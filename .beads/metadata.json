@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "server",
+  "dolt_database": "pa_compact_licensing_platform",
+  "project_id": "7519ce9c-9d2e-4f83-893b-a2fd694e7b73"
+}
