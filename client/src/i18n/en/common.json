@@ -1,0 +1,10 @@
+{
+  "yes": "Yes",
+  "no": "No",
+  "editTitle": "Edit",
+  "removeTitle": "Remove",
+  "requiredText": "Required fields are marked with an asterisk",
+  "optionalText": " (optional)",
+  "nextTitle": "Save and Continue →",
+  "backTitle": "← Back"
+}

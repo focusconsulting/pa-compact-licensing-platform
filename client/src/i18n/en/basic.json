@@ -1,0 +1,13 @@
+{
+  "title": "Let's get some basic information",
+  "fields": {
+    "legalNameTitle": "What is your current legal name?",
+    "birthNameTitle": "What is your legal birth name?",
+    "name": {
+      "firstNameTitle": "First name",
+      "middleNameTitle": "Middle name",
+      "lastNameTitle": "Last name"
+    },
+    "hasBirthNameTitle": "Do you have a different name at birth?"
+  }
+}

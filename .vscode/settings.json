@@ -1,0 +1,38 @@
+{
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    }
+  },
+  "[typescriptreact]": {
+    "editor.formatOnSave": true
+  },
+  "debugpy.debugJustMyCode": false,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "python.analysis.autoImportCompletions": true,
+
+  "python.testing.unittestEnabled": false,
+  "flake8.enabled": false,
+  "python.testing.pytestEnabled": true,
+  "python.analysis.inlayHints.callArgumentNames": "all",
+  "python.analysis.inlayHints.functionReturnTypes": true,
+  "python.analysis.inlayHints.variableTypes": true,
+  "python.testing.cwd": "${workspaceFolder}",
+  "python.REPL.enableREPLSmartSend": false,
+  "python.defaultInterpreterPath": "${workspaceFolder}/api/.venv/bin/python",
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[terraform]": {
+    "editor.defaultFormatter": "hashicorp.terraform"
+  },
+  "[terraform-vars]": {
+    "editor.defaultFormatter": "hashicorp.terraform"
+  },
+  "[xml]": {
+    "editor.defaultFormatter": "redhat.vscode-xml"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "title": "What's your current mailing address?",
+  "fields": {
+    "mailingAddressTitle": "Current mailing address",
+    "mailingAddressSubtitle": "This is the address the IRS will use to return original documents to and send written notifications of your ITIN application status.",
+    "foreignAddressTitle": "Foreign address",
+    "foreignAddressSubtitle": "Do not use a P.O. box number as your complete address.",
+    "address": {
+      "countryTitle": "Country",
+      "address1Title": "Address Line 1",
+      "address2Title": "Address Line 2",
+      "address2Subtitle": "This could include apartment, number, or P.O. box",
+      "cityTitle": "City or town",
+      "stateTitle": "State or Province",
+      "zipTitle": "ZIP code / Postal code",
+      "phoneNumberTitle": "Phone number",
+      "phoneNumberPlaceholder": "10 digit phone number",
+      "emailAddressTitle": "Email address"
+    },
+    "hasForeignAddressTitle": "Do you have a foreign address?"
+  }
+}

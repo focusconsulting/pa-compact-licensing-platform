@@ -1,0 +1,59 @@
+# Default recipe: show available commands
+default:
+    @just --list
+
+app_name := "api"
+image_tag := if `git rev-parse --is-inside-work-tree 2>/dev/null || true` == "true" { `git rev-parse HEAD` } else { "unknown-dev." + `date -u '+%Y%m%d.%H%M%S'` }
+open_cmd := if os() == "macos" { "open" } else { "xdg-open" }
+
+# Install dependencies
+install:
+    uv sync
+
+# Run the API with hot reload
+dev:
+    uv run uvicorn licensing_api.__main__:app --reload
+
+# Run tests (pass additional args with: just test -k test_name)
+test *args:
+    uv run pytest {{ args }}
+
+# Run tests with coverage report
+test-coverage *args:
+    uv run coverage run --branch --source=licensing_api -m pytest {{ args }}
+    uv run coverage report
+
+# Open HTML coverage report in browser
+test-coverage-report:
+    uv run coverage html --directory .coverage_report
+    {{ open_cmd }} .coverage_report/index.html
+
+# Run all linting (spectral + ruff + pyright)
+lint: lint-spectral lint-ruff typecheck
+
+# Run ruff linter and format check
+lint-ruff:
+    uv run ruff check licensing_api tests
+    uv run ruff format --check licensing_api tests
+
+# Run pyright type checker
+typecheck:
+    uv run pyright licensing_api
+
+# Run OpenAPI spec linting
+lint-spectral:
+    docker run --rm --tty --cap-drop=ALL --network=none --read-only --volume={{ justfile_directory() }}:/tmp:ro \
+        stoplight/spectral:6 lint /tmp/openapi.yaml --ruleset /tmp/.spectral.yaml
+
+# Format code (ruff + prettier for OpenAPI spec)
+format:
+    uv run ruff check --fix licensing_api tests
+    uv run ruff format licensing_api tests
+    npx prettier --write openapi.yaml
+
+# Build production Docker image
+build:
+    docker build \
+        --tag {{ app_name }}:latest \
+        --tag {{ app_name }}:{{ image_tag }} \
+        --target app

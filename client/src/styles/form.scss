@@ -1,0 +1,197 @@
+@use "uswds-core";
+
+.legend-lg > legend {
+  @include uswds-core.typeset("body", lg);
+}
+
+.required-text-subtitle {
+  color: #71767a;
+  line-height: 150%; /* 25.5px */
+}
+
+.center-contents {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.space-between {
+  display: flex;
+  justify-content: space-between;
+}
+
+.button-container {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.button-container > button {
+  margin-top: 0px !important;
+}
+
+.button-container > button:only-child {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.button-container {
+  @include uswds-core.at-media-max("tablet") {
+    flex-direction: column-reverse;
+    align-items: center;
+  }
+}
+
+.button-container > button {
+  @include uswds-core.at-media-max("tablet") {
+    width: 100%;
+    margin-right: 0;
+  }
+}
+
+.mobile-max-width {
+  @include uswds-core.at-media-max("tablet") {
+    width: 100%;
+  }
+}
+.desktop-space-between {
+  @include uswds-core.at-media("desktop") {
+    display: flex;
+    justify-content: space-between;
+  }
+}
+
+.tablet-space-between {
+  @include uswds-core.at-media("tablet") {
+    display: flex;
+    justify-content: space-between;
+  }
+}
+
+.mobile-margin-top-3 {
+  @include uswds-core.at-media-max("tablet") {
+    @include uswds-core.u-margin-top(3);
+  }
+}
+
+.mobile-margin-bottom-1 {
+  @include uswds-core.at-media-max("tablet") {
+    @include uswds-core.u-margin-bottom(1);
+  }
+}
+
+.desktop-maxw-66ct {
+  @include uswds-core.at-media("desktop") {
+    max-width: 66%;
+  }
+}
+
+.card-entry-heading {
+  font-weight: 600;
+  @include uswds-core.u-font-size("sans", "md");
+  @include uswds-core.u-color("base-darker");
+}
+.card-entry-value {
+  @include uswds-core.u-font-size("sans", "sm");
+}
+.card-entry-title {
+  @include uswds-core.u-font-size("sans", "lg");
+  @include uswds-core.u-color("base-darker");
+}
+
+.edit-button,
+.remove-button {
+  margin-top: 0 !important;
+  margin-right: 0 !important;
+}
+
+form
+  > fieldset
+  > :is(
+    input,
+    div.usa-radio,
+    select,
+    div.usa-memorable-date,
+    div > div.usa-date-picker__wrapper
+  ) {
+  max-width: 480px !important;
+}
+
+form
+  > :is(
+    input,
+    div.usa-radio,
+    select,
+    div.usa-memorable-date,
+    div > div.usa-date-picker__wrapper
+  ) {
+  max-width: 480px !important;
+}
+
+form
+  > div
+  > fieldset
+  > :is(
+    input,
+    div.usa-radio,
+    select,
+    div.usa-memorable-date,
+    div > div.usa-date-picker__wrapper
+  ) {
+  max-width: 480px !important;
+}
+
+form > fieldset > div.usa-memorable-date {
+  > div:first-child {
+    flex: 1 1 auto;
+
+    > select {
+      width: 100%;
+    }
+  }
+  > div:last-child {
+    margin-right: 0;
+  }
+}
+
+form > fieldset > legend.usa-legend {
+  max-width: 100%;
+}
+
+button.remove-button {
+  box-shadow: inset 0 0 0 2px uswds-core.color("secondary");
+  @include uswds-core.u-color("secondary");
+}
+
+button.remove-button:hover {
+  box-shadow: inset 0 0 0 2px uswds-core.color("secondary-dark");
+  @include uswds-core.u-color("secondary-dark");
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+div#root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+#container {
+  position: relative;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(3px);
+  background-color: rgba(255, 255, 255, 0.3);
+  z-index: 10;
+}

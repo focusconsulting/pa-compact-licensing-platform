@@ -1,0 +1,36 @@
+@use "uswds-core";
+
+.usa-banner,
+.stinger {
+  background-color: #162e51;
+}
+.usa-banner :is(p, span) {
+  color: #ffffff;
+}
+
+.usa-navbar > .usa-logo {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.usa-navbar .usa-identifier__logo {
+  width: 102px;
+  height: 57.37px;
+}
+
+.usa-navbar .logo {
+  width: 102px;
+  height: 57.37px;
+  overflow-y: hidden; // TODO-maybe: fix this hack (without, a scrollbar renders momentarily due to anchor wrapped img
+  @include uswds-core.at-media-max("tablet") {
+    @include uswds-core.u-margin-x(auto);
+  }
+}
+
+.stinger .usa-identifier__logo {
+  width: 80.19px;
+  height: 28px;
+  @include uswds-core.at-media-max("tablet") {
+    @include uswds-core.u-margin-x(auto);
+  }
+}
