@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from licensing_api.db.config import DbConfig, get_config
+from licensing_api.db.config import LOCAL_DEFAULT_CONNECTION_STRING, DbConfig, get_config
 
 
 class TestDbConfig:
@@ -24,11 +24,11 @@ class TestDbConfig:
 
 
 class TestGetConfig:
-    def test_raises_without_env(self) -> None:
+    def test_falls_back_to_default_without_env(self) -> None:
         env_backup = os.environ.pop("POSTGRES_CONNECTION_STRING", None)
         try:
-            with pytest.raises(Exception, match="Postgres connection string"):
-                get_config()
+            config = get_config()
+            assert config.connection_string == LOCAL_DEFAULT_CONNECTION_STRING
         finally:
             if env_backup:
                 os.environ["POSTGRES_CONNECTION_STRING"] = env_backup
