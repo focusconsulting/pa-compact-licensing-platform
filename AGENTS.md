@@ -26,6 +26,7 @@ This file contains rules that are injected into every AI coding session. Keep it
 
 ### Process
 
+- Never add co-author information or Claude attribution
 - Never commit directly to main/master branch
 - Never force push to shared branches
 - Never delete tests to make the build pass
