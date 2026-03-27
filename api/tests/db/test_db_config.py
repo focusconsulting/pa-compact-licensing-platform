@@ -1,7 +1,5 @@
 import os
 
-import pytest
-
 from licensing_api.db.config import LOCAL_DEFAULT_CONNECTION_STRING, DbConfig, get_config
 
 
