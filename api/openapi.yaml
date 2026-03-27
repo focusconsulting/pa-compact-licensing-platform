@@ -3,6 +3,8 @@ info:
   title: API
   description: An API for managing PA licensing platform
   version: 0.1.0
+  contact:
+    name: Focus Consulting
 
 servers:
   - url: /v1
@@ -139,6 +141,7 @@ components:
         data:
           oneOf:
             - type: array
+              items: {}
             - type: object
           example: []
         warnings:
@@ -161,6 +164,7 @@ components:
         data:
           oneOf:
             - type: array
+              items: {}
             - type: object
           example: []
         warnings:
@@ -225,6 +229,7 @@ components:
             - type: integer
             - type: boolean
             - type: array
+              items: {}
             - type: object
           example: []
         field:

@@ -2,6 +2,7 @@
 extends: spectral:oas
 
 rules:
+  oas3-unused-component: off
   operation-description: off
   no-$ref-siblings: info
   path-kebab-case:
