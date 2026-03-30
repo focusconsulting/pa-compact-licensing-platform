@@ -52,3 +52,5 @@
 # - linear.api-key
 # - github.org
 # - github.repo
+
+sync.git-remote: "git+ssh://git@github.com/focusconsulting/pa-compact-licensing-platform"
