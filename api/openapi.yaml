@@ -32,6 +32,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/HealthResponseDeep"
+        "503":
+          $ref: "#/components/responses/HealthResponseDeep"
 
 components:
   #
@@ -110,6 +112,12 @@ components:
                         type: object
                         properties:
                           db:
+                            type: object
+                            properties:
+                              status:
+                                type: string
+                                example: up
+                          cache:
                             type: object
                             properties:
                               status:
