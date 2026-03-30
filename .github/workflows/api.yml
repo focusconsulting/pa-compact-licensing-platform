@@ -1,0 +1,67 @@
+name: API CI
+
+on:
+  push:
+    branches: [main]
+    paths: [api/**]
+  pull_request:
+    paths: [api/**]
+
+defaults:
+  run:
+    working-directory: api
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: api/uv.lock
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Ruff check
+        run: uv run ruff check licensing_api tests
+
+      - name: Ruff format check
+        run: uv run ruff format --check licensing_api tests
+
+      - name: Pyright
+        run: uv run pyright licensing_api
+
+      - name: Spectral OpenAPI lint
+        run: |
+          docker run --rm --cap-drop=ALL --network=none --read-only \
+            --volume=${{ github.workspace }}/api:/tmp:ro \
+            stoplight/spectral:6 lint /tmp/openapi.yaml --ruleset /tmp/.spectral.yaml
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: api/uv.lock
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Run tests with coverage
+        run: |
+          uv run coverage run --branch --source=licensing_api -m pytest
+          uv run coverage report

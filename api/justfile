@@ -10,8 +10,16 @@ open_cmd := if os() == "macos" { "open" } else { "xdg-open" }
 install:
     uv sync
 
-# Run the API with hot reload
-dev:
+# Start local Postgres and Redis containers
+infra:
+    docker compose up -d
+
+# Stop local infrastructure containers
+infra-down:
+    docker compose down
+
+# Run the API with hot reload (starts infra automatically)
+dev: infra
     uv run uvicorn licensing_api.__main__:app --reload
 
 # Run tests (pass additional args with: just test -k test_name)

@@ -19,11 +19,13 @@ class DbConfig:
     statement_timeout: int = 3600000
 
 
-def get_config() -> DbConfig:
-    connection = os.getenv("POSTGRES_CONNECTION_STRING")
+LOCAL_DEFAULT_CONNECTION_STRING = (
+    "postgresql+psycopg://licensing:secret123@localhost:5432/licensing"
+)
 
-    if not connection:
-        raise Exception("Postgres connection string ENV not available")
+
+def get_config() -> DbConfig:
+    connection = os.getenv("POSTGRES_CONNECTION_STRING", LOCAL_DEFAULT_CONNECTION_STRING)
 
     db_config = DbConfig(
         connection_string=connection,
