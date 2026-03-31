@@ -11,7 +11,7 @@ iac/          Infrastructure as Code
 ## Prerequisites
 
 - Python 3.13+
-- Node.js 20+
+- Node.js 24+
 - [uv](https://docs.astral.sh/uv/) (Python package manager)
 - [pnpm](https://pnpm.io/) 10+
 - [just](https://github.com/casey/just) (task runner)
