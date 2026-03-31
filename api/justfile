@@ -2,7 +2,7 @@
 default:
     @just --list
 
-app_name := "api"
+app_name := "pa-compact-api"
 image_tag := if `git rev-parse --is-inside-work-tree 2>/dev/null || true` == "true" { `git rev-parse HEAD` } else { "unknown-dev." + `date -u '+%Y%m%d.%H%M%S'` }
 open_cmd := if os() == "macos" { "open" } else { "xdg-open" }
 
@@ -12,11 +12,11 @@ install:
 
 # Start local Postgres and Redis containers
 infra:
-    docker compose up -d
+    docker compose -p pa-compact up -d
 
 # Stop local infrastructure containers
 infra-down:
-    docker compose down
+    docker compose -p pa-compact down
 
 # Run the API with hot reload (starts infra automatically)
 dev: infra
