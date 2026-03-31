@@ -30,9 +30,8 @@ describe("DisplayField component", () => {
     renderWithForm(
       <DisplayField id="field1" label="Name" value="John" />,
     );
-    expect(screen.queryByClass).toBeUndefined; // no hint element
-    const container = screen.getByText("John");
-    expect(container).toBeInTheDocument();
+    expect(screen.queryByText("Enter your name")).not.toBeInTheDocument();
+    expect(screen.getByText("John")).toBeInTheDocument();
   });
 
   it("renders current date when asCurrentDateInput is true", () => {
