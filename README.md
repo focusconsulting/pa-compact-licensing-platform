@@ -10,11 +10,33 @@ iac/          Infrastructure as Code
 
 ## Prerequisites
 
-- Python 3.13+
-- Node.js 24+
-- [uv](https://docs.astral.sh/uv/) (Python package manager)
-- [pnpm](https://pnpm.io/) 10+
-- [just](https://github.com/casey/just) (task runner)
+- Install the following using [asdf](https://asdf-vm.com/guide/getting-started.html):
+
+   ```bash
+     asdf plugin add python
+     asdf install python 3.13.12
+     asdf set python 3.13.12
+
+     asdf plugin add nodejs
+     asdf install nodejs 25.8.2
+     asdf set nodejs 25.8.2
+
+     asdf plugin add uv
+     asdf install uv 0.11.2
+     asdf set uv 0.11.2
+
+     asdf plugin add just
+     asdf install just 1.48.1
+     asdf set just 1.48.1
+
+     asdf reshim
+     npm install -g pnpm@latest-10
+   ```
+    - Python 3.13+
+    - Node.js 24+
+    - [uv](https://docs.astral.sh/uv/) (Python package manager)
+    - [pnpm](https://pnpm.io/) 10+
+    - [just](https://github.com/casey/just) (task runner)
 - Docker (for containerized linting and builds)
 
 ## Getting Started
@@ -23,6 +45,7 @@ iac/          Infrastructure as Code
 
 ```bash
 cd api
+export UV_PYTHON=$(asdf which python) # use the python from asdf
 just install     # Install Python dependencies
 just dev         # Run API with hot reload (localhost:8000)
 ```
