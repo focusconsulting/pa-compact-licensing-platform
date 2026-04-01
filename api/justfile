@@ -20,7 +20,7 @@ infra-down:
 
 # Run the API with hot reload (starts infra automatically)
 dev: infra
-    uv run uvicorn licensing_api.__main__:app --reload
+    uv run uvicorn licensing_api.__main__:app --reload --env-file .env
 
 # Run tests (pass additional args with: just test -k test_name)
 test *args:
@@ -36,8 +36,8 @@ test-coverage-report:
     uv run coverage html --directory .coverage_report
     {{ open_cmd }} .coverage_report/index.html
 
-# Run all linting (spectral + ruff + pyright)
-lint: lint-spectral lint-ruff typecheck
+# Run all linting (ruff + pyright)
+lint: lint-ruff typecheck
 
 # Run ruff linter and format check
 lint-ruff:
@@ -48,16 +48,10 @@ lint-ruff:
 typecheck:
     uv run pyright licensing_api
 
-# Run OpenAPI spec linting
-lint-spectral:
-    docker run --rm --tty --cap-drop=ALL --network=none --read-only --volume={{ justfile_directory() }}:/tmp:ro \
-        stoplight/spectral:6 lint /tmp/openapi.yaml --ruleset /tmp/.spectral.yaml
-
-# Format code (ruff + prettier for OpenAPI spec)
+# Format code with ruff
 format:
     uv run ruff check --fix licensing_api tests
     uv run ruff format licensing_api tests
-    npx prettier --write openapi.yaml
 
 # Build production Docker image
 build:

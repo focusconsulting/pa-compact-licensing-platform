@@ -1,6 +1,34 @@
+[project]
+name = "pa-compact-api"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "gunicorn>=23.0.0",
+    "asyncpg>=0.30.0",
+    "redis>=5.2.0",
+    "pydantic-settings>=2.6.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "httpx>=0.28.0",
+    "coverage>=7.6.0",
+    "ruff>=0.8.0",
+    "pyright>=1.1.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py313"
+
+[tool.ruff.format]
+quote-style="single"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "C4", "UP"]
@@ -9,52 +37,7 @@ ignore = [
   "B904",  # raise-without-from in exception re-wrapping is intentional
 ]
 
-[tool.ruff.lint.isort]
-known-first-party = ["licensing_api"]
-
 [tool.pyright]
 pythonVersion = "3.13"
-typeCheckingMode = "standard"
-reportMissingTypeStubs = false
-
-[build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
-
-
-[project]
-authors = [
-    {name = "Michael Kalish", email = "michael.kalish@focusconsulting.io"},
-]
-requires-python = "<4.0.0,>=3.13"
-dependencies = [
-    "connexion[flask,mock,swagger-ui,uvicorn]<4.0.0,>=3.0.6",
-    "sqlalchemy<3.0.0,>=2.0.30",
-    "pydantic<3.0.0,>=2.7.1",
-    "requests<3.0.0,>=2.31.0",
-    "psycopg[binary]>=3.2.0",
-    "gunicorn<23.0.0,>=22.0.0",
-    "alembic<2.0.0,>=1.13.1",
-    "flask-session[cachelib]>=0.8.0,<1.0.0",
-    "redis<6.0.0,>=5.2.1",
-    "botocore<2.0.0,>=1.37.29",
-    "pydantic-settings<3.0.0,>=2.8.1",
-    "flask-wtf>=1.2.2",
-    "locust>=2.37.10",
-    "cachetools>=7.0.5",
-]
-name = "licensing_api"
-version = "0.1.0"
-description = ""
-
-[dependency-groups]
-dev = [
-    "freezegun<2.0.0,>=1.5.0",
-    "alembic<2.0.0,>=1.13.1",
-    "pytest<9.0.0,>=8.2.0",
-    "coverage<8.0.0,>=7.5.1",
-    "ruff>=0.11.0",
-    "pyright>=1.1.400",
-    "testcontainers[postgres,redis]>=4.10.0",
-    "httpx>=0.28.0",
-]
+venvPath = "."
+venv = ".venv"

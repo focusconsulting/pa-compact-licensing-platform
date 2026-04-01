@@ -4,7 +4,8 @@
 .dolt/
 *.db
 
-.idea
+.env
+.idea/
 .claude/settings.local.json
 
 # Beads / Dolt files (added by bd init)
