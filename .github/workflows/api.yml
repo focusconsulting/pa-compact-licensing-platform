@@ -38,12 +38,6 @@ jobs:
       - name: Pyright
         run: uv run pyright licensing_api
 
-      - name: Spectral OpenAPI lint
-        run: |
-          docker run --rm --cap-drop=ALL --network=none --read-only \
-            --volume=${{ github.workspace }}/api:/tmp:ro \
-            stoplight/spectral:6 lint /tmp/openapi.yaml --ruleset /tmp/.spectral.yaml
-
   test:
     runs-on: ubuntu-latest
     steps:
@@ -61,7 +55,19 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen
 
+      - name: Start services
+        run: docker compose up -d
+
+      - name: Wait for services to be healthy
+        run: |
+          until docker compose exec -T postgres pg_isready -U licensing -d licensing; do
+            echo "Waiting for postgres..."; sleep 1
+          done
+          until docker compose exec -T redis redis-cli ping | grep -q PONG; do
+            echo "Waiting for redis..."; sleep 1
+          done
+
       - name: Run tests with coverage
         run: |
-          uv run coverage run --branch --source=licensing_api -m pytest
+          uv run --env-file .env.example coverage run --branch --source=licensing_api -m pytest
           uv run coverage report

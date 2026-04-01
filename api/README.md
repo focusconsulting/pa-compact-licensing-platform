@@ -1,50 +1,96 @@
-# API
+# PA Compact Licensing API
 
-## Table of contents
+## Getting started
 
--   [Developer Setup](./README.md#developer-setup)
--   [Key Tooling](./README.md#key-tooling)
+See the prerequisites in [root README](../README.md)
 
-## Developer Setup
+Set your local environment variables:
 
-Please make sure that you have completed all the steps in the [root setup](../README.md#developer-setup)
-1. Run `just` to see the available commands
+```shell
+cp ./.env.example ./env
+```
 
-## Key Tooling
+### 1. Install dependencies
 
-The API uses these main libraries:
-- Connexion: REST API framework using Flask, handles OpenAPI/Swagger specs, mocking, validation
-- Flask: Web application framework (via Connexion)
-- Gunicorn: WSGI HTTP server for production deployment
+```bash
+just install
+```
 
-Database Layer:
-- SQLAlchemy: ORM for database operations
-- psycopgbinary: PostgreSQL database driver (binary wheels included)
-- Alembic: Database migrations
+### 2. Start local infrastructure (Postgres + Redis)
 
-Data Validation:
-- Pydantic: Data validation using Python type hints
-- Pydantic-settings: Settings management with Pydantic
+```bash
+just infra
+```
 
-Caching & Storage:
-- Redis: Caching and session storage
-- Flask-session: Server-side session management with Redis backend
-- Cachetools: In-memory cache implementations (LRU, TTL)
+### 3. Run the API with hot reload
 
-HTTP Client:
-- Requests: HTTP requests library
-- Botocore: AWS SDK client (used with botocore)
-Security:
-- Flask-WTF: CSRF protection and form handling
+```bash
+just dev
+```
 
-Performance/Monitoring:
-- Locust: Load testing framework
-- Uvicorn: ASGI server (optional in Connexion)
+Visit http://localhost:8000/docs to see the endpoints exposed.
 
-Development Tools:
-- Pytest: Testing framework
-- Pyright: Static type checker
-- Coverage: Code coverage
-- Testcontainers: Docker-based test isolation
-- Freezegun: Time mocking for tests
+### 4. Stop infrastructure
 
+```bash
+just infra-down
+```
+
+## Running tests
+
+```bash
+# Run all tests
+just test
+
+# Run a specific test by name
+just test -k test_live_returns_200
+
+# Run with coverage report printed to terminal
+just test-coverage
+
+# Open HTML coverage report in browser
+just test-coverage-report
+```
+
+## Linting and formatting
+
+```bash
+# Run all linting (ruff + pyright)
+just lint
+
+# Auto-fix and format code
+just format
+
+# Type check only
+just typecheck
+```
+
+## Building the Docker image
+
+```bash
+just build
+```
+
+This builds the production (`app`) stage and tags the image as `pa-compact-health-api:latest` and
+`pa-compact-health-api:<git-sha>`.
+
+## All available tasks
+
+```
+just --list
+```
+
+## Key frameworks and dependencies
+
+| Package                                                                           | Purpose                         | Docs                                                         |
+|-----------------------------------------------------------------------------------|---------------------------------|--------------------------------------------------------------|
+| [FastAPI](https://fastapi.tiangolo.com/)                                          | Web framework                   | https://fastapi.tiangolo.com/                                |
+| [Uvicorn](https://www.uvicorn.org/)                                               | ASGI server (development)       | https://www.uvicorn.org/                                     |
+| [Gunicorn](https://gunicorn.org/)                                                 | WSGI/ASGI server (production)   | https://docs.gunicorn.org/                                   |
+| [asyncpg](https://magicstack.github.io/asyncpg/)                                  | Async PostgreSQL client         | https://magicstack.github.io/asyncpg/                        |
+| [redis-py](https://redis-py.readthedocs.io/)                                      | Redis client (async)            | https://redis-py.readthedocs.io/                             |
+| [pydantic-settings](https://docs.pydantic.dev/latest/concepts/pydantic_settings/) | Environment-based configuration | https://docs.pydantic.dev/latest/concepts/pydantic_settings/ |
+| [uv](https://docs.astral.sh/uv/)                                                  | Dependency management           | https://docs.astral.sh/uv/                                   |
+| [pytest](https://docs.pytest.org/)                                                | Test framework                  | https://docs.pytest.org/                                     |
+| [ruff](https://docs.astral.sh/ruff/)                                              | Linter and formatter            | https://docs.astral.sh/ruff/                                 |
+| [pyright](https://microsoft.github.io/pyright/)                                   | Static type checker             | https://microsoft.github.io/pyright/                         |
