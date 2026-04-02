@@ -1,0 +1,2 @@
+-- Initial tables migration
+-- Add table definitions here

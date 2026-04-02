@@ -9,7 +9,7 @@ from fastapi import APIRouter
 from licensing_api.config import settings
 from licensing_api.routes.health_schemas import LiveResp, ReadyResp
 
-router = APIRouter()
+router = APIRouter(prefix='/health', tags=['health'])
 
 
 async def check_postgres() -> bool:
@@ -33,7 +33,8 @@ async def check_redis() -> bool:
 
 
 @router.get(
-    path='/health/live',
+    path='/live',
+    name='Liveness check',
     description='Check whether the application is ready to receive requests',
     response_model=LiveResp,
 )
@@ -42,7 +43,8 @@ async def live() -> LiveResp:
 
 
 @router.get(
-    path='/health/ready',
+    path='/ready',
+    name='Ready check',
     description='Check the database and cache are ready to accept requests',
     response_model=ReadyResp,
 )

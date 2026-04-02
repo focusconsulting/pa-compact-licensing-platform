@@ -7,8 +7,6 @@ services:
       POSTGRES_USER: licensing
       POSTGRES_PASSWORD: secret123
       POSTGRES_DB: licensing
-    volumes:
-      - pgdata:/var/lib/postgresql/data
 
   redis:
     image: redis:7-alpine
