@@ -11,15 +11,15 @@ install:
     uv sync
 
 # Start local Postgres and Redis containers
-infra:
+infra: infra-down
     docker compose -p pa-compact up -d
 
 # Stop local infrastructure containers
 infra-down:
-    docker compose -p pa-compact down
+    docker compose -p pa-compact down -v
 
 # Run the API with hot reload (starts infra automatically)
-dev: infra
+dev:
     uv run uvicorn licensing_api.__main__:app --reload --env-file .env
 
 # Run tests (pass additional args with: just test -k test_name)

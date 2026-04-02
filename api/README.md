@@ -12,11 +12,19 @@ cp ./.env.example ./env
 
 ### 1. Install dependencies
 
+This step should be run once.
+
 ```bash
 just install
 ```
 
 ### 2. Start local infrastructure (Postgres + Redis)
+
+This should be run before launching the service. Everytime it is invoked, the data in services is reset.
+
+You might need to reset the data for testing if a test doesn't clean up properly after itself. However, tests should be written such that the clean up after themselves.
+
+Test data can be defined [ahead of time](./db-migrations/30000101_000000_test_data.sql).
 
 ```bash
 just infra
@@ -87,10 +95,14 @@ just --list
 | [FastAPI](https://fastapi.tiangolo.com/)                                          | Web framework                   | https://fastapi.tiangolo.com/                                |
 | [Uvicorn](https://www.uvicorn.org/)                                               | ASGI server (development)       | https://www.uvicorn.org/                                     |
 | [Gunicorn](https://gunicorn.org/)                                                 | WSGI/ASGI server (production)   | https://docs.gunicorn.org/                                   |
-| [asyncpg](https://magicstack.github.io/asyncpg/)                                  | Async PostgreSQL client         | https://magicstack.github.io/asyncpg/                        |
-| [redis-py](https://redis-py.readthedocs.io/)                                      | Redis client (async)            | https://redis-py.readthedocs.io/                             |
+| [asyncpg](https://magicstack.github.io/asyncpg/current/)                          | Async PostgreSQL client         | https://magicstack.github.io/asyncpg/current/                |
+| [redis-py](https://redis.readthedocs.io/en/stable/)                               | Redis client (async)            | https://redis.readthedocs.io/en/stable/                      |
 | [pydantic-settings](https://docs.pydantic.dev/latest/concepts/pydantic_settings/) | Environment-based configuration | https://docs.pydantic.dev/latest/concepts/pydantic_settings/ |
+| [yoyo-migrations](https://ollycope.com/software/yoyo/)                            | Database migrations             | https://ollycope.com/software/yoyo/                          |
+| [psycopg2](https://www.psycopg.org/docs/)                                         | Sync PostgreSQL driver (yoyo)   | https://www.psycopg.org/docs/                                |
 | [uv](https://docs.astral.sh/uv/)                                                  | Dependency management           | https://docs.astral.sh/uv/                                   |
-| [pytest](https://docs.pytest.org/)                                                | Test framework                  | https://docs.pytest.org/                                     |
+| [pytest](https://docs.pytest.org/en/9.0.x/)                                       | Test framework                  | https://docs.pytest.org/en/9.0.x/                            |
+| [pytest-asyncio](https://pytest-asyncio.readthedocs.io/en/stable/)                | Async test support              | https://pytest-asyncio.readthedocs.io/en/stable/             |
+| [asgi-lifespan](https://github.com/florimondmanca/asgi-lifespan)                  | ASGI lifespan for tests         | https://github.com/florimondmanca/asgi-lifespan               |
 | [ruff](https://docs.astral.sh/ruff/)                                              | Linter and formatter            | https://docs.astral.sh/ruff/                                 |
 | [pyright](https://microsoft.github.io/pyright/)                                   | Static type checker             | https://microsoft.github.io/pyright/                         |
