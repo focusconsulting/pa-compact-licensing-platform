@@ -5,6 +5,7 @@ import re
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from typing import Any, cast
 
 import asyncpg
 import uvicorn
@@ -21,9 +22,11 @@ _LOG_RECORD_KEYS = frozenset(logging.LogRecord('', 0, '', 0, '', (), None).__dic
 
 def _mask_sensitive(obj: object) -> object:
     if hasattr(obj, 'model_dump'):
-        return _mask_sensitive(obj.model_dump())
+        return _mask_sensitive(cast(Any, obj).model_dump())
     if isinstance(obj, dict):
-        return {k: _MASK if _SENSITIVE_PATTERN.search(k) else _mask_sensitive(v) for k, v in obj.items()}
+        return {
+            k: _MASK if _SENSITIVE_PATTERN.search(k) else _mask_sensitive(v) for k, v in obj.items()
+        }
     if isinstance(obj, list):
         return [_mask_sensitive(item) for item in obj]
     return obj
@@ -32,7 +35,9 @@ def _mask_sensitive(obj: object) -> object:
 class JsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         log_entry: dict[str, object] = {
-            'timestamp': datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat(timespec='milliseconds').replace('+00:00', 'Z'),
+            'timestamp': datetime.fromtimestamp(record.created, tz=timezone.utc)
+            .isoformat(timespec='milliseconds')
+            .replace('+00:00', 'Z'),  # noqa: UP017
             'level': record.levelname,
             'logger': record.name,
             'message': record.getMessage(),
