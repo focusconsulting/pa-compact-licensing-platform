@@ -1,5 +1,7 @@
 # PA Compact Licensing Platform
 
+<!-- test: dummy PR 2 for verification -->
+
 ## Repository Structure
 
 ```text
