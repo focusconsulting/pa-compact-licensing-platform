@@ -41,6 +41,7 @@ select = ["E", "F", "W", "I", "B", "C4", "UP"]
 ignore = [
   "E501",  # line length handled by formatter
   "B904",  # raise-without-from in exception re-wrapping is intentional
+  "UP017", # datetime.UTC not recognized by pyright 1.1.x stubs; use timezone.utc
 ]
 
 [tool.pyright]
