@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import re
+import sys
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
@@ -50,7 +51,7 @@ class JsonFormatter(logging.Formatter):
         return json.dumps(_mask_sensitive(log_entry))
 
 
-_handler = logging.StreamHandler()
+_handler = logging.StreamHandler(stream=sys.stdout)
 _handler.setFormatter(JsonFormatter())
 logging.basicConfig(level=settings.log_level, handlers=[_handler], force=True)
 
@@ -58,7 +59,13 @@ _LOG_CONFIG = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {'json': {'()': JsonFormatter}},
-    'handlers': {'default': {'class': 'logging.StreamHandler', 'formatter': 'json'}},
+    'handlers': {
+        'default': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'json',
+            'stream': 'ext://sys.stdout',
+        }
+    },
     'loggers': {
         'uvicorn': {'handlers': ['default'], 'propagate': False},
         'uvicorn.error': {'handlers': ['default'], 'propagate': False},
