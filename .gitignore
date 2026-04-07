@@ -6,6 +6,12 @@
 
 .env
 .idea/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfplan
 .claude/settings.local.json
 
 # Beads / Dolt files (added by bd init)

@@ -1,0 +1,84 @@
+name: Deploy Release to Environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Image tag to deploy (e.g., v1.2.3)"
+        required: true
+        type: string
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - staging
+          - prod
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: pa-compact-licensing-api
+  CONTAINER_NAME: api
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.image_tag }} to ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Verify image exists in ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          aws ecr describe-images \
+            --repository-name ${{ env.ECR_REPOSITORY }} \
+            --image-ids imageTag=${{ inputs.image_tag }} \
+            || (echo "::error::Image tag '${{ inputs.image_tag }}' not found in ECR" && exit 1)
+
+      - name: Set environment-specific variables
+        id: env-vars
+        run: |
+          if [ "${{ inputs.environment }}" = "staging" ]; then
+            echo "cluster=pa-compact-licensing-staging" >> "$GITHUB_OUTPUT"
+            echo "service=pa-compact-licensing-staging" >> "$GITHUB_OUTPUT"
+          elif [ "${{ inputs.environment }}" = "prod" ]; then
+            echo "cluster=pa-compact-licensing-prod" >> "$GITHUB_OUTPUT"
+            echo "service=pa-compact-licensing-prod" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download current task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition ${{ steps.env-vars.outputs.service }} \
+            --query taskDefinition \
+            > task-definition.json
+
+      - name: Render updated task definition
+        id: render
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ inputs.image_tag }}
+
+      - name: Deploy to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render.outputs.task-definition }}
+          service: ${{ steps.env-vars.outputs.service }}
+          cluster: ${{ steps.env-vars.outputs.cluster }}
+          wait-for-service-stability: true
