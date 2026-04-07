@@ -1,26 +1,31 @@
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from fastapi.testclient import TestClient
 
 from licensing_api.__main__ import app
 from licensing_api.routes.health_schemas import LiveResp, ReadyResp
 
-client = TestClient(app)
+
+@pytest.fixture(scope='module')
+def client():
+    with TestClient(app) as c:
+        yield c
 
 
-def test_live_returns_200():
+def test_live_returns_200(client):
     response = client.get('/health/live')
     assert response.status_code == 200
     assert LiveResp.model_validate(response.json()) == LiveResp(status='ok')
 
 
-def test_ready_all_healthy():
+def test_ready_all_healthy(client):
     response = client.get('/health/ready')
     assert response.status_code == 200
     assert ReadyResp.model_validate(response.json()) == ReadyResp(db=True, cache=True)
 
 
-def test_ready_db_down():
+def test_ready_db_down(client):
     with (
         patch(
             'licensing_api.routes.health.check_postgres',
@@ -38,7 +43,7 @@ def test_ready_db_down():
         assert ReadyResp.model_validate(response.json()) == ReadyResp(db=False, cache=True)
 
 
-def test_ready_cache_down():
+def test_ready_cache_down(client):
     with (
         patch(
             'licensing_api.routes.health.check_postgres',
@@ -56,7 +61,7 @@ def test_ready_cache_down():
         assert ReadyResp.model_validate(response.json()) == ReadyResp(db=True, cache=False)
 
 
-def test_ready_all_down():
+def test_ready_all_down(client):
     with (
         patch(
             'licensing_api.routes.health.check_postgres',

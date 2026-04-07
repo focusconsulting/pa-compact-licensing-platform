@@ -59,7 +59,13 @@ _LOG_CONFIG = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {'json': {'()': JsonFormatter}},
-    'handlers': {'default': {'class': 'logging.StreamHandler', 'formatter': 'json', 'stream': 'ext://sys.stdout'}},
+    'handlers': {
+        'default': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'json',
+            'stream': 'ext://sys.stdout',
+        }
+    },
     'loggers': {
         'uvicorn': {'handlers': ['default'], 'propagate': False},
         'uvicorn.error': {'handlers': ['default'], 'propagate': False},
