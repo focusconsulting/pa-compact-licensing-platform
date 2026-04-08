@@ -10,3 +10,5 @@
 
 # Beads / Dolt files (added by bd init)
 .beads-credential-key
+.terraform.lock.hcl
+infrastructure/iac/components/ecr/terraform/.terraform
