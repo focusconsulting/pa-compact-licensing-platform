@@ -1,9 +1,11 @@
 variable "tf_state_bucket" {
   description = "The name of the S3 bucket to store Terraform state"
+  default= "focus-dev-pacompact-terraform-state"
 }
 
 variable "aws_region" {
   description = "The AWS region where the infrastructure will be deployed"
+  default= "us-east-1"
 }
 
 variable "environment_name" {

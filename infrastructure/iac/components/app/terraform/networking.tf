@@ -1,35 +1,15 @@
-data "aws_availability_zones" "available" {}
-
-resource "aws_subnet" "web_subnets" {
-  count                   = 2
-  vpc_id                  = aws_vpc.vpc.id
-  cidr_block              = cidrsubnet(aws_vpc.vpc.cidr_block, 8, count.index)
-  availability_zone       = data.aws_availability_zones.available.names[count.index]
-  map_public_ip_on_launch = true
-}
-
-resource "aws_route_table_association" "web_associations" {
-  count          = length(aws_subnet.web_subnets)
-  subnet_id      = aws_subnet.web_subnets[count.index].id
-  route_table_id = aws_route_table.web_route_table.id
-}
-
-# Security Group for RDS and ECS
-resource "aws_security_group" "web_sg" {
-  vpc_id = aws_vpc.vpc.id
+# Security Group for the internal Application Load Balancer
+# Only accepts traffic from within the VPC (CloudFront → ALB path stays inside private network)
+resource "aws_security_group" "alb_sg" {
+  description = "${var.environment_name}-${local.application_name}-alb-sg"
+  vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
 
   ingress {
-    from_port   = 5432
-    to_port     = 5432
-    protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]
-  }
-
-  ingress {
+    description = "HTTP from VPC"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [data.terraform_remote_state.network.outputs.vpc_cidr]
   }
 
   egress {
@@ -37,5 +17,91 @@ resource "aws_security_group" "web_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.environment_name}-${local.application_name}-alb-sg"
+  }
+}
+
+# Security Group for ECS Fargate tasks
+# Only accepts traffic on port 8000 from the ALB
+resource "aws_security_group" "ecs_sg" {
+  description = "${var.environment_name}-${local.application_name}-ecs-sg"
+  vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
+
+  ingress {
+    description     = "API port from ALB"
+    from_port       = 8000
+    to_port         = 8000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.environment_name}-${local.application_name}-ecs-sg"
+  }
+}
+
+# Security Group for Aurora RDS
+# Only accepts PostgreSQL traffic from ECS tasks
+resource "aws_security_group" "rds_sg" {
+  description = "${var.environment_name}-${local.application_name}-rds-sg"
+  vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
+
+  ingress {
+    description     = "PostgreSQL from ECS"
+    from_port       = local.db_port
+    to_port         = local.db_port
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ecs_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.environment_name}-${local.application_name}-rds-sg"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Security Group for ElastiCache Redis
+# Only accepts Redis traffic from ECS tasks
+resource "aws_security_group" "redis_sg" {
+  description = "${var.environment_name}-${local.application_name}-redis-sg"
+  vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
+
+  ingress {
+    description     = "Redis from ECS"
+    from_port       = 6379
+    to_port         = 6379
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ecs_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.environment_name}-${local.application_name}-redis-sg"
   }
 }
