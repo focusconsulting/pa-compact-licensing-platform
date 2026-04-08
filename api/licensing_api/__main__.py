@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from typing import Any, cast
 
 import asyncpg
+import redis.asyncio as aioredis
 import uvicorn
 from fastapi import FastAPI
 
@@ -81,8 +82,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     logger.info('Starting up', extra={'settings': settings})
     await asyncio.to_thread(run_migrations)
     app.state.db_pool = await asyncpg.create_pool(settings.db_url)
+    app.state.redis = aioredis.from_url(settings.redis_url, decode_responses=True)
     yield
     await app.state.db_pool.close()
+    await app.state.redis.aclose()
 
 
 app = FastAPI(
