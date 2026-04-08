@@ -6,8 +6,7 @@ import asyncpg
 import redis.asyncio as aioredis
 from fastapi import APIRouter
 
-from licensing_api.config import settings
-from licensing_api.dependencies import DbPool
+from licensing_api.dependencies import DbPool, RedisCli
 from licensing_api.routes.health_schemas import LiveResp, ReadyResp
 
 router = APIRouter(prefix='/health', tags=['health'])
@@ -22,11 +21,9 @@ async def check_postgres(pool: asyncpg.Pool) -> bool:
         return False
 
 
-async def check_redis() -> bool:
+async def check_redis(redis: aioredis.Redis) -> bool:
     try:
-        client = aioredis.from_url(settings.redis_url)
-        await cast(Awaitable[bool], client.ping())
-        await client.aclose()
+        await cast(Awaitable[bool], redis.ping())
         return True
     except Exception:
         return False
@@ -48,6 +45,9 @@ async def live() -> LiveResp:
     description='Check the database and cache are ready to accept requests',
     response_model=ReadyResp,
 )
-async def ready(pool: DbPool) -> ReadyResp:
-    db_ok, cache_ok = await asyncio.gather(check_postgres(pool), check_redis())
+async def ready(pool: DbPool, redis: RedisCli) -> ReadyResp:
+    db_ok, cache_ok = await asyncio.gather(
+        check_postgres(pool),
+        check_redis(redis),
+    )
     return ReadyResp(db=db_ok, cache=cache_ok)
