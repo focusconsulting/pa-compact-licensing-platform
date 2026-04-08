@@ -28,7 +28,7 @@ resource "aws_rds_cluster_parameter_group" "cluster" {
 resource "aws_rds_cluster" "rds_aurora_cluster" {
   cluster_identifier                  = local.cluster_identifier
   engine                              = "aurora-postgresql"
-  engine_version                      = "16.2"
+  engine_version                      = "16.13"
   db_subnet_group_name                = aws_db_subnet_group.rds_subnet_group.name
   database_name                       = local.db_name
   master_username                     = jsondecode(aws_secretsmanager_secret_version.db_credentials_version.secret_string)["username"]
@@ -56,7 +56,7 @@ resource "aws_rds_cluster_instance" "cluster_instances" {
   identifier                   = "${local.cluster_identifier}-instance-${count.index}"
   cluster_identifier           = aws_rds_cluster.rds_aurora_cluster.id
   engine                       = "aurora-postgresql"
-  engine_version               = "16.2"
+  engine_version               = "16.13"
   instance_class               = var.db_instance_class
   performance_insights_enabled = false
 }
