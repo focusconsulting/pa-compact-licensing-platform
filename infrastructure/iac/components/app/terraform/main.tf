@@ -10,12 +10,12 @@ provider "aws" {
 }
 
 terraform {
-  required_version = "1.10.3"
+  required_version = "1.14.8"
 
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "5.49.0"
+      version = "~> 5.0"
 
     }
   }
@@ -23,11 +23,23 @@ terraform {
   backend "s3" {}
 }
 
+# All Focus accounts are setup with a default VPC and this module will use that.
+# The VPC's characteristics (e.g. vpc id, subnet cidrs, ...) can be read from the 
+# terraform state bucket.
+data "terraform_remote_state" "network" {
+  backend = "s3"
+  config = {
+    bucket = var.tf_state_bucket
+    key    = "bootstrap/network/default/terraform.tfstate"
+    region = var.aws_region
+  }
+}
+
 locals {
-  db_name            = "focus"
+  db_name            = "licensing"
   db_master_username = "postgres"
   db_port            = 5432
-  application_name   = "focus"
+  application_name   = "licensing"
   cluster_identifier = "${var.environment_name}-${local.application_name}-rds"
   aurora_engine      = "aurora-postgresql"
 

@@ -1,10 +1,16 @@
-
 # ECS Cluster
 resource "aws_ecs_cluster" "app_cluster" {
   name = "${var.environment_name}-${local.application_name}-ecs-cluster"
 }
 
+# CloudWatch Log Group for API container logs
+resource "aws_cloudwatch_log_group" "api_logs" {
+  name              = "/ecs/${local.application_name}/${var.environment_name}/api"
+  retention_in_days = 30
+}
+
 # IAM Role for ECS
+# task execution role (image pull + log delivery)
 resource "aws_iam_role" "ecs_task_execution_role" {
   name = "${var.environment_name}-${local.application_name}-ecs-task-execution-role"
   assume_role_policy = jsonencode({
@@ -17,6 +23,13 @@ resource "aws_iam_role" "ecs_task_execution_role" {
   })
 }
 
+# Attach AWS-managed policy so ECS can pull from ECR and write to CloudWatch Logs
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+# Allow the execution role to read DB credentials from Secrets Manager
 resource "aws_iam_policy" "ecs_secrets_policy" {
   name        = "${var.environment_name}-ecs-secrets-policy"
   description = "Allow ECS Task to read DB secrets"
@@ -53,13 +66,18 @@ resource "aws_ecs_task_definition" "api_task" {
     essential = true
     portMappings = [
       {
-        containerPort = 80
-        hostPort      = 80
+        containerPort = 8000
+        hostPort      = 8000
         protocol      = "tcp"
       }
     ]
     environment = [
-      { name = "DB_HOST", value = aws_rds_cluster.rds_aurora_cluster.endpoint }
+      { name = "DB_HOST",     value = aws_rds_cluster.rds_aurora_cluster.endpoint },
+      { name = "DB_PORT",     value = tostring(local.db_port) },
+      { name = "DB_NAME",     value = local.db_name },
+      { name = "REDIS_URL",   value = "redis://${aws_elasticache_cluster.redis.cache_nodes[0].address}:6379" },
+      { name = "ENVIRONMENT", value = upper(var.environment_name) },
+      { name = "LOG_LEVEL",   value = "INFO" },
     ]
     secrets = [
       {
@@ -71,16 +89,24 @@ resource "aws_ecs_task_definition" "api_task" {
         valueFrom = "${aws_secretsmanager_secret.db_credentials.arn}:password::"
       }
     ]
+    logConfiguration = {
+      logDriver = "awslogs"
+      options = {
+        "awslogs-group"         = aws_cloudwatch_log_group.api_logs.name
+        "awslogs-region"        = var.aws_region
+        "awslogs-stream-prefix" = "ecs"
+      }
+    }
   }])
 }
 
 # Application Load Balancer (ALB)
 resource "aws_lb" "api_alb" {
   name               = "${var.environment_name}-${local.application_name}-api-alb"
-  internal           = false
+  internal           = true
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.web_sg.id]
-  subnets            = aws_subnet.web_subnets[*].id
+  security_groups    = [aws_security_group.alb_sg.id]
+  subnets            = data.terraform_remote_state.network.outputs.private_subnet_ids
 }
 
 resource "aws_lb_listener" "api_listener" {
@@ -96,9 +122,9 @@ resource "aws_lb_listener" "api_listener" {
 
 resource "aws_lb_target_group" "api_target_group" {
   name        = "${var.environment_name}-${local.application_name}-api-target-group"
-  port        = 80
+  port        = 8000
   protocol    = "HTTP"
-  vpc_id      = aws_vpc.vpc.id
+  vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
   target_type = "ip"
 
   health_check {
@@ -107,7 +133,7 @@ resource "aws_lb_target_group" "api_target_group" {
     protocol            = "HTTP"
     matcher             = "200"        # Look for HTTP 200 responses
     timeout             = 3            # Timeout after 3 seconds
-    path                = "/v1/status" # Health check endpoint
+    path                = "/health/ready" # Health check endpoint
     unhealthy_threshold = 2            # Mark unhealthy after 2 failed checks
   }
 }
@@ -120,14 +146,15 @@ resource "aws_ecs_service" "api_service" {
   launch_type     = "FARGATE"                                                       # Use Fargate for serverless compute
 
   network_configuration {
-    subnets         = aws_subnet.web_subnets[*].id   # Deploy tasks in public subnets
-    security_groups = [aws_security_group.web_sg.id] # Attach security group
+    subnets          = data.terraform_remote_state.network.outputs.private_subnet_ids
+    security_groups  = [aws_security_group.ecs_sg.id]
+    assign_public_ip = false
   }
 
   load_balancer {
     target_group_arn = aws_lb_target_group.api_target_group.arn # Forward traffic to the target group
     container_name   = "${local.application_name}-api"
-    container_port   = 80
+    container_port   = 8000
   }
 
   desired_count = 1 # Number of tasks to run
