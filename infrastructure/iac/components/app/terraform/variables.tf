@@ -17,7 +17,7 @@ variable "environment_name" {
 variable "db_instance_class" {
   description = "Aurora RDS instance class (must be Aurora-compatible, e.g. db.t3.medium)"
   type        = string
-  default     = "db.t3.medium"
+  default     = "db.t4g.medium"
 }
 
 variable "instance_count" {

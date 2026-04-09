@@ -5,7 +5,7 @@ tf_state_bucket  = "focus-dev-pacompact-terraform-state"
 # Database
 db_username = "licensing"
 db_password = "password"
-db_instance_class       = "db.t3.medium"
+db_instance_class       = "db.t4g.medium"
 backup_retention_period = 1
 
 # ECS — ECR image URI, e.g. 123456789012.dkr.ecr.us-east-1.amazonaws.com/licensing-api
