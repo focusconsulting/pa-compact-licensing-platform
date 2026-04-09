@@ -106,3 +106,5 @@ just --list
 | [asgi-lifespan](https://github.com/florimondmanca/asgi-lifespan)                  | ASGI lifespan for tests         | https://github.com/florimondmanca/asgi-lifespan               |
 | [ruff](https://docs.astral.sh/ruff/)                                              | Linter and formatter            | https://docs.astral.sh/ruff/                                 |
 | [pyright](https://microsoft.github.io/pyright/)                                   | Static type checker             | https://microsoft.github.io/pyright/                         |
+
+<!-- Thu Apr  9 12:31:29 EDT 2026 -->
