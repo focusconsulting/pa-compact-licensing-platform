@@ -10,3 +10,8 @@
 
 # Beads / Dolt files (added by bd init)
 .beads-credential-key
+
+# Terraform files to ignore
+.terraform.lock.hcl
+.terraform
+

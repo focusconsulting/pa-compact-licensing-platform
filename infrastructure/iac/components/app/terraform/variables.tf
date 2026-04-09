@@ -1,5 +1,7 @@
 variable "tf_state_bucket" {
   description = "state bucket"
+  type        = string
+  default     = "focus-dev-pacompact-terraform-state"
 }
 
 variable "aws_region" {
@@ -13,69 +15,41 @@ variable "environment_name" {
 }
 
 variable "db_instance_class" {
-  description = "RDS instance class"
+  description = "Aurora RDS instance class (must be Aurora-compatible, e.g. db.t3.medium)"
   type        = string
-  default     = "db.t3.micro"
+  default     = "db.t4g.medium"
 }
 
 variable "instance_count" {
-  default     = 1
+  description = "Number of Aurora cluster instances to create"
   type        = number
-  description = "Number of Aurora instances to create"
+  default     = 1
 }
 
-variable "allocated_storage" {
-  description = "RDS allocated storage GB"
-  type        = string
-  default     = "20"
-}
 variable "backup_retention_period" {
-  description = "RDS backup retention period"
-  type        = string
+  description = "RDS backup retention period in days"
+  type        = number
   default     = 30
 }
 
-variable "security_group_ids" {
-  description = "Security Group IDs to allow access"
-  type        = list(string)
-  default     = []
-}
-
-variable "naming_prefix" {
-  description = "The prefix for the RDS Aurora cluster name"
-  type        = string
-  default     = "dos-mvp"
-}
-
-variable "vpc_id" {
-  description = "The ID of the VPC"
-  type        = string
-  default     = null
-}
-
-variable "subnet_ids" {
-  description = "List of subnet IDs for the RDS instance"
-  type        = list(string)
-  default     = null
-}
-
-variable "cluster_security_group_id" {
-  description = "The ID of the EKS cluster security group"
-  type        = string
-  default     = null
-}
 variable "db_username" {
   type        = string
-  description = "Database username"
+  description = "Database master username"
 }
 
 variable "db_password" {
   type        = string
-  description = "Database password"
+  description = "Database master password"
   sensitive   = true
 }
 
 variable "repo_name" {
   type        = string
-  description = "Repo for ECS service"
+  description = "ECR repository URI for the API container image"
+}
+
+variable "acm_certificate_arn" {
+  type        = string
+  description = "ACM certificate ARN for HTTPS on the ALB listener (optional; HTTP-only if not set)"
+  default     = null
 }
