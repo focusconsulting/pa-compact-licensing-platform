@@ -107,4 +107,6 @@ just --list
 | [ruff](https://docs.astral.sh/ruff/)                                              | Linter and formatter            | https://docs.astral.sh/ruff/                                 |
 | [pyright](https://microsoft.github.io/pyright/)                                   | Static type checker             | https://microsoft.github.io/pyright/                         |
 
-<!-- Thu Apr  9 12:31:29 EDT 2026 -->
+<!--
+Thu Apr  9 12:39:41 EDT 2026
+-->
