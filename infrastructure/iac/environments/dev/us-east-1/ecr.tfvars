@@ -5,6 +5,6 @@ repositories = [
   {
     name                 = "pacompact-app-dev"
     image_tag_mutability = "MUTABLE"
-    scan_on_push         = false
+    scan_on_push         = true
   }
 ]

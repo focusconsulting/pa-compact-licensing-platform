@@ -17,6 +17,6 @@ variable "repositories" {
   type = list(object({
     name                 = string
     image_tag_mutability = string
-    scan_on_push         = bool
+    scan_on_push         = bool  # Optional, defaults to true if not provided
   }))
 }
