@@ -6,6 +6,7 @@ on:
     paths: [client/**]
   pull_request:
     paths: [client/**]
+  workflow_dispatch:
 
 defaults:
   run:
@@ -56,3 +57,51 @@ jobs:
 
       - name: Run tests
         run: pnpm test
+
+  deploy:
+    name: Deploy to DEV
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    permissions:
+      id-token: write
+      contents: read
+    defaults:
+      run:
+        working-directory: .
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: client/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: client/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: client
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        working-directory: client
+        run: pnpm build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Deploy to S3
+        run: aws s3 sync client/out/ s3://${{ vars.CLIENT_S3_BUCKET }}/ --delete
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"

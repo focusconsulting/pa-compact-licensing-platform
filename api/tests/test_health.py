@@ -14,13 +14,13 @@ def client():
 
 
 def test_live_returns_200(client):
-    response = client.get('/health/live')
+    response = client.get('/api/health/live')
     assert response.status_code == 200
     assert LiveResp.model_validate(response.json()) == LiveResp(status='ok')
 
 
 def test_ready_all_healthy(client):
-    response = client.get('/health/ready')
+    response = client.get('/api/health/ready')
     assert response.status_code == 200
     assert ReadyResp.model_validate(response.json()) == ReadyResp(db=True, cache=True)
 
@@ -38,7 +38,7 @@ def test_ready_db_down(client):
             return_value=True,
         ),
     ):
-        response = client.get('/health/ready')
+        response = client.get('/api/health/ready')
         assert response.status_code == 200
         assert ReadyResp.model_validate(response.json()) == ReadyResp(db=False, cache=True)
 
@@ -56,7 +56,7 @@ def test_ready_cache_down(client):
             return_value=False,
         ),
     ):
-        response = client.get('/health/ready')
+        response = client.get('/api/health/ready')
         assert response.status_code == 200
         assert ReadyResp.model_validate(response.json()) == ReadyResp(db=True, cache=False)
 
@@ -74,6 +74,6 @@ def test_ready_all_down(client):
             return_value=False,
         ),
     ):
-        response = client.get('/health/ready')
+        response = client.get('/api/health/ready')
         assert response.status_code == 200
         assert ReadyResp.model_validate(response.json()) == ReadyResp(db=False, cache=False)

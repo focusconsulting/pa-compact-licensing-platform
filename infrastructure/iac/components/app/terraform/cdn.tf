@@ -1,3 +1,34 @@
+# CloudFront Function that returns 403 — used to block paths at the CDN edge
+# before requests reach the VPC. Runs on viewer-request so no origin is contacted.
+resource "aws_cloudfront_function" "block_403" {
+  name    = "${var.environment_name}-${local.application_name}-block-403"
+  runtime = "cloudfront-js-2.0"
+  publish = true
+  code    = <<-EOF
+    function handler(event) {
+      return { statusCode: 403, statusDescription: "Forbidden" };
+    }
+  EOF
+}
+
+# CloudFront VPC Origin — wraps the internal ALB so CloudFront can reach it
+# without making the ALB internet-facing. CloudFront injects ENIs into the VPC;
+# traffic arrives from within the VPC CIDR, which the ALB SG already allows.
+resource "aws_cloudfront_vpc_origin" "alb_origin" {
+  vpc_origin_endpoint_config {
+    name                   = "${var.environment_name}-${local.application_name}-alb-origin"
+    arn                    = aws_lb.api_alb.arn
+    http_port              = 80
+    https_port             = 443
+    origin_protocol_policy = "http-only"
+
+    origin_ssl_protocols {
+      items    = ["TLSv1.2"]
+      quantity = 1
+    }
+  }
+}
+
 # S3 Bucket for Front-End Client Assets
 resource "aws_s3_bucket" "client_assets" {
   bucket = "${var.environment_name}-${local.application_name}-client-assets"
@@ -49,16 +80,17 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
     }
   }
 
-  # Internal ALB origin for API requests
+  # Internal ALB origin for API requests via CloudFront VPC Origin.
+  # VPC Origins allow CloudFront to reach private ALBs without making them internet-facing —
+  # CloudFront injects ENIs into the VPC so traffic arrives from within the VPC CIDR.
   origin {
     domain_name = aws_lb.api_alb.dns_name
     origin_id   = "ALB-Origin"
 
-    custom_origin_config {
-      http_port              = 80
-      https_port             = 443
-      origin_protocol_policy = "http-only"
-      origin_ssl_protocols   = ["TLSv1.2"]
+    vpc_origin_config {
+      vpc_origin_id            = aws_cloudfront_vpc_origin.alb_origin.id
+      origin_read_timeout      = 30
+      origin_keepalive_timeout = 5
     }
   }
 
@@ -77,6 +109,62 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
       cookies {
         forward = "none"
       }
+    }
+  }
+
+  # Block Swagger/OpenAPI docs at the CDN edge — 403 returned before origin is contacted.
+  # Matches /api/docs*, /api/redoc*, /api/openapi.json as forwarded by CloudFront.
+  ordered_cache_behavior {
+    path_pattern           = "/api/docs*"
+    target_origin_id       = "ALB-Origin"
+    viewer_protocol_policy = "redirect-to-https"
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+
+    forwarded_values {
+      query_string = false
+      cookies { forward = "none" }
+    }
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.block_403.arn
+    }
+  }
+
+  ordered_cache_behavior {
+    path_pattern           = "/api/redoc*"
+    target_origin_id       = "ALB-Origin"
+    viewer_protocol_policy = "redirect-to-https"
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+
+    forwarded_values {
+      query_string = false
+      cookies { forward = "none" }
+    }
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.block_403.arn
+    }
+  }
+
+  ordered_cache_behavior {
+    path_pattern           = "/api/openapi.json"
+    target_origin_id       = "ALB-Origin"
+    viewer_protocol_policy = "redirect-to-https"
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+
+    forwarded_values {
+      query_string = false
+      cookies { forward = "none" }
+    }
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.block_403.arn
     }
   }
 

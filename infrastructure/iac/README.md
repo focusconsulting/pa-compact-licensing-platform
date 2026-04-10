@@ -1,4 +1,13 @@
-This is the terraform code for standing up the PA Compact in AWS.  First it creates an ECR repository for the build pipeline to publish the packages.  Then it stands up the whole application, front end, backend and database.
+# PA Compact infrastructure
+
+This is the terraform code for standing up the PA Compact in AWS.
+
+## Pre-requesite
+
+Your terminal AWS client must be authenticated to the account associated with
+the environment you will be working with.
+
+## Viewing and Applying Terraform
 
 Until a pipeline has been created to run this, use the interactive helper script:
 
@@ -14,3 +23,23 @@ Run it from anywhere. It will:
 5. Offer to run the plan immediately
 
 To make changes, substitute `plan` → `apply` in the printed command and run it from the same directory.
+
+## Viewing details
+
+To see details such as:
+- alb_dns_name
+- client_assets_bucket
+- cloudfront_distribution_id
+- cloudfront_domain_name
+- cloudwatch_log_group
+- ecs_cluster_name
+- rds_endpoint
+- rds_reader_endpoint
+- redis_endpoint
+
+Execute `terraform output` in the appropriate component directory. For example:
+
+```
+cd /infrastructure/iac/components/[app|ecr]/terraform
+terraform output
+```

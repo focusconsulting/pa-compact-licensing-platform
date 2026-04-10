@@ -172,18 +172,12 @@ def main() -> None:
         print("❌ No environments found under iac/environments/")
         sys.exit(1)
 
-    env_cfg = (
-        envs[0]
-        if len(envs) == 1
-        else select(
-            "Select an environment:",
-            envs,
-            display_fn=lambda e: f"{e['env']}/{e['region']}",
-        )
+    env_cfg = select(
+        "Select an environment:",
+        envs,
+        display_fn=lambda e: f"{e['env']}/{e['region']}",
     )
     config_dir: Path = env_cfg["config_dir"]
-    if len(envs) == 1:
-        print(f"✔ Environment: {env_cfg['env']}/{env_cfg['region']}")
 
     backend_config = config_dir / f"{comp_name}.backend.hcl"
     tfvars = config_dir / f"{comp_name}.tfvars"

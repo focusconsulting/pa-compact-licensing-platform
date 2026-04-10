@@ -26,6 +26,12 @@ terraform {
 # All Focus accounts are setup with a default VPC and this module will use that.
 # The VPC's characteristics (e.g. vpc id, subnet cidrs, ...) can be read from the 
 # terraform state bucket.
+# CloudFront VPC Origins creates and manages this security group in the account.
+# It must be referenced (not the VPC CIDR) in the ALB SG to allow VPC Origin traffic.
+data "aws_security_group" "cloudfront_vpc_origin" {
+  name = "CloudFront-VPCOrigins-Service-SG"
+}
+
 data "terraform_remote_state" "network" {
   backend = "s3"
   config = {

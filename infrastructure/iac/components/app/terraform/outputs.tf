@@ -3,6 +3,11 @@ output "cloudfront_domain_name" {
   value       = aws_cloudfront_distribution.frontend_distribution.domain_name
 }
 
+output "cloudfront_distribution_id" {
+  description = "CloudFront distribution ID — used for cache invalidation in the client deploy workflow (CLOUDFRONT_DISTRIBUTION_ID GitHub variable)"
+  value       = aws_cloudfront_distribution.frontend_distribution.id
+}
+
 output "alb_dns_name" {
   description = "Internal ALB DNS name (accessible only from within the VPC)"
   value       = aws_lb.api_alb.dns_name
