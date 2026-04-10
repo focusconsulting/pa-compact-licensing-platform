@@ -53,3 +53,9 @@ variable "acm_certificate_arn" {
   description = "ACM certificate ARN for HTTPS on the ALB listener (optional; HTTP-only if not set)"
   default     = null
 }
+
+variable "jumpbox_sg_id" {
+  type        = string
+  description = "Security group ID of the EC2 jumpbox. When set, allows SSM port-forward tunnels from the jumpbox to reach ECS tasks on port 8000."
+  default     = null
+}
