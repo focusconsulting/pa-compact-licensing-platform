@@ -11,11 +11,11 @@ from typing import Any, cast
 import asyncpg
 import redis.asyncio as aioredis
 import uvicorn
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
 
 from licensing_api.config import settings
 from licensing_api.migrations import run_migrations
-from licensing_api.routes.health import router
+from licensing_api.routes import health
 
 _SENSITIVE_PATTERN = re.compile(r'password|token|secret', re.IGNORECASE)
 _MASK = '****'
@@ -95,7 +95,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.include_router(router)
+api_router = APIRouter(prefix='/api')
+# If we decide to exclude /health routes from /api, that is make them private,
+# include the health.router directly to app. Then update the paths in
+# infrastructure/iac/components/app/terraform/ecs.tf
+api_router.include_router(health.router)
+app.include_router(api_router)
 
 if __name__ == '__main__':
     uvicorn.run(

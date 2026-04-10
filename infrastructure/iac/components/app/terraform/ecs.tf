@@ -89,6 +89,17 @@ resource "aws_ecs_task_definition" "api_task" {
         valueFrom = "${aws_secretsmanager_secret.db_credentials.arn}:password::"
       }
     ]
+    healthCheck = {
+      # Use /live (not /ready) — liveness checks whether the process is alive,
+      # not whether dependencies are reachable. Using /ready here causes ECS to
+      # kill and restart tasks whenever DB/Redis is slow, creating restart loops
+      # and slow deployments. The ALB /ready check gates traffic separately.
+      command     = ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health/live')\""]
+      interval    = 30
+      timeout     = 5
+      retries     = 3
+      startPeriod = 60
+    }
     logConfiguration = {
       logDriver = "awslogs"
       options = {
@@ -133,7 +144,7 @@ resource "aws_lb_target_group" "api_target_group" {
     protocol            = "HTTP"
     matcher             = "200"        # Look for HTTP 200 responses
     timeout             = 3            # Timeout after 3 seconds
-    path                = "/health/ready" # Health check endpoint
+    path                = "/api/health/ready" # Health check endpoint
     unhealthy_threshold = 2            # Mark unhealthy after 2 failed checks
   }
 }
@@ -158,4 +169,12 @@ resource "aws_ecs_service" "api_service" {
   }
 
   desired_count = 1 # Number of tasks to run
+
+  lifecycle {
+    # CI/CD deploys new task definition revisions (new image tags) independently of terraform.
+    # Without this, every `terraform apply` would revert the service to the revision terraform
+    # last created, undoing CI deployments. Terraform still manages the task definition config
+    # (env vars, health check, etc.) — it just doesn't pin the service to a specific revision.
+    ignore_changes = [task_definition]
+  }
 }

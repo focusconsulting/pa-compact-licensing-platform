@@ -1,15 +1,18 @@
 # Security Group for the internal Application Load Balancer
-# Only accepts traffic from within the VPC (CloudFront → ALB path stays inside private network)
+# CloudFront VPC Origin traffic arrives through the CloudFront-managed service SG
+# (CloudFront-VPCOrigins-Service-SG). That SG must be referenced explicitly here —
+# allowing the VPC CIDR is not sufficient because VPC Origin traffic is matched
+# by SG membership, not source IP.
 resource "aws_security_group" "alb_sg" {
   description = "${var.environment_name}-${local.application_name}-alb-sg"
   vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
 
   ingress {
-    description = "HTTP from VPC"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = [data.terraform_remote_state.network.outputs.vpc_cidr]
+    description     = "HTTP from CloudFront VPC Origin"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [data.aws_security_group.cloudfront_vpc_origin.id]
   }
 
   egress {
