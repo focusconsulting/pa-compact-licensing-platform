@@ -4,7 +4,7 @@
 .dolt/
 *.db
 
-.env
+.env*
 .idea/
 .claude/settings.local.json
 
