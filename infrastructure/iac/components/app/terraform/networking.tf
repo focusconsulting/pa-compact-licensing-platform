@@ -38,6 +38,17 @@ resource "aws_security_group" "ecs_sg" {
     security_groups = [aws_security_group.alb_sg.id]
   }
 
+  dynamic "ingress" {
+    for_each = var.jumpbox_sg_id != null ? [1] : []
+    content {
+      description     = "All ports from jumpbox (SSM tunnel)"
+      from_port       = 0
+      to_port         = 0
+      protocol        = "-1"
+      security_groups = [var.jumpbox_sg_id]
+    }
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -62,6 +73,17 @@ resource "aws_security_group" "rds_sg" {
     to_port         = local.db_port
     protocol        = "tcp"
     security_groups = [aws_security_group.ecs_sg.id]
+  }
+
+  dynamic "ingress" {
+    for_each = var.jumpbox_sg_id != null ? [1] : []
+    content {
+      description     = "PostgreSQL from jumpbox (SSM tunnel)"
+      from_port       = local.db_port
+      to_port         = local.db_port
+      protocol        = "tcp"
+      security_groups = [var.jumpbox_sg_id]
+    }
   }
 
   egress {
@@ -92,6 +114,17 @@ resource "aws_security_group" "redis_sg" {
     to_port         = 6379
     protocol        = "tcp"
     security_groups = [aws_security_group.ecs_sg.id]
+  }
+
+  dynamic "ingress" {
+    for_each = var.jumpbox_sg_id != null ? [1] : []
+    content {
+      description     = "Redis from jumpbox (SSM tunnel)"
+      from_port       = 6379
+      to_port         = 6379
+      protocol        = "tcp"
+      security_groups = [var.jumpbox_sg_id]
+    }
   }
 
   egress {
