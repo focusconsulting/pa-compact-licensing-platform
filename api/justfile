@@ -18,9 +18,9 @@ infra: infra-down
 infra-down:
     docker compose -p pa-compact down -v
 
-# Run the API with hot reload (starts infra automatically)
-dev:
-    uv run uvicorn licensing_api.__main__:app --reload --env-file .env
+# Run the API with hot reload. Override env file with: just dev env-file=.env.dev
+dev env-file=".env":
+    uv run uvicorn licensing_api.__main__:app --reload --env-file {{ env-file }}
 
 # Run tests (pass additional args with: just test -k test_name)
 test *args:
