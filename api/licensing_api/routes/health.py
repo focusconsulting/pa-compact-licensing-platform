@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from collections.abc import Awaitable
 from typing import cast
 
@@ -9,6 +10,8 @@ from fastapi import APIRouter
 from licensing_api.dependencies import DbPool, RedisCli
 from licensing_api.routes.health_schemas import LiveResp, ReadyResp
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix='/health', tags=['health'])
 
 
@@ -18,6 +21,7 @@ async def check_postgres(pool: asyncpg.Pool) -> bool:
             await conn.execute('SELECT 1')
         return True
     except Exception:
+        logger.error('Postgres health check failed', exc_info=True)
         return False
 
 
@@ -26,6 +30,7 @@ async def check_redis(redis: aioredis.Redis) -> bool:
         await cast(Awaitable[bool], redis.ping())
         return True
     except Exception:
+        logger.error('Redis health check failed', exc_info=True)
         return False
 
 
