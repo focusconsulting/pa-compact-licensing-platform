@@ -13,3 +13,7 @@ repo_name = "126942145463.dkr.ecr.us-east-1.amazonaws.com/pacompact-app-dev"
 
 # Optional: supply an ACM certificate ARN to enable HTTPS on the ALB listener
 # acm_certificate_arn = "arn:aws:acm:REGION:ACCOUNT_ID:certificate/CERTIFICATE_ID"
+
+# Slack alerting via AWS Chatbot — authorize workspace in Chatbot console first, then fill in IDs
+# slack_team_id  = "TXXXXXXXXX"
+# slack_channel_id = "CXXXXXXXXX"
