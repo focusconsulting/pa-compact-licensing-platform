@@ -5,8 +5,9 @@
 Please make sure you have followed the setup instructions in the [root](../README.md#developer-setup)
 
 1. Run `npm install`
-2. Run `npm run dev`
-3. Verify that http://localhost:3000 loads
+1. Copy and override secrets `cp .env.{example,local} && vi .env.local`
+1. Run `npm run dev`
+1. Verify that http://localhost:3000 loads
 
 ## Storybook
 

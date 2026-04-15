@@ -48,9 +48,12 @@ resource "aws_iam_policy" "ecs_secrets_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = "secretsmanager:GetSecretValue"
-        Resource = aws_secretsmanager_secret.db_credentials.arn
+        Effect = "Allow"
+        Action = "secretsmanager:GetSecretValue"
+        Resource = [
+          aws_secretsmanager_secret.db_credentials.arn,
+          aws_secretsmanager_secret.cognito_config.arn,
+        ]
       },
       {
         Effect   = "Allow"
@@ -167,7 +170,19 @@ resource "aws_ecs_task_definition" "api_task" {
         {
           name      = "DB_PASSWORD"
           valueFrom = "${aws_secretsmanager_secret.db_credentials.arn}:password::"
-        }
+        },
+        {
+          name      = "COGNITO_USER_POOL_ID"
+          valueFrom = "${aws_secretsmanager_secret.cognito_config.arn}:user_pool_id::"
+        },
+        {
+          name      = "COGNITO_CLIENT_ID"
+          valueFrom = "${aws_secretsmanager_secret.cognito_config.arn}:client_id::"
+        },
+        {
+          name      = "COGNITO_REGION"
+          valueFrom = "${aws_secretsmanager_secret.cognito_config.arn}:region::"
+        },
       ]
       healthCheck = {
         # Use /live (not /ready) — liveness checks whether the process is alive,

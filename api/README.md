@@ -104,6 +104,8 @@ just --list
 | [opentelemetry-instrumentation-fastapi](https://opentelemetry-python-contrib.readthedocs.io/) | Auto-instrument FastAPI requests | https://opentelemetry-python-contrib.readthedocs.io/ |
 | [opentelemetry-instrumentation-asyncpg](https://opentelemetry-python-contrib.readthedocs.io/) | Auto-instrument asyncpg queries  | https://opentelemetry-python-contrib.readthedocs.io/ |
 | [opentelemetry-exporter-otlp-proto-grpc](https://opentelemetry-python.readthedocs.io/) | Export traces/metrics to ADOT sidecar via gRPC | https://opentelemetry-python.readthedocs.io/ |
+| [python-jose[cryptography]](https://python-jose.readthedocs.io/en/latest/)        | JWT validation (Cognito ID tokens) | https://python-jose.readthedocs.io/en/latest/             |
+| [httpx](https://www.python-httpx.org/)                                            | HTTP client (JWKS fetching)     | https://www.python-httpx.org/                                |
 | [uv](https://docs.astral.sh/uv/)                                                  | Dependency management           | https://docs.astral.sh/uv/                                   |
 | [pytest](https://docs.pytest.org/en/9.0.x/)                                       | Test framework                  | https://docs.pytest.org/en/9.0.x/                            |
 | [pytest-asyncio](https://pytest-asyncio.readthedocs.io/en/stable/)                | Async test support              | https://pytest-asyncio.readthedocs.io/en/stable/             |

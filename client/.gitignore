@@ -28,6 +28,9 @@ yarn-error.log*
 # local env files
 .env*.local
 
+# uswds assets (copied from node_modules by postinstall)
+/public/uswds/
+
 # vercel
 .vercel
 

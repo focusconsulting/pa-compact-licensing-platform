@@ -11,13 +11,21 @@ from typing import Any, cast
 import asyncpg
 import redis.asyncio as aioredis
 import uvicorn
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, FastAPI, HTTPException
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 
 from licensing_api.config import settings
+from licensing_api.errors import (
+    AppError,
+    app_error_handler,
+    http_exception_handler,
+    validation_error_handler,
+)
 from licensing_api.migrations import run_migrations
-from licensing_api.routes import health
+from licensing_api.routes import health, user
 
-_SENSITIVE_PATTERN = re.compile(r'password|token|secret', re.IGNORECASE)
+_SENSITIVE_PATTERN = re.compile(r'password|token|secret|cognito', re.IGNORECASE)
 _MASK = '****'
 _LOG_RECORD_KEYS = frozenset(logging.LogRecord('', 0, '', 0, '', (), None).__dict__.keys())
 
@@ -140,11 +148,24 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
+)
+
+app.add_exception_handler(AppError, app_error_handler)  # type: ignore[arg-type]
+app.add_exception_handler(HTTPException, http_exception_handler)  # type: ignore[arg-type]
+app.add_exception_handler(RequestValidationError, validation_error_handler)  # type: ignore[arg-type]
+
 api_router = APIRouter(prefix='/api')
 # If we decide to exclude /health routes from /api, that is make them private,
 # include the health.router directly to app. Then update the paths in
 # infrastructure/iac/components/app/terraform/ecs.tf
 api_router.include_router(health.router)
+api_router.include_router(user.router)
 app.include_router(api_router)
 
 if settings.otel_enabled:
