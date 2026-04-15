@@ -1,6 +1,7 @@
 aws_region       = "us-east-1"
 environment_name = "dev"
 tf_state_bucket  = "focus-dev-pacompact-terraform-state"
+dns_name        = "site.dev-pacompact.aws.focusconsulting.io"
 
 # Database
 db_username = "licensing"
