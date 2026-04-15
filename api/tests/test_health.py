@@ -1,16 +1,6 @@
 from unittest.mock import AsyncMock, patch
 
-import pytest
-from fastapi.testclient import TestClient
-
-from licensing_api.__main__ import app
 from licensing_api.routes.health_schemas import LiveResp, ReadyResp
-
-
-@pytest.fixture(scope='module')
-def client():
-    with TestClient(app) as c:
-        yield c
 
 
 def test_live_returns_200(client):

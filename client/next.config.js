@@ -11,14 +11,29 @@ const sassOptions = require("./scripts/sassOptions");
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH;
 const appSassOptions = sassOptions(basePath);
 
+const isDev = process.env.NODE_ENV !== "production";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   basePath,
   reactStrictMode: true,
-  // Output only the necessary files for a deployment, excluding irrelevant node_modules
+  // Static export for production (S3/CloudFront). Omitted in dev so that rewrites work.
   // https://nextjs.org/docs/app/api-reference/next-config-js/output
-  output: "export",
+  ...(isDev ? {} : { output: "export" }),
   sassOptions: appSassOptions,
+  // Proxy /api/* to the local FastAPI server during development.
+  // In production the browser calls NEXT_PUBLIC_API_BASE_URL directly.
+  async rewrites() {
+    if (!isDev) return [];
+    const apiBase =
+      process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${apiBase}/api/:path*`,
+      },
+    ];
+  },
   // Continue to support older browsers (ES5)
   transpilePackages: [
     // https://github.com/trussworks/react-uswds/issues/2605

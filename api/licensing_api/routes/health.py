@@ -1,13 +1,13 @@
 import asyncio
 import logging
 from collections.abc import Awaitable
-from typing import cast
+from typing import Annotated, cast
 
 import asyncpg
 import redis.asyncio as aioredis
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
-from licensing_api.dependencies import DbPool, RedisCli
+from licensing_api.dependencies import get_db_pool, get_redis
 from licensing_api.routes.health_schemas import LiveResp, ReadyResp
 
 logger = logging.getLogger(__name__)
@@ -38,7 +38,6 @@ async def check_redis(redis: aioredis.Redis) -> bool:
     path='/live',
     name='Liveness check',
     description='Check whether the application is ready to receive requests',
-    response_model=LiveResp,
 )
 async def live() -> LiveResp:
     return LiveResp(status='ok')
@@ -48,9 +47,11 @@ async def live() -> LiveResp:
     path='/ready',
     name='Ready check',
     description='Check the database and cache are ready to accept requests',
-    response_model=ReadyResp,
 )
-async def ready(pool: DbPool, redis: RedisCli) -> ReadyResp:
+async def ready(
+    pool: Annotated[asyncpg.Pool, Depends(get_db_pool)],
+    redis: Annotated[aioredis.Redis, Depends(get_redis)],
+) -> ReadyResp:
     db_ok, cache_ok = await asyncio.gather(
         check_postgres(pool),
         check_redis(redis),
