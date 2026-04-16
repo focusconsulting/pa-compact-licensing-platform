@@ -72,6 +72,15 @@ jobs:
         run: |
           uv run --env-file .env.example coverage run --branch --source=licensing_api -m pytest
           uv run coverage report
+          uv run coverage xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: api
+          files: api/coverage.xml
+          fail_ci_if_error: true
 
   deploy:
     name: Deploy to DEV
