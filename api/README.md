@@ -112,5 +112,5 @@ just --list
 | [pyright](https://microsoft.github.io/pyright/)                                   | Static type checker             | https://microsoft.github.io/pyright/                         |
 
 <!--
-Thu Apr  9 13:54:26 EDT 2026
+Thu Apr 16 14:18:03 EDT 2026
 -->
