@@ -8,12 +8,12 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from typing import Any, cast
 
-import asyncpg
 import redis.asyncio as aioredis
 import uvicorn
 from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from licensing_api.config import settings
 from licensing_api.errors import (
@@ -131,10 +131,14 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     logger.info('Starting up', extra={'settings': settings})
     await asyncio.to_thread(run_migrations)
-    app.state.db_pool = await asyncpg.create_pool(settings.db_url)
+
+    engine = create_async_engine(settings.db_url, pool_pre_ping=True)
+    app.state.session_factory = async_sessionmaker(engine, expire_on_commit=False)
+    app.state.db_engine = engine
+
     app.state.redis = aioredis.from_url(settings.redis_url, decode_responses=True)
     yield
-    await app.state.db_pool.close()
+    await engine.dispose()
     await app.state.redis.aclose()
 
 
