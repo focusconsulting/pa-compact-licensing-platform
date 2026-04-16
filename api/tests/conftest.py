@@ -1,4 +1,5 @@
 import base64
+import uuid
 from collections.abc import Callable
 from unittest.mock import patch
 
@@ -63,7 +64,7 @@ def auth_header(_private_key) -> Callable[[str], dict]:
     def _make(email: str) -> dict:
         token = jose_jwt.encode(
             {
-                'sub': '00000000-0000-0000-0000-000000000001',
+                'sub': str(uuid.uuid5(uuid.NAMESPACE_URL, email)),
                 'email': email,
                 'token_use': 'id',
                 'aud': _TEST_CLIENT_ID,
