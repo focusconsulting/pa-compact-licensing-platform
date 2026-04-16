@@ -15,7 +15,7 @@ _LOCAL_DEV_ONLY_PREFIX = '30000101'
 
 def run_migrations() -> None:
     logger.info('Running database migrations (environment=%s)', settings.environment)
-    backend = yoyo.get_backend(settings.db_url)
+    backend = yoyo.get_backend(settings.sync_db_url)
     all_migrations = yoyo.read_migrations(str(_MIGRATIONS_DIR))
 
     # locked so only one pod can attempt to run the migrations at a time

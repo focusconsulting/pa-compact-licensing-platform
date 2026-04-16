@@ -96,6 +96,7 @@ just --list
 | [Uvicorn](https://www.uvicorn.org/)                                               | ASGI server (development)       | https://www.uvicorn.org/                                     |
 | [Gunicorn](https://gunicorn.org/)                                                 | WSGI/ASGI server (production)   | https://docs.gunicorn.org/                                   |
 | [asyncpg](https://magicstack.github.io/asyncpg/current/)                          | Async PostgreSQL client         | https://magicstack.github.io/asyncpg/current/                |
+| [SQLModel](https://sqlmodel.tiangolo.com/)                                           | Async ORM (SQLAlchemy + Pydantic) | https://sqlmodel.tiangolo.com/                                |\n| [greenlet](https://greenlet.readthedocs.io/)                                          | Required for SQLAlchemy async engine | https://greenlet.readthedocs.io/                               |
 | [redis-py](https://redis.readthedocs.io/en/stable/)                               | Redis client (async)            | https://redis.readthedocs.io/en/stable/                      |
 | [pydantic-settings](https://docs.pydantic.dev/latest/concepts/pydantic_settings/) | Environment-based configuration | https://docs.pydantic.dev/latest/concepts/pydantic_settings/ |
 | [yoyo-migrations](https://ollycope.com/software/yoyo/)                            | Database migrations             | https://ollycope.com/software/yoyo/                          |

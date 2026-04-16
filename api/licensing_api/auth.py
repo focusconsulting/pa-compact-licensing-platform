@@ -2,18 +2,20 @@ from __future__ import annotations
 
 import logging
 from functools import lru_cache
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import UUID
 
-import asyncpg
 import httpx
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from licensing_api.config import Settings, get_settings
+from licensing_api.dependencies import get_db_session
 from licensing_api.errors import AppError, ErrorCode
+from licensing_api.repo.user import get_user_by_email
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +23,8 @@ _bearer = HTTPBearer()
 
 
 class CurrentUser(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     email: str
     public_id: UUID | None
@@ -31,7 +35,7 @@ class CurrentUser(BaseModel):
     is_active: bool
 
 
-def _get_db_pool(request: Request) -> asyncpg.Pool:
+def _get_db_pool(request: Request) -> Any:
     return request.app.state.db_pool
 
 
@@ -76,33 +80,16 @@ def _verify_token(token: str, settings: Settings) -> dict:
 async def get_current_user(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer)],
     settings: Annotated[Settings, Depends(get_settings)],
-    db: Annotated[asyncpg.Pool, Depends(_get_db_pool)],
+    session: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> CurrentUser:
     """Verify the Bearer token and return the authenticated user from the database."""
     claims = _verify_token(credentials.credentials, settings)
     email: str = claims['email']
 
-    row = await db.fetchrow(
-        """
-        SELECT id, email, public_id, given_name, family_name,
-               role, state_code, is_active
-        FROM users
-        WHERE email = $1
-        """,
-        email,
-    )
-    if row is None:
+    user = await get_user_by_email(session, email)
+    if user is None:
         raise AppError(403, ErrorCode.UserNotFound, ['User not found'])
-    if not row['is_active']:
+    if not user.is_active:
         raise AppError(403, ErrorCode.UserInactive, ['User is inactive'])
 
-    return CurrentUser(
-        id=row['id'],
-        email=row['email'],
-        public_id=row['public_id'],
-        given_name=row['given_name'],
-        family_name=row['family_name'],
-        role=row['role'],
-        state_code=row['state_code'],
-        is_active=row['is_active'],
-    )
+    return CurrentUser.model_validate(user)
