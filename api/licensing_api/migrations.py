@@ -21,7 +21,7 @@ def run_migrations() -> None:
     # locked so only one pod can attempt to run the migrations at a time
     with backend.lock():
         pending = backend.to_apply(all_migrations)
-        if settings.environment != 'LOCAL_DEV':
+        if settings.environment != 'LOCAL_DEV':  # pragma: no cover
             pending = [m for m in pending if not m.id.startswith(_LOCAL_DEV_ONLY_PREFIX)]
         backend.apply_migrations(pending)
 

@@ -23,12 +23,12 @@ dev env-file=".env":
     uv run uvicorn licensing_api.__main__:app --reload --env-file {{ env-file }}
 
 # Run tests (pass additional args with: just test -k test_name)
-test *args:
-    uv run --env-file .env pytest {{ args }}
+test env-file=".env" *args:
+    uv run --env-file {{ env-file }} pytest {{ args }}
 
 # Run tests with coverage report
-test-coverage *args:
-    uv run coverage run --branch --source=licensing_api -m pytest {{ args }}
+test-coverage env-file=".env" *args:
+    uv run --env-file {{ env-file }} coverage run --branch --source=licensing_api -m pytest {{ args }}
     uv run coverage report
 
 # Open HTML coverage report in browser
