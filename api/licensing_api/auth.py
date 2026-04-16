@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import logging
 from functools import lru_cache
-from typing import Annotated, Any
+from typing import Annotated
 from uuid import UUID
 
 import httpx
-from fastapi import Depends, Request
+from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from pydantic import BaseModel, ConfigDict, Field
@@ -32,10 +32,6 @@ class CurrentUser(BaseModel):
     role: str
     state_code: str | None
     is_active: bool
-
-
-def _get_db_pool(request: Request) -> Any:
-    return request.app.state.db_pool
 
 
 @lru_cache

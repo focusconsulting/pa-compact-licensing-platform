@@ -42,7 +42,7 @@ def _mask_sensitive(obj: object) -> object:
     return obj
 
 
-def _configure_otel() -> None:
+def _configure_otel() -> None:  # pragma: no cover
     """Configure OpenTelemetry SDK to export traces and metrics to the ADOT sidecar.
 
     Imports are lazy so local dev and tests don't pay the import cost when
