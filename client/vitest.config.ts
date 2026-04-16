@@ -19,12 +19,15 @@ export default defineConfig({
         "src/**/*.test.{ts,tsx}",
         "src/**/*.stories.{ts,tsx}",
         "src/**/*.d.ts",
+        "src/app/layout.tsx",
+        "src/@types/**",
       ],
     },
   },
   resolve: {
     alias: {
       "/src": path.resolve(__dirname, "src"),
+      src: path.resolve(__dirname, "src"),
     },
   },
 });
