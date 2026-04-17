@@ -59,23 +59,7 @@ variable "acm_certificate_arn" {
   default     = null
 }
 
-variable "jumpbox_sg_id" {
-  type        = string
-  description = "Security group ID of the EC2 jumpbox. When set, allows SSM port-forward tunnels from the jumpbox to reach ECS tasks on port 8000."
-  default     = null
-}
 
-variable "slack_team_id" {
-  type        = string
-  description = "Slack team (workspace) ID for AWS Chatbot (authorize workspace in Chatbot console first; format: TXXXXXXXXX)"
-  default     = null
-}
-
-variable "slack_channel_id" {
-  type        = string
-  description = "Slack channel ID to receive API alerts (format: CXXXXXXXXX)"
-  default     = null
-}
 
 variable "ecs_max_capacity" {
   type        = number
@@ -85,10 +69,12 @@ variable "ecs_max_capacity" {
 
 variable "cognito_callback_url" {
   type        = string
-  description = "Cognito OAuth callback URL (frontend login redirect)"
+  description = "Cognito OAuth callback URL (frontend login redirect). Defaults to https://<dns_name> if not set."
+  default     = null
 }
 
 variable "cognito_logout_url" {
   type        = string
-  description = "Cognito logout redirect URL"
+  description = "Cognito logout redirect URL. Defaults to https://<dns_name> if not set."
+  default     = null
 }

@@ -56,6 +56,10 @@ data "terraform_remote_state" "network" {
 }
 
 locals {
+  # Cognito URLs, if not defined, default to the CloudFront URL.
+  cognito_callback_url = coalesce(var.cognito_callback_url, "https://${var.dns_name}")
+  cognito_logout_url   = coalesce(var.cognito_logout_url, "https://${var.dns_name}")
+
   # Derive the Route 53 hosted zone name by dropping the first DNS label from dns_name.
   # e.g. "site.dev-pacompact.aws.focusconsulting.io" → "dev-pacompact.aws.focusconsulting.io"
   hosted_zone_name = join(".", slice(split(".", var.dns_name), 1, length(split(".", var.dns_name))))
