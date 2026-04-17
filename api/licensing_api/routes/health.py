@@ -5,15 +5,24 @@ from typing import Annotated, cast
 
 import redis.asyncio as aioredis
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from licensing_api.dependencies import get_db_engine, get_redis
-from licensing_api.routes.health_schemas import LiveResp, ReadyResp
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix='/health', tags=['health'])
+
+
+class LiveResp(BaseModel):
+    status: str
+
+
+class ReadyResp(BaseModel):
+    db: bool
+    cache: bool
 
 
 async def check_postgres(engine: AsyncEngine) -> bool:

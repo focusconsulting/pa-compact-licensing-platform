@@ -4,7 +4,7 @@ import pytest
 
 from licensing_api.__main__ import app
 from licensing_api.dependencies import get_db_engine, get_redis
-from licensing_api.routes.health_schemas import LiveResp, ReadyResp
+from licensing_api.routes.health import LiveResp, ReadyResp
 
 
 def test_live_returns_200(client):

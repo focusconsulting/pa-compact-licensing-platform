@@ -9,29 +9,21 @@ import httpx
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
-from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import BaseModel, ConfigDict
 
 from licensing_api.config import Settings, get_settings
-from licensing_api.dependencies import get_db_session
 from licensing_api.errors import AppError, ErrorCode
-from licensing_api.repo.user import get_user_by_email, get_user_by_public_id
 
 logger = logging.getLogger(__name__)
 
 _bearer = HTTPBearer()
 
 
-class CurrentUser(BaseModel):
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+class AuthClaims(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
-    id: UUID = Field(validation_alias='public_id')
+    sub: UUID
     email: str
-    given_name: str | None
-    family_name: str | None
-    role: str
-    state_code: str | None
-    is_active: bool
 
 
 @lru_cache
@@ -72,26 +64,10 @@ def _verify_token(token: str, settings: Settings) -> dict:
     return claims
 
 
-async def get_current_user(
+async def get_auth_claims(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer)],
     settings: Annotated[Settings, Depends(get_settings)],
-    session: Annotated[AsyncSession, Depends(get_db_session)],
-) -> CurrentUser:
-    """Verify the Bearer token and return the authenticated user from the database."""
+) -> AuthClaims:
+    """Unpacks relevant data from auth claims"""
     claims = _verify_token(credentials.credentials, settings)
-    sub = UUID(claims['sub'])
-    email: str = claims['email']
-
-    user = await get_user_by_public_id(session, sub)
-    if user is None:
-        user = await get_user_by_email(session, email)
-        if user is None:
-            raise AppError(403, ErrorCode.UserNotFound, ['User not found'])
-        if user.public_id is None:
-            user.public_id = sub
-            await session.commit()
-
-    if not user.is_active:
-        raise AppError(403, ErrorCode.UserInactive, ['User is inactive'])
-
-    return CurrentUser.model_validate(user)
+    return AuthClaims.model_validate(claims)

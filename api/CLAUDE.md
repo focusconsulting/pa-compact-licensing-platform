@@ -52,17 +52,32 @@ bd close <id>         # Complete work
 
 ## Build & Test
 
-_Add your build and test commands here_
-
 ```bash
-# Example:
-# npm install
-# npm test
+just test
+# for checking coverage
+just test-coverage
 ```
 
 ## Architecture Overview
 
-_Add a brief overview of your project architecture_
+FastAPI application served by Uvicorn/Gunicorn, targeting Python 3.13.
+
+**Request lifecycle:**
+1. `CORSMiddleware` → `UnhandledExceptionMiddleware` → `RequestLoggingMiddleware` (registered outermost-first, executed innermost-first)
+2. FastAPI exception handlers normalize `AppError`, `HTTPException`, and `RequestValidationError` into `{"code": "...", "details": [...]}` JSON responses
+3. Secured routes inject `get_auth_claims` (validates a Cognito ID token via JWKS, returns `AuthClaims(sub: UUID, email: str)`)
+
+**Layers (one file per resource):**
+- `routes/` — HTTP handlers; own request/response Pydantic models for OpenAPI docs
+- `repo/` — async DB query functions (SQLModel + asyncpg); accept plain values, return model instances
+- `migrations.py` — programmatic yoyo migrations run at startup
+
+**Backing services:**
+- PostgreSQL — primary store; async via asyncpg/SQLModel
+- Redis — available via `get_redis` dependency; currently used for health checks, intended for permission caching keyed on `AuthClaims.sub`
+- AWS Cognito — identity provider; tokens validated with `python-jose` against the pool's JWKS endpoint
+
+**Observability:** structured JSON logs (all app + Uvicorn output); OpenTelemetry traces exported via OTLP/gRPC.
 
 ## Conventions & Patterns
 
@@ -71,3 +86,6 @@ _Add a brief overview of your project architecture_
 - The annotations marking functions as endpoints must contain name and description
 - When adding a dependency, list its documentation page in README.md, follow the
     pattern there.
+- Flag places where people are querying for serial user.id by using
+    AuthClaim.sub for the purpose of updating audit columns. Prefer sub-queries
+    to avoid an extra roundtrip to the database.
