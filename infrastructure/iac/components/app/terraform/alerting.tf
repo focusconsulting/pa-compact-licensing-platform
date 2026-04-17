@@ -68,10 +68,19 @@ resource "aws_cloudwatch_metric_alarm" "api_error_rate" {
   }
 }
 
+# Slack credentials stored in secrets manager in <env>-slack-tfvar secret.
+# Secret contains JSON with keys: slack_team_id, slack_channel_id
+data "aws_secretsmanager_secret_version" "slack" {
+  secret_id = "${var.environment_name}-slack-tfvar"
+}
+
+locals {
+  slack = jsondecode(data.aws_secretsmanager_secret_version.slack.secret_string)
+}
+
 # IAM role that AWS Chatbot assumes to read CloudWatch data
 resource "aws_iam_role" "chatbot" {
-  count = var.slack_team_id != null ? 1 : 0
-  name  = "${var.environment_name}-${local.application_name}-chatbot-role"
+  name = "${var.environment_name}-${local.application_name}-chatbot-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -83,17 +92,15 @@ resource "aws_iam_role" "chatbot" {
 }
 
 resource "aws_iam_role_policy_attachment" "chatbot_cloudwatch" {
-  count      = var.slack_team_id != null ? 1 : 0
-  role       = aws_iam_role.chatbot[0].name
+  role       = aws_iam_role.chatbot.name
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess"
 }
 
 # Delivers SNS alert messages to the configured Slack channel
 resource "aws_chatbot_slack_channel_configuration" "api_alerts" {
-  count              = var.slack_team_id != null ? 1 : 0
   configuration_name = "${var.environment_name}-${local.application_name}-alerts"
-  iam_role_arn       = aws_iam_role.chatbot[0].arn
-  slack_team_id      = var.slack_team_id
-  slack_channel_id   = var.slack_channel_id
+  iam_role_arn       = aws_iam_role.chatbot.arn
+  slack_team_id      = local.slack["slack_team_id"]
+  slack_channel_id   = local.slack["slack_channel_id"]
   sns_topic_arns     = [aws_sns_topic.api_alerts.arn]
 }

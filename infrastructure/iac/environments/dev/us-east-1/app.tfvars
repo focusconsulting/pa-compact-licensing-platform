@@ -12,13 +12,8 @@ backup_retention_period = 1
 # ECS — ECR image URI, e.g. 123456789012.dkr.ecr.us-east-1.amazonaws.com/licensing-api
 repo_name = "126942145463.dkr.ecr.us-east-1.amazonaws.com/pacompact-app-dev"
 
-# Cognito
-# cognito_callback_url = "https://d1kdkdkddk.cloudfront.net"
-# cognito_logout_url   = "https://d1kdkdkddk.cloudfront.net"
-
 # Optional: supply an ACM certificate ARN to enable HTTPS on the ALB listener
 # acm_certificate_arn = "arn:aws:acm:REGION:ACCOUNT_ID:certificate/CERTIFICATE_ID"
 
-# Slack alerting via AWS Chatbot — authorize workspace in Chatbot console first, then fill in IDs
-# slack_team_id  = "TXXXXXXXXX"
-# slack_channel_id = "CXXXXXXXXX"
+# Slack alerting credentials are read from Secrets Manager: ${environment_name}-slack-tfvar
+# Keys required in that secret: slack_team_id, slack_channel_id
