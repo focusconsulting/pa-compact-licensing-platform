@@ -48,6 +48,11 @@ variable "repo_name" {
   description = "ECR repository URI for the API container image"
 }
 
+variable "dns_name" {
+  type        = string
+  description = "Fully-qualified domain name for the site (e.g. site.dev-pacompact.aws.focusconsulting.io). This assumes there already exists a Route 53 hosted zone for the parent domain in this account and a wildcard certificate that will cover this dns name."
+}
+
 variable "acm_certificate_arn" {
   type        = string
   description = "ACM certificate ARN for HTTPS on the ALB listener (optional; HTTP-only if not set)"

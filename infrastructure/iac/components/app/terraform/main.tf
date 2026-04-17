@@ -9,6 +9,20 @@ provider "aws" {
   }
 }
 
+# CloudFront ACM certificates must always exist in us-east-1, regardless of the
+# deployment region. This alias provider is used only for that certificate lookup.
+provider "aws" {
+  alias  = "us_east_1"
+  region = "us-east-1"
+
+  default_tags {
+    tags = {
+      environment          = "${var.environment_name}"
+      created-by-terraform = "true"
+    }
+  }
+}
+
 terraform {
   required_version = "1.14.8"
 
@@ -42,6 +56,9 @@ data "terraform_remote_state" "network" {
 }
 
 locals {
+  # Derive the Route 53 hosted zone name by dropping the first DNS label from dns_name.
+  # e.g. "site.dev-pacompact.aws.focusconsulting.io" → "dev-pacompact.aws.focusconsulting.io"
+  hosted_zone_name = join(".", slice(split(".", var.dns_name), 1, length(split(".", var.dns_name))))
   db_name            = "licensing"
   db_master_username = "postgres"
   db_port            = 5432
