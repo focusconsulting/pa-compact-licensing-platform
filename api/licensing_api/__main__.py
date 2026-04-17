@@ -1,8 +1,8 @@
 import asyncio
 import json
 import logging
+import logging.config
 import re
-import sys
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
@@ -23,6 +23,7 @@ from licensing_api.errors import (
     validation_error_handler,
 )
 from licensing_api.migrations import run_migrations
+from licensing_api.request_logger import RequestLoggingMiddleware, UnhandledExceptionMiddleware
 from licensing_api.routes import health, user
 
 _SENSITIVE_PATTERN = re.compile(r'password|token|secret|cognito', re.IGNORECASE)
@@ -92,38 +93,45 @@ class JsonFormatter(logging.Formatter):
             .replace('+00:00', 'Z'),  # noqa: UP017
             'level': record.levelname,
             'logger': record.name,
-            'message': record.getMessage(),
         }
+
+        message = record.getMessage()
+        if message:
+            log_entry['message'] = message
+
         for key, val in record.__dict__.items():
             if key not in _LOG_RECORD_KEYS and not key.startswith('_'):
                 log_entry[key] = val
         if record.exc_info:
-            log_entry['exception'] = self.formatException(record.exc_info)
+            log_entry['exception'] = self.formatException(record.exc_info).splitlines()
         return json.dumps(_mask_sensitive(log_entry))
 
-
-_handler = logging.StreamHandler(stream=sys.stdout)
-_handler.setFormatter(JsonFormatter())
-logging.basicConfig(level=settings.log_level, handlers=[_handler], force=True)
 
 _LOG_CONFIG = {
     'version': 1,
     'disable_existing_loggers': False,
-    'formatters': {'json': {'()': JsonFormatter}},
+    'formatters': {
+        'json': {
+            '()': JsonFormatter,
+        },
+    },
     'handlers': {
         'default': {
             'class': 'logging.StreamHandler',
             'formatter': 'json',
             'stream': 'ext://sys.stdout',
-        }
+        },
     },
     'loggers': {
-        'uvicorn': {'handlers': ['default'], 'propagate': False},
-        'uvicorn.error': {'handlers': ['default'], 'propagate': False},
-        'uvicorn.access': {'handlers': ['default'], 'propagate': False},
+        'uvicorn': {'handlers': [], 'level': settings.log_level.upper(), 'propagate': False},
+    },
+    'root': {
+        'handlers': ['default'],
+        'level': settings.log_level.upper(),
     },
 }
 
+logging.config.dictConfig(_LOG_CONFIG)
 logger = logging.getLogger(__name__)
 
 
@@ -159,6 +167,8 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+app.add_middleware(RequestLoggingMiddleware)
+app.add_middleware(UnhandledExceptionMiddleware)
 
 app.add_exception_handler(AppError, app_error_handler)  # type: ignore[arg-type]
 app.add_exception_handler(HTTPException, http_exception_handler)  # type: ignore[arg-type]

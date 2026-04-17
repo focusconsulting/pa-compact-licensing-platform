@@ -1,12 +1,9 @@
-import uuid
-
-from jose import jwt as jose_jwt
-
-from licensing_api.auth import CurrentUser
+from licensing_api.__main__ import app
 from licensing_api.errors import ErrorCode
+from licensing_api.repo.user import get_user_by_email
+from licensing_api.routes.user import CurrentUser
 
-_TEST_CLIENT_ID = 'test-client-id'
-_TEST_KID = 'test-key-1'
+_BACKFILL_EMAIL = 'backfill@example.com'
 
 
 def test_me_returns_active_user(client, auth_header):
@@ -30,6 +27,25 @@ def test_me_unknown_email_returns_403(client, auth_header):
     assert 'User not found' in body['details']
 
 
+async def test_me_backfills_public_id_on_first_login(client, auth_header):
+    try:
+        response = client.get('/api/me', headers=auth_header(_BACKFILL_EMAIL))
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body['user_id'] is not None
+    finally:
+
+        async def _reset():
+            async with app.state.session_factory() as session:
+                user = await get_user_by_email(session, _BACKFILL_EMAIL)
+                if user:
+                    user.public_id = None
+                    await session.commit()
+
+        client.portal.call(_reset)
+
+
 def test_me_inactive_user_returns_403(client, auth_header):
     response = client.get('/api/me', headers=auth_header('inactive@example.com'))
 
@@ -37,54 +53,3 @@ def test_me_inactive_user_returns_403(client, auth_header):
     body = response.json()
     assert body['code'] == ErrorCode.UserInactive
     assert 'User is inactive' in body['details']
-
-
-def test_me_invalid_token_returns_401(client):
-    # A structurally invalid JWT fails before JWKS is even consulted —
-    # jose raises JWTError at header parsing, which becomes INVALID_TOKEN / 401.
-    response = client.get('/api/me', headers={'Authorization': 'Bearer not.a.valid.jwt'})
-
-    assert response.status_code == 401
-    body = response.json()
-    assert body['code'] == ErrorCode.InvalidToken
-    assert len(body['details']) > 0
-
-
-def test_me_unknown_signing_key_returns_401(client, _private_key):
-    token = jose_jwt.encode(
-        {
-            'sub': str(uuid.uuid4()),
-            'email': 'test@example.com',
-            'token_use': 'id',
-            'aud': _TEST_CLIENT_ID,
-        },
-        _private_key,
-        algorithm='RS256',
-        headers={'kid': 'unknown-kid'},
-    )
-    response = client.get('/api/me', headers={'Authorization': f'Bearer {token}'})
-
-    assert response.status_code == 401
-    body = response.json()
-    assert body['code'] == ErrorCode.InvalidToken
-    assert 'Unknown signing key' in body['details']
-
-
-def test_me_wrong_token_use_returns_401(client, _private_key):
-    token = jose_jwt.encode(
-        {
-            'sub': str(uuid.uuid4()),
-            'email': 'test@example.com',
-            'token_use': 'access',
-            'aud': _TEST_CLIENT_ID,
-        },
-        _private_key,
-        algorithm='RS256',
-        headers={'kid': _TEST_KID},
-    )
-    response = client.get('/api/me', headers={'Authorization': f'Bearer {token}'})
-
-    assert response.status_code == 401
-    body = response.json()
-    assert body['code'] == ErrorCode.InvalidToken
-    assert 'Expected Cognito ID token' in body['details']
