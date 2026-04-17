@@ -82,3 +82,13 @@ variable "ecs_max_capacity" {
   description = "Maximum number of ECS Fargate tasks to scale to"
   default     = 2
 }
+
+variable "cognito_callback_url" {
+  type        = string
+  description = "Cognito OAuth callback URL (frontend login redirect)"
+}
+
+variable "cognito_logout_url" {
+  type        = string
+  description = "Cognito logout redirect URL"
+}

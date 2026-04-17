@@ -55,8 +55,16 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run tests
-        run: pnpm test
+      - name: Run tests with coverage
+        run: pnpm test:coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: client
+          files: client/coverage/lcov.info
+          fail_ci_if_error: true
 
   deploy:
     name: Deploy to DEV
@@ -87,15 +95,24 @@ jobs:
         working-directory: client
         run: pnpm install --frozen-lockfile
 
-      - name: Build
-        working-directory: client
-        run: pnpm build
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Fetch Cognito config from Secrets Manager
+        run: |
+          SECRET=$(aws secretsmanager get-secret-value \
+            --secret-id "dev-cognito-config" \
+            --query SecretString --output text)
+          echo "NEXT_PUBLIC_COGNITO_USER_POOL_ID=$(echo "$SECRET" | jq -r .user_pool_id)" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_COGNITO_CLIENT_ID=$(echo "$SECRET" | jq -r .client_id)"       >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_COGNITO_REGION=$(echo "$SECRET" | jq -r .region)"             >> "$GITHUB_ENV"
+
+      - name: Build
+        working-directory: client
+        run: pnpm build
 
       - name: Deploy to S3
         run: aws s3 sync client/out/ s3://${{ vars.CLIENT_S3_BUCKET }}/ --delete

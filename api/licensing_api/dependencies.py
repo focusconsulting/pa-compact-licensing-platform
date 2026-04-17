@@ -1,16 +1,23 @@
-from typing import Annotated
+from collections.abc import AsyncGenerator
 
-import asyncpg
 import redis.asyncio as aioredis
 from fastapi import Request
-from fastapi.params import Depends
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 
-def get_db_pool(request: Request) -> asyncpg.Pool:
+def get_db_engine(request: Request) -> AsyncEngine:
     """
-    Dependency that provides the database connection pool from the app state.
+    Dependency that provides the database engine from the app state.
     """
-    return request.app.state.db_pool
+    return request.app.state.db_engine
+
+
+async def get_db_session(request: Request) -> AsyncGenerator[AsyncSession]:
+    """
+    Dependency that provides a database session from the app state.
+    """
+    async with request.app.state.session_factory() as session:
+        yield session
 
 
 def get_redis(request: Request) -> aioredis.Redis:
@@ -18,7 +25,3 @@ def get_redis(request: Request) -> aioredis.Redis:
     Dependency that provides the Redis connection from the app state.
     """
     return request.app.state.redis
-
-
-DbPool = Annotated[asyncpg.Pool, Depends(get_db_pool)]
-RedisCli = Annotated[aioredis.Redis, Depends(get_redis)]

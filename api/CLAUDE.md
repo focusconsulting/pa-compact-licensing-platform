@@ -66,4 +66,8 @@ _Add a brief overview of your project architecture_
 
 ## Conventions & Patterns
 
-_Add your project-specific conventions here_
+- All endpoints with response bodies must return pydantic models so they are
+  clearly documented in OpenAPI.
+- The annotations marking functions as endpoints must contain name and description
+- When adding a dependency, list its documentation page in README.md, follow the
+    pattern there.

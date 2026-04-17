@@ -1,9 +1,13 @@
 # PA Compact Licensing Platform
 
+**API Coverage**: [![API Coverage](https://codecov.io/gh/focusconsulting/pa-compact-licensing-platform/branch/main/graph/badge.svg?flag=api)](https://codecov.io/gh/focusconsulting/pa-compact-licensing-platform)
+
+**Client Coverage**: [![Client Coverage](https://codecov.io/gh/focusconsulting/pa-compact-licensing-platform/branch/main/graph/badge.svg?flag=client)](https://codecov.io/gh/focusconsulting/pa-compact-licensing-platform)
+
 ## Repository Structure
 
 ```text
-api/          Python API (Connexion/Flask, Python 3.13)
+api/          Python API (FastAPI, Python 3.13)
 client/       Next.js frontend (React, TypeScript, USWDS)
 iac/          Infrastructure as Code
 ```

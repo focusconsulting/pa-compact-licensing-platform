@@ -42,3 +42,18 @@ output "cloudwatch_log_group" {
   description = "CloudWatch log group for API container logs"
   value       = aws_cloudwatch_log_group.api_logs.name
 }
+
+output "cognito_user_pool_id" {
+  description = "Cognito User Pool ID"
+  value       = aws_cognito_user_pool.main.id
+}
+
+output "cognito_client_id" {
+  description = "Cognito App Client ID"
+  value       = aws_cognito_user_pool_client.web.id
+}
+
+output "cognito_user_import_role_arn" {
+  description = "IAM role ARN for Cognito user import CloudWatch logging"
+  value       = aws_iam_role.cognito_user_import.arn
+}

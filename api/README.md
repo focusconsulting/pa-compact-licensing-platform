@@ -96,6 +96,7 @@ just --list
 | [Uvicorn](https://www.uvicorn.org/)                                               | ASGI server (development)       | https://www.uvicorn.org/                                     |
 | [Gunicorn](https://gunicorn.org/)                                                 | WSGI/ASGI server (production)   | https://docs.gunicorn.org/                                   |
 | [asyncpg](https://magicstack.github.io/asyncpg/current/)                          | Async PostgreSQL client         | https://magicstack.github.io/asyncpg/current/                |
+| [SQLModel](https://sqlmodel.tiangolo.com/)                                           | Async ORM (SQLAlchemy + Pydantic) | https://sqlmodel.tiangolo.com/                                |\n| [greenlet](https://greenlet.readthedocs.io/)                                          | Required for SQLAlchemy async engine | https://greenlet.readthedocs.io/                               |
 | [redis-py](https://redis.readthedocs.io/en/stable/)                               | Redis client (async)            | https://redis.readthedocs.io/en/stable/                      |
 | [pydantic-settings](https://docs.pydantic.dev/latest/concepts/pydantic_settings/) | Environment-based configuration | https://docs.pydantic.dev/latest/concepts/pydantic_settings/ |
 | [yoyo-migrations](https://ollycope.com/software/yoyo/)                            | Database migrations             | https://ollycope.com/software/yoyo/                          |
@@ -104,6 +105,8 @@ just --list
 | [opentelemetry-instrumentation-fastapi](https://opentelemetry-python-contrib.readthedocs.io/) | Auto-instrument FastAPI requests | https://opentelemetry-python-contrib.readthedocs.io/ |
 | [opentelemetry-instrumentation-asyncpg](https://opentelemetry-python-contrib.readthedocs.io/) | Auto-instrument asyncpg queries  | https://opentelemetry-python-contrib.readthedocs.io/ |
 | [opentelemetry-exporter-otlp-proto-grpc](https://opentelemetry-python.readthedocs.io/) | Export traces/metrics to ADOT sidecar via gRPC | https://opentelemetry-python.readthedocs.io/ |
+| [python-jose[cryptography]](https://python-jose.readthedocs.io/en/latest/)        | JWT validation (Cognito ID tokens) | https://python-jose.readthedocs.io/en/latest/             |
+| [httpx](https://www.python-httpx.org/)                                            | HTTP client (JWKS fetching)     | https://www.python-httpx.org/                                |
 | [uv](https://docs.astral.sh/uv/)                                                  | Dependency management           | https://docs.astral.sh/uv/                                   |
 | [pytest](https://docs.pytest.org/en/9.0.x/)                                       | Test framework                  | https://docs.pytest.org/en/9.0.x/                            |
 | [pytest-asyncio](https://pytest-asyncio.readthedocs.io/en/stable/)                | Async test support              | https://pytest-asyncio.readthedocs.io/en/stable/             |
@@ -112,5 +115,5 @@ just --list
 | [pyright](https://microsoft.github.io/pyright/)                                   | Static type checker             | https://microsoft.github.io/pyright/                         |
 
 <!--
-Thu Apr  9 13:54:26 EDT 2026
+Thu Apr 16 14:18:03 EDT 2026
 -->

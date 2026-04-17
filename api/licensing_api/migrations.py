@@ -15,13 +15,13 @@ _LOCAL_DEV_ONLY_PREFIX = '30000101'
 
 def run_migrations() -> None:
     logger.info('Running database migrations (environment=%s)', settings.environment)
-    backend = yoyo.get_backend(settings.db_url)
+    backend = yoyo.get_backend(settings.sync_db_url)
     all_migrations = yoyo.read_migrations(str(_MIGRATIONS_DIR))
 
     # locked so only one pod can attempt to run the migrations at a time
     with backend.lock():
         pending = backend.to_apply(all_migrations)
-        if settings.environment != 'LOCAL_DEV':
+        if settings.environment != 'LOCAL_DEV':  # pragma: no cover
             pending = [m for m in pending if not m.id.startswith(_LOCAL_DEV_ONLY_PREFIX)]
         backend.apply_migrations(pending)
 

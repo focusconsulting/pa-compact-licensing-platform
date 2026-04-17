@@ -3,11 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "copy-uswds-assets": "cp -r node_modules/@uswds/uswds/dist/fonts public/uswds/fonts && cp -r node_modules/@uswds/uswds/dist/img public/uswds/img",
+    "postinstall": "mkdir -p public/uswds && pnpm run copy-uswds-assets",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
@@ -15,6 +18,7 @@
   "dependencies": {
     "@trussworks/react-uswds": "^7.0.0",
     "@uswds/uswds": "^3.13.0",
+    "amazon-cognito-identity-js": "^6.3.16",
     "i18next": "^25.10.1",
     "next": "^14.2.35",
     "react": "^18",
@@ -39,6 +43,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@vitejs/plugin-react": "^4.7.0",
+    "@vitest/coverage-v8": "^3.2.4",
     "autoprefixer": "^10.4.27",
     "eslint": "^8",
     "eslint-config-next": "^15.5.14",

@@ -1,16 +1,10 @@
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from fastapi.testclient import TestClient
 
 from licensing_api.__main__ import app
+from licensing_api.dependencies import get_db_engine, get_redis
 from licensing_api.routes.health_schemas import LiveResp, ReadyResp
-
-
-@pytest.fixture(scope='module')
-def client():
-    with TestClient(app) as c:
-        yield c
 
 
 def test_live_returns_200(client):
@@ -25,55 +19,48 @@ def test_ready_all_healthy(client):
     assert ReadyResp.model_validate(response.json()) == ReadyResp(db=True, cache=True)
 
 
-def test_ready_db_down(client):
-    with (
-        patch(
-            'licensing_api.routes.health.check_postgres',
-            new_callable=AsyncMock,
-            return_value=False,
-        ),
-        patch(
-            'licensing_api.routes.health.check_redis',
-            new_callable=AsyncMock,
-            return_value=True,
-        ),
-    ):
-        response = client.get('/api/health/ready')
-        assert response.status_code == 200
-        assert ReadyResp.model_validate(response.json()) == ReadyResp(db=False, cache=True)
+def _mock_engine_raising(exc: Exception) -> MagicMock:
+    cm = MagicMock()
+    cm.__aenter__ = AsyncMock(side_effect=exc)
+    cm.__aexit__ = AsyncMock(return_value=False)
+    engine = MagicMock()
+    engine.connect.return_value = cm
+    return engine
 
 
-def test_ready_cache_down(client):
-    with (
-        patch(
-            'licensing_api.routes.health.check_postgres',
-            new_callable=AsyncMock,
-            return_value=True,
-        ),
-        patch(
-            'licensing_api.routes.health.check_redis',
-            new_callable=AsyncMock,
-            return_value=False,
-        ),
-    ):
-        response = client.get('/api/health/ready')
-        assert response.status_code == 200
-        assert ReadyResp.model_validate(response.json()) == ReadyResp(db=True, cache=False)
+def _mock_redis_raising(exc: Exception) -> AsyncMock:
+    redis = AsyncMock()
+    redis.ping.side_effect = exc
+    return redis
 
 
-def test_ready_all_down(client):
-    with (
-        patch(
-            'licensing_api.routes.health.check_postgres',
-            new_callable=AsyncMock,
-            return_value=False,
-        ),
-        patch(
-            'licensing_api.routes.health.check_redis',
-            new_callable=AsyncMock,
-            return_value=False,
-        ),
-    ):
-        response = client.get('/api/health/ready')
-        assert response.status_code == 200
-        assert ReadyResp.model_validate(response.json()) == ReadyResp(db=False, cache=False)
+@pytest.fixture()
+def db_raises(client):
+    app.dependency_overrides[get_db_engine] = lambda: _mock_engine_raising(Exception('DB error'))
+    yield
+    del app.dependency_overrides[get_db_engine]
+
+
+@pytest.fixture()
+def cache_raises(client):
+    app.dependency_overrides[get_redis] = lambda: _mock_redis_raising(Exception('Redis error'))
+    yield
+    del app.dependency_overrides[get_redis]
+
+
+def test_ready_db_down(client, db_raises):
+    response = client.get('/api/health/ready')
+    assert response.status_code == 200
+    assert ReadyResp.model_validate(response.json()) == ReadyResp(db=False, cache=True)
+
+
+def test_ready_cache_down(client, cache_raises):
+    response = client.get('/api/health/ready')
+    assert response.status_code == 200
+    assert ReadyResp.model_validate(response.json()) == ReadyResp(db=True, cache=False)
+
+
+def test_ready_all_down(client, db_raises, cache_raises):
+    response = client.get('/api/health/ready')
+    assert response.status_code == 200
+    assert ReadyResp.model_validate(response.json()) == ReadyResp(db=False, cache=False)

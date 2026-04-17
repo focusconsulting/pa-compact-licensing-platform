@@ -10,10 +10,24 @@ export default defineConfig({
     setupFiles: ["./src/tests/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
     css: false,
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "lcov"],
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: [
+        "src/tests/**",
+        "src/**/*.test.{ts,tsx}",
+        "src/**/*.stories.{ts,tsx}",
+        "src/**/*.d.ts",
+        "src/app/layout.tsx",
+        "src/@types/**",
+      ],
+    },
   },
   resolve: {
     alias: {
       "/src": path.resolve(__dirname, "src"),
+      src: path.resolve(__dirname, "src"),
     },
   },
 });
