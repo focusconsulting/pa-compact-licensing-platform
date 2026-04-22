@@ -22,7 +22,7 @@ When invoked:
    First, let me check what tasks are ready:
    ```
    Then run `bd ready` and show available tasks.
-   
+
    Ask: "Which task would you like to work on? Provide a beads ID (e.g., bd-a1b2) or GitHub issue number (e.g., #123)"
 
 ## Process Steps

@@ -36,11 +36,13 @@ Two design questions arose:
 Query helpers that stamp `created_by` / `updated_by` accept the user's `public_id` UUID. The caller (route handler) reads it from `claims.sub`. The query itself resolves `public_id → users.id` via a subquery or correlated expression, so `created_by` / `updated_by` columns remain integer FKs — no schema changes required. The entire operation (resolve + mutate) is a single network round-trip to the database.
 
 **Pros:**
+
 - One DB call over the network per mutation — resolve and write happen in the same query.
 - `created_by` / `updated_by` remain integer FK columns; no schema changes.
 - Route handlers stay clean: read `claims.sub`, pass it through, done.
 
 **Cons:**
+
 - Mutation queries are slightly more complex (subquery to resolve `public_id → id`), though this is an indexed lookup on a unique column.
 
 ### Option 2: Resolve to internal integer `users.id` before querying
@@ -48,10 +50,12 @@ Query helpers that stamp `created_by` / `updated_by` accept the user's `public_i
 Route handlers call `get_user_by_public_id` first, then pass the resulting `users.id` integer to mutation helpers.
 
 **Pros:**
+
 - Integer FK joins are marginally faster at large scale.
 - Consistent with tables that already use integer PKs for FKs.
 
 **Cons:**
+
 - Every secured mutating request pays an extra `SELECT` to resolve `public_id → id`.
 - Increases latency and connection pool pressure with no functional benefit at current scale.
 - Makes route handlers responsible for an ID-resolution step that is boilerplate.
@@ -61,9 +65,11 @@ Route handlers call `get_user_by_public_id` first, then pass the resulting `user
 Mutation helpers accept the full `AuthClaims` object and look up the user internally.
 
 **Pros:**
+
 - Call-site is simple.
 
 **Cons:**
+
 - Hidden DB side-effects inside query helpers make them harder to test and reason about.
 - Cannot be called without a live DB session even in unit tests.
 

@@ -32,23 +32,25 @@ bd close <id>         # Complete work
 2. **Run quality gates** (if code changed) - Tests, linters, builds
 3. **Update issue status** - Close finished work, update in-progress items
 4. **PUSH TO REMOTE** - This is MANDATORY:
+
    ```bash
    git pull --rebase
    bd dolt push
    git push
    git status  # MUST show "up to date with origin"
    ```
+
 5. **Clean up** - Clear stashes, prune remote branches
 6. **Verify** - All changes committed AND pushed
 7. **Hand off** - Provide context for next session
 
 **CRITICAL RULES:**
+
 - Work is NOT complete until `git push` succeeds
 - NEVER stop before pushing - that leaves work stranded locally
 - NEVER say "ready to push when you are" - YOU must push
 - If push fails, resolve and retry until it succeeds
 <!-- END BEADS INTEGRATION -->
-
 
 ## Build & Test
 
@@ -63,16 +65,19 @@ just test-coverage
 FastAPI application served by Uvicorn/Gunicorn, targeting Python 3.13.
 
 **Request lifecycle:**
+
 1. `CORSMiddleware` → `UnhandledExceptionMiddleware` → `RequestLoggingMiddleware` (registered outermost-first, executed innermost-first)
 2. FastAPI exception handlers normalize `AppError`, `HTTPException`, and `RequestValidationError` into `{"code": "...", "details": [...]}` JSON responses
 3. Secured routes inject `get_auth_claims` (validates a Cognito ID token via JWKS, returns `AuthClaims(sub: UUID, email: str)`)
 
 **Layers (one file per resource):**
+
 - `routes/` — HTTP handlers; own request/response Pydantic models for OpenAPI docs
 - `repo/` — async DB query functions (SQLModel + asyncpg); accept plain values, return model instances
 - `migrations.py` — programmatic yoyo migrations run at startup
 
 **Backing services:**
+
 - PostgreSQL — primary store; async via asyncpg/SQLModel
 - Redis — available via `get_redis` dependency; currently used for health checks, intended for permission caching keyed on `AuthClaims.sub`
 - AWS Cognito — identity provider; tokens validated with `python-jose` against the pool's JWKS endpoint

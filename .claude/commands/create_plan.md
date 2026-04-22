@@ -114,10 +114,10 @@ Before proceeding with detailed research, set up the working environment:
    ```bash
    # Check current branch
    git branch --show-current
-   
+
    # If on main, create feature branch
    git checkout -b feature/<task-id>-short-description
-   
+
    # Examples:
    git checkout -b feature/bd-f7a3-integration-tests
    git checkout -b feature/issue-42-test-coverage
@@ -189,13 +189,13 @@ After getting initial clarifications:
    ```
 
 6. **Document architectural decisions with ADRs**:
-   
+
    After the user chooses an approach, evaluate if this is an architectural decision that should be documented. Consider creating an ADR if the decision:
    - Affects system architecture or patterns
    - Introduces new dependencies or technologies
    - Changes how components interact
    - Will impact future development choices
-   
+
    If appropriate, ask:
    ```
    You've chosen [Option X]. This is an architectural decision that affects [scope/impact].
@@ -203,7 +203,7 @@ After getting initial clarifications:
    I recommend documenting this as ADR-NNNN so future developers understand the rationale.
    Shall I create the ADR now? (I'll reference it in the implementation plan)
    ```
-   
+
    If the user agrees, run `/create_adr` to document the decision, then continue with planning.
    Reference the ADR in the plan's "Related" section.
 

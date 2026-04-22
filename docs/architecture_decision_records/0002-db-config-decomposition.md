@@ -26,12 +26,14 @@ The API previously required a single `DB_URL` environment variable containing th
 Replace `db_url: str` in `Settings` with five typed fields (`db_host`, `db_port`, `db_name`, `db_user`, `db_password`) and a `@property` that assembles the DSN internally.
 
 **Pros:**
+
 - Each credential can be injected separately by a secrets manager
 - `db_password` key is caught by `_mask_sensitive` and never logged in plaintext
 - `db_port` is validated as `int` by Pydantic at startup
 - No change to call sites — `settings.db_url` continues to work
 
 **Cons:**
+
 - Five env vars to configure instead of one — slightly more verbose `.env` files
 
 ### Option 2: Keep `DB_URL`; extract password at runtime
@@ -39,9 +41,11 @@ Replace `db_url: str` in `Settings` with five typed fields (`db_host`, `db_port`
 Keep `DB_URL` but parse it with `urllib.parse.urlparse` to extract components for masking.
 
 **Pros:**
+
 - Single var — simpler `.env`
 
 **Cons:**
+
 - Parsing a URL to re-compose it is fragile
 - Still requires `DB_URL` to contain the password, defeating secrets manager injection
 - More code than Option 1
@@ -49,9 +53,11 @@ Keep `DB_URL` but parse it with `urllib.parse.urlparse` to extract components fo
 ### Option 3: Keep `DB_URL` unchanged
 
 **Pros:**
+
 - No migration needed
 
 **Cons:**
+
 - Password embedded in a URL string — high risk of accidental logging
 - Incompatible with per-field secrets manager injection
 

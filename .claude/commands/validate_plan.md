@@ -25,9 +25,9 @@ When invoked:
 
    # Determine which areas were affected
    git diff HEAD~N..HEAD --name-only | cut -d'/' -f1 | sort -u
-   
+
    # Run area-specific checks based on affected directories
-   
+
    # For Client changes
    if git diff HEAD~N..HEAD --name-only | grep -q "^client/"; then
        cd client && pnpm test && pnpm tsc --noEmit && pnpm lint && pnpm build && cd ..
@@ -47,7 +47,7 @@ When invoked:
    if git diff HEAD~N..HEAD --name-only | grep -q "^docs/"; then
        cd docs && mkdocs build && cd ..  # or equivalent
    fi
-   
+
    # For local integration testing
    docker compose build
    docker compose up -d

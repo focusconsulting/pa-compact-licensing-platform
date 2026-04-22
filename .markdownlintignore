@@ -1,0 +1,7 @@
+.claude/
+thoughts/
+.beads/
+node_modules/
+**/node_modules/
+client/.next/
+client/out/

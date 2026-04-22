@@ -28,12 +28,14 @@ Additionally, there was no guarantee that sensitive values (passwords, tokens, s
 Implement a `logging.Formatter` subclass that serialises each `LogRecord` to a JSON object. Wire it to the root logger and to Uvicorn via its `log_config` dict. Add a `_mask_sensitive` helper that recursively masks dict/list/Pydantic values whose key matches `password|token|secret`.
 
 **Pros:**
+
 - No additional dependencies
 - Full control over output schema
 - Uvicorn and app logs share one formatter
 - Sensitive-field masking is automatic
 
 **Cons:**
+
 - Custom code to maintain
 - Must stay in sync with Uvicorn's `log_config` API across upgrades
 
@@ -42,10 +44,12 @@ Implement a `logging.Formatter` subclass that serialises each `LogRecord` to a J
 Replace `logging` with `structlog` for all application code.
 
 **Pros:**
+
 - Feature-rich (context vars, processors pipeline)
 - Well-maintained
 
 **Cons:**
+
 - Adds a dependency
 - Uvicorn still needs a custom bridge to emit JSON; doesn't simplify that problem
 - More migration surface across existing call sites
@@ -55,9 +59,11 @@ Replace `logging` with `structlog` for all application code.
 Keep plaintext logs; let the log collector parse/transform them.
 
 **Pros:**
+
 - Zero code changes
 
 **Cons:**
+
 - Brittle — relies on regex parsing of free-form text
 - Sensitive values still risk appearing in plaintext
 - Inconsistent format makes local debugging harder too

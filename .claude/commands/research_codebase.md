@@ -20,7 +20,7 @@ You are tasked with conducting comprehensive research across the codebase to ans
 
 When this command is invoked, respond with:
 ```
-I'm ready to research the codebase. 
+I'm ready to research the codebase.
 
 This is a monorepo with these areas:
 - `client/` - Frontend application (Next.js/TypeScript)
@@ -95,7 +95,7 @@ Then wait for the user's research query.
    echo "branch: $(git branch --show-current)"
    echo "repository: $(basename $(git remote get-url origin 2>/dev/null || echo 'local') .git)"
    ```
-   
+
    Filename: `thoughts/shared/research/<area>/YYYY-MM-DD-description.md`
    - Area options: `client/`, `api/`, `iac/`, `general/`
    - Format: `YYYY-MM-DD-description.md` where:
@@ -109,7 +109,7 @@ Then wait for the user's research query.
 
 6. **Generate research document:**
    Structure the document with YAML frontmatter followed by content:
-   
+
    ```markdown
    ---
    date: [Current date and time with timezone in ISO format]
@@ -164,7 +164,7 @@ Then wait for the user's research query.
    git add thoughts/shared/research/
    git commit -m "docs: research on [topic]"
    ```
-   
+
    Present a concise summary of findings to the user, including key file references for easy navigation. Ask if they have follow-up questions.
 
 8. **Handle follow-up questions:**

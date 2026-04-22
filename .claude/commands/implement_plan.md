@@ -55,7 +55,7 @@ After implementing a phase:
 1. **Identify the affected area(s)** from the plan's "Area" field and file paths
 
 2. **Run the area-specific success criteria checks**:
-   
+
    **For Client (`client/`) changes:**
    ```bash
    cd client
@@ -187,7 +187,7 @@ Task: bd-XXXX or #XXX"
 When all phases are complete:
 
 1. **Run full verification for affected components**:
-   
+
    **For Client changes:**
    ```bash
    cd client && pnpm test && pnpm tsc --noEmit && pnpm lint && pnpm build && cd ..
