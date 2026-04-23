@@ -1,0 +1,41 @@
+version: 2
+updates:
+  # JavaScript (client/)
+  - package-ecosystem: npm
+    directory: /client
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+
+  # Python / uv (api/)
+  - package-ecosystem: pip
+    directory: /api
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+
+  # Terraform providers — app component
+  - package-ecosystem: terraform
+    directory: /infrastructure/iac/components/app/terraform
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+
+  # Terraform providers — ecr component
+  - package-ecosystem: terraform
+    directory: /infrastructure/iac/components/ecr/terraform
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
