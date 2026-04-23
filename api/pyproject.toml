@@ -29,7 +29,7 @@ dev = [
     "asgi-lifespan>=2.1.0",
     "coverage>=7.13.5",
     "ruff>=0.15.8",
-    "pyright>=1.1.408",
+    "pyright>=1.1.409",
 ]
 
 [tool.pytest.ini_options]
