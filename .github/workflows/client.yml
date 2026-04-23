@@ -36,7 +36,7 @@ jobs:
         with:
           package_json_file: client/package.json
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "24"
           cache: pnpm
@@ -60,7 +60,7 @@ jobs:
         with:
           package_json_file: client/package.json
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "24"
           cache: pnpm
@@ -99,7 +99,7 @@ jobs:
         with:
           package_json_file: client/package.json
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "24"
           cache: pnpm
