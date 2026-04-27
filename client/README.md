@@ -7,7 +7,7 @@ Please make sure you have followed the setup instructions in the [root](../READM
 1. Run `npm install`
 1. Copy and override secrets `cp .env.{example,local} && vi .env.local`
 1. Run `npm run dev`
-1. Verify that http://localhost:3000 loads
+1. Verify that <http://localhost:3000> loads
 
 ## Storybook
 

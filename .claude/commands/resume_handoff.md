@@ -29,12 +29,12 @@ When this command is invoked:
 
 3. **If no parameters provided**, respond with:
    ```
-   I'll help you resume work from a handoff document. 
-   
+   I'll help you resume work from a handoff document.
+
    You can provide:
    - A full path: `/resume_handoff thoughts/shared/handoffs/bd-a1b2/2025-01-22_14-30-00_description.md`
    - A task ID: `/resume_handoff bd-a1b2` or `/resume_handoff issue-123`
-   
+
    Let me check for recent handoffs...
    ```
    Then run `ls -lt thoughts/shared/handoffs/*/` to show available handoffs.

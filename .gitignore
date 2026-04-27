@@ -15,4 +15,3 @@
 # Terraform files to ignore
 .terraform.lock.hcl
 .terraform
-

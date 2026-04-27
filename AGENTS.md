@@ -31,6 +31,9 @@ This file contains rules that are injected into every AI coding session. Keep it
 - Never force push to shared branches
 - Never delete tests to make the build pass
 - Never skip running the test suite
+- Never use `git commit --no-verify` to bypass pre-commit hooks. If a hook
+  fails, fix the underlying issue (or update the hook config with the team's
+  approval) rather than bypassing it.
 
 ---
 
@@ -250,7 +253,6 @@ git branch --show-current  # Should NOT be 'main'
 - Handoffs bridge sessions - no value after task completion
 - PR descriptions are working files - the PR itself is the record
 
-
 ---
 
 ## Available Commands
@@ -300,7 +302,7 @@ For complex features, use git worktrees:
 Use `/create_plan` for complex features requiring multiple sessions.
 Use `/create_handoff` before ending a session with work in progress.
 
-## PR Workflow
+## PR Creation
 
 1. Create feature branch (see Branch Workflow above)
 2. Make changes and commit to feature branch
@@ -445,10 +447,12 @@ bd close bd-42 --reason "Completed" --json
 5. **Complete**: `bd close <id> --reason "Done"`
 
 ### Quality
+
 - Use `--acceptance` and `--design` fields when creating issues
 - Use `--validate` to check description completeness
 
 ### Lifecycle
+
 - `bd defer <id>` / `bd supersede <id>` for issue management
 - `bd stale` / `bd orphans` / `bd lint` for hygiene
 - `bd human <id>` to flag for human decisions
@@ -484,17 +488,20 @@ For more details, see README.md and docs/QUICKSTART.md.
 2. **Run quality gates** (if code changed) - Tests, linters, builds
 3. **Update issue status** - Close finished work, update in-progress items
 4. **PUSH TO REMOTE** - This is MANDATORY:
+
    ```bash
    git pull --rebase
    bd dolt push
    git push
    git status  # MUST show "up to date with origin"
    ```
+
 5. **Clean up** - Clear stashes, prune remote branches
 6. **Verify** - All changes committed AND pushed
 7. **Hand off** - Provide context for next session
 
 **CRITICAL RULES:**
+
 - Work is NOT complete until `git push` succeeds
 - NEVER stop before pushing - that leaves work stranded locally
 - NEVER say "ready to push when you are" - YOU must push

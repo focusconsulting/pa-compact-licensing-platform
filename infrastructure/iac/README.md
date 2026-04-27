@@ -12,8 +12,6 @@ the environment you will be working with.
 Until a pipeline has been created to run this, you must run this manually
 
 1. cd infrastructure/iac/components/<component>/terraform
-2. terraform init -backend-config=../../../environments/dev/us-east-1/<component>.backend.hcl 
+2. terraform init -backend-config=../../../environments/dev/us-east-1/<component>.backend.hcl
 3. terraform plan -var-file=../../../environments/dev/us-east-1/<component>.tfvars
 4. terraform apply -var-file=../../../environments/dev/us-east-1/<component>.tfvars
-
-

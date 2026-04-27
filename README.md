@@ -36,12 +36,35 @@ iac/          Infrastructure as Code
      asdf reshim
      npm install -g pnpm@latest-10
    ```
-    - Python 3.13+
-    - Node.js 24+
-    - [uv](https://docs.astral.sh/uv/) (Python package manager)
-    - [pnpm](https://pnpm.io/) 10+
-    - [just](https://github.com/casey/just) (task runner)
+
+  - Python 3.13+
+  - Node.js 24+
+  - [uv](https://docs.astral.sh/uv/) (Python package manager)
+  - [pnpm](https://pnpm.io/) 10+
+  - [just](https://github.com/casey/just) (task runner)
 - Docker (for containerized linting and builds)
+- [pre-commit](https://pre-commit.com/) (`pipx install pre-commit` or `brew install pre-commit`)
+
+## Pre-commit hooks
+
+Install once after cloning:
+
+```bash
+pre-commit install           # sets up the git hook
+pre-commit install-hooks     # pre-fetch hook environments
+```
+
+Hooks run automatically on `git commit`. To run them on demand:
+
+```bash
+pre-commit run --all-files   # lint the whole repo
+pre-commit run               # lint staged files only
+```
+
+Hooks include: ruff (Python lint + format), gitleaks (secret detection),
+markdownlint, and generic file checks (trailing whitespace, EOF, merge
+conflicts, large files, YAML/JSON validity). The same hooks run in CI via
+`.github/workflows/lint.yml`.
 
 ## Getting Started
 
