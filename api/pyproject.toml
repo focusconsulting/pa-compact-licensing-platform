@@ -19,7 +19,7 @@ dependencies = [
     "python-jose[cryptography]>=3.5.0",
     "httpx>=0.28.1",
     "sqlmodel>=0.0.38",
-    "greenlet>=3.4.0",
+    "greenlet>=3.5.0",
     ]
 
 [dependency-groups]
