@@ -3,7 +3,7 @@ name = "pa-compact-api"
 version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
-    "fastapi>=0.136.0",
+    "fastapi>=0.136.1",
     "uvicorn[standard]>=0.46.0",
     "gunicorn>=25.3.0",
     "asyncpg>=0.31.0",
