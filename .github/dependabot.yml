@@ -7,6 +7,9 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 10
+    groups:
+      npm-all:
+        patterns: ["*"]
 
   # Python / uv (api/)
   - package-ecosystem: pip
@@ -15,6 +18,9 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 10
+    groups:
+      pip-all:
+        patterns: ["*"]
 
   # Terraform providers — app component
   - package-ecosystem: terraform
@@ -23,6 +29,9 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    groups:
+      terraform-app-all:
+        patterns: ["*"]
 
   # Terraform providers — ecr component
   - package-ecosystem: terraform
@@ -31,6 +40,9 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    groups:
+      terraform-ecr-all:
+        patterns: ["*"]
 
   # GitHub Actions
   - package-ecosystem: github-actions
@@ -39,3 +51,6 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 10
+    groups:
+      actions-all:
+        patterns: ["*"]
