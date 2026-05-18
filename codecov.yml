@@ -2,11 +2,11 @@
 flags:
   api:
     paths:
-      - api/
+      - engineering/api/
     carryforward: true
   client:
     paths:
-      - client/
+      - engineering/client/
     carryforward: true
 coverage:
   status:

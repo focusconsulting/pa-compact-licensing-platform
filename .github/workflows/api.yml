@@ -4,12 +4,12 @@ on:
   push:
     branches: [main]
   pull_request:
-    paths: [api/**]
+    paths: [engineering/api/**]
   workflow_dispatch:
 
 defaults:
   run:
-    working-directory: api
+    working-directory: engineering/api
 
 jobs:
   changes:
@@ -21,7 +21,7 @@ jobs:
       - name: Check changed paths
         id: filter
         run: |
-          if git diff --name-only HEAD^ HEAD 2>/dev/null | grep -q "^api/"; then
+          if git diff --name-only HEAD^ HEAD 2>/dev/null | grep -q "^engineering/api/"; then
             echo "api=true" >> $GITHUB_OUTPUT
           else
             echo "api=false" >> $GITHUB_OUTPUT
@@ -35,7 +35,7 @@ jobs:
       - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
-          cache-dependency-glob: api/uv.lock
+          cache-dependency-glob: engineering/api/uv.lock
 
       - uses: actions/setup-python@v6
         with:
@@ -61,7 +61,7 @@ jobs:
       - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
-          cache-dependency-glob: api/uv.lock
+          cache-dependency-glob: engineering/api/uv.lock
 
       - uses: actions/setup-python@v6
         with:
@@ -93,7 +93,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: api
-          files: api/coverage.xml
+          files: engineering/api/coverage.xml
           fail_ci_if_error: true
 
   deploy:
@@ -128,7 +128,7 @@ jobs:
           ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
         run: |
           IMAGE_TAG=$(date +%Y%m%d%H%M%S)-${GITHUB_SHA::10}
-          docker build --target app -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG api/
+          docker build --target app -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG engineering/api/
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 

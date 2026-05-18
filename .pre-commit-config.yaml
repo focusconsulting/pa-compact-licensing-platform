@@ -15,7 +15,7 @@ repos:
       - id: check-yaml
         args: [--allow-multiple-documents]
       - id: check-json
-        exclude: ^client/tsconfig\.json$
+        exclude: ^engineering/client/tsconfig\.json$
       - id: detect-private-key
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
@@ -23,9 +23,9 @@ repos:
     hooks:
       - id: ruff
         args: [--fix]
-        files: ^api/
+        files: ^engineering/api/
       - id: ruff-format
-        files: ^api/
+        files: ^engineering/api/
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.21.2
