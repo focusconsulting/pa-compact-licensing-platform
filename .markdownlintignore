@@ -3,5 +3,5 @@ thoughts/
 .beads/
 node_modules/
 **/node_modules/
-client/.next/
-client/out/
+engineering/client/.next/
+engineering/client/out/
