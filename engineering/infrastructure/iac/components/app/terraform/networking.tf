@@ -15,14 +15,6 @@ resource "aws_security_group" "alb_sg" {
   description = "${var.environment_name}-${local.application_name}-alb-sg"
   vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
 
-  ingress {
-    description     = "HTTP from CloudFront VPC Origin"
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    security_groups = [data.aws_security_group.cloudfront_vpc_origin.id]
-  }
-
   egress {
     from_port   = 0
     to_port     = 0
@@ -33,6 +25,18 @@ resource "aws_security_group" "alb_sg" {
   tags = {
     Name = "${var.environment_name}-${local.application_name}-alb-sg"
   }
+}
+
+# Allow traffic from CloudFront to the ALB by referencing the security group CloudFront VPC Origins creates.
+resource "aws_vpc_security_group_ingress_rule" "alb_from_cloudfront" {
+  security_group_id            = aws_security_group.alb_sg.id
+  referenced_security_group_id = data.aws_security_group.cloudfront_vpc_origin.id
+  ip_protocol                  = "tcp"
+  from_port                    = 80
+  to_port                      = 80
+  description                  = "HTTP from CloudFront VPC Origin"
+
+  depends_on = [aws_cloudfront_vpc_origin.alb_origin]
 }
 
 # Security Group for ECS Fargate tasks

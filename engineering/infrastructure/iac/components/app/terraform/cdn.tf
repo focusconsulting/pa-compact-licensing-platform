@@ -29,6 +29,13 @@ resource "aws_cloudfront_vpc_origin" "alb_origin" {
   }
 }
 
+# CloudFront VPC Origins automatically creates and manages a security group in the account.
+# We make it available as a data source for other resources
+data "aws_security_group" "cloudfront_vpc_origin" {
+  name = "CloudFront-VPCOrigins-Service-SG"
+  depends_on = [aws_cloudfront_vpc_origin.alb_origin]
+}
+
 # S3 Bucket for Front-End Client Assets
 resource "aws_s3_bucket" "client_assets" {
   bucket = "${var.environment_name}-${local.application_name}-client-assets"
