@@ -11,6 +11,8 @@
 | april 25 2025 pa commission meeting minutes approved | [april-25-2025-pa-commission-meeting-minutes-approved.md](sources/april-25-2025-pa-commission-meeting-minutes-approved.md) | pdf | 2026-09-29 | — |
 | comms committee mar 5 2026 agenda | [comms-committee-mar-5-2026-agenda.md](sources/comms-committee-mar-5-2026-agenda.md) | pdf | 2026-09-29 | — |
 | comms committee mar 5 2026 draft minutes | [comms-committee-mar-5-2026-draft-minutes.md](sources/comms-committee-mar-5-2026-draft-minutes.md) | pdf | 2026-09-29 | — |
+| CompactConnect Backend Design | [compactconnect-backend-design.md](sources/compactconnect-backend-design.md) | md | 2026-09-30 | — |
+| CompactConnect Staff Onboarding Guide | [compactconnect-staff-user-guide.md](sources/compactconnect-staff-user-guide.md) | md | 2026-09-30 | — |
 | draft 3 rule 2 state of qualifying license | [draft-3-rule-2-state-of-qualifying-license.md](sources/draft-3-rule-2-state-of-qualifying-license.md) | pdf | 2026-09-29 | — |
 | draft minutes sept 15 2025 finance committee | [draft-minutes-sept-15-2025-finance-committee.md](sources/draft-minutes-sept-15-2025-finance-committee.md) | pdf | 2026-09-29 | — |
 | exec com agenda august 13 25 | [exec-com-agenda-august-13-25.md](sources/exec-com-agenda-august-13-25.md) | pdf | 2026-09-29 | — |
