@@ -1,0 +1,17 @@
+---
+atom-id: ATOM-GOV-R5-08
+source: PA Compact draft Rule 5 "Data System" (renumbered Rule 4 on 2025-11-10; earlier draft text)
+date-observed: 2026-09-29
+captured-by: CTO (Kalish, reviewer)
+context: Read from the corpus source (draft rule (earlier draft; see Nov 10 2025 minutes for amendments); draft predating the 2025-11-10 amendments) at §5.6(a), L1409; approved from the 2026-09-29 atom-candidates debrief.
+source-document: product/context/research-corpus/sources/pa-draft-rules-2_3_5.md
+tags: access-control, state-scoping
+---
+
+# ATOM-GOV-R5-08
+
+The PA Compact draft Rule 5 "Data System" (renumbered Rule 4 on 2025-11-10; earlier draft text) states, at §5.6(a), L1409:
+
+> "A Participating State shall have access to the uniform data set for every applicant and licensee who holds a Qualifying License or Compact Privilege in the Participating State."
+
+This is a direct quote from the converted source file (`pa-draft-rules-2_3_5.md`, L1409); it is not a paraphrase.

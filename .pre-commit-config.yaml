@@ -8,7 +8,9 @@ repos:
     hooks:
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
+        exclude: ^product/context/(research-corpus/sources/|PA Compact Data System SOW)
       - id: end-of-file-fixer
+        exclude: ^product/context/(research-corpus/sources/|PA Compact Data System SOW)
       - id: check-merge-conflict
       - id: check-added-large-files
         args: [--maxkb=500]
@@ -37,3 +39,4 @@ repos:
     hooks:
       - id: markdownlint
         args: [--config, .markdownlint.json]
+        exclude: ^product/context/(research-corpus/sources/|PA Compact Data System SOW)
