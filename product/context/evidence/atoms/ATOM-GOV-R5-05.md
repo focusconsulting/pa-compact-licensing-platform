@@ -6,6 +6,9 @@ captured-by: CTO (Kalish, reviewer)
 context: Read from the corpus source (draft rule (earlier draft; see Nov 10 2025 minutes for amendments); draft predating the 2025-11-10 amendments) at §5.4(b) (superseded in part by M1110-03), L1312–1316; approved from the 2026-09-29 atom-candidates debrief.
 source-document: product/context/research-corpus/sources/pa-draft-rules-2_3_5.md
 tags: adverse-action, reporting-window, superseded
+status: superseded
+superseded-by: ATOM-GOV-R4-02
+superseded-on: 2026-10-01 (SCRUM-39). Rules 3 and 4 were adopted on 2026-04-06.
 ---
 
 # ATOM-GOV-R5-05
