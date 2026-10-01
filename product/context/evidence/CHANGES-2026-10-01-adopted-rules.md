@@ -1,0 +1,101 @@
+# Atoms superseded by the adopted Rules 3 and 4
+
+**Date:** 2026-10-01. **Ticket:** SCRUM-39. **Written by:** Moe (moe-focus).
+
+The Commission adopted Rule 3 (Compact Privilege) and Rule 4 (Compact Data System) on 2026-04-06. They took effect on 2026-05-31. Eight atoms in this folder quoted draft text that the adopted rules changed. Each one now has a new atom that quotes the adopted text. The old atoms are kept and marked `status: superseded`.
+
+This file records each change: what the draft said, what the adopted rule says, and which flows and signals cite the old atom. Those flows and signals carry a "needs review" note until they are updated. When a file is updated, remove its note and its entry in the "Cited by" column.
+
+Draft sources:
+
+- `product/context/research-corpus/raw/raw/claudesourced-pacompact-meetings/rules-committee/pa-compact-rule-2-and-3-drafts.pdf`: the Rules 2 and 3 redline approved by the Rules Committee on 2026-02-09. Line numbers restart for each rule. Draft text below is quoted as amended: inserted text kept, struck text left out, checked against the page images. The converted text of this redline lost its strike-through marks, so quote from the PDF.
+- `product/context/research-corpus/raw/raw/claudesourced-pacompact-meetings/rules-committee/pa-draft-rules-2_3_5.pdf`: draft Rule 5, Data System, renumbered Rule 4 on 2025-11-10. Clean text, with no redline marks.
+
+Adopted text: `product/context/research-corpus/raw/raw/commission-documents/rules/adopted/`.
+
+Not covered here:
+
+- `ATOM-GOV-R23-01` and `ATOM-GOV-R23-11` quote draft text that has no counterpart in the adopted rules. They are not superseded by a new atom.
+- The other draft-rule atoms quote text that reads the same in the adopted rules. They still cite the draft and have not been given adopted-rule citations.
+
+## Summary
+
+| Old atom | New atom | Adopted section | What it covers | Cited by |
+|---|---|---|---|---|
+| `ATOM-GOV-R23-05` | `ATOM-GOV-R3-01` | Rule 3.4(a) | What a PA submits to apply | `evidence/signals/SIGNAL-the-sql-is-the-sole-eligibility-authority.md`, `flows/01-end-to-end-privilege-issuance.md`, `flows/02-sql-eligibility-verification.md` |
+| `ATOM-GOV-R23-06` | `ATOM-GOV-R3-02` | Rule 3.4(b) | What the state of qualifying license does with an application | `evidence/signals/SIGNAL-the-sql-is-the-sole-eligibility-authority.md`, `evidence/signals/SIGNAL-the-system-does-the-heavy-lifting-for-states.md`, `evidence/signals/SIGNAL-the-uniform-data-set-is-one-record-with-per-field-provenance.md`, `flows/02-sql-eligibility-verification.md` |
+| `ATOM-GOV-R23-12` | `ATOM-GOV-R3-03` | Rule 3.5(c) | What the state of qualifying license does at renewal | `evidence/signals/SIGNAL-privilege-life-is-tied-to-the-qualifying-license.md`, `evidence/signals/SIGNAL-the-sql-is-the-sole-eligibility-authority.md`, `flows/04-expiration-and-renewal.md` |
+| `ATOM-GOV-R23-13` | `ATOM-GOV-R3-04` | Rule 3.7(a)-(b) | When an application is withdrawn | `flows/02-sql-eligibility-verification.md`, `flows/03-payment-and-remote-state-issuance.md`, `flows/06-state-machines.md` |
+| `ATOM-GOV-R23-14` | `ATOM-GOV-R3-05` | Rule 3.9(a) | Appealing a denial | `flows/02-sql-eligibility-verification.md` |
+| `ATOM-GOV-R23-15` | `ATOM-GOV-R3-06` | Rule 3.9(b) | When a state withdraws eligibility | `evidence/signals/SIGNAL-the-sql-is-the-sole-eligibility-authority.md`, `flows/05-adverse-action-cascade.md`, `flows/06-state-machines.md` |
+| `ATOM-GOV-R5-02` | `ATOM-GOV-R4-01` | Rule 4.3(c) | What the state of qualifying license must verify and submit | `evidence/signals/SIGNAL-the-uniform-data-set-is-one-record-with-per-field-provenance.md`, `flows/01-end-to-end-privilege-issuance.md`, `flows/02-sql-eligibility-verification.md` |
+| `ATOM-GOV-R5-05` | `ATOM-GOV-R4-02` | Rule 4.4(b) | Reporting adverse actions | `flows/05-adverse-action-cascade.md` |
+
+## `ATOM-GOV-R23-05` to `ATOM-GOV-R3-01`: What a PA submits to apply (Rule 3.4(a))
+
+- **Draft**, Rule 3.4(a)(2), PDF page 7, lines 111-115: "During the application process designate a state of qualifying license. The PA must meet one of the state of qualifying license eligibility requirements in Rule 2 at the time of application. A member state shall apply Rule 2 requirements contemporaneously when evaluating a licensee's compact privilege eligibility under Compact Section 4 and this Rule."
+  **Adopted**, Rule 3.4(a)(2), lines 118-121: "At the time of application designate a Participating State as the state of qualifying license for purposes of eligibility for a compact privilege through the Compact if the PA possesses a full and unrestricted license to conduct medical services in that Participating State."
+- **Draft**, Rule 3.4(a)(3), PDF page 7, lines 116-118: "Submit to a criminal background check at the time of application through the process designated by the state of qualifying license which will include the submission of fingerprints or other biometric based information."
+  **Adopted**, Rule 3.4(a)(4), lines 127-129: "Submit to a criminal background check within 60 days of the application through the process designated by the state of qualifying license which will include the submission of fingerprints or other biometric based information."
+- **Draft**, Rule 3.4(a)(4), PDF page 7, lines 119-120: "Submit any other information regarding clarifying any discrepancies requested by the state of qualifying license."
+  **Adopted**, Rule 3.4(a)(6), lines 132-134: "Submit any other information requested by the state of qualifying license regarding any unusual circumstances related to the application under review in accordance with compact requirements."
+- **Draft**, Rule 2.1(b), PDF page 3, lines 80-83: "Regardless of the designation qualification under subsection (a), the PA shall provide the Commission the primary residence address and consent to service of process by mail at the primary residence address under Section 5(A)(2) of the Compact. A change of primary residence address shall be reported to the Commission within thirty (30) days."
+  **Adopted**, Rule 3.4(a)(3), lines 122-126: "Regardless of the participating state selected as the state of qualifying license, the PA shall provide the Commission the primary residence address and consent to service of process by mail at the primary residence address under Section 5(A)(2) of the Compact. A change of primary residence address shall be reported to the Commission within thirty (30) days of the change."
+- **Draft** Rule 3.4(a) (PDF pages 7-8, lines 107-122) has no item on pending investigations.
+  **Adopted**, Rule 3.4(a)(5), lines 130-131: "Sign an attestation that the applicant is unaware of any pending investigation of the current qualifying license at the time of the application."
+- Draft 3.4(a)(1) and (5) read the same as adopted 3.4(a)(1) and (7).
+
+Cited by: `evidence/signals/SIGNAL-the-sql-is-the-sole-eligibility-authority.md`, `flows/01-end-to-end-privilege-issuance.md`, `flows/02-sql-eligibility-verification.md`.
+
+## `ATOM-GOV-R23-06` to `ATOM-GOV-R3-02`: What the state of qualifying license does with an application (Rule 3.4(b))
+
+- **Draft**, Rule 3.4(b), PDF page 8, lines 124-133: "When the state of qualifying license receives the application through the Compact Commission that state shall: (1) Evaluate the PA's eligibility for participating in the compact privilege process; (2) Perform a criminal background check pursuant to Public Law 92-544 as required by the terms and provisions of the Compact within 60 days; (3) Determine whether the PA meets one of the state of qualifying license eligibility requirements in Rule 2 at the time of application; and (4) Issue notice, through the data system, to the Compact Commission verifying or denying the PA's eligibility to participate in the Compact and confirming that the state will serve as the state of qualifying license."
+  **Adopted**: see `ATOM-GOV-R3-02`
+
+Cited by: `evidence/signals/SIGNAL-the-sql-is-the-sole-eligibility-authority.md`, `evidence/signals/SIGNAL-the-system-does-the-heavy-lifting-for-states.md`, `evidence/signals/SIGNAL-the-uniform-data-set-is-one-record-with-per-field-provenance.md`, `flows/02-sql-eligibility-verification.md`.
+
+## `ATOM-GOV-R23-12` to `ATOM-GOV-R3-03`: What the state of qualifying license does at renewal (Rule 3.5(c))
+
+- **Draft**, Rule 3.5(d), PDF page 9, lines 187-196: "When the state of qualifying license processes a complete renewal for the PA, the state of qualifying license shall: (1) Determine that the PA has not been found guilty by a court of a felony or misdemeanor offense through an adjudication or by an entry of a plea of guilt or no contest to the charge; (2) Determine whether the PA meets one of the state of qualifying license eligibility requirements in Rule 2 at the time of renewal; and (3) Issue notice, through the data system, to the Compact Commission verifying or denying the PA's eligibility to continue participation in the Compact."
+  **Adopted**: see `ATOM-GOV-R3-03`
+
+Cited by: `evidence/signals/SIGNAL-privilege-life-is-tied-to-the-qualifying-license.md`, `evidence/signals/SIGNAL-the-sql-is-the-sole-eligibility-authority.md`, `flows/04-expiration-and-renewal.md`.
+
+## `ATOM-GOV-R23-13` to `ATOM-GOV-R3-04`: When an application is withdrawn (Rule 3.7(a)-(b))
+
+- **Draft**, Rule 3.6(a)(1), PDF page 10, lines 210-212: "If the PA does not submit all requested materials, including any required fees, within 60 days after the application is opened, then the application shall be deemed to have been withdrawn."
+  **Adopted**, Rule 3.7(a)(1), lines 235-237: "If the PA does not submit all requested materials, including any required fees, within 60 days after the application is opened, then the application shall be deemed incomplete and to have been withdrawn."
+- The rest of draft 3.6 (PDF page 10, lines 207-223), including the remote-state clock in (b), matches adopted 3.7 apart from the section number and the same "deemed incomplete and" wording in 3.7(b)(1).
+
+Cited by: `flows/02-sql-eligibility-verification.md`, `flows/03-payment-and-remote-state-issuance.md`, `flows/06-state-machines.md`.
+
+## `ATOM-GOV-R23-14` to `ATOM-GOV-R3-05`: Appealing a denial (Rule 3.9(a))
+
+- **Draft**, Rule 3.8(a), PDF pages 10-11, lines 241-245: "If the member state selected as the state of qualifying license issues a notice to the Compact Commission denying the applicant's eligibility for the compact, the PA may appeal such determination. The appeal shall be filed with the member state that issued the denial and shall be subject to the laws of that state."
+  **Adopted**: see `ATOM-GOV-R3-05`
+- In the redline, "of eligibility within 30 days of the PA's receipt of the notice" is struck through (PDF page 10, line 243). The earlier version of this atom quoted those words as live text, because the converted file lost the strike-through.
+
+Cited by: `flows/02-sql-eligibility-verification.md`.
+
+## `ATOM-GOV-R23-15` to `ATOM-GOV-R3-06`: When a state withdraws eligibility (Rule 3.9(b))
+
+- **Draft**, Rule 3.8(b), PDF page 11, lines 247-255: "If the member state selected as the state of qualifying license issues a notice to the Compact Commission approving the PA's eligibility for the compact and thereafter withdraws the approval due to the PA not meeting the Compact's eligibility requirements, any compact privilege issued under that qualifying license shall automatically be cancelled with no action required by any member state. The Compact Commission shall provide e-mail notice of the withdrawal to the PA along with notice that all issued compact privileges have been cancelled. The PA may appeal the withdrawal of eligibility. The appeal shall be filed with the member state that issued the denial and shall be subject to the laws of that state."
+  **Adopted**: see `ATOM-GOV-R3-06`
+- In the redline, "within 30 days of the PA's receipt of the withdrawal notice" is struck through (PDF page 11, lines 253-254).
+
+Cited by: `evidence/signals/SIGNAL-the-sql-is-the-sole-eligibility-authority.md`, `flows/05-adverse-action-cascade.md`, `flows/06-state-machines.md`.
+
+## `ATOM-GOV-R5-02` to `ATOM-GOV-R4-01`: What the state of qualifying license must verify and submit (Rule 4.3(c))
+
+- **Draft**, §5.3(c), lines 114-134: "As a State of Qualifying License, a Participating State shall verify and submit the following information for each PA applying for or holding a Qualifying License: (1) Full legal name; (2) Other name(s) used, previously or currently; (3) Sex; (4) Date of birth; (5) National Provider Identifier Number; (6) Social security number; (7) Primary residence address of record; (8) Telephone number of record; (9) E-mail address delegated by applicant to receive correspondence from the Compact Commission and Participating States; (10) PA educational program completed, including year of completion; (11) NCCPA Certification number, current certification status and certification expiration date; (12) License number, status, issue date and expiration date in the designated State of Qualifying License; (13) Adverse actions against a License or Compact Privilege; (14) The existence of Significant Investigative Information; and (15) Any denial of licensure, and the reason(s) for such denial (excluding the reporting of any criminal history record information where prohibited by law)."
+  **Adopted**: see `ATOM-GOV-R4-01`
+
+Cited by: `evidence/signals/SIGNAL-the-uniform-data-set-is-one-record-with-per-field-provenance.md`, `flows/01-end-to-end-privilege-issuance.md`, `flows/02-sql-eligibility-verification.md`.
+
+## `ATOM-GOV-R5-05` to `ATOM-GOV-R4-02`: Reporting adverse actions (Rule 4.4(b))
+
+- **Draft**, §5.4(b), lines 159-166: "Adverse action reports shall: (1) Include the participating PA's name, NPI number, a summary of the action taken or a copy of a public complaint detailing the charges against the PA, and a copy of the order or other documentation imposing the adverse action. (2) Be submitted to the Compact Commission as soon as reasonably possible, but no later than ten days after the adverse action is ordered or otherwise taken by the State. If the adverse action is summary or emergency action, the report shall be submitted within one business day."
+  **Adopted**: see `ATOM-GOV-R4-02`
+- Draft §5.4(b)(3), lines 167-170, reads the same as adopted 4.4(b)(3).
+
+Cited by: `flows/05-adverse-action-cascade.md`.
