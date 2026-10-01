@@ -20,6 +20,8 @@ tensions: [TENSION-01-adverse-action-notification-breadth]
 signals: [SIGNAL-disciplinary-data-is-confidential-by-default, SIGNAL-the-sql-is-the-sole-eligibility-authority]
 ---
 
+> **Needs review (2026-10-01, SCRUM-39).** This file cites two atoms that quoted draft rule text. That text changed when Rules 3 and 4 were adopted on 2026-04-06. `ATOM-GOV-R23-15` is replaced by `ATOM-GOV-R3-06`; `ATOM-GOV-R5-05` is replaced by `ATOM-GOV-R4-02`. The draft and adopted text are side by side in `product/context/evidence/CHANGES-2026-10-01-adopted-rules.md`. Remove this note when the file is updated.
+
 # FLOW-05 — Adverse action on the qualifying license
 
 ML §4.B / §6.G: an adverse action on the QL deactivates **every** privilege. There is no automatic reinstatement; the PA may apply again two years after the restriction ends (ML §4.A.8, §4.C). An adverse action against a **single privilege**, reported by that remote state (ML §6.B.1), affects only that privilege.
