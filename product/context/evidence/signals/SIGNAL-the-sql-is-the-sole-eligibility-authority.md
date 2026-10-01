@@ -6,6 +6,8 @@ validated-by: CTO (Kalish)
 tags: sql, eligibility, state-scoping, two-phase-workflow
 ---
 
+> **Needs review (2026-10-01, SCRUM-39).** This file cites four atoms that quoted draft rule text. That text changed when Rules 3 and 4 were adopted on 2026-04-06. `ATOM-GOV-R23-05` is replaced by `ATOM-GOV-R3-01`; `ATOM-GOV-R23-06` is replaced by `ATOM-GOV-R3-02`; `ATOM-GOV-R23-12` is replaced by `ATOM-GOV-R3-03`; `ATOM-GOV-R23-15` is replaced by `ATOM-GOV-R3-06`. The draft and adopted text are side by side in `product/context/evidence/CHANGES-2026-10-01-adopted-rules.md`. Remove this note when the file is updated.
+
 # SIGNAL — The State of Qualifying License is the sole eligibility authority
 
 ## Pattern

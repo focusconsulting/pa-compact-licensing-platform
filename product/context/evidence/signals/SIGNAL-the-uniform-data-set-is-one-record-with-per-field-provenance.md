@@ -6,6 +6,8 @@ validated-by: CTO (Kalish)
 tags: uniform-data-set, data-model, provenance, sql-verification, pa-entered, commission-generated
 ---
 
+> **Needs review (2026-10-01, SCRUM-39).** This file cites two atoms that quoted draft rule text. That text changed when Rules 3 and 4 were adopted on 2026-04-06. `ATOM-GOV-R23-06` is replaced by `ATOM-GOV-R3-02`; `ATOM-GOV-R5-02` is replaced by `ATOM-GOV-R4-01`. The draft and adopted text are side by side in `product/context/evidence/CHANGES-2026-10-01-adopted-rules.md`. Remove this note when the file is updated.
+
 # SIGNAL — The uniform data set is one record with per-field provenance
 
 ## Pattern
