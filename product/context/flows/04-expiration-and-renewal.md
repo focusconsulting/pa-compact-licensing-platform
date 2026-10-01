@@ -18,6 +18,8 @@ atoms: [ATOM-GOV-ML-09, ATOM-GOV-ML-12, ATOM-GOV-R23-09, ATOM-GOV-R23-10, ATOM-G
 signals: [SIGNAL-privilege-life-is-tied-to-the-qualifying-license]
 ---
 
+> **Needs review (2026-10-01, SCRUM-39).** This file cites one atom that quoted draft rule text. That text changed when Rules 3 and 4 were adopted on 2026-04-06. `ATOM-GOV-R23-12` is replaced by `ATOM-GOV-R3-03`. The draft and adopted text are side by side in `product/context/evidence/CHANGES-2026-10-01-adopted-rules.md`. Remove this note when the file is updated.
+
 # FLOW-04 — Privilege expiration and renewal
 
 Key rule: a privilege's expiration is **pinned** to the QL expiration as it was when the privilege was requested. Renewing the QL does not extend the privilege (R3r §3.5(a)). CompactConnect applies the same rule and shows it on the dashboard as a clock icon whose tooltip says privileges expire when the license does (`pa-dashboard-expiry-explanation.png`); we keep that device. Renewal = the SQL confirms continued eligibility (R3r §3.5(d)) → the PA re-applies to remote states, with fee (R3r §3.5(e)). The Nov 10 2025 minutes ask that the system, not the state, track which PAs use each SQL: "the system should be doing the heavy lifting there."

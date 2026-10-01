@@ -17,6 +17,8 @@ atoms: [ATOM-GOV-ML-01, ATOM-GOV-ML-02, ATOM-GOV-R23-03, ATOM-GOV-R23-05, ATOM-G
 signals: [SIGNAL-the-sql-is-the-sole-eligibility-authority, SIGNAL-the-system-does-the-heavy-lifting-for-states, SIGNAL-the-uniform-data-set-is-one-record-with-per-field-provenance]
 ---
 
+> **Needs review (2026-10-01, SCRUM-39).** This file cites two atoms that quoted draft rule text. That text changed when Rules 3 and 4 were adopted on 2026-04-06. `ATOM-GOV-R23-05` is replaced by `ATOM-GOV-R3-01`; `ATOM-GOV-R5-02` is replaced by `ATOM-GOV-R4-01`. The draft and adopted text are side by side in `product/context/evidence/CHANGES-2026-10-01-adopted-rules.md`. Remove this note when the file is updated.
+
 # FLOW-01 — End-to-end compact privilege issuance
 
 From "I want to practise in another state" to "privilege issued". Three phases; the Commission's role in the happy path is played by the system itself (R3r §3.2(a): provide the application, facilitate SQL review, collect and remit fees). Commission staff watch the dashboard (C-01) and pull reports (C-02).

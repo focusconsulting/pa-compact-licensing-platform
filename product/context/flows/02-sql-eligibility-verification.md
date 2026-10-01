@@ -20,6 +20,8 @@ atoms: [ATOM-GOV-ML-05, ATOM-GOV-ML-06, ATOM-GOV-ML-14, ATOM-GOV-R23-01, ATOM-GO
 signals: [SIGNAL-the-sql-is-the-sole-eligibility-authority, SIGNAL-the-uniform-data-set-is-one-record-with-per-field-provenance]
 ---
 
+> **Needs review (2026-10-01, SCRUM-39).** This file cites five atoms that quoted draft rule text. That text changed when Rules 3 and 4 were adopted on 2026-04-06. `ATOM-GOV-R23-05` is replaced by `ATOM-GOV-R3-01`; `ATOM-GOV-R23-06` is replaced by `ATOM-GOV-R3-02`; `ATOM-GOV-R23-13` is replaced by `ATOM-GOV-R3-04`; `ATOM-GOV-R23-14` is replaced by `ATOM-GOV-R3-05`; `ATOM-GOV-R5-02` is replaced by `ATOM-GOV-R4-01`. The draft and adopted text are side by side in `product/context/evidence/CHANGES-2026-10-01-adopted-rules.md`. Remove this note when the file is updated.
+
 # FLOW-02 — SQL eligibility verification
 
 The step with no CompactConnect equivalent (crosswalk §4.4: the nearest thing a CompactConnect state does is tick "compact eligible" on a bulk upload). Rule 3 §3.4(b) assigns the State of Qualifying License four duties, all recorded "through the data system":
