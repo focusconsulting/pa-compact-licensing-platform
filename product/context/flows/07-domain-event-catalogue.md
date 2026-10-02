@@ -17,6 +17,8 @@ tensions: [TENSION-01-adverse-action-notification-breadth]
 signals: [SIGNAL-the-system-does-the-heavy-lifting-for-states, SIGNAL-the-uniform-data-set-is-one-record-with-per-field-provenance]
 ---
 
+> **Needs review (2026-10-02, SCRUM-39).** This file cites one atom that quoted only part of an exchange in the Commission minutes. `ATOM-GOV-M0825-02` is replaced by `ATOM-GOV-M0825-04`, which adds counsel N. Kalfas's next turn: "allow the state to put in what they have". The adopted rules keep both routes: the state verifies and submits the "Primary residence address of record" (Rule 4.3(c)(6)), and PA changes are kept as history (Rule 4.3(e)(1)). The details are in `product/context/evidence/CHANGES-2026-10-01-adopted-rules.md`. Remove this note when the file is updated.
+
 # FLOW-07 — Domain event catalogue
 
 The producer writes the event in the same transaction as the change (transactional outbox, decision D2). Consumers are idempotent on `(event_id, handler)`. F-05 ships a test that every event type listed here has at least one test; adding an event means adding a row here.
