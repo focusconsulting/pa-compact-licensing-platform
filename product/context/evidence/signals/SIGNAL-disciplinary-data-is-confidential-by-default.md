@@ -6,6 +6,8 @@ validated-by: CTO (Kalish)
 tags: confidentiality, adverse-action, sii, public-data, access-control
 ---
 
+> **Needs review (2026-10-02, SCRUM-39).** One claim to re-check against the adopted Rules 3 and 4 (adopted 2026-04-06). This signal says a participating state "can only see the records of PAs who hold a license or privilege in that state". The adopted rules also make application information "accessible to all participating states" (Rule 3.4(e)), and let adverse action reports be shared "Upon request" with "any other Participating State" (Rule 4.6(c)). Remove this note when the file is updated.
+
 # SIGNAL — Disciplinary data is confidential by default
 
 ## Pattern
