@@ -6,6 +6,9 @@ captured-by: CTO (Kalish, reviewer)
 context: Read from the corpus source (committee minutes; meeting of 2025-11-10) at L165–167; approved from the 2026-09-29 atom-candidates debrief.
 source-document: product/context/research-corpus/sources/minutes-nov-10-2025-rules-committee-approved.md
 tags: renewal, system-responsibility, sql-tracking
+status: superseded
+superseded-by: ATOM-GOV-M1110-04
+superseded-on: 2026-10-02 (SCRUM-39). The new atom quotes the full exchange from the same minutes.
 ---
 
 # ATOM-GOV-M1110-02

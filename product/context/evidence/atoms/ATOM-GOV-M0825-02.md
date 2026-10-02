@@ -6,6 +6,9 @@ captured-by: CTO (Kalish, reviewer)
 context: Read from the corpus source (committee minutes; meeting of 2025-08-25) at L268–271, during review of draft Rule 5 §5.3(c), the SQL's list of fields to verify and submit.
 source-document: product/context/research-corpus/sources/minutes-august-25-2025-rules-committee-amended-approved.md
 tags: uniform-data-set, address, pa-entered, sql-verification, imlc-precedent, provenance
+status: superseded
+superseded-by: ATOM-GOV-M0825-04
+superseded-on: 2026-10-02 (SCRUM-39). The new atom quotes the full exchange from the same minutes.
 ---
 
 # ATOM-GOV-M0825-02
