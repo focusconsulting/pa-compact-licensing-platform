@@ -6,7 +6,7 @@ validated-by: CTO (Kalish)
 tags: privilege-lifecycle, expiration, renewal, computed-status
 ---
 
-> **Needs review (2026-10-01, SCRUM-39).** This file cites one atom that quoted draft rule text. That text changed when Rules 3 and 4 were adopted on 2026-04-06. `ATOM-GOV-R23-12` is replaced by `ATOM-GOV-R3-03`. The draft and adopted text are side by side in `product/context/evidence/CHANGES-2026-10-01-adopted-rules.md`.  Remove this note when the file is updated.
+> **Needs review (2026-10-01, SCRUM-39).** This file cites one atom that quoted draft rule text. That text changed when Rules 3 and 4 were adopted on 2026-04-06. `ATOM-GOV-R23-12` is replaced by `ATOM-GOV-R3-03`. The draft and adopted text are side by side in `product/context/evidence/CHANGES-2026-10-01-adopted-rules.md`.  Added 2026-10-02 (SCRUM-39): `ATOM-GOV-R23-09` is replaced by `ATOM-GOV-R3-07`. The adopted Rule 3.5(a) adds "or the qualifying license is voluntarily terminated by the PA" and "in accordance with Section 4.A of the model legislation". See the change index. Remove this note when the file is updated.
 
 # SIGNAL — Privilege life is tied to the qualifying license
 
