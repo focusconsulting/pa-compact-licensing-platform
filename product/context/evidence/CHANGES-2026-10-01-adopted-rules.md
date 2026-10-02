@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-01. **Ticket:** SCRUM-39. **Written by:** Moe (moe-focus).
 
-The Commission adopted Rule 3 (Compact Privilege) and Rule 4 (Compact Data System) on 2026-04-06. They took effect on 2026-05-31. Eight atoms in this folder quoted draft text that the adopted rules changed. Each one now has a new atom that quotes the adopted text. The old atoms are kept and marked `status: superseded`.
+The Commission adopted Rule 3 (Compact Privilege) and Rule 4 (Compact Data System) on 2026-04-06. They took effect on 2026-05-31. Ten atoms in this folder quoted draft text that the adopted rules changed (eight on 2026-10-01, two on 2026-10-02). Each one now has a new atom that quotes the adopted text. The old atoms are kept and marked `status: superseded`.
 
 This file records each change: what the draft said, what the adopted rule says, and which flows and signals cite the old atom. Those flows and signals carry a "needs review" note until they are updated. When a file is updated, remove its note and its entry in the "Cited by" column.
 
@@ -21,7 +21,7 @@ Adopted text: `product/context/research-corpus/raw/raw/commission-documents/rule
 Not covered here:
 
 - `ATOM-GOV-R23-01` and `ATOM-GOV-R23-11` quote draft text that the adopted rules left out. They are marked superseded with no replacement. See "Atoms quoting draft text the adopted rules left out" below.
-- The other draft-rule atoms quote text that reads the same in the adopted rules. They still cite the draft and have not been given adopted-rule citations.
+- Twelve draft-rule atoms quote text that reads the same in the adopted rules. Each keeps its draft source and gets one `adopted-text:` line naming the adopted section. See "Atoms with the same wording in the adopted rules" below.
 
 ## Summary
 
@@ -35,6 +35,8 @@ Not covered here:
 | `ATOM-GOV-R23-15` | `ATOM-GOV-R3-06` | Rule 3.9(b) | When a state withdraws eligibility | `evidence/signals/SIGNAL-the-sql-is-the-sole-eligibility-authority.md`, `flows/05-adverse-action-cascade.md`, `flows/06-state-machines.md` |
 | `ATOM-GOV-R5-02` | `ATOM-GOV-R4-01` | Rule 4.3(c) | What the state of qualifying license must verify and submit | `evidence/signals/SIGNAL-the-uniform-data-set-is-one-record-with-per-field-provenance.md`, `flows/01-end-to-end-privilege-issuance.md`, `flows/02-sql-eligibility-verification.md` |
 | `ATOM-GOV-R5-05` | `ATOM-GOV-R4-02` | Rule 4.4(b) | Reporting adverse actions | `flows/05-adverse-action-cascade.md` |
+| `ATOM-GOV-R23-09` | `ATOM-GOV-R3-07` | Rule 3.5(a) | When a privilege expires, and renewing it | `evidence/signals/SIGNAL-privilege-life-is-tied-to-the-qualifying-license.md`, `flows/04-expiration-and-renewal.md`, `flows/06-state-machines.md` |
+| `ATOM-GOV-R5-03` | `ATOM-GOV-R4-03` | Rule 4.3(d) | What the remote state must verify and submit | `evidence/signals/SIGNAL-the-uniform-data-set-is-one-record-with-per-field-provenance.md`, `flows/01-end-to-end-privilege-issuance.md`, `flows/03-payment-and-remote-state-issuance.md` |
 
 ## `ATOM-GOV-R23-05` to `ATOM-GOV-R3-01`: What a PA submits to apply (Rule 3.4(a))
 
@@ -105,6 +107,24 @@ Cited by: `evidence/signals/SIGNAL-the-uniform-data-set-is-one-record-with-per-f
 
 Cited by: `flows/05-adverse-action-cascade.md`.
 
+## `ATOM-GOV-R23-09` to `ATOM-GOV-R3-07`: When a privilege expires, and renewing it (Rule 3.5(a))
+
+Added 2026-10-02 (SCRUM-39).
+
+- **Draft**, Rule 3.5(a), PDF page 9, lines 167-171, as amended (checked against the page image: "extend the expiration date of" is struck, "renew" and the last sentence are inserted): "The expiration date of the qualifying license shall be the expiration date that was in effect on the date the PA applied for the compact privilege. Any renewal of the qualifying license does not automatically renew the compact privilege. The PA must follow the procedure set forth in this Rule in order to maintain any existing compact privilege(s)."
+  **Adopted**: see `ATOM-GOV-R3-07`. Two additions: the first sentence adds "or the qualifying license is voluntarily terminated by the PA", and the last sentence adds "in accordance with Section 4.A of the model legislation".
+
+Cited by: `evidence/signals/SIGNAL-privilege-life-is-tied-to-the-qualifying-license.md`, `flows/04-expiration-and-renewal.md`, `flows/06-state-machines.md`.
+
+## `ATOM-GOV-R5-03` to `ATOM-GOV-R4-03`: What the remote state must verify and submit (Rule 4.3(d))
+
+Added 2026-10-02 (SCRUM-39).
+
+- **Draft**, Rule 5.3(d), `pa-draft-rules-2_3_5.pdf`, lines 135-141: "As a Remote State, a Participating State shall verify and submit the following information for each PA applying for or holding a Compact Privilege in the Remote State: (1) Compact Privilege issue date, status, expiration date and privilege number or other unique privilege identifier issued by the remote state; (2) Adverse actions against a Compact Privilege; and (3) The existence of Significant Investigative Information."
+  **Adopted**: see `ATOM-GOV-R4-03`. One addition: "where applicable", after "shall verify and submit".
+
+Cited by: `evidence/signals/SIGNAL-the-uniform-data-set-is-one-record-with-per-field-provenance.md`, `flows/01-end-to-end-privilege-issuance.md`, `flows/03-payment-and-remote-state-issuance.md`.
+
 ## Atoms quoting draft text the adopted rules left out
 
 Added 2026-10-02 (SCRUM-39). These two atoms quote draft text that the adopted rules left out, with nothing in its place. Each is marked `status: superseded` with `superseded-by: none`. The questions they leave open are tracked as tensions in `evidence/tensions/`.
@@ -138,3 +158,28 @@ Cited by: `evidence/signals/SIGNAL-the-sql-is-the-sole-eligibility-authority.md`
 - See `TENSION-03`.
 
 Cited by: `evidence/signals/SIGNAL-privilege-life-is-tied-to-the-qualifying-license.md`, `flows/04-expiration-and-renewal.md`, `flows/06-state-machines.md`.
+
+## Atoms with the same wording in the adopted rules
+
+Added 2026-10-02 (SCRUM-39). These atoms quote draft text that reads the same in the adopted rules. Each was checked word for word against the adopted rule PDF. Each keeps its draft source and gets one `adopted-text:` line in its front matter.
+
+| Atom | Adopted section | Note |
+|---|---|---|
+| `ATOM-GOV-R23-02` | Rule 3.6(a) | Same meaning. The adopted text says "state of qualifying license" where this quote says "SQL". |
+| `ATOM-GOV-R23-03` | Rule 3.2(a)(1)-(3) | Same wording |
+| `ATOM-GOV-R23-04` | Rule 3.3(a)(5) | Same wording |
+| `ATOM-GOV-R23-07` | Rule 3.4(c)(1)-(4) | Same wording |
+| `ATOM-GOV-R23-08` | Rule 3.4(d) | Same meaning. The adopted text drops the "and" before "receipt of the information". |
+| `ATOM-GOV-R23-10` | Rule 3.5(b) | Same wording |
+| `ATOM-GOV-R5-01` | Rule 4.2(g) | Same wording |
+| `ATOM-GOV-R5-04` | Rule 4.3(e)(1)-(5) | Same wording |
+| `ATOM-GOV-R5-06` | Rule 4.5(b) | Same wording |
+| `ATOM-GOV-R5-08` | Rule 4.6(a) | Same wording |
+| `ATOM-GOV-R5-09` | Rule 4.6(b) | Same wording |
+| `ATOM-GOV-R5-10` | Rule 4.2(f) | Same wording |
+
+## Other atoms checked
+
+Added 2026-10-02 (SCRUM-39). The 15 model legislation atoms and the 6 RFP and RFP questions atoms were checked word for word against their PDFs. All match. They are not rules, so the adoption of Rules 3 and 4 does not change them.
+
+`ATOM-GOV-RFP-07` quotes the RFP correctly, but the number has changed since. The RFP (October 2025) says: "As of October 2025, the PA Compact has 19 member states." The Commission's August 2026 newsletter (page 2) says: "As of August 28, 2026, there are 29 Compact Member States." No file cites `ATOM-GOV-RFP-07`.

@@ -6,6 +6,7 @@ captured-by: CTO (Kalish, reviewer)
 context: Read from the corpus source (draft rule (redline; inserted text is operative); redline as approved 2026-02-09) at Rule 3 §3.4(c), L486–489, 493; approved from the 2026-09-29 atom-candidates debrief.
 source-document: product/context/research-corpus/sources/pa-compact-rule-2-and-3-drafts.md
 tags: privilege-application, fees, non-refundable
+adopted-text: Same wording in Rule 3, Compact Privilege (adopted 2026-04-06), 3.4(c)(1)-(4). Checked 2026-10-02 (SCRUM-39); see evidence/CHANGES-2026-10-01-adopted-rules.md.
 ---
 
 # ATOM-GOV-R23-07
