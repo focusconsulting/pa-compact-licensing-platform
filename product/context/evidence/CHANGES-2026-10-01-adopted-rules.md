@@ -201,3 +201,16 @@ What the adopted rules say on each:
 - Renewal: Rule 3.5(c)(2), the state of qualifying license shall "Issue notice, through the data system, to the Compact Commission verifying or denying the PA's eligibility to continue participation in the Compact."
 
 Three other minutes atoms were checked and kept as they are: `ATOM-GOV-M0209-02` (word for word), `ATOM-GOV-M0209-03` and `ATOM-GOV-M0209-05`. The last two use "…" to skip lines in the 2026-02-09 minutes (PDF page 4, lines 110-115, and page 5, lines 131-134). The skipped lines are the committee calling each change not substantive and agreeing to it. Both changes are in the adopted Rule 3 (3.4(e) and 3.6(a)).
+
+## Signals and tension re-checked
+
+Added 2026-10-02 (SCRUM-39). After the atom changes above, each signal and `TENSION-01` was read against the adopted Rules 3 and 4. Their text is unchanged. Claims to re-check are listed in each file's "needs review" note, with the adopted text beside them.
+
+| File | Claims to re-check |
+|---|---|
+| `signals/SIGNAL-disciplinary-data-is-confidential-by-default.md` | 1: which records a state can see (Rules 3.4(e), 4.6(c)) |
+| `signals/SIGNAL-privilege-life-is-tied-to-the-qualifying-license.md` | 2: "the same privilege number"; who tracks renewals (Rule 3.5(c)(2)) |
+| `signals/SIGNAL-the-sql-is-the-sole-eligibility-authority.md` | 2: who runs the background check (Rule 3.4(b)(2)); the designation basis (not adopted) |
+| `signals/SIGNAL-the-system-does-the-heavy-lifting-for-states.md` | 1: who tracks which PAs use which state (Rule 3.5(c)(2)) |
+| `signals/SIGNAL-the-uniform-data-set-is-one-record-with-per-field-provenance.md` | 3: denials (Rule 4.3(c)(14)); address (Rule 4.3(c)(6)); what counts as "submit" (open, Confluence Q4) |
+| `tensions/TENSION-01-adverse-action-notification-breadth.md` | 1: Rule 4.6(c) is not listed |

@@ -5,6 +5,8 @@ surfaced-by: CTO (Kalish)
 status: open
 ---
 
+> **Needs review (2026-10-02, SCRUM-39).** This tension does not list adopted Rule 4.6(c) (Rule 4, adopted 2026-04-06): "Upon request, adverse action reports may also be shared with any other Participating State." Remove this note when the file is updated.
+
 # TENSION-01 — Who must be told about an adverse action?
 
 ## Positions
