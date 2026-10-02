@@ -183,3 +183,21 @@ Added 2026-10-02 (SCRUM-39). These atoms quote draft text that reads the same in
 Added 2026-10-02 (SCRUM-39). The 15 model legislation atoms and the 6 RFP and RFP questions atoms were checked word for word against their PDFs. All match. They are not rules, so the adoption of Rules 3 and 4 does not change them.
 
 `ATOM-GOV-RFP-07` quotes the RFP correctly, but the number has changed since. The RFP (October 2025) says: "As of October 2025, the PA Compact has 19 member states." The Commission's August 2026 newsletter (page 2) says: "As of August 28, 2026, there are 29 Compact Member States." No file cites `ATOM-GOV-RFP-07`.
+
+## Minutes atoms that quoted only part of an exchange
+
+Added 2026-10-02 (SCRUM-39). These three atoms quote Rules Committee minutes word for word, but leave out the turns around them, which change what the quote means. Each now has a new atom quoting the full exchange from the same minutes. The old atom is kept and marked `status: superseded`.
+
+| Old atom | New atom | Minutes | What the new atom adds | Cited by |
+|---|---|---|---|---|
+| `ATOM-GOV-M0825-01` | `ATOM-GOV-M0825-03` | 2025-08-25, PDF page 5, lines 145-165 | L. Monick's question, then counsel N. Kalfas: "I do not see how the commission will generate some of this information." J. Alley replies that the system must hold it "even if it is provided by a participating state." | `evidence/signals/SIGNAL-the-uniform-data-set-is-one-record-with-per-field-provenance.md`, `flows/02-sql-eligibility-verification.md` |
+| `ATOM-GOV-M0825-02` | `ATOM-GOV-M0825-04` | 2025-08-25, PDF pages 6-7, lines 223-243 | Counsel N. Kalfas: "allow the state to put in what they have, and the system could notify states what the most current information is according to state records." | `evidence/signals/SIGNAL-the-uniform-data-set-is-one-record-with-per-field-provenance.md`, `flows/02-sql-eligibility-verification.md`, `flows/07-domain-event-catalogue.md` |
+| `ATOM-GOV-M1110-02` | `ATOM-GOV-M1110-04` | 2025-11-10, PDF page 4, lines 101-114 | J. Alley: "there is a need to know the PAs in your state who are practicing with your state as their SQL". Chair Loucka: "it has become apparent that it is necessary." | `evidence/signals/SIGNAL-privilege-life-is-tied-to-the-qualifying-license.md`, `evidence/signals/SIGNAL-the-system-does-the-heavy-lifting-for-states.md`, `flows/04-expiration-and-renewal.md` |
+
+What the adopted rules say on each:
+
+- Denials: Rule 4.3(c)(14), the state of qualifying license verifies and submits "Any denial of licensure, and the reason(s) for such denial". Rule 4.2(b)(5), the system maintains "License and privilege denials and any periods of Compact participation ineligibility resulting therefrom".
+- Address: Rule 4.3(c)(6), the state verifies and submits the "Primary residence address of record". Rule 3.4(a)(3), the PA reports a change of address "within thirty (30) days". Rule 4.3(e)(1), the system keeps "All primary residence address changes provided by the participating PA".
+- Renewal: Rule 3.5(c)(2), the state of qualifying license shall "Issue notice, through the data system, to the Compact Commission verifying or denying the PA's eligibility to continue participation in the Compact."
+
+Three other minutes atoms were checked and kept as they are: `ATOM-GOV-M0209-02` (word for word), `ATOM-GOV-M0209-03` and `ATOM-GOV-M0209-05`. The last two use "…" to skip lines in the 2026-02-09 minutes (PDF page 4, lines 110-115, and page 5, lines 131-134). The skipped lines are the committee calling each change not substantive and agreeing to it. Both changes are in the adopted Rule 3 (3.4(e) and 3.6(a)).
