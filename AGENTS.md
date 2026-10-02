@@ -117,6 +117,28 @@ iac/              - Infrastructure as Code
 
 ---
 
+## 🎨 Design and UI
+
+### Where screens come from
+
+- Each screen is drawn in Figma ("PA Compact Parts Library", Focus team) and linked from its story's spec (`product/stories/<story-id>/spec.md`) by screen ID.
+- The spec is the instruction; the agreed Figma screen is the picture. Read both.
+- How the work runs: `product/context/design/ui-workflow.md`.
+
+### Building a screen
+
+- Use only the components named in `product/context/design/parts-crosswalk.md`, or in the Figma part's "PA COMPACT CROSSWALK" description. Our wrappers in `engineering/client/src/components/` come first, then Trussworks.
+- Never add colours, fonts or spacing by hand. They come from `engineering/client/src/styles/_uswds-theme.scss`.
+- Build every state the spec lists, with one Storybook story per state, named with the screen ID.
+- Compare the result with the agreed Figma screen. Different components, missing states or different wording are defects.
+
+### When something doesn't fit
+
+- Never invent a component or a behaviour. Raise it with the Service Designer. A new component or a departure from USWDS needs a design decision record first.
+- When a wrapper is added or changed, update `parts-crosswalk.md` in the same PR.
+
+---
+
 ## 🔧 Environment & Tools
 
 ### Python Environment
