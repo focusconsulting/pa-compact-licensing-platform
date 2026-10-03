@@ -8,6 +8,7 @@ source-document: product/context/research-corpus/sources/rules-committee-feb-9-2
 tags: sql-change, cascade, voluntary-termination
 
 Same observation as `ATOM-GOV-M0209-05`; retained because this atom is keyed to the rule clause (Rule 2 §2.2(d)) it amends.
+adopted-text: Rule 3, Compact Privilege (adopted 2026-04-06), 3.6(a). Same meaning. The adopted text says "state of qualifying license" where this quote says "SQL". Checked 2026-10-02 (SCRUM-39); see evidence/CHANGES-2026-10-01-adopted-rules.md.
 ---
 
 # ATOM-GOV-R23-02

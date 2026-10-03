@@ -19,7 +19,7 @@ atoms: [ATOM-GOV-ML-07, ATOM-GOV-R23-03, ATOM-GOV-R23-07, ATOM-GOV-R23-08, ATOM-
 signals: [SIGNAL-the-system-does-the-heavy-lifting-for-states, SIGNAL-the-uniform-data-set-is-one-record-with-per-field-provenance]
 ---
 
-> **Needs review (2026-10-01, SCRUM-39).** This file cites one atom that quoted draft rule text. That text changed when Rules 3 and 4 were adopted on 2026-04-06. `ATOM-GOV-R23-13` is replaced by `ATOM-GOV-R3-04`. The draft and adopted text are side by side in `product/context/evidence/CHANGES-2026-10-01-adopted-rules.md`. Remove this note when the file is updated.
+> **Needs review (2026-10-01, SCRUM-39).** This file cites one atom that quoted draft rule text. That text changed when Rules 3 and 4 were adopted on 2026-04-06. `ATOM-GOV-R23-13` is replaced by `ATOM-GOV-R3-04`. The draft and adopted text are side by side in `product/context/evidence/CHANGES-2026-10-01-adopted-rules.md`. Added 2026-10-02 (SCRUM-39): `ATOM-GOV-R5-03` is replaced by `ATOM-GOV-R4-03`. The adopted Rule 4.3(d) adds "where applicable" after "shall verify and submit". See the change index. Remove this note when the file is updated.
 
 # FLOW-03 — Payment and remote-state issuance
 
