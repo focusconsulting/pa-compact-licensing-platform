@@ -4,7 +4,7 @@ flow-id: FLOW-05
 title: Adverse action on the qualifying license — cascade, lift, eligibility withdrawal
 status: draft
 authored-by: CTO (Kalish)
-last-revised: 2026-09-30
+last-revised: 2026-10-05
 sources:
   - product/context/research-corpus/sources/pa-compact-model-legislation.md
   - product/context/research-corpus/sources/pa-compact-rule-2-and-3-drafts.md
@@ -60,8 +60,9 @@ sequenceDiagram
 
 - Per the Nov 10 2025 amendments to R5 §5.4: a **structured record** (summary plus NPDB category), not document copies; a state that wants the order on file may attach it (optional, D9). SII is a checkbox plus contact information and a brief description on the same form; 5-day window, 1 business day for summary/emergency actions.
 - `is_public=false` records never reach public verification (V-01) and show a "confidential — do not redisclose" banner to state users (R5 §5.5(c)).
+- SOW §2.1 now has public verification cover "active and inactive" privileges (it said active only). A privilege this cascade deactivates is therefore publicly visible as inactive. The public site shows the status vocabulary in FLOW-06 and never the `deactivation_reason` or the action behind it when that record is not public.
 - SII is visible only to participating-state and commission users, never to the PA or the public (ML §8.C).
-- Notification goes to the PA, every state where the PA holds a QL or privilege, and the Commission (R5 §5.6(b)); other states may request the report (R5 §5.6(c)).
+- Notification goes to the PA, every state where the PA holds a QL or privilege, and the Commission (R5 §5.6(b)); other states may request the report (R5 §5.6(c)). SOW §2.1 now names this for the state portal: "Notify compact member states of license status changes, including adverse action and significant investigatory information". How broadly "member states" reads is the same question as `TENSION-01`.
 
 ## CompactConnect reference (crosswalk §4.7)
 

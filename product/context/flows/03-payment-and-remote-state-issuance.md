@@ -4,7 +4,7 @@ flow-id: FLOW-03
 title: Payment and remote-state issuance (Phase 2)
 status: draft
 authored-by: CTO (Kalish)
-last-revised: 2026-09-30
+last-revised: 2026-10-05
 sources:
   - product/context/research-corpus/sources/pa-compact-model-legislation.md
   - product/context/research-corpus/sources/pa-compact-rule-2-and-3-drafts.md
@@ -23,7 +23,7 @@ signals: [SIGNAL-the-system-does-the-heavy-lifting-for-states, SIGNAL-the-unifor
 
 # FLOW-03 — Payment and remote-state issuance
 
-Phase 2 of FLOW-01 in detail. The PA applies to one or more remote states, pays state fee(s) plus the Commission fee, and each remote state issues or denies. The 72-hour issuance target is operational (RFP Q&A #46.1), not a system SLA; it is measured from the paid request reaching the remote state.
+Phase 2 of FLOW-01 in detail. The PA applies to one or more remote states, pays state fee(s) plus the Commission fee, and each remote state issues or denies. The 72-hour issuance target is operational (RFP Q&A #46.1), not a system SLA; it is measured from the paid request reaching the remote state. The SOW no longer says this itself: the redline response v2 removed the sentence calling the 72-hour goal "not a system-level SLA" from §2.3, and §2.1 now has the PA "receive confirmation of timely privilege issuance". The RFP Q&A is the only source for the operational reading.
 
 The PA-side steps are CompactConnect's purchase wizard step for step (crosswalk §3.6; captures `pa-privilege-step2-*.png` through `pa-privilege-step4-payment-summary.png`). Only the ending changes: CompactConnect says "purchased" and the privilege exists the moment payment clears; we say "sent to {states} for issuance" and the remote state issues from a queue (R3r §3.4(d)). The state-side queue and case view have no CompactConnect equivalent (crosswalk §4.5).
 
@@ -88,6 +88,8 @@ sequenceDiagram
 
 CompactConnect's per-state panel has one configurable proof: "jurisprudence exam required?" with a link, accepted as a checkbox that opens the full text. Ours generalises it to the four things R3r §3.4(c)(3)–(6) let a remote state require: jurisprudence, supervision/collaborative agreement, prescriptive authority, other compliance. Each is configured per state as `none | attestation | proof_upload`; an attestation renders as CompactConnect's checkbox-with-modal (`pa-privilege-step2-attestation-modal.png`), an upload as the F-12 file field. "More info" is the state's practice-requirements URL. Which proofs each pilot state requires is Q-07.
 
+SOW §2.1 now lists two state capabilities here. "Verify completion of jurisprudence exam requirements": the remote state does this when it reviews the attestation or uploaded proof on the case view before issuing; whether it records a separate per-proof verification, as the SQL does per field in FLOW-02, is open. "Upload state practice requirements": the flow carries a URL only; an upload is not drawn, and the practice-requirements editor is still on the deferred list (§5.1).
+
 ## Payment integration shape (Q-02b)
 
 Authorize.net is not hosted-only. The Accept suite offers three shapes; the trade is PCI scope against control of the payment form's accessibility:
@@ -99,6 +101,14 @@ Authorize.net is not hosted-only. The Accept suite offers three shapes; the trad
 | Accept.js + our own form | our USWDS form; only an opaque nonce reaches the API | SAQ A-EP | full |
 
 **MVP: Accept UI lightbox** (D6, CompactConnect parity), accessibility limitation documented as a known exception in H-01. The `PaymentProvider` protocol allows a later move to our own form (deferred, §5.1: pulled back if H-01 cannot document the lightbox as an acceptable exception).
+
+## State financial view and reconciliation (SOW §2.1)
+
+The redline response v2 moves "Payment reconciliation and financial reporting" out of the old "Out of Scope" list. The Commission portal list now has "Payment reconciliation and financial reporting to Member State administrators to verify payment for each privilege issued", and the state portal list has "Access state financial transactions". Neither is drawn above.
+
+- The data is already written: every transaction carries line items tagged by state, and the case view shows payment status per request. What is missing is a state-side list of its own transactions and a per-privilege payment report (C-02).
+- §7.4 is unchanged on the limit: Focus "will not be responsible for financial reconciliation or settlement". A report built on this flow shows what the processor approved by webhook, not settled funds. Showing settlement needs the settlement job below.
+- §7.4 now also says the Commission bears all processor costs (vendor acquisition, setup, transaction, and ongoing fees). That is the background to Q-02 (card-fee pass-through to the PA).
 
 ## Deferred (§5.1): ACH and settlement
 

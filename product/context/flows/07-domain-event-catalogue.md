@@ -4,7 +4,7 @@ flow-id: FLOW-07
 title: Domain event catalogue (F-05 contract)
 status: draft
 authored-by: CTO (Kalish)
-last-revised: 2026-09-30
+last-revised: 2026-10-05
 sources:
   - product/context/research-corpus/sources/pa-draft-rules-2_3_5.md
   - product/context/research-corpus/sources/minutes-august-25-2025-rules-committee-amended-approved.md
@@ -52,7 +52,7 @@ The PA-facing emails this table produces are, in order of the PA's journey: welc
 
 ## Deferred events (§5.1)
 
-Listed so the names are reserved and the producers know where they plug in.
+Listed so the names are reserved and the producers know where they plug in. Two rows relate to capabilities SOW §2.1 now lists (redline response v2): `renewal.*` ("Renew privileges") and `payment.settled` / `.returned` (settlement status behind "Payment reconciliation and financial reporting"). Both stay deferred until the backlog is re-prioritised (`README.md`, "SOW alignment"). State data ingestion by upload or API (SOW §2.1, §3 Phase 2) has no event row: if it writes license records through L-01 it produces `qualifying_license.status_changed` like any other license update, and a new event is needed only if ingestion gets its own producer.
 
 | Event | Returns with | Consumers |
 |---|---|---|
