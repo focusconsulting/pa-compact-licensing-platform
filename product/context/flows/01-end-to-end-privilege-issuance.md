@@ -4,7 +4,7 @@ flow-id: FLOW-01
 title: End-to-end compact privilege issuance
 status: draft
 authored-by: CTO (Kalish)
-last-revised: 2026-09-30
+last-revised: 2026-10-05
 sources:
   - product/context/research-corpus/sources/pa-compact-model-legislation.md
   - product/context/research-corpus/sources/pa-compact-rule-2-and-3-drafts.md
@@ -14,6 +14,7 @@ tickets: [U-01, U-03, L-01, L-03, L-04, L-05, P-01, P-02, P-03]
 decisions: [D2, D6, D7, D9, D15]
 see-also: [FLOW-02, FLOW-03, FLOW-06, compactconnect-crosswalk §2-§3]
 atoms: [ATOM-GOV-ML-01, ATOM-GOV-ML-02, ATOM-GOV-R23-03, ATOM-GOV-R23-05, ATOM-GOV-R23-07, ATOM-GOV-R23-08, ATOM-GOV-R5-02, ATOM-GOV-R5-03, ATOM-GOV-R5-04, ATOM-GOV-RFP-01]
+tensions: [TENSION-04-state-upload-versus-multi-party-record]
 signals: [SIGNAL-the-sql-is-the-sole-eligibility-authority, SIGNAL-the-system-does-the-heavy-lifting-for-states, SIGNAL-the-uniform-data-set-is-one-record-with-per-field-provenance]
 ---
 
@@ -85,11 +86,19 @@ sequenceDiagram
     Web->>API: POST /states/{rs}/privilege-requests/{id}/issue
     API->>DB: privilege row (number PA-{RS}-{n}, issued_at, expiration = QL expiry as of request), event privilege.issued
     note over RS,DB: the privilege row IS the remote state's R5 §5.3(d) "verify and submit"
-    Worker->>Email: "Privilege issued" → PA (confirmation, SOW)
+    Worker->>Email: "Privilege issued" → PA (confirmation of timely issuance, SOW §2.1)
     Worker->>Email: FYI → SQL ops list, Commission ops list
     PA->>Web: Dashboard shows active privilege
     end
 ```
+
+## What the SOW adds around this flow (redline response v2)
+
+The happy path above is unchanged. SOW §2.1 now lists three capabilities that touch it and that no flow draws yet (`README.md`, "SOW alignment"):
+
+- **State data ingestion.** States "upload PA identifying information and licensure data" and "upload compact uniform data set ... via API capability"; §3 Phase 2 adds "State licensee data ingestion (multi-format: API and upload)", designed against mock data from two or more representative states. In this flow an ingested record lands before Phase 1 as a license already on file (L-01), which the SQL then sees in FLOW-02. It is the state writing its own lane by another route. It does not replace the SQL's eligibility decision (R3r §3.4(b)) and it does not gate account creation. That reading is Focus's preference, not a settled answer: see `TENSION-04-state-upload-versus-multi-party-record`.
+- **Military affiliation.** The PA portal list adds "Verify military affiliation". The only military element in this flow is the service-member SQL basis in the Phase 1 wizard, which comes from draft Rule 2.1 and was not adopted (`TENSION-02`). The SOW does not say what the verification is for, so no step is drawn.
+- **National credentialing organizations.** Integration moved from "Out of Scope" into the Commission portal list. Today the PA enters NCCPA certification in Phase 0 and the SQL verifies it in Phase 1; an integration would change who enters that field, not the phases.
 
 ## Why two phases
 
@@ -132,4 +141,4 @@ Atoms are in `product/context/evidence/atoms/`; signals and tensions beside them
 - `ATOM-GOV-RFP-01` — the PA priority story this flow satisfies end to end
 - `SIGNAL-the-sql-is-the-sole-eligibility-authority` — why there are two phases
 - `SIGNAL-the-system-does-the-heavy-lifting-for-states` — why the Commission has no manual step in the happy path
-- `SIGNAL-the-uniform-data-set-is-one-record-with-per-field-provenance` — why there is one record with three writers rather than a state upload
+- `SIGNAL-the-uniform-data-set-is-one-record-with-per-field-provenance` — why there is one record with three writers; a state upload or API feed (SOW §2.1) is another route for the state's own lane, not a fourth writer

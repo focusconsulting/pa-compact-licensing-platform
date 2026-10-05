@@ -4,7 +4,7 @@ flow-id: FLOW-06
 title: State machines — participation application, privilege request, privilege
 status: draft
 authored-by: CTO (Kalish)
-last-revised: 2026-09-30
+last-revised: 2026-10-05
 sources:
   - product/context/research-corpus/sources/pa-compact-rule-2-and-3-drafts.md
 rules-cited: [R3r §3.4, R3r §3.5, R3r §3.6, R3r §3.8, ML §4.B]
@@ -67,13 +67,15 @@ stateDiagram-v2
     active --> inactive: administrator_status=inactive (QL adverse action, eligibility withdrawn, QL inactive/terminated, state deactivation)
     active --> encumbered: adverse action against this privilege (computed)
     encumbered --> active: all actions lifted
-    expired --> [*]: PA applies again via P-01 with a new number (renewal on the same number is deferred)
+    expired --> [*]: PA applies again via P-01 with a new number (renewal on the same number is deferred, FLOW-04)
     inactive --> [*]: no reactivation, PA re-applies
 ```
 
 `deactivation_reason` enum: `qualifying_license_adverse_action | eligibility_withdrawn | qualifying_license_inactive | qualifying_license_terminated | state_deactivated`.
 
 The status vocabulary shown to the PA and the public follows CompactConnect's privilege card and history: "Active (Expires: date)", "Inactive (Expired: date)", "Inactive (Deactivated)", and one event vocabulary for the timeline (issued, renewed, expired, deactivated, disciplinary action, disciplinary action lifted). CompactConnect's "Privilege purchased" becomes "Privilege issued" (crosswalk §3.4).
+
+SOW §2.1 (redline response v2) has public verification cover active and inactive privileges, so the inactive statuses in this vocabulary are public as well as the active one; FLOW-05 says what the public view withholds. Renewal on the same number is listed in SOW §2.1 but still deferred in the backlog (FLOW-04).
 
 ## Evidence
 

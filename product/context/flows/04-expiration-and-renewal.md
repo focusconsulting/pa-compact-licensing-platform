@@ -4,7 +4,7 @@ flow-id: FLOW-04
 title: Privilege expiration and renewal
 status: draft
 authored-by: CTO (Kalish)
-last-revised: 2026-09-30
+last-revised: 2026-10-05
 sources:
   - product/context/research-corpus/sources/pa-compact-model-legislation.md
   - product/context/research-corpus/sources/pa-compact-rule-2-and-3-drafts.md
@@ -27,6 +27,8 @@ Key rule: a privilege's expiration is **pinned** to the QL expiration as it was 
 ## What the pilot builds (A-04)
 
 Expiry notices and expiry only. The renewal flow is deferred (§5.1) because no privilege issued in the pilot can reach its QL expiry inside the period of performance; H-04 computes the earliest such date at go-live, and the flow is pulled back in if any pilot privilege comes within 90 days of it or the Commission wants it demonstrated.
+
+**SOW change (redline response v2).** The deferral was decided against the earlier SOW, whose §2.1 listed renewal notifications only. §2.1 now lists "Renew privileges" for the PA and "View privilege issuance, renewal, and expiration data" for state administrators. §2.1 is a candidate list, so this does not by itself schedule the renewal flow, but it is no longer outside the SOW's list and the deferral needs a prioritisation decision with the Commission's Product Manager. §2.3 also changes the reasoning: live pilot operations are out of scope for the period of performance and acceptance is a live operations test on Commission-controlled test data, so renewal could be demonstrated on test data without waiting for a real privilege to near expiry.
 
 ```mermaid
 sequenceDiagram
@@ -59,7 +61,7 @@ sequenceDiagram
 
 ## Deferred (§5.1): the renewal flow
 
-Recorded here so the pilot build does not paint it out. Shape: L-05 reused with a renewal badge; P-01 reused with `fee_type=renewal`; P-03 keeps the number.
+Listed in SOW §2.1 since the redline response v2; still deferred in the backlog (see above). Recorded here so the pilot build does not paint it out. Shape: L-05 reused with a renewal badge; P-01 reused with `fee_type=renewal`; P-03 keeps the number.
 
 ```mermaid
 sequenceDiagram
