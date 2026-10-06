@@ -7,6 +7,14 @@ reference: "../CompactConnect @ 83596ab4 (2026-09-28) — github.com/csg-org/Com
 inputs: [mvp-jira-tickets.md, mvp-ticket-breakdown.md v4.2, product/context/flows/ FLOW-01..07]
 ---
 
+> **Needs review (2026-10-05, SCRUM-39).** Two places say bulk upload is "not in SOW": the paragraph that says "Ours drops bulk upload (not in SOW)", and the row "Bulk license upload, military status, home-state change, printable proof". That was true of SOW version 1.0. The current SOW in this repo (`product/context/PA Compact Data System SOW - Focus Consulting.md`), §2.1, now lists:
+>
+> - **State upload:** "Upload PA identifying information and licensure data", and "Upload compact uniform data set, as defined by compact policy, via API capability".
+> - **Military status:** "Verify military affiliation", for the PA.
+> - **Still not listed:** home-state change and printable proof.
+>
+> See `TENSION-04-state-upload-versus-multi-party-record` and `flows/README.md`. Remove this note when the file is updated.
+
 # CompactConnect crosswalk — product analysis
 
 CompactConnect (CC) is the data system CSG and InspiringApps built for the Audiology/SLP, Counseling, and OT compacts. It demoed to the full PA Commission on 25 April 2025 and the Counseling compact went live on it in October 2025. This document maps what we are building, journey by journey and screen by screen, onto what CC already does, so that product tickets can point at a CC screen and say "like this" or "like this, except", and so that every place we differ has a stated product reason.
