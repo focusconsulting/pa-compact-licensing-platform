@@ -22,15 +22,15 @@ When this command is invoked:
 I'll help you create a detailed implementation plan. Let me start by understanding what we're building.
 
 This is a monorepo with these areas:
-- `client/` - Frontend application (Next.js/TypeScript)
-- `api/` - Backend application (Python/FastAPI)
-- `iac/` - Infrastructure as Code
-- `docs/` - Documentation
-- `cross-cutting` - Work spanning multiple areas
+- `client` - `engineering/client/`, frontend (Next.js/TypeScript)
+- `api` - `engineering/api/`, backend (Python/FastAPI)
+- `iac` - `engineering/infrastructure/iac/`, infrastructure (Terraform)
+- `docs` - `engineering/docs/`, engineering documentation
+- `cross-cutting` - work spanning multiple areas
 
 Please provide:
 1. Which area does this work affect? (client, api, iac, docs, or cross-cutting)
-2. The task/issue description (GitHub issue #, beads ID, or description)
+2. The task/issue description (Jira ticket, GitHub issue #, beads ID, or description)
 3. Any relevant context, constraints, or specific requirements
 
 Tip: You can specify the area directly: `/create_plan api #123` or `/create_plan iac bd-a1b2`
@@ -42,8 +42,12 @@ Then wait for the user's input.
 
 ### Step 1: Context Gathering & Initial Analysis
 
-1. **Read all mentioned files immediately and FULLY**:
-   - Plan files (e.g., `thoughts/shared/plans/*.md`)
+1. **Read the engineering constitution FULLY**:
+   `engineering/engineering-constitution.md` is binding, and the plan is
+   evaluated against it. Note every principle the work touches.
+
+2. **Read all mentioned files immediately and FULLY**:
+   - Plan files (e.g., `engineering/thoughts/shared/plans/*.md`)
    - Research documents
    - Related implementation plans
    - Any JSON/data files mentioned
@@ -51,15 +55,26 @@ Then wait for the user's input.
    - **CRITICAL**: DO NOT spawn sub-tasks before reading these files yourself in the main context
    - **NEVER** read files partially - if a file is mentioned, read it completely
 
-2. **If a GitHub issue is mentioned**:
+3. **Find the spec this plan implements** (constitution Principle IX):
+   - The ticket in `product/backlog/mvp-jira-tickets.md` and its entry in
+     `product/backlog/mvp-ticket-breakdown.md` (decisions D1-D15 are in
+     §2.1, open questions Q-xx in §6)
+   - Any story or spec for it under `product/`
+   - Every flow in `product/context/flows/` the work touches, and the
+     compact rules those flows cite (keys in
+     `product/context/reference/glossary.md`)
+   - Related ADRs in `engineering/adrs/`
+   - If no spec or story exists, say so and ask before planning
+
+4. **If a GitHub issue is mentioned**:
    - Fetch issue details: `gh issue view <number> --json title,body,labels,assignees`
    - Read any linked PRs or related issues
 
-3. **If a beads ID is mentioned**:
+5. **If a beads ID is mentioned**:
    - Get task details: `bd show <id> --json`
    - Check dependencies: `bd tree <id>`
 
-4. **Spawn initial research tasks to gather context**:
+6. **Spawn initial research tasks to gather context**:
    Before asking the user any questions, use specialized agents to research in parallel:
 
    - Use the **codebase-locator** agent to find all files related to the task
@@ -72,18 +87,18 @@ Then wait for the user's input.
    - Trace data flow and key functions
    - Return detailed explanations with file:line references
 
-5. **Read all files identified by research tasks**:
+7. **Read all files identified by research tasks**:
    - After research tasks complete, read ALL files they identified as relevant
    - Read them FULLY into the main context
    - This ensures you have complete understanding before proceeding
 
-6. **Analyze and verify understanding**:
+8. **Analyze and verify understanding**:
    - Cross-reference the task requirements with actual code
    - Identify any discrepancies or misunderstandings
    - Note assumptions that need verification
    - Determine true scope based on codebase reality
 
-7. **Present informed understanding and focused questions**:
+9. **Present informed understanding and focused questions**:
    ```
    Based on the task and my research of the codebase, I understand we need to [accurate summary].
 
@@ -195,6 +210,8 @@ After getting initial clarifications:
    - Introduces new dependencies or technologies
    - Changes how components interact
    - Will impact future development choices
+   - Deviates from a principle in the engineering constitution (the
+     constitution requires an ADR for any exception)
 
    If appropriate, ask:
    ```
@@ -204,7 +221,8 @@ After getting initial clarifications:
    Shall I create the ADR now? (I'll reference it in the implementation plan)
    ```
 
-   If the user agrees, run `/create_adr` to document the decision, then continue with planning.
+   If the user agrees, run `/create_adr` to document the decision in
+   `engineering/adrs/`, then continue with planning.
    Reference the ADR in the plan's "Related" section.
 
 ### Step 3: Plan Structure Development
@@ -232,17 +250,18 @@ Once aligned on approach:
 
 After structure approval:
 
-1. **Write the plan** to `thoughts/shared/plans/<area>/YYYY-MM-DD-issue-XXX-description.md`
+1. **Write the plan** to `engineering/thoughts/shared/plans/<area>/YYYY-MM-DD-XXX-description.md`
    - Area options: `client/`, `api/`, `iac/`, `docs/`, `cross-cutting/`
-   - Format: `YYYY-MM-DD-issue-XXX-description.md` where:
+   - Format: `YYYY-MM-DD-XXX-description.md` where:
      - YYYY-MM-DD is today's date
-     - XXX is the GitHub issue number (use `bd-XXXX` for beads tasks, omit if no issue)
+     - XXX is the task ID: the Jira key (e.g. `SCRUM-35`), `issue-123` for a
+       GitHub issue, or `bd-XXXX` for a beads task; omit if there is none
      - description is a brief kebab-case description
    - Examples:
-     - Client feature: `thoughts/shared/plans/client/2025-01-22-issue-100-login-page.md`
-     - API feature: `thoughts/shared/plans/api/2025-01-22-issue-123-user-authentication.md`
-     - IaC: `thoughts/shared/plans/iac/2025-01-22-bd-a1b2-staging-env.md`
-     - Cross-cutting: `thoughts/shared/plans/cross-cutting/2025-01-22-issue-456-ci-cd-pipeline.md`
+     - Client feature: `engineering/thoughts/shared/plans/client/2026-10-06-SCRUM-41-login-page.md`
+     - API feature: `engineering/thoughts/shared/plans/api/2026-10-06-issue-123-user-authentication.md`
+     - IaC: `engineering/thoughts/shared/plans/iac/2026-10-06-bd-a1b2-staging-env.md`
+     - Cross-cutting: `engineering/thoughts/shared/plans/cross-cutting/2026-10-06-issue-456-ci-cd-pipeline.md`
 
 2. **Use this template structure**:
 
@@ -255,10 +274,17 @@ After structure approval:
 
 ## Related
 
-- GitHub Issue: #XXX (or N/A)
-- Beads Task: bd-XXXX (or N/A)
-- ADRs: [List any related ADRs, e.g., ADR-0001, ADR-0003]
+- **Spec**: [link to the story or spec in `product/` this plan implements, and its ticket in `product/backlog/mvp-jira-tickets.md`]
+- **Flows**: [links to each flow in `product/context/flows/` this touches, e.g. FLOW-02]
+- **Compact rules**: [rules the flows cite that this work encodes, using the glossary keys, e.g. ML §4.B, Rule 3 §3.4(d)]
+- **Decisions**: [backlog decisions D1-D15 and open questions Q-xx this depends on]
+- Jira / GitHub issue / beads task: [ID, or N/A]
+- ADRs: [links to related ADRs in `engineering/adrs/`]
 - **Area**: [client | api | iac | docs | cross-cutting]
+
+## Constitution Check
+
+[Each principle in `engineering/engineering-constitution.md` this plan touches, and how the plan meets it. Any deviation names the ADR that allows it.]
 
 ## Current State Analysis
 
@@ -289,7 +315,7 @@ After structure approval:
 ### Changes Required:
 
 #### 1. [Component/File Group]
-**File**: `api/src/path/to/file.py` (note: use full path from repo root)
+**File**: `engineering/api/licensing_api/routes/example.py` (note: use full path from repo root)
 **Changes**: [Summary of changes]
 
 ```python
@@ -300,31 +326,28 @@ After structure approval:
 
 #### Automated Verification:
 
-**For Client changes (`client/`):**
-- [ ] Tests pass: `cd client && pnpm test`
-- [ ] Type checking passes: `cd client && pnpm tsc --noEmit`
-- [ ] Linting passes: `cd client && pnpm lint`
-- [ ] Build succeeds: `cd client && pnpm build`
+**For Client changes (`engineering/client/`):**
+- [ ] Tests pass with coverage: `cd engineering/client && pnpm test:coverage`
+- [ ] Type checking passes: `cd engineering/client && pnpm exec tsc --noEmit`
+- [ ] Linting passes: `cd engineering/client && pnpm lint`
+- [ ] Build succeeds: `cd engineering/client && pnpm build`
 
-**For API changes (`api/`):**
-- [ ] Tests pass: `cd api && uv run pytest`
-- [ ] Type checking passes: `cd api && uv run pyright`
-- [ ] Linting passes: `cd api && uv run ruff check .`
-- [ ] Formatting correct: `cd api && uv run ruff format --check .`
+**For API changes (`engineering/api/`):**
+- [ ] Local services running: `cd engineering/api && just infra`
+- [ ] Tests pass with coverage: `cd engineering/api && just test-coverage`
+- [ ] Linting, formatting, and type checking pass: `cd engineering/api && just lint`
 
-**For IaC changes (`iac/`):**
-- [ ] Terraform validates: `cd iac && terraform validate`
-- [ ] Terraform formats: `cd iac && terraform fmt -check`
-- [ ] Terraform plan succeeds: `cd iac && terraform plan`
+**For IaC changes (`engineering/infrastructure/iac/`):**
+- [ ] Terraform formats: `cd engineering/infrastructure/iac && terraform fmt -check -recursive`
+- [ ] Terraform validates: `cd engineering/infrastructure/iac/components/<component>/terraform && terraform init -backend=false && terraform validate`
+- [ ] Terraform plan reviewed for each environment it changes (needs AWS credentials)
 
-**For Documentation changes (`docs/`):**
-- [ ] Docs build successfully: `cd docs && mkdocs build` (or equivalent)
-- [ ] Links are valid: [link checker command]
+**For Documentation and product changes:**
+- [ ] Markdown lint passes: `pre-commit run --files <changed files>`
 
-**For Local Integration (all changes):**
-- [ ] Docker Compose builds: `docker compose build`
-- [ ] Services start: `docker compose up -d`
-- [ ] Health checks pass: `docker compose ps` (all services healthy)
+**For Local Integration (API changes):**
+- [ ] API starts against local services: `cd engineering/api && just dev`
+- [ ] Health checks pass: `curl localhost:8000/api/health/ready`
 
 #### Manual Verification:
 - [ ] Feature works as expected when tested manually
@@ -343,45 +366,56 @@ After structure approval:
 
 ## Testing Strategy
 
-### Unit Tests:
+### API Tests (through the endpoint, against real Postgres and Redis):
 - [What to test]
-- [Key edge cases]
+- [Key edge cases, including permission and state-scope failures]
 
-### Integration Tests:
-- [End-to-end scenarios]
+### E2E Tests (Playwright, per flow):
+- [Golden path and at least one error path for each flow touched]
 
 ### Manual Testing Steps:
 1. [Specific step to verify feature]
 2. [Another verification step]
 3. [Edge case to test manually]
 
+## Security Impact Assessment
+
+[Required if the work touches PII or confidential disciplinary data (constitution, Security Requirements): what data is involved and its confidentiality tier, where it flows, how it's protected at each step, and what could go wrong. Otherwise write "Not applicable" and say why.]
+
+## Dates and Deadlines
+
+[If the work computes a date, deadline, or day count (constitution Principle XIII): which ones, which helper computes them, and the boundary tests. Otherwise "Not applicable".]
+
+## Migration Notes
+
+[For each migration (constitution Principle XIV): how it stays compatible with the release still serving during deploy, whether it uses expand and contract, and any table it rewrites or locks. Otherwise "Not applicable".]
+
+## Documentation Updates
+
+[Docstrings/JSDoc, `engineering/docs/` pages, architecture diagrams, and dependency/license inventory this changes (constitution Principle XI).]
+
 ## Performance Considerations
 
 [Any performance implications or optimizations needed]
 
-## Migration Notes
-
-[If applicable, how to handle existing data/systems]
-
 ## References
 
 - Original issue: #XXX or bd-XXXX
-- Related research: `thoughts/shared/research/<area>/[relevant].md`
+- Related research: `engineering/thoughts/shared/research/<area>/[relevant].md`
 - Similar implementation: `[file:line]`
 ````
 
 ### Step 5: Sync and Review
 
-1. **Commit the plan**:
+1. **Commit the plan** with the `/commit` skill (stage only the plan file):
    ```bash
-   git add thoughts/shared/plans/
-   git commit -m "docs: implementation plan for #XXX"
+   git add engineering/thoughts/shared/plans/<area>/<plan-file>.md
    ```
 
 2. **Present the draft plan location**:
    ```
    I've created the initial implementation plan at:
-   `thoughts/shared/plans/YYYY-MM-DD-issue-XXX-description.md`
+   `engineering/thoughts/shared/plans/<area>/YYYY-MM-DD-XXX-description.md`
 
    Please review it and let me know:
    - Are the phases properly scoped?
@@ -419,6 +453,7 @@ After structure approval:
    - Write measurable success criteria with clear automated vs manual distinction
 
 4. **Be Practical**:
+   - Follow the engineering constitution; a deviation needs an ADR
    - Focus on incremental, testable changes
    - Consider migration and rollback
    - Think about edge cases
@@ -457,9 +492,8 @@ After structure approval:
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] All tests pass: `pytest`
-- [ ] Type checking passes: `pyright`
-- [ ] No linting errors: `ruff check .`
+- [ ] All tests pass with coverage: `cd engineering/api && just test-coverage`
+- [ ] Lint and type checking pass: `cd engineering/api && just lint`
 - [ ] API endpoint returns 200: `curl localhost:8000/api/new-endpoint`
 
 #### Manual Verification:
@@ -471,7 +505,7 @@ After structure approval:
 ## Common Patterns
 
 ### For Database Changes:
-- Start with schema/migration
+- Start with schema/migration (forward-only, compatible with the running release)
 - Add model methods
 - Update business logic
 - Expose via API
