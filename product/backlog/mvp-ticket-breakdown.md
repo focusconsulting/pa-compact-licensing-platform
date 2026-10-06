@@ -225,7 +225,7 @@ Capacity: ticket sizes total **63.75 nominal engineer-days** (must 56.25, rule 1
 
 ## 4. Tickets
 
-Common acceptance criteria on every ticket (not repeated): ≥90% coverage enforced (SOW §5.2); 0 lint errors/warnings against the GSA 18F Front-End Guide (SOW §5.2); pa11y + axe clean on new screens; OpenAPI updated + TS client regenerated on API change; migrations forward-only; audit + history rows on every mutation; domain event emitted for every state change and listed in `docs/events.md` (FLOW-07); runs against the local stack with no AWS; docstrings/JSDoc; docs updated in the same PR (SOW §5.2: documentation "complete and current at each sprint").
+Common acceptance criteria on every ticket (not repeated): 100% coverage enforced (engineering constitution; SOW §5.2 floor is 90%); 0 lint errors/warnings against the GSA 18F Front-End Guide (SOW §5.2); pa11y + axe clean on new screens; OpenAPI updated + TS client regenerated on API change; migrations forward-only; audit + history rows on every mutation; domain event emitted for every state change and listed in `docs/events.md` (FLOW-07); runs against the local stack with no AWS; docstrings/JSDoc; docs updated in the same PR (SOW §5.2: documentation "complete and current at each sprint").
 
 Format: size · tier · lane · depends → blocks.
 
@@ -280,7 +280,7 @@ Design: wireframe = nav/IA only. Refs: CompactConnect `webroot/src/components/Pa
 #### F-07 · Quality gates
 
 **1.5d · must · B · F-01 → H-01**
-Codecov enforced 90% for `api`/`client` with documented exclusions (migrations, generated client, IaC); ESLint/Prettier/Stylelint configured to the GSA 18F Front-End Guide (SOW §5.2 "Properly Styled Code") with 0 warnings; pa11y-ci over Storybook + Playwright page list; axe in Vitest; Playwright e2e skeleton against the F-14 stack in CI; pre-commit; `just check` / `pnpm check`.
+Codecov enforced 100% for `api`/`client` with documented exclusions (migrations, generated client, IaC); ESLint/Prettier/Stylelint configured to the GSA 18F Front-End Guide (SOW §5.2 "Properly Styled Code") with 0 warnings; pa11y-ci over Storybook + Playwright page list; axe in Vitest; Playwright e2e skeleton against the F-14 stack in CI; pre-commit; `just check` / `pnpm check`.
 AC: coverage drop fails PR; a lint warning fails PR; contrast violation fails CI; e2e smoke <5 min.
 
 #### F-08 · Security scanning

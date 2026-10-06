@@ -16,7 +16,7 @@ coverage:
           - api
           - client
         informational: true
-        target: 90% # from RFP
+        target: 100% # engineering constitution; the RFP/SOW floor is 90%
         threshold: 5%
         base: auto
       api:
