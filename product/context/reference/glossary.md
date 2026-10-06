@@ -1,3 +1,5 @@
+> **Needs review (2026-10-05, SCRUM-39).** Two entries cite rule text that changed when Rules 3 and 4 were adopted on 2026-04-06. **SQL** cites "Rule 2 §2.1"; draft Rule 2 was not adopted. The PA designates the state of qualifying license under adopted Rule 3.4(a)(2), and Rule 3.1(q) defines it. **CBC** says the check is "run by the SQL". Adopted Rule 3.4(a)(4) has the PA "Submit to a criminal background check within 60 days of the application through the process designated by the state of qualifying license", and Rule 3.4(b)(2) has the state review it. The CBC entry also cites "Rule 4/5 §5.2(g)"; the adopted citation is Rule 4.2(g). Remove this note when the file is updated.
+
 # PA Compact Data System — Acronyms and Terms
 
 Companion to `product/backlog/mvp-ticket-breakdown.md`, `product/context/flows/`, and `compactconnect-crosswalk.md` beside this file. Rule citations use the keys in the second table.
