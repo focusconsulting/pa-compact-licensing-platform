@@ -9,6 +9,8 @@ last-revised: 2026-10-05
 
 Cross-story workflow definitions for the MVP. Each flow is one file with `artifact: flow` front matter so a story's spec can cite it (`product/context/flows/<file>`) instead of restating it. Flows are derived from the compact rules in the research corpus; every step that a rule forces carries its citation. Where a flow describes something the pilot defers (`product/backlog/mvp-ticket-breakdown.md` §5.1), the deferred part is kept under a "Deferred" heading so the build does not paint it out.
 
+The journey these flows serve, with the assumptions and open questions for the Commission, is on the Research and Usability page: <https://focusdigital.atlassian.net/wiki/spaces/PC/pages/69074952>. Which of the 14 items in Rule 4.3(c) a state or FSMB can supply is on the license data comparison page: <https://focusdigital.atlassian.net/wiki/spaces/PC/pages/71663618>.
+
 | ID | File | What it covers | Feeds tickets |
 |---|---|---|---|
 | FLOW-01 | [01-end-to-end-privilege-issuance.md](01-end-to-end-privilege-issuance.md) | Account → participation → privilege, the whole happy path; the uniform data set's three writers; where we differ from CompactConnect | U-01, U-03, L-01, L-03, L-04, L-05, P-01, P-02, P-03 |
