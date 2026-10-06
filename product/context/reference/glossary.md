@@ -49,7 +49,7 @@ Companion to `product/backlog/mvp-ticket-breakdown.md`, `product/context/flows/`
 
 | Acronym | Expansion | Where it shows up |
 |---|---|---|
-| **ADR** | Architecture Decision Record | `engineering/docs/architecture_decision_records/`; decisions D1–D15 each get one |
+| **ADR** | Architecture Decision Record | `engineering/adrs/`; decisions D1–D15 each get one |
 | **AC** | Acceptance Criteria | The testable "done" list on every ticket |
 | **API** | Application Programming Interface | The FastAPI service under `/api/v1/*` |
 | **REST** | Representational State Transfer | The API style; resources per persona namespace |

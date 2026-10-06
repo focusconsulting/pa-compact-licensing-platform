@@ -12,7 +12,7 @@ You are tasked with updating existing implementation plans based on user feedbac
 When this command is invoked:
 
 1. **Parse the input to identify**:
-   - Plan file path (e.g., `thoughts/shared/plans/api/2025-01-22-issue-123-feature.md`)
+   - Plan file path (e.g., `engineering/thoughts/shared/plans/api/2025-01-22-issue-123-feature.md`)
    - Requested changes/feedback
 
 2. **Handle different input scenarios**:
@@ -27,10 +27,10 @@ When this command is invoked:
    ```
    Then list recent plans by component:
    ```bash
-   echo "=== Client ===" && ls -lt thoughts/shared/plans/client/ 2>/dev/null | head -3
-   echo "=== API ===" && ls -lt thoughts/shared/plans/api/ 2>/dev/null | head -3
-   echo "=== IaC ===" && ls -lt thoughts/shared/plans/iac/ 2>/dev/null | head -3
-   echo "=== Cross-cutting ===" && ls -lt thoughts/shared/plans/cross-cutting/ 2>/dev/null | head -3
+   echo "=== Client ===" && ls -lt engineering/thoughts/shared/plans/client/ 2>/dev/null | head -3
+   echo "=== API ===" && ls -lt engineering/thoughts/shared/plans/api/ 2>/dev/null | head -3
+   echo "=== IaC ===" && ls -lt engineering/thoughts/shared/plans/iac/ 2>/dev/null | head -3
+   echo "=== Cross-cutting ===" && ls -lt engineering/thoughts/shared/plans/cross-cutting/ 2>/dev/null | head -3
    ```
 
    **If plan file provided but NO feedback**:
@@ -134,13 +134,13 @@ Get user confirmation before proceeding.
 
 1. **Commit the updated plan**:
    ```bash
-   git add thoughts/shared/plans/
+   git add engineering/thoughts/shared/plans/
    git commit -m "docs: update plan - [brief description of changes]"
    ```
 
 2. **Present the changes made**:
    ```
-   I've updated the plan at `thoughts/shared/plans/[filename].md`
+   I've updated the plan at `engineering/thoughts/shared/plans/[filename].md`
 
    Changes made:
    - [Specific change 1]

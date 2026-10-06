@@ -27,7 +27,7 @@ bd show ${BEADS_ID} --json 2>/dev/null || echo "No active beads task"
 
 ### 2. Determine Filepath
 
-Create the handoff at: `thoughts/shared/handoffs/<task-id>/YYYY-MM-DD_HH-MM-SS_description.md`
+Create the handoff at: `engineering/thoughts/shared/handoffs/<task-id>/YYYY-MM-DD_HH-MM-SS_description.md`
 
 Where:
 - `<task-id>` is the beads ID (e.g., `bd-a1b2`), GitHub issue (e.g., `issue-123`), or `general`
@@ -36,9 +36,9 @@ Where:
 - `description` is a brief kebab-case description
 
 Examples:
-- `thoughts/shared/handoffs/bd-a1b2/2025-01-22_14-30-00_implementing-auth.md`
-- `thoughts/shared/handoffs/issue-123/2025-01-22_14-30-00_refactor-parser.md`
-- `thoughts/shared/handoffs/general/2025-01-22_14-30-00_exploring-options.md`
+- `engineering/thoughts/shared/handoffs/bd-a1b2/2025-01-22_14-30-00_implementing-auth.md`
+- `engineering/thoughts/shared/handoffs/issue-123/2025-01-22_14-30-00_refactor-parser.md`
+- `engineering/thoughts/shared/handoffs/general/2025-01-22_14-30-00_exploring-options.md`
 
 ### 3. Write the Handoff Document
 
@@ -68,7 +68,7 @@ If working on an implementation plan, note which phase you're on and reference t
 ## Critical References
 
 [List 2-3 most important files/documents that must be read to continue:]
-- `thoughts/shared/plans/YYYY-MM-DD-xxx.md` - The implementation plan
+- `engineering/thoughts/shared/plans/YYYY-MM-DD-xxx.md` - The implementation plan
 - `src/module/file.py` - Key file being modified
 
 ## Recent Changes
@@ -87,8 +87,8 @@ If working on an implementation plan, note which phase you're on and reference t
 ## Artifacts
 
 [Exhaustive list of files created or updated:]
-- `thoughts/shared/plans/2025-01-22-issue-123-auth.md` - Implementation plan
-- `thoughts/shared/research/2025-01-22-auth-patterns.md` - Research findings
+- `engineering/thoughts/shared/plans/2025-01-22-issue-123-auth.md` - Implementation plan
+- `engineering/thoughts/shared/research/2025-01-22-auth-patterns.md` - Research findings
 - `src/auth/handler.py` - Modified for new validation
 
 ## Action Items & Next Steps
@@ -110,10 +110,10 @@ If working on an implementation plan, note which phase you're on and reference t
 
 ```bash
 # Create directory if needed
-mkdir -p thoughts/shared/handoffs/${TASK_ID}
+mkdir -p engineering/thoughts/shared/handoffs/${TASK_ID}
 
 # After writing the file
-git add thoughts/shared/handoffs/
+git add engineering/thoughts/shared/handoffs/
 git commit -m "docs: handoff for ${TASK_ID}"
 ```
 
@@ -125,7 +125,7 @@ After creating and committing:
 Handoff created and committed! You can resume from this handoff in a new session with:
 
 ```bash
-/resume_handoff thoughts/shared/handoffs/<task-id>/YYYY-MM-DD_HH-MM-SS_description.md
+/resume_handoff engineering/thoughts/shared/handoffs/<task-id>/YYYY-MM-DD_HH-MM-SS_description.md
 ```
 
 Or to resume the latest handoff for this task:
