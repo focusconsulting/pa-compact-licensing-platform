@@ -116,7 +116,7 @@ Present the summary:
 
 3. **Or launch with a plan** (for automated execution):
    ```bash
-   claude "/implement_plan thoughts/shared/plans/PLAN_FILE.md"
+   claude "/implement_plan engineering/thoughts/shared/plans/PLAN_FILE.md"
    ```
 
 ## Useful Commands

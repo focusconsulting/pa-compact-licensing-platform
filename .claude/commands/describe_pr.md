@@ -42,7 +42,7 @@ gh pr view --json url,title,number,state,baseRefName
 ### 3. Check for related context
 
 Look for:
-- Implementation plan in `thoughts/shared/plans/`
+- Implementation plan in `engineering/thoughts/shared/plans/`
 - Related beads task: `bd show <id>`
 - GitHub issue: `gh issue view <number>`
 
@@ -73,7 +73,7 @@ Document which checks pass/fail.
 
 ### 6. Generate the description
 
-Write to `thoughts/shared/prs/<task-id>_description.md`:
+Write to `engineering/thoughts/shared/prs/<task-id>_description.md`:
 
 ```markdown
 ## Summary
@@ -137,7 +137,7 @@ pytest tests/test_feature.py
 </details>
 ```
 
-**Important**: The `<details>` section embeds the implementation plan directly in the PR. This is the audit trail - after the PR merges, the plan file in `thoughts/shared/plans/` can be deleted.
+**Important**: The `<details>` section embeds the implementation plan directly in the PR. This is the audit trail - after the PR merges, the plan file in `engineering/thoughts/shared/plans/` can be deleted.
 
 ### 7. Use the description (DO NOT COMMIT)
 
@@ -145,17 +145,17 @@ The PR description file is a **local working file** - do not commit it to git.
 
 ```bash
 # Create or update the PR with the description
-gh pr create --base main --body-file thoughts/shared/prs/<task-id>_description.md
+gh pr create --base main --body-file engineering/thoughts/shared/prs/<task-id>_description.md
 
 # Or if PR already exists:
-gh pr edit ${PR_NUMBER} --body-file thoughts/shared/prs/<task-id>_description.md
+gh pr edit ${PR_NUMBER} --body-file engineering/thoughts/shared/prs/<task-id>_description.md
 ```
 
 ### 8. Present to user
 
 ```
 I've generated the PR description at:
-`thoughts/shared/prs/<task-id>_description.md`
+`engineering/thoughts/shared/prs/<task-id>_description.md`
 
 **Verification Status:**
 - ✅ Tests pass
@@ -171,12 +171,12 @@ The PR description has been updated. View at: [PR URL]
 [If no PR yet:]
 Create the PR with:
 ```bash
-gh pr create --base main --body-file thoughts/shared/prs/<task-id>_description.md
+gh pr create --base main --body-file engineering/thoughts/shared/prs/<task-id>_description.md
 ```
 
 **After PR merges**, you can delete the plan file:
 ```bash
-rm thoughts/shared/plans/<component>/<plan-file>.md
+rm engineering/thoughts/shared/plans/<component>/<plan-file>.md
 git add -A && git commit -m "chore: cleanup plan after merge"
 ```
 ```
@@ -189,5 +189,5 @@ git add -A && git commit -m "chore: cleanup plan after merge"
 - Always attempt to run verification commands
 - Be clear about which verification steps need manual testing
 - **Embed the implementation plan** in a collapsible section - this is your audit trail
-- **Do not commit** `thoughts/shared/prs/` - these are local working files
+- **Do not commit** `engineering/thoughts/shared/prs/` - these are local working files
 - **Plan files can be deleted** after the PR merges (the PR preserves the content)
