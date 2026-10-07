@@ -384,9 +384,9 @@ History tables: `practitioners_history`, `qualifying_licenses_history`, `partici
 
 #### Automated Verification
 
-- [ ] Tests pass with coverage: `cd engineering/api && just test-coverage`
-- [ ] Linting, formatting, and type checking pass: `cd engineering/api && just lint`
-- [ ] Constraint tests (using `factories.py` and `db_session`) prove each rule-fixed constraint rejects a bad row:
+- [x] Tests pass with coverage: `cd engineering/api && just test-coverage`
+- [x] Linting, formatting, and type checking pass: `cd engineering/api && just lint`
+- [x] Constraint tests (using `factories.py` and `db_session`) prove each rule-fixed constraint rejects a bad row:
   - an `eligible` application without `cbc_completed_on`;
   - a second open application for the same practitioner;
   - an `inactive` privilege without a reason;
@@ -394,14 +394,23 @@ History tables: `practitioners_history`, `qualifying_licenses_history`, `partici
   - a `submitted` privilege request without `ql_expires_on_snapshot`;
   - a duplicate `(state_code, license_number)`;
   - deleting a practitioner with applications (RESTRICT).
-- [ ] History tables reject `UPDATE`/`DELETE`.
-- [ ] The model-schema test passes for every new model.
+- [x] History tables reject `UPDATE`/`DELETE`.
+- [x] The model-schema test passes for every new model.
 
 #### Manual Verification
 
 - [ ] The tech lead and PM review the dictionary's Phase 2 sections (F-02 acceptance: "dictionary reviewed by tech lead + PM").
 
 **Implementation Note**: once this phase merges, tell the vertical owners the base is ready; Phase 3 can proceed in parallel with their work.
+
+**Implemented 2026-10-07 as 2a and 2b; differences from the plan, which Phase 3 follows:**
+
+- **Two migrations**, `20261007_100000_data_model_core_entities_a.sql` and `20261007_110000_data_model_core_entities_b.sql`, committed separately. Phase 3's migration therefore takes `20261007_120000`.
+- **Two reusable helpers** in migration 2a: `add_audit_columns_trigger(table)` and `create_history_table(table)`. Later epics call them when adding entity tables.
+- **`privilege_requests.withdrawn_at`** was added, required when `status = 'withdrawn'`, matching the application table.
+- **`documents` has no `uploaded_by`**: `created_by` is the uploader.
+- **History models use `sa_type=JSONB`**, not `sa_column`: one Column object cannot be shared by several tables.
+- **Two structural tests** guard later epics: every table with audit columns has the audit trigger, and every `*_history` table has the append-only trigger.
 
 ---
 
@@ -415,7 +424,7 @@ Compute license status, privilege status, and compact eligibility on read, as of
 
 #### 1. Migration
 
-**File**: `engineering/api/db-migrations/20261007_110000_data_model_status_views.sql`
+**File**: `engineering/api/db-migrations/20261007_120000_data_model_status_views.sql`
 
 - `qualifying_license_status_on(as_of DATE)` returns one row per license: `active` when `state_reported_status = 'active'`, `as_of <= expires_on`, `terminated_on` is NULL or later than `as_of`, and no in-force adverse action against it; otherwise `expired`, `terminated`, `encumbered`, or the reported status. View `v_qualifying_license_status` = the function at `compact_today()`.
 - `privilege_status_on(as_of DATE)` returns `status` and `status_reason` per privilege, with precedence `inactive` (with `deactivation_reason`), `expired` (`as_of > expires_on`), `encumbered` (an adverse action against the privilege with `effective_from <= as_of` and `effective_until` NULL or `>= as_of`), else `active`. View `v_privilege_status`.

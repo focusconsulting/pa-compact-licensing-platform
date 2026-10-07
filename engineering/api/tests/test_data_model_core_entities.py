@@ -11,10 +11,13 @@ from licensing_api.repo.participation_application import ApplicationKind, Applic
 from licensing_api.repo.practitioner import PractitionerSsn
 from tests.factories import (
     assert_rejected,
+    make_adverse_action,
     make_application,
     make_eligible_application,
+    make_issued_privilege,
     make_practitioner,
     make_qualifying_license,
+    make_submitted_request,
     system_user_id,
 )
 
@@ -236,6 +239,154 @@ async def test_a_closed_application_does_not_block_a_new_one(db_session):
     assert change.status == ApplicationStatus.DRAFT
 
 
+# --- privilege_requests ----------------------------------------------------
+
+
+async def test_a_submitted_request_pins_the_license_expiry(db_session):
+    application = await make_eligible_application(db_session, await make_practitioner(db_session))
+    request = await make_submitted_request(db_session, application)
+
+    await assert_rejected(
+        db_session,
+        'UPDATE privilege_requests SET ql_expires_on_snapshot = NULL, updated_by = 1 WHERE id = :id',
+        {'id': request.id},
+    )
+
+
+async def test_a_practitioner_has_one_open_request_per_remote_state(db_session):
+    application = await make_eligible_application(db_session, await make_practitioner(db_session))
+    await make_submitted_request(db_session, application)
+
+    await assert_rejected(
+        db_session,
+        'INSERT INTO privilege_requests (participation_application_id, practitioner_id, '
+        "remote_state_code, qualifying_license_id, created_by) VALUES (:app, :pa, 'OK', :ql, 1)",
+        {
+            'app': application.id,
+            'pa': application.practitioner_id,
+            'ql': application.qualifying_license_id,
+        },
+    )
+
+
+async def test_requests_to_different_remote_states_can_be_open_together(db_session):
+    application = await make_eligible_application(db_session, await make_practitioner(db_session))
+    await make_submitted_request(db_session, application)
+
+    other = await make_submitted_request(db_session, application, remote_state_code='NE')
+
+    assert other.remote_state_code == 'NE'
+
+
+async def test_a_denied_request_needs_a_reason(db_session):
+    application = await make_eligible_application(db_session, await make_practitioner(db_session))
+    request = await make_submitted_request(db_session, application)
+
+    await assert_rejected(
+        db_session,
+        "UPDATE privilege_requests SET status = 'denied', decided_at = now(), decided_by = 1, "
+        'updated_by = 1 WHERE id = :id',
+        {'id': request.id},
+    )
+
+
+# --- privileges ------------------------------------------------------------
+
+
+async def test_an_issued_privilege_expires_on_the_pinned_date(db_session):
+    privilege = await make_issued_privilege(db_session)
+
+    assert privilege.expires_on == date(2027, 12, 31)
+
+
+async def test_an_inactive_privilege_needs_a_reason_and_time(db_session):
+    privilege = await make_issued_privilege(db_session)
+
+    await assert_rejected(
+        db_session,
+        "UPDATE privileges SET administrator_status = 'inactive', updated_by = 1 WHERE id = :id",
+        {'id': privilege.id},
+    )
+
+
+async def test_a_deactivation_reason_must_be_known(db_session):
+    privilege = await make_issued_privilege(db_session)
+
+    await assert_rejected(
+        db_session,
+        "UPDATE privileges SET administrator_status = 'inactive', deactivation_reason = 'expired', "
+        'deactivated_at = now(), updated_by = 1 WHERE id = :id',
+        {'id': privilege.id},
+    )
+
+
+async def test_a_privilege_number_is_unique(db_session):
+    privilege = await make_issued_privilege(db_session)
+    other = await make_issued_privilege(db_session)
+
+    await assert_rejected(
+        db_session,
+        'UPDATE privileges SET privilege_number = :number, updated_by = 1 WHERE id = :id',
+        {'number': privilege.privilege_number, 'id': other.id},
+    )
+
+
+# --- adverse_actions and sii_reports ---------------------------------------
+
+
+async def test_an_adverse_action_needs_a_summary_or_an_order(db_session):
+    action = await make_adverse_action(db_session, await make_issued_privilege(db_session))
+
+    await assert_rejected(
+        db_session,
+        'UPDATE adverse_actions SET summary = NULL, updated_by = 1 WHERE id = :id',
+        {'id': action.id},
+    )
+
+
+async def test_an_adverse_action_targets_what_it_is_against(db_session):
+    action = await make_adverse_action(db_session, await make_issued_privilege(db_session))
+
+    await assert_rejected(
+        db_session,
+        "UPDATE adverse_actions SET against = 'qualifying_license', updated_by = 1 WHERE id = :id",
+        {'id': action.id},
+    )
+
+
+async def test_an_adverse_action_cannot_end_before_it_starts(db_session):
+    action = await make_adverse_action(db_session, await make_issued_privilege(db_session))
+
+    await assert_rejected(
+        db_session,
+        "UPDATE adverse_actions SET effective_until = '2026-06-30', updated_by = 1 WHERE id = :id",
+        {'id': action.id},
+    )
+
+
+async def test_an_npdb_category_must_exist(db_session):
+    action = await make_adverse_action(db_session, await make_issued_privilege(db_session))
+
+    await assert_rejected(
+        db_session,
+        'INSERT INTO adverse_action_npdb_categories (adverse_action_id, npdb_category_code, '
+        "created_by) VALUES (:id, 'unknown', 1)",
+        {'id': action.id},
+    )
+
+
+async def test_an_sii_report_needs_a_way_to_reach_the_contact(db_session):
+    practitioner = await make_practitioner(db_session)
+
+    await assert_rejected(
+        db_session,
+        'INSERT INTO sii_reports (practitioner_id, reporting_state_code, description, '
+        "contact_name, determined_on, created_by) VALUES (:id, 'KS', 'Under review', 'Board', "
+        "'2026-07-01', 1)",
+        {'id': practitioner.id},
+    )
+
+
 # --- history ---------------------------------------------------------------
 
 
@@ -257,3 +408,30 @@ async def test_history_rejects_update_and_delete(db_session):
     await assert_rejected(
         db_session, 'DELETE FROM practitioners_history WHERE id = :id', {'id': entry.id}
     )
+
+
+async def test_every_history_table_is_append_only(db_session):
+    result = await db_session.execute(
+        text(
+            "SELECT c.relname FROM pg_class c WHERE c.relkind = 'r' "
+            "AND c.relnamespace = 'public'::regnamespace AND c.relname LIKE '%\\_history' "
+            'AND NOT EXISTS (SELECT 1 FROM pg_trigger t WHERE t.tgrelid = c.oid '
+            "AND t.tgname = 'trg_' || c.relname || '_append_only')"
+        )
+    )
+
+    assert list(result.scalars()) == []
+
+
+async def test_every_table_with_audit_columns_has_the_trigger(db_session):
+    result = await db_session.execute(
+        text(
+            'SELECT c.table_name FROM information_schema.columns c '
+            "WHERE c.table_schema = 'public' AND c.column_name = 'updated_by' "
+            'AND NOT EXISTS (SELECT 1 FROM pg_trigger t '
+            "WHERE t.tgrelid = ('public.' || c.table_name)::regclass "
+            "AND t.tgname = 'trg_' || c.table_name || '_audit_columns')"
+        )
+    )
+
+    assert list(result.scalars()) == []
