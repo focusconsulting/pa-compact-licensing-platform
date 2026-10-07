@@ -200,22 +200,30 @@ $$;
 
 #### Automated Verification
 
-- [ ] Local services running: `cd engineering/api && just infra`
-- [ ] Tests pass with coverage: `cd engineering/api && just test-coverage`
-- [ ] Linting, formatting, and type checking pass: `cd engineering/api && just lint`
-- [ ] Markdown lint passes: `pre-commit run --files engineering/adrs/*.md engineering/docs/data-model.md`
-- [ ] Tests prove: updating a `users` row sets `updated_at`; inserting without `updated_by` copies `created_by`; `UPDATE` and `DELETE` on `audit_log` raise unless `app.expunge` is `on`; `compact_today()` returns the date in `America/New_York` around midnight UTC; the role CHECK accepts `state_admin`; the model-schema test passes.
+- [x] Local services running: `cd engineering/api && just infra`
+- [x] Tests pass with coverage: `cd engineering/api && just test-coverage`
+- [x] Linting, formatting, and type checking pass: `cd engineering/api && just lint`
+- [x] Markdown lint passes: `pre-commit run --files engineering/adrs/*.md engineering/docs/data-model.md`
+- [x] Tests prove: updating a `users` row sets `updated_at`; inserting without `updated_by` copies `created_by`; `UPDATE` and `DELETE` on `audit_log` raise unless `app.expunge` is `on`; `compact_today()` returns the date in `America/New_York` around midnight UTC; the role CHECK accepts `state_admin`; the model-schema test passes.
 
 #### Local Integration
 
-- [ ] The current local database (with the `20260415` migration and seed applied) upgrades cleanly: `cd engineering/api && just dev`, then `curl localhost:8000/api/health/ready`.
-- [ ] `/api/me` still works for a seeded user (existing `test_user.py` passes).
+- [x] The current local database (with the `20260415` migration and seed applied) upgrades cleanly: `cd engineering/api && just dev`, then `curl localhost:8000/api/health/ready`.
+- [x] `/api/me` still works for a seeded user (existing `test_user.py` passes).
 
 #### Manual Verification
 
-- [ ] The tech lead reviews ADR-0005 to ADR-0008 and the dictionary skeleton.
+- [x] The tech lead reviews ADR-0005 to ADR-0008 and the dictionary skeleton.
 
 **Implementation Note**: after this phase passes automated verification, pause for the human to confirm the ADRs before Phase 2 builds on them.
+
+**Implemented 2026-10-07; differences from the plan, which Phase 2 follows:**
+
+- **Instants need `TimestampTZ` in the model.** SQLModel maps `datetime` to a timestamp *without* time zone, so ORM inserts of aware datetimes failed. Every instant field uses `sa_type=TimestampTZ` (`licensing_api/repo/base.py`), and `test_model_schema.py` fails on any naive datetime column. The existing `User` model had the same latent bug.
+- **`users` ↔ `states` foreign-key cycle.** `users.state_code` references `states` and `states.created_by` references `users`; the model marks `fk_users_state_code` `use_alter=True` so SQLAlchemy can order inserts.
+- **`licensing_api/repo/__init__.py`** imports every table model so foreign keys resolve whichever model is used first. Phase 2 models are added there.
+- **`compact_date_at(instant)`** was added beside `compact_today()`, so date-boundary tests pass an instant instead of freezing the database clock.
+- **Running one test file:** the `just test` recipe's first argument is the env file, so use `just test .env tests/<file>.py`.
 
 ---
 
