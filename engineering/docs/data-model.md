@@ -306,9 +306,41 @@ A report that significant investigative information exists (Rule 4 §4.4(c)–(d
 
 `practitioners_history`, `qualifying_licenses_history`, `participation_applications_history`, `privilege_requests_history`, `privileges_history`, `adverse_actions_history`, and `sii_reports_history`. Columns: `entity_id`, `changed_at`, `changed_by`, `effective_at`, and `previous`, `updated`, `removed` as JSONB. Append-only (ADR-0008). Tier: the same as the entity's, since history copies its values.
 
-## Status functions
+## Computed status
 
-Added by F-02 phase 3: license status, privilege status, and compact eligibility, as of any date.
+A status a rule derives is computed on read, never stored (D1). Three SQL functions are the only place status day arithmetic lives (ADR-0006). Each takes the date to evaluate; each has a view that evaluates it as of `compact_today()`. End dates are inclusive. Tier: follows the underlying record. Models: `licensing_api/repo/status.py`.
+
+### `qualifying_license_status_on(as_of)` and `v_qualifying_license_status`
+
+Returns `qualifying_license_id` and `status`, taking the first that applies:
+
+1. `terminated`: the PA voluntarily terminated it on or before `as_of` (`terminated_on`).
+2. The state's reported status, if not `active`: `expired`, `lapsed`, `inactive`, `terminated`.
+3. `expired`: `as_of` is after `expires_on`.
+4. `encumbered`: an adverse action against the license is in force.
+5. `active`.
+
+The reported status is the current one; `as_of` applies to the dates.
+
+### `privilege_status_on(as_of)` and `v_privilege_status`
+
+Returns `privilege_id`, `status`, and `status_reason`, taking the first that applies (ADR-0005, FLOW-06):
+
+1. `inactive`, with the `deactivation_reason` as `status_reason`.
+2. `expired`: `as_of` is after the pinned `expires_on`. Renewing the license does not change this (Rule 3 §3.5(a)).
+3. `encumbered`: an adverse action against this privilege is in force.
+4. `active`.
+
+An adverse action against the qualifying license reaches privileges through the cascade that deactivates them (FLOW-05), not through this function.
+
+### `compact_eligibility_on(as_of)` and `v_compact_eligibility`
+
+Returns, for every practitioner, `is_barred` and `eligible_again_on` (ML §4.A.8):
+
+- A PA is barred while an adverse action against a qualifying license is in force.
+- Once it ends, the bar lasts two years from the first unrestricted day: `eligible_again_on = effective_until + 1 day + 2 years`. With several actions, the latest end wins.
+- `eligible_again_on` is NULL while any such action has no end date, and for a PA never barred.
+- Actions that start after `as_of`, and actions against a privilege, do not bar (FLOW-05).
 
 ## Reserved for later epics
 
