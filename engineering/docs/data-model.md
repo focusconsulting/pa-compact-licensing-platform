@@ -24,32 +24,7 @@ Every table also has the audit columns `created_at`, `created_by`, `updated_at`,
 
 ## Diagram
 
-```mermaid
-erDiagram
-    users }o--o| states : "state_code"
-    users ||--o{ audit_log : "actor"
-    users ||--o{ domain_events : "actor"
-    users ||--o{ notifications : "recipient"
-    domain_events ||--o{ domain_event_deliveries : "event_id"
-    users ||--o| practitioners : "user_id"
-    practitioners ||--o| practitioner_ssn : "practitioner_id"
-    practitioners ||--o{ qualifying_licenses : "practitioner_id"
-    states ||--o{ qualifying_licenses : "state_code"
-    practitioners ||--o{ participation_applications : "practitioner_id"
-    states ||--o{ participation_applications : "sql_state_code"
-    qualifying_licenses ||--o{ participation_applications : "qualifying_license_id"
-    participation_applications ||--o{ privilege_requests : "participation_application_id"
-    states ||--o{ privilege_requests : "remote_state_code"
-    privilege_requests ||--o| privileges : "privilege_request_id"
-    qualifying_licenses ||--o{ privileges : "qualifying_license_id"
-    qualifying_licenses ||--o{ adverse_actions : "against a license"
-    privileges ||--o{ adverse_actions : "against a privilege"
-    adverse_actions ||--o{ adverse_action_npdb_categories : "adverse_action_id"
-    practitioners ||--o{ sii_reports : "practitioner_id"
-    documents |o--o{ adverse_actions : "order_document_id"
-```
-
-The diagram grows with each phase of the F-02 plan.
+Every table, column, and foreign key, as the migrations build them: [data-model-diagram.md](data-model-diagram.md).
 
 ## Shared roots
 
