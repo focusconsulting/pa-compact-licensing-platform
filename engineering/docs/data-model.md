@@ -31,6 +31,13 @@ erDiagram
     users ||--o{ domain_events : "actor"
     users ||--o{ notifications : "recipient"
     domain_events ||--o{ domain_event_deliveries : "event_id"
+    users ||--o| practitioners : "user_id"
+    practitioners ||--o| practitioner_ssn : "practitioner_id"
+    practitioners ||--o{ qualifying_licenses : "practitioner_id"
+    states ||--o{ qualifying_licenses : "state_code"
+    practitioners ||--o{ participation_applications : "practitioner_id"
+    states ||--o{ participation_applications : "sql_state_code"
+    qualifying_licenses ||--o{ participation_applications : "qualifying_license_id"
 ```
 
 The diagram grows with each phase of the F-02 plan.
@@ -130,7 +137,95 @@ An email the worker sends (backlog D7); F-11 adds the code. Tier: private.
 
 ## Core entities
 
-Added by F-02 phase 2: practitioners and SSNs, documents, qualifying licenses, participation applications, privilege requests, privileges, adverse actions, and SII reports, each with a history table.
+Every entity table has a `public_id` UUID for use outside the API, and a `<table>_history` table (ADR-0005). Two helpers in the migrations keep new tables consistent: `add_audit_columns_trigger(table)` and `create_history_table(table)`.
+
+### `practitioners`
+
+A PA's uniform data set (Rule 4 §4.3(c)), held by the Commission and written by several parties: the PA enters it and the state of qualifying license verifies it. Tier: private. Owner: platform (shared root).
+
+| Column | Type | Meaning |
+|---|---|---|
+| `user_id` | FK `users`, unique | The PA's sign-in |
+| `current_sql_state_code` | FK `states`, NULL | Set when an application becomes eligible |
+| `legal_first_name`, `legal_middle_name`, `legal_last_name`, `name_suffix` | TEXT | §4.3(c)(1) |
+| `sex_code` | FK `ref_sex`, NULL | §4.3(c)(3); values wait on Q-10 |
+| `date_of_birth` | DATE | §4.3(c)(4) |
+| `residence_*` (line1, line2, city, region, postal code, country code) | TEXT | Primary residence of record, §4.3(c)(6) |
+| `phone`, `correspondence_email` | TEXT | §4.3(c)(7)–(8) |
+| `pa_program_name`, `pa_program_graduation_year` | TEXT, SMALLINT | §4.3(c)(9) |
+| `nccpa_certification_number`, `_status`, `_expires_on` | TEXT, TEXT, DATE | §4.3(c)(10) |
+| `npi` | TEXT, NULL | Not in the adopted uniform data set; optional, never verified |
+| `<group>_entered_by`, `<group>_verified_by_state`, `<group>_verified_at` | FK `users`, FK `states`, TIMESTAMPTZ | Provenance for each group: `identity`, `residence`, `contact`, `education`, `certification`. A state and a time are set together or not at all |
+
+Other names (§4.3(c)(2)) and the address and email change log (§4.3(e)(1)–(2)) are reserved for epic 5.
+
+### `practitioner_ssn`
+
+One SSN per practitioner, encrypted by the application (ADR-0007). Tier: restricted. No history table: changes are audited without the value.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `practitioner_id` | FK, unique | |
+| `ssn_ciphertext` | BYTEA | AES-256-GCM, nonce prepended |
+| `ssn_key_version` | SMALLINT | Which key encrypted it |
+| `ssn_lookup_hash` | BYTEA, unique | Keyed HMAC; a second account with the same SSN is rejected |
+| `ssn_last4` | CHAR(4) | Four digits, shown to staff with `read_private` |
+
+### `documents`
+
+A file in object storage owned by one record (D9). `created_by` is the uploader. Tier: follows its owner. Owner: platform.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `owner_type`, `owner_id` | TEXT CHECK, BIGINT | `practitioner`, `participation_application`, `privilege_request`, `adverse_action`, `sii_report`; no foreign key |
+| `kind` | TEXT | What it proves; free text until Q-07 |
+| `storage_key` | TEXT, unique | S3 (RustFS locally) object key |
+| `file_name`, `content_type`, `size_bytes` | | |
+| `scan_status` | TEXT CHECK | `pending`, `clean`, `infected`, `error`; only `clean` may be downloaded |
+
+### `qualifying_licenses`
+
+A state PA license, authored by the issuing state (Rule 4 §4.3(c)(11)). Tier: the state holding it is public (Rule 4 §4.5(b)); the rest is private. Owner: epic 7.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `practitioner_id` | FK, NULL | NULL until linked; an uploaded license may arrive first (epic 13) |
+| `state_code`, `license_number` | FK `states`, TEXT | Unique together |
+| `state_reported_status` | TEXT CHECK | `active`, `expired`, `lapsed`, `inactive`, `terminated`; reinstatement returns to `active` (FLOW-05) |
+| `status_effective_on` | DATE | When the reported status took effect |
+| `issued_on`, `expires_on` | DATE | `issued_on` ≤ `expires_on` |
+| `is_unrestricted` | BOOLEAN | Only a full and unrestricted license qualifies (Rule 3 §3.4(a)(2)) |
+| `terminated_on` | DATE, NULL | Voluntary termination by the PA (Rule 3 §3.5(a), §3.6(a)) |
+| `source` | TEXT CHECK | `manual`, `upload`, `api` |
+| `verified_by`, `verified_at` | FK `users`, TIMESTAMPTZ | Set together |
+
+Whether a license is in effect on a given day is computed (F-02 phase 3), not stored.
+
+### `participation_applications`
+
+A PA's application to participate in the compact, decided by their state of qualifying license (FLOW-02). Tier: private. Owner: epic 6.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `practitioner_id` | FK | |
+| `kind` | TEXT CHECK | `initial` or `change_sql` (Rule 3 §3.6(a)) |
+| `sql_state_code` | FK `states` | The designated state of qualifying license. There is no basis column: adopted Rule 3 §3.4(a)(2) dropped the draft's tests |
+| `qualifying_license_id` | FK, NULL | |
+| `status` | TEXT CHECK | `draft`, `submitted`, `info_requested`, `eligible`, `denied`, `withdrawn`, `eligibility_withdrawn` (FLOW-06) |
+| `opened_at` | TIMESTAMPTZ | Received by the SQL; starts the 60-day clock (Rule 3 §3.7(a)). Required once out of `draft` |
+| `request_note` | TEXT | The SQL's request for information (D15) |
+| `license_verified_at`, `license_verified_by` | | Set together |
+| `cbc_completed_on` | DATE | The background check's completion date; never a result (Rule 4 §4.2) |
+| `decided_at`, `decided_by` | | Required for `eligible`, `denied`, `eligibility_withdrawn` |
+| `denial_reason_code`, `denial_reason_detail` | FK `ref_denial_reasons`, TEXT | A code is required for `denied`; use an `eligibility` reason |
+| `withdrawn_at` | TIMESTAMPTZ | Required for `withdrawn` |
+| `eligibility_withdrawn_at`, `eligibility_withdrawal_reason` | | Required for `eligibility_withdrawn` (Rule 3 §3.9(b)) |
+
+The database enforces: `eligible` needs `license_verified_at` and `cbc_completed_on` (FLOW-02); one open application (`draft`, `submitted`, `info_requested`) per practitioner. The queue index is `(sql_state_code, status)`.
+
+### History tables
+
+`practitioners_history`, `qualifying_licenses_history`, `participation_applications_history`, and one per entity added in phase 2b. Columns: `entity_id`, `changed_at`, `changed_by`, `effective_at`, and `previous`, `updated`, `removed` as JSONB. Append-only (ADR-0008). Tier: the same as the entity's, since history copies its values.
 
 ## Status functions
 
