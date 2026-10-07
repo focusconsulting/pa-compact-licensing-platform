@@ -1,12 +1,14 @@
 import base64
 import uuid
-from collections.abc import Callable
+from collections.abc import AsyncGenerator, Callable
 from unittest.mock import patch
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi.testclient import TestClient
 from jose import jwt as jose_jwt
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.pool import NullPool
 
 from licensing_api.__main__ import app
 from licensing_api.config import Settings, get_settings
@@ -55,6 +57,28 @@ def client(jwks):
         with TestClient(app) as c:
             yield c
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+async def db_session(client) -> AsyncGenerator[AsyncSession]:
+    """A session whose work is rolled back when the test ends, so tests never see each other's rows.
+
+    Depends on ``client`` so the app's lifespan has applied the migrations. Code
+    under test may commit: with ``create_savepoint`` a commit releases a
+    savepoint inside the outer transaction, which is still rolled back.
+    """
+    engine = create_async_engine(TEST_SETTINGS.db_url, poolclass=NullPool)
+    async with engine.connect() as connection:
+        transaction = await connection.begin()
+        session = AsyncSession(
+            bind=connection, join_transaction_mode='create_savepoint', expire_on_commit=False
+        )
+        try:
+            yield session
+        finally:
+            await session.close()
+            await transaction.rollback()
+    await engine.dispose()
 
 
 @pytest.fixture(scope='module')
