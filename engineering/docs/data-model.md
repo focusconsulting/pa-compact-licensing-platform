@@ -38,6 +38,15 @@ erDiagram
     practitioners ||--o{ participation_applications : "practitioner_id"
     states ||--o{ participation_applications : "sql_state_code"
     qualifying_licenses ||--o{ participation_applications : "qualifying_license_id"
+    participation_applications ||--o{ privilege_requests : "participation_application_id"
+    states ||--o{ privilege_requests : "remote_state_code"
+    privilege_requests ||--o| privileges : "privilege_request_id"
+    qualifying_licenses ||--o{ privileges : "qualifying_license_id"
+    qualifying_licenses ||--o{ adverse_actions : "against a license"
+    privileges ||--o{ adverse_actions : "against a privilege"
+    adverse_actions ||--o{ adverse_action_npdb_categories : "adverse_action_id"
+    practitioners ||--o{ sii_reports : "practitioner_id"
+    documents |o--o{ adverse_actions : "order_document_id"
 ```
 
 The diagram grows with each phase of the F-02 plan.
@@ -223,9 +232,79 @@ A PA's application to participate in the compact, decided by their state of qual
 
 The database enforces: `eligible` needs `license_verified_at` and `cbc_completed_on` (FLOW-02); one open application (`draft`, `submitted`, `info_requested`) per practitioner. The queue index is `(sql_state_code, status)`.
 
+### `privilege_requests`
+
+A PA's request for a compact privilege in one remote state (FLOW-03). Tier: private. Owner: epic 8.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `participation_application_id`, `practitioner_id` | FKs | The eligible application it rests on |
+| `remote_state_code` | FK `states` | |
+| `qualifying_license_id` | FK | The license used to apply (Rule 3 §3.5(a)) |
+| `status` | TEXT CHECK | `pending_payment`, `submitted`, `issued`, `denied`, `withdrawn`. `withdrawn` replaces FLOW-06's `abandoned`, per Rule 3 §3.7(b)(1) |
+| `ql_expires_on_snapshot` | DATE | The license expiry in effect when the PA applied; becomes the privilege's expiry (Rule 3 §3.5(a)). Required once submitted |
+| `submitted_at` | TIMESTAMPTZ | Received by the remote state (Rule 3 §3.7(b)); required once submitted |
+| `decided_at`, `decided_by` | | Required for `issued` and `denied` |
+| `denial_reason_code`, `denial_reason_detail` | FK `ref_denial_reasons`, TEXT | A code is required for `denied`; use a `privilege` reason |
+| `withdrawn_at` | TIMESTAMPTZ | Required for `withdrawn` |
+
+One open request (`pending_payment`, `submitted`) per practitioner and remote state. The queue index is `(remote_state_code, status)`. Per-proof verification rows are reserved for epic 8.
+
+### `privileges`
+
+A compact privilege issued by a remote state (Rule 4 §4.3(d)). Tier: the state, number, status, and dates are public (Rule 4 §4.5(b), Q-12); the deactivation reason and note are states and Commission. Owner: epic 8.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `privilege_request_id` | FK, unique | |
+| `practitioner_id`, `remote_state_code`, `qualifying_license_id` | FKs | |
+| `privilege_number` | TEXT, unique | `PA-{state}-{n}` |
+| `state_privilege_identifier` | TEXT, NULL | The remote state's own identifier, if it issues one (Rule 4 §4.3(d)(1)) |
+| `issued_at` | TIMESTAMPTZ | |
+| `expires_on` | DATE | Pinned from the request; inclusive |
+| `administrator_status` | TEXT CHECK | `active` or `inactive`, set by a state or the Commission |
+| `deactivation_reason` | TEXT CHECK | `qualifying_license_adverse_action`, `eligibility_withdrawn`, `qualifying_license_inactive`, `qualifying_license_terminated`, `sql_changed` (Rule 3 §3.6(d)), `state_deactivated`. Set, with `deactivated_at`, exactly when `inactive` |
+| `deactivation_note` | TEXT, NULL | |
+
+The status a user sees (active, expired, encumbered, inactive) is computed (F-02 phase 3), never stored (D1).
+
+### `adverse_actions` and `adverse_action_npdb_categories`
+
+Discipline a state reports against a qualifying license or one privilege (Rule 4 §4.4(a)–(b)). Tier: states and Commission; public only when `is_public`. Owner: epic 9.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `practitioner_id`, `reporting_state_code` | FKs | |
+| `against` | TEXT CHECK | `qualifying_license` or `privilege`; exactly the matching target id is set |
+| `qualifying_license_id`, `privilege_id` | FKs, NULL | |
+| `action_type_code` | FK `ref_adverse_action_types` | |
+| `summary`, `order_document_id` | TEXT, FK `documents` | At least one: "a summary of the action taken or a copy of the order" (Rule 4 §4.4(b)(1)) |
+| `ordered_on` | DATE | |
+| `effective_from`, `effective_until` | DATE, DATE NULL | In force through `effective_until` inclusive, or indefinitely while it is NULL |
+| `is_emergency` | BOOLEAN | Shortens the reporting window |
+| `is_public` | BOOLEAN, default false | Non-public actions never reach public verification (Rule 4 §4.5(c)–(d)) |
+| `reported_at` | TIMESTAMPTZ | Measures the five-business-day window (Rule 4 §4.4(b)(2)) |
+
+`adverse_action_npdb_categories` holds optional NPDB categories, one row per category (Q-17). Updates to an action are kept in `adverse_actions_history` (Rule 4 §4.4(b)(3)). Reports a PA makes about a non-participating state are reserved for epic 9.
+
+### `sii_reports`
+
+A report that significant investigative information exists (Rule 4 §4.4(c)–(d)). Tier: **states and Commission only**, never the PA or the public (ML §8.C); kept apart from `adverse_actions` so no adverse-action query can return it. Owner: epic 9.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `practitioner_id`, `reporting_state_code` | FKs | The state of qualifying license or a remote state |
+| `qualifying_license_id`, `privilege_id` | FKs, NULL | Optional link to what it concerns |
+| `description` | TEXT | |
+| `contact_name`, `contact_email`, `contact_phone` | TEXT | For follow-up; an email or a phone is required |
+| `public_complaint_document_id` | FK `documents`, NULL | "a copy of any public complaint" (Rule 4 §4.4(d)(1)) |
+| `determined_on` | DATE | Starts the five-business-day window (Rule 4 §4.4(d)(2)) |
+| `reported_at` | TIMESTAMPTZ | |
+| `closed_at`, `closed_by` | | Set together when the investigation closes |
+
 ### History tables
 
-`practitioners_history`, `qualifying_licenses_history`, `participation_applications_history`, and one per entity added in phase 2b. Columns: `entity_id`, `changed_at`, `changed_by`, `effective_at`, and `previous`, `updated`, `removed` as JSONB. Append-only (ADR-0008). Tier: the same as the entity's, since history copies its values.
+`practitioners_history`, `qualifying_licenses_history`, `participation_applications_history`, `privilege_requests_history`, `privileges_history`, `adverse_actions_history`, and `sii_reports_history`. Columns: `entity_id`, `changed_at`, `changed_by`, `effective_at`, and `previous`, `updated`, `removed` as JSONB. Append-only (ADR-0008). Tier: the same as the entity's, since history copies its values.
 
 ## Status functions
 

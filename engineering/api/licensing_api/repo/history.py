@@ -50,3 +50,33 @@ class ParticipationApplicationHistory(HistoryRecord, table=True):
     __tablename__ = 'participation_applications_history'  # type: ignore[assignment]
 
     entity_id: int = Field(foreign_key='participation_applications.id')
+
+
+class PrivilegeRequestHistory(HistoryRecord, table=True):
+    # SQLModel defines __tablename__ as a declared_attr method; assigning a string is its documented way to name a table.
+    __tablename__ = 'privilege_requests_history'  # type: ignore[assignment]
+
+    entity_id: int = Field(foreign_key='privilege_requests.id')
+
+
+class PrivilegeHistory(HistoryRecord, table=True):
+    # SQLModel defines __tablename__ as a declared_attr method; assigning a string is its documented way to name a table.
+    __tablename__ = 'privileges_history'  # type: ignore[assignment]
+
+    entity_id: int = Field(foreign_key='privileges.id')
+
+
+class AdverseActionHistory(HistoryRecord, table=True):
+    """Every update a reporting state makes to an adverse action (Rule 4 §4.4(b)(3))."""
+
+    # SQLModel defines __tablename__ as a declared_attr method; assigning a string is its documented way to name a table.
+    __tablename__ = 'adverse_actions_history'  # type: ignore[assignment]
+
+    entity_id: int = Field(foreign_key='adverse_actions.id')
+
+
+class SiiReportHistory(HistoryRecord, table=True):
+    # SQLModel defines __tablename__ as a declared_attr method; assigning a string is its documented way to name a table.
+    __tablename__ = 'sii_reports_history'  # type: ignore[assignment]
+
+    entity_id: int = Field(foreign_key='sii_reports.id')

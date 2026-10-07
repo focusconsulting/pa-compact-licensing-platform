@@ -11,11 +11,14 @@ from sqlalchemy import select, text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from licensing_api.repo.adverse_action import AdverseAction, AdverseActionTarget
 from licensing_api.repo.participation_application import (
     ApplicationStatus,
     ParticipationApplication,
 )
 from licensing_api.repo.practitioner import Practitioner
+from licensing_api.repo.privilege import Privilege
+from licensing_api.repo.privilege_request import PrivilegeRequest, PrivilegeRequestStatus
 from licensing_api.repo.qualifying_license import LicenseStatus, QualifyingLicense
 from licensing_api.repo.user import SYSTEM_USER_EMAIL, User
 
@@ -116,6 +119,75 @@ async def make_eligible_application(
     }
     fields.update(overrides)
     return await make_application(session, practitioner, **fields)
+
+
+async def make_submitted_request(
+    session: AsyncSession, application: ParticipationApplication, **overrides: Any
+) -> PrivilegeRequest:
+    """A paid request received by the remote state, with the license expiry pinned (Rule 3 §3.5(a))."""
+    fields: dict[str, Any] = {
+        'participation_application_id': application.id,
+        'practitioner_id': application.practitioner_id,
+        'remote_state_code': 'OK',
+        'qualifying_license_id': application.qualifying_license_id,
+        'status': PrivilegeRequestStatus.SUBMITTED,
+        'ql_expires_on_snapshot': date(2027, 12, 31),
+        'submitted_at': datetime(2026, 6, 2, tzinfo=timezone.utc),
+        'created_by': await system_user_id(session),
+    }
+    fields.update(overrides)
+    return await _add(session, PrivilegeRequest(**fields))
+
+
+async def make_privilege(
+    session: AsyncSession, request: PrivilegeRequest, **overrides: Any
+) -> Privilege:
+    """Issues the request: marks it issued and creates the privilege with the pinned expiry."""
+    system_id = await system_user_id(session)
+    issued = datetime(2026, 6, 3, tzinfo=timezone.utc)
+    request.status = PrivilegeRequestStatus.ISSUED
+    request.decided_at = issued
+    request.decided_by = system_id
+    request.updated_by = system_id
+    assert request.ql_expires_on_snapshot is not None
+    fields: dict[str, Any] = {
+        'privilege_request_id': request.id,
+        'practitioner_id': request.practitioner_id,
+        'remote_state_code': request.remote_state_code,
+        'qualifying_license_id': request.qualifying_license_id,
+        'privilege_number': f'PA-{request.remote_state_code}-{uuid.uuid4().hex[:6]}',
+        'issued_at': issued,
+        'expires_on': request.ql_expires_on_snapshot,
+        'created_by': system_id,
+    }
+    fields.update(overrides)
+    return await _add(session, Privilege(**fields))
+
+
+async def make_issued_privilege(session: AsyncSession, **overrides: Any) -> Privilege:
+    """A practitioner, eligible application, submitted request, and issued privilege in one call."""
+    application = await make_eligible_application(session, await make_practitioner(session))
+    request = await make_submitted_request(session, application)
+    return await make_privilege(session, request, **overrides)
+
+
+async def make_adverse_action(
+    session: AsyncSession, privilege: Privilege, **overrides: Any
+) -> AdverseAction:
+    """An adverse action against a privilege by default; override ``against`` and the target for a license."""
+    fields: dict[str, Any] = {
+        'practitioner_id': privilege.practitioner_id,
+        'reporting_state_code': privilege.remote_state_code,
+        'against': AdverseActionTarget.PRIVILEGE,
+        'privilege_id': privilege.id,
+        'action_type_code': 'suspension',
+        'summary': 'Suspended pending review.',
+        'ordered_on': date(2026, 7, 1),
+        'effective_from': date(2026, 7, 1),
+        'created_by': await system_user_id(session),
+    }
+    fields.update(overrides)
+    return await _add(session, AdverseAction(**fields))
 
 
 async def _add[T](session: AsyncSession, row: T) -> T:
