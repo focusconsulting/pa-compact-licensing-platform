@@ -17,6 +17,7 @@ _POSTGRES_TYPES_BY_PYTHON_TYPE = {
     date: {'date'},
     UUID: {'uuid'},
     dict: {'jsonb'},
+    bytes: {'bytea'},
 }
 
 # Tables owned by yoyo, and the local-only seed table awaiting removal from migrations.
