@@ -31,16 +31,20 @@ def _python_type(column: Column) -> type:
     return column.type.python_type
 
 
-async def _database_columns(db_session) -> dict[str, dict[str, tuple[str, bool]]]:
+async def _database_columns(db_session) -> dict[str, dict[str, tuple[str, bool | None]]]:
+    """Columns of every table and view. A view's nullability is None: Postgres reports every view column as nullable."""
     result = await db_session.execute(
         text(
-            "SELECT table_name, column_name, data_type, is_nullable = 'YES' "
-            "FROM information_schema.columns WHERE table_schema = 'public'"
+            "SELECT c.table_name, c.column_name, c.data_type, c.is_nullable = 'YES', "
+            "t.table_type = 'VIEW' "
+            'FROM information_schema.columns c JOIN information_schema.tables t '
+            'USING (table_schema, table_name) '
+            "WHERE c.table_schema = 'public'"
         )
     )
-    tables: dict[str, dict[str, tuple[str, bool]]] = {}
-    for table_name, column_name, data_type, nullable in result:
-        tables.setdefault(table_name, {})[column_name] = (data_type, nullable)
+    tables: dict[str, dict[str, tuple[str, bool | None]]] = {}
+    for table_name, column_name, data_type, nullable, is_view in result:
+        tables.setdefault(table_name, {})[column_name] = (data_type, None if is_view else nullable)
     return tables
 
 
@@ -61,7 +65,7 @@ async def test_every_model_matches_its_table(db_session):
             continue
         for column in table.columns:
             data_type, db_nullable = db_columns[column.name]
-            if column.nullable != db_nullable:
+            if db_nullable is not None and column.nullable != db_nullable:
                 mismatches.append(
                     f'{table.name}.{column.name}: model nullable={column.nullable}, table nullable={db_nullable}'
                 )

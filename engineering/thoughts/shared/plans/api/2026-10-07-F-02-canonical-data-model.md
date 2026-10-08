@@ -441,7 +441,7 @@ Compute license status, privilege status, and compact eligibility on read, as of
 
 - `qualifying_license_status_on(as_of DATE)` returns one row per license: `active` when `state_reported_status = 'active'`, `as_of <= expires_on`, `terminated_on` is NULL or later than `as_of`, and no in-force adverse action against it; otherwise `expired`, `terminated`, `encumbered`, or the reported status. View `v_qualifying_license_status` = the function at `compact_today()`.
 - `privilege_status_on(as_of DATE)` returns `status` and `status_reason` per privilege, with precedence `inactive` (with `deactivation_reason`), `expired` (`as_of > expires_on`), `encumbered` (an adverse action against the privilege with `effective_from <= as_of` and `effective_until` NULL or `>= as_of`), else `active`. View `v_privilege_status`.
-- `compact_eligibility_on(as_of DATE)` returns per practitioner `eligible_again_on`: NULL when no adverse action against a qualifying license applies; the latest `effective_until + 2 years` when all have ended; and barred with no date while any is still in force (ML §4.A.8). View `v_compact_eligibility`.
+- `compact_eligibility_on(as_of DATE)` returns per practitioner `eligible_again_on`: NULL when no adverse action against a qualifying license applies; the latest `effective_until + 1 day + 2 years` when all have ended (two years from the first unrestricted day); and barred with no date while any is still in force (ML §4.A.8). View `v_compact_eligibility`.
 - These three functions are the only place status day arithmetic lives (ADR-0006).
 
 #### 2. Models
@@ -464,7 +464,7 @@ Compute license status, privilege status, and compact eligibility on read, as of
 | Adverse action against the privilege, in force | `encumbered` |
 | Same, on its `effective_until` date / the day after | `encumbered` / `active` |
 | License adverse action in force | eligibility barred, no date |
-| License adverse action ended | `eligible_again_on = effective_until + 2 years`; barred the day before, eligible on the day |
+| License adverse action ended | `eligible_again_on = effective_until + 1 day + 2 years`; barred the day before, eligible on the day |
 | License voluntarily terminated | license `terminated` |
 | `compact_today()` at 23:30 New York on the expiry date (04:30 UTC the next day) | `active` |
 
@@ -476,15 +476,22 @@ Compute license status, privilege status, and compact eligibility on read, as of
 
 #### Automated Verification
 
-- [ ] Tests pass with coverage: `cd engineering/api && just test-coverage`
-- [ ] Linting, formatting, and type checking pass: `cd engineering/api && just lint`
-- [ ] Every row of the fixture matrix passes.
-- [ ] The full migration chain applies to an empty database (fresh `just infra`, then `just test`).
+- [x] Tests pass with coverage: `cd engineering/api && just test-coverage`
+- [x] Linting, formatting, and type checking pass: `cd engineering/api && just lint`
+- [x] Every row of the fixture matrix passes.
+- [x] The full migration chain applies to an empty database (fresh `just infra`, then `just test`).
 
 #### Manual Verification
 
 - [ ] The tech lead and PM sign off the dictionary (F-02 acceptance).
 - [ ] The migrations apply cleanly to DEV after merge.
+
+**Implemented 2026-10-07 on `feature/F-02-status-views`; differences from the plan:**
+
+- **The bar starts the day after `effective_until`.** ML §4.A.8 counts two years "from the date on which the License ... is no longer limited", and ADR-0006 makes `effective_until` the last restricted day. So `eligible_again_on = effective_until + 1 day + 2 years`, one day later than FLOW-05's `effective_end + 2 years`. Raised for the backlog owner.
+- **Only actions against a qualifying license bar eligibility**, as planned and as FLOW-05 implies. ML §4.A.8 also names a "Compact Privilege"; raised for the backlog owner.
+- **Two years from 29 February** is 28 February (Postgres interval arithmetic); a test fixes it.
+- **The drift test covers views**, checking columns and types; it skips nullability because Postgres reports every view column as nullable.
 
 ---
 
@@ -519,7 +526,7 @@ Compute license status, privilege status, and compact eligibility on read, as of
 
 ## Dates and Deadlines
 
-- Computed here: privilege expiry (`expires_on`, inclusive), adverse-action in-force windows (inclusive), and `eligible_again_on` (`effective_until + 2 years`).
+- Computed here: privilege expiry (`expires_on`, inclusive), adverse-action in-force windows (inclusive), and `eligible_again_on` (`effective_until + 1 day + 2 years`).
 - Computed in: the three SQL status functions only, with "today" from `compact_today()` in `compact_settings.time_zone` (ADR-0006).
 - Stored as `DATE`: `expires_on`, `issued_on`, `status_effective_on`, `terminated_on`, `cbc_completed_on`, `ordered_on`, `effective_from`, `effective_until`, `determined_on`, `ql_expires_on_snapshot`, `date_of_birth`, `nccpa_certification_expires_on`, `member_effective_on`.
 - Boundary tests: the last day, the day after, the two-year bar's day before and day of, and the New York midnight case (Phase 3 matrix). The 60-day withdrawal clock and the business-day reporting windows are computed by L-06 and A-02, which add the day-arithmetic module and the holiday calendar.
@@ -553,7 +560,8 @@ For @mkalish; none of these change this plan, which follows the adopted rules. T
 3. **Questions now obsolete or changed:** Q-11's "last-4 + NPI" option is closed by Rule 3 §3.3(a)(5); Q-16 is obsolete (Rules 3 and 4 adopted 2026-04-06); Q-08's 30-day appeal window is gone from adopted Rule 3 §3.9(a); Q-03's member count is 29 per the 2026-10-01 change index, not 20.
 4. **New questions for the Commission:** the reference time zone (default America/New_York, ADR-0006); how expungement requests arrive (ADR-0008, Rule 4 §4.2(f)).
 5. **Review fixes that change the flows.** FLOW-06 gains a `superseded` application status for a change of SQL. FLOW-01 and FLOW-02's claimed license is stored on the application. Fee types are `participation`, `privilege`, and `renewal`, with the Commission's fees as rows with no state.
-6. **Citations:** the backlog cites `R5 §5.3` and `ATOM-GOV-R5-02`; the adopted section is Rule 4 §4.3 and `ATOM-GOV-R4-01`.
+6. **The two-year bar (ML §4.A.8).** FLOW-05 computes `eligible_again_on` as `effective_end + 2 years`; read with inclusive end dates, the rule's "two years from the date ... no longer limited" gives one day later, which phase 3 implements. And the rule names a "License or Compact Privilege", while FLOW-05 restores a privilege when a privilege-level action lifts; phase 3 bars only on license-level actions. Both need a product decision.
+7. **Citations:** the backlog cites `R5 §5.3` and `ATOM-GOV-R5-02`; the adopted section is Rule 4 §4.3 and `ATOM-GOV-R4-01`.
 
 ## References
 
