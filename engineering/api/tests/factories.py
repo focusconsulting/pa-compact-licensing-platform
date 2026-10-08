@@ -58,7 +58,7 @@ async def assert_rejected(
 
 async def make_practitioner(session: AsyncSession, **overrides: Any) -> Practitioner:
     system_id = await system_user_id(session)
-    user = await make_user(session, role='licensee', state_code='KS')
+    user = await make_user(session, role='licensee')
     fields: dict[str, Any] = {
         'user_id': user.id,
         'legal_first_name': 'Pat',

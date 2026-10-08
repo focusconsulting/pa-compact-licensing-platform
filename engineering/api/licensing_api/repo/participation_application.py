@@ -25,6 +25,8 @@ class ApplicationStatus(StrEnum):
     DENIED = 'denied'
     WITHDRAWN = 'withdrawn'
     ELIGIBILITY_WITHDRAWN = 'eligibility_withdrawn'
+    # Replaced by a later change_sql application that became eligible (Rule 3 §3.6).
+    SUPERSEDED = 'superseded'
 
 
 OPEN_APPLICATION_STATUSES = frozenset(
@@ -36,8 +38,10 @@ class ParticipationApplication(AuditColumns, table=True):
     """A PA's application to participate in the compact, decided by their state of qualifying license (FLOW-02).
 
     Owner: epic 6. The database enforces the decision rules: an eligible decision
-    needs the license verified and the background check's completion date; a
-    denial needs a reason; a practitioner has at most one open application.
+    needs a linked, verified license and the background check's completion date;
+    a denial needs a reason; a practitioner has at most one open application and
+    at most one eligible one. ``claimed_license_*`` is what the PA entered, which
+    the SQL compares with the on-file license (FLOW-02).
     ``cbc_completed_on`` is a date only, never a result (Rule 4 §4.2).
     """
 
@@ -50,6 +54,8 @@ class ParticipationApplication(AuditColumns, table=True):
     kind: str = ApplicationKind.INITIAL
     sql_state_code: str = Field(foreign_key='states.code')
     qualifying_license_id: int | None = Field(default=None, foreign_key='qualifying_licenses.id')
+    claimed_license_number: str | None = None
+    claimed_license_expires_on: date | None = None
     status: str = ApplicationStatus.DRAFT
     opened_at: datetime | None = Field(default=None, sa_type=TimestampTZ)
     request_note: str | None = None
@@ -63,3 +69,4 @@ class ParticipationApplication(AuditColumns, table=True):
     withdrawn_at: datetime | None = Field(default=None, sa_type=TimestampTZ)
     eligibility_withdrawn_at: datetime | None = Field(default=None, sa_type=TimestampTZ)
     eligibility_withdrawal_reason: str | None = None
+    superseded_at: datetime | None = Field(default=None, sa_type=TimestampTZ)
