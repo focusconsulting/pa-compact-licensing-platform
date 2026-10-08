@@ -2,10 +2,10 @@
 
 The PA Compact Data System's schema as of migration `20261007_120000_data_model_status_views`: every table, every column, and every foreign key. It was generated from the database those migrations build, so it shows the schema as it is, not as planned. What each table and column means is in the [data dictionary](data-model.md).
 
-There are two diagrams so the relationships stay legible. Together they show all 102 foreign keys:
+There are two diagrams so the relationships stay legible. Together they show all 112 foreign keys:
 
-1. **The domain model**: 28 tables with their columns, and the 59 relationships between them.
-2. **Audit columns**: the 43 relationships from each table's `created_by`, `updated_by`, or `changed_by` to `users` ([ADR-0005](../adrs/0005-data-model-conventions.md)).
+1. **The domain model**: 32 tables with their columns, and the 63 relationships between them.
+2. **Audit columns**: the 49 relationships from each table's `created_by`, `updated_by`, or `changed_by` to `users` ([ADR-0005](../adrs/0005-data-model-conventions.md)).
 
 Left out: yoyo's migration bookkeeping tables and the local-only `test` table. The three status views, `v_qualifying_license_status`, `v_privilege_status`, and `v_compact_eligibility`, have no foreign keys; they are described under "Computed status" in the dictionary.
 
@@ -70,6 +70,7 @@ erDiagram
         text action
         text entity_type
         bigint entity_id
+        text entity_key
         jsonb before
         jsonb after
         text reason
@@ -88,6 +89,7 @@ erDiagram
         uuid public_id UK
         text owner_type
         bigint owner_id
+        text owner_key
         text kind
         text storage_key UK
         text file_name
@@ -114,10 +116,33 @@ erDiagram
         text type
         text aggregate_type
         bigint aggregate_id
+        text aggregate_key
         jsonb payload
         bigint actor_user_id FK
         text request_id
         timestamptz occurred_at
+    }
+    fees {
+        bigint id PK
+        uuid public_id UK
+        char state_code FK
+        text fee_type
+        integer amount_cents
+        date effective_from
+        timestamptz created_at
+        bigint created_by FK
+        timestamptz updated_at
+        bigint updated_by FK
+    }
+    fees_history {
+        bigint id PK
+        bigint entity_id FK
+        timestamptz changed_at
+        bigint changed_by FK
+        timestamptz effective_at
+        jsonb previous
+        jsonb updated
+        jsonb removed
     }
     notifications {
         bigint id PK
@@ -143,6 +168,8 @@ erDiagram
         text kind
         char sql_state_code FK
         bigint qualifying_license_id FK
+        text claimed_license_number
+        date claimed_license_expires_on
         text status
         timestamptz opened_at
         text request_note
@@ -156,6 +183,7 @@ erDiagram
         timestamptz withdrawn_at
         timestamptz eligibility_withdrawn_at
         text eligibility_withdrawal_reason
+        timestamptz superseded_at
         timestamptz created_at
         bigint created_by FK
         timestamptz updated_at
@@ -237,6 +265,14 @@ erDiagram
         jsonb previous
         jsonb updated
         jsonb removed
+    }
+    privilege_number_sequences {
+        char state_code PK,FK
+        integer last_number
+        timestamptz created_at
+        bigint created_by FK
+        timestamptz updated_at
+        bigint updated_by FK
     }
     privilege_requests {
         bigint id PK
@@ -416,6 +452,16 @@ erDiagram
         timestamptz updated_at
         bigint updated_by FK
     }
+    states_history {
+        bigint id PK
+        char state_code FK
+        timestamptz changed_at
+        bigint changed_by FK
+        timestamptz effective_at
+        jsonb previous
+        jsonb updated
+        jsonb removed
+    }
     users {
         bigint id PK
         text email UK
@@ -437,6 +483,7 @@ erDiagram
     documents |o--o{ adverse_actions : "order_document_id"
     documents |o--o{ sii_reports : "public_complaint_document_id"
     domain_events ||--o{ domain_event_deliveries : "event_id"
+    fees ||--o{ fees_history : "entity_id"
     participation_applications ||--o{ participation_applications_history : "entity_id"
     participation_applications ||--o{ privilege_requests : "participation_application_id"
     practitioners ||--o{ adverse_actions : "practitioner_id"
@@ -465,6 +512,7 @@ erDiagram
     ref_sex |o--o{ practitioners : "sex_code"
     sii_reports ||--o{ sii_reports_history : "entity_id"
     states ||--o{ adverse_actions : "reporting_state_code"
+    states |o--o{ fees : "state_code"
     states ||--o{ participation_applications : "sql_state_code"
     states |o--o{ practitioners : "certification_verified_by_state"
     states |o--o{ practitioners : "contact_verified_by_state"
@@ -472,10 +520,12 @@ erDiagram
     states |o--o{ practitioners : "education_verified_by_state"
     states |o--o{ practitioners : "identity_verified_by_state"
     states |o--o{ practitioners : "residence_verified_by_state"
+    states ||--o| privilege_number_sequences : "state_code"
     states ||--o{ privilege_requests : "remote_state_code"
     states ||--o{ privileges : "remote_state_code"
     states ||--o{ qualifying_licenses : "state_code"
     states ||--o{ sii_reports : "reporting_state_code"
+    states ||--o{ states_history : "state_code"
     states |o--o{ users : "state_code"
     users |o--o{ audit_log : "actor_user_id"
     users |o--o{ domain_events : "actor_user_id"
@@ -506,6 +556,9 @@ erDiagram
     users ||--o{ compact_settings : "updated_by"
     users ||--o{ documents : "created_by"
     users ||--o{ documents : "updated_by"
+    users ||--o{ fees : "created_by"
+    users ||--o{ fees : "updated_by"
+    users ||--o{ fees_history : "changed_by"
     users ||--o{ notifications : "created_by"
     users ||--o{ notifications : "updated_by"
     users ||--o{ participation_applications : "created_by"
@@ -516,6 +569,8 @@ erDiagram
     users ||--o{ practitioners : "created_by"
     users ||--o{ practitioners : "updated_by"
     users ||--o{ practitioners_history : "changed_by"
+    users ||--o{ privilege_number_sequences : "created_by"
+    users ||--o{ privilege_number_sequences : "updated_by"
     users ||--o{ privilege_requests : "created_by"
     users ||--o{ privilege_requests : "updated_by"
     users ||--o{ privilege_requests_history : "changed_by"
@@ -538,6 +593,7 @@ erDiagram
     users ||--o{ sii_reports_history : "changed_by"
     users ||--o{ states : "created_by"
     users ||--o{ states : "updated_by"
+    users ||--o{ states_history : "changed_by"
     users ||--o{ users : "created_by"
     users ||--o{ users : "updated_by"
 ```
