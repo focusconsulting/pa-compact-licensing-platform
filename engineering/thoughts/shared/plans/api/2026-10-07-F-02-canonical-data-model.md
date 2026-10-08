@@ -412,6 +412,19 @@ History tables: `practitioners_history`, `qualifying_licenses_history`, `partici
 - **History models use `sa_type=JSONB`**, not `sa_column`: one Column object cannot be shared by several tables.
 - **Two structural tests** guard later epics: every table with audit columns has the audit trigger, and every `*_history` table has the append-only trigger.
 
+**Review fixes, 2026-10-08** (PR #81 review: can epics start concurrently, and do the flows fit). Made in place in the three migrations, which no shared environment had applied:
+
+- A `licensee` may have no `state_code` (FLOW-01 self-signup was rejected).
+- An `eligible` application must link a qualifying license; `claimed_license_number` and `claimed_license_expires_on` hold what the PA entered (FLOW-02's claimed-versus-on-file comparison).
+- A `superseded` status, with `superseded_at`, and one `eligible` application per practitioner, so a change of SQL cannot leave two in force.
+- `fees` moved from the reserved list into the base, owned by epic 7 and read by epics 8 and 9; the Commission's fees are rows with no state.
+- `documents` may be uploaded before its owner exists, and can be owned by a `state` (by `owner_key`) or an `ingestion_batch`.
+- `states_history`, plus `aggregate_key` on `domain_events` and `entity_key` on `audit_log`, for records keyed by text.
+- `privilege_number_sequences` and `next_privilege_number()` for `PA-{state}-{n}`; a `commission_deactivated` reason.
+- Every non-audit foreign key indexed, enforced by a test.
+- A `route_db_session` test fixture rolls back what routes write.
+- ADR-0005 names owners for the status functions, `compact_settings`, and `fees`; the dictionary's reserved list names a home and owner for state contacts, machine credentials, the pending email change, service-of-process consent, NCCPA lookups, the renewal link, and the transaction webhook key.
+
 ---
 
 ## Phase 3: Status Views and Fixture Matrix
@@ -546,8 +559,9 @@ For @mkalish; none of these change this plan, which follows the adopted rules. T
 2. **Flows and signals still carry draft text:** FLOW-01:54 and FLOW-02:32 (SQL basis); FLOW-04:58 (grace); FLOW-02:116 and the uniform-data-set signal (denials "never entered by a state"); FLOW-05 says eligibility withdrawal "cancels" privileges while FLOW-06 says `inactive`; FLOW-06 says `abandoned` where Rule 3 §3.7(b)(1) says "withdrawn".
 3. **Questions now obsolete or changed:** Q-11's "last-4 + NPI" option is closed by Rule 3 §3.3(a)(5); Q-16 is obsolete (Rules 3 and 4 adopted 2026-04-06); Q-08's 30-day appeal window is gone from adopted Rule 3 §3.9(a); Q-03's member count is 29 per the 2026-10-01 change index, not 20.
 4. **New questions for the Commission:** the reference time zone (default America/New_York, ADR-0006); how expungement requests arrive (ADR-0008, Rule 4 §4.2(f)).
-5. **The two-year bar (ML §4.A.8).** FLOW-05 computes `eligible_again_on` as `effective_end + 2 years`; read with inclusive end dates, the rule's "two years from the date ... no longer limited" gives one day later, which phase 3 implements. And the rule names a "License or Compact Privilege", while FLOW-05 restores a privilege when a privilege-level action lifts; phase 3 bars only on license-level actions. Both need a product decision.
-6. **Citations:** the backlog cites `R5 §5.3` and `ATOM-GOV-R5-02`; the adopted section is Rule 4 §4.3 and `ATOM-GOV-R4-01`.
+5. **Review fixes that change the flows.** FLOW-06 gains a `superseded` application status for a change of SQL. FLOW-01 and FLOW-02's claimed license is stored on the application. Fee types are `participation`, `privilege`, and `renewal`, with the Commission's fees as rows with no state.
+6. **The two-year bar (ML §4.A.8).** FLOW-05 computes `eligible_again_on` as `effective_end + 2 years`; read with inclusive end dates, the rule's "two years from the date ... no longer limited" gives one day later, which phase 3 implements. And the rule names a "License or Compact Privilege", while FLOW-05 restores a privilege when a privilege-level action lifts; phase 3 bars only on license-level actions. Both need a product decision.
+7. **Citations:** the backlog cites `R5 §5.3` and `ATOM-GOV-R5-02`; the adopted section is Rule 4 §4.3 and `ATOM-GOV-R4-01`.
 
 ## References
 

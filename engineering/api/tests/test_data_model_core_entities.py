@@ -1,6 +1,6 @@
 """Core entities from the F-02 phase 2 migrations: the rules the database enforces."""
 
-from datetime import date
+from datetime import date, datetime, timezone
 
 import pytest
 from sqlalchemy import text
@@ -435,3 +435,168 @@ async def test_every_table_with_audit_columns_has_the_trigger(db_session):
     )
 
     assert list(result.scalars()) == []
+
+
+# --- review fixes ----------------------------------------------------------
+
+
+async def test_eligible_requires_a_linked_license(db_session):
+    application = await make_eligible_application(db_session, await make_practitioner(db_session))
+
+    await assert_rejected(
+        db_session,
+        'UPDATE participation_applications SET qualifying_license_id = NULL, updated_by = 1 '
+        'WHERE id = :id',
+        {'id': application.id},
+    )
+
+
+async def test_an_application_keeps_the_license_the_pa_claimed(db_session):
+    application = await make_application(
+        db_session,
+        await make_practitioner(db_session),
+        claimed_license_number='KS-12345',
+        claimed_license_expires_on=date(2027, 12, 31),
+    )
+
+    assert application.qualifying_license_id is None
+    assert application.claimed_license_number == 'KS-12345'
+
+
+async def test_a_practitioner_has_one_eligible_application(db_session):
+    practitioner = await make_practitioner(db_session)
+    await make_eligible_application(db_session, practitioner)
+
+    with pytest.raises(DBAPIError):
+        async with db_session.begin_nested():
+            await make_eligible_application(
+                db_session, practitioner, kind=ApplicationKind.CHANGE_SQL, sql_state_code='OK'
+            )
+
+
+async def test_superseding_lets_a_change_of_sql_become_eligible(db_session):
+    practitioner = await make_practitioner(db_session)
+    old = await make_eligible_application(db_session, practitioner)
+    old.status = ApplicationStatus.SUPERSEDED
+    old.superseded_at = datetime(2026, 9, 1, tzinfo=timezone.utc)
+    old.updated_by = old.created_by
+    await db_session.flush()
+
+    new = await make_eligible_application(
+        db_session, practitioner, kind=ApplicationKind.CHANGE_SQL, sql_state_code='OK'
+    )
+
+    assert new.status == ApplicationStatus.ELIGIBLE
+
+
+async def test_a_superseded_application_records_when(db_session):
+    application = await make_eligible_application(db_session, await make_practitioner(db_session))
+
+    await assert_rejected(
+        db_session,
+        "UPDATE participation_applications SET status = 'superseded', updated_by = 1 WHERE id = :id",
+        {'id': application.id},
+    )
+
+
+async def test_a_document_can_be_uploaded_before_its_owner_exists(db_session):
+    await db_session.execute(
+        text(
+            'INSERT INTO documents (kind, storage_key, file_name, content_type, size_bytes, '
+            "created_by) VALUES ('order', 'k-unowned', 'order.pdf', 'application/pdf', 10, 1)"
+        )
+    )
+
+
+@pytest.mark.parametrize(
+    ('owner_type', 'owner_id', 'owner_key'),
+    [
+        ('adverse_action', None, None),  # an owner type with no owner
+        ('state', 1, None),  # a state is keyed by its code
+        ('adverse_action', None, 'KS'),  # other owners are keyed by id
+        (None, 1, None),  # an owner with no type
+    ],
+)
+async def test_a_document_owner_is_complete_and_keyed_correctly(
+    db_session, owner_type, owner_id, owner_key
+):
+    await assert_rejected(
+        db_session,
+        'INSERT INTO documents (owner_type, owner_id, owner_key, kind, storage_key, file_name, '
+        "content_type, size_bytes, created_by) VALUES (:type, :id, :key, 'proof', 'k-bad', "
+        "'a.pdf', 'application/pdf', 10, 1)",
+        {'type': owner_type, 'id': owner_id, 'key': owner_key},
+    )
+
+
+async def test_a_state_can_own_a_document(db_session):
+    await db_session.execute(
+        text(
+            'INSERT INTO documents (owner_type, owner_key, kind, storage_key, file_name, '
+            "content_type, size_bytes, created_by) VALUES ('state', 'KS', "
+            "'practice_requirements', 'k-ks', 'ks.pdf', 'application/pdf', 10, 1)"
+        )
+    )
+
+
+async def test_a_fee_amount_is_scheduled_once_per_day(db_session):
+    statement = (
+        'INSERT INTO fees (state_code, fee_type, amount_cents, effective_from, created_by) '
+        "VALUES (:state, 'privilege', 5000, '2026-10-01', 1)"
+    )
+    await db_session.execute(text(statement), {'state': 'KS'})
+    await db_session.execute(text(statement), {'state': None})
+
+    # The Commission's fee (state NULL) is unique too, not just state fees.
+    await assert_rejected(db_session, statement, {'state': None})
+    await assert_rejected(db_session, statement, {'state': 'KS'})
+
+
+async def test_a_fee_cannot_be_negative_or_of_an_unknown_type(db_session):
+    await assert_rejected(
+        db_session,
+        'INSERT INTO fees (state_code, fee_type, amount_cents, effective_from, created_by) '
+        "VALUES ('KS', 'privilege', -1, '2026-10-01', 1)",
+    )
+    await assert_rejected(
+        db_session,
+        'INSERT INTO fees (state_code, fee_type, amount_cents, effective_from, created_by) '
+        "VALUES ('KS', 'late_fee', 100, '2026-10-01', 1)",
+    )
+
+
+async def _next_privilege_number(db_session, state_code: str) -> str:
+    result = await db_session.execute(
+        text('SELECT next_privilege_number(:state, 1)'), {'state': state_code}
+    )
+    return result.scalar_one()
+
+
+async def test_privilege_numbers_count_up_per_state(db_session):
+    first_ks = await _next_privilege_number(db_session, 'KS')
+    first_ok = await _next_privilege_number(db_session, 'OK')
+    second_ks = await _next_privilege_number(db_session, 'KS')
+
+    assert (first_ks, first_ok, second_ks) == ('PA-KS-000001', 'PA-OK-000001', 'PA-KS-000002')
+
+
+async def test_privilege_numbers_grow_past_six_digits(db_session):
+    await _next_privilege_number(db_session, 'KS')
+    await db_session.execute(
+        text("UPDATE privilege_number_sequences SET last_number = 999999 WHERE state_code = 'KS'")
+    )
+
+    assert await _next_privilege_number(db_session, 'KS') == 'PA-KS-1000000'
+
+
+async def test_the_commission_can_deactivate_a_privilege(db_session):
+    privilege = await make_issued_privilege(db_session)
+
+    await db_session.execute(
+        text(
+            "UPDATE privileges SET administrator_status = 'inactive', "
+            "deactivation_reason = 'commission_deactivated', deactivated_at = now(), "
+            'updated_by = 1 WHERE id = :id'
+        ),
+        {'id': privilege.id},
+    )

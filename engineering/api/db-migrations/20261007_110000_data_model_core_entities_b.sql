@@ -61,6 +61,8 @@ CREATE UNIQUE INDEX uq_privilege_requests_one_open
 CREATE INDEX idx_privilege_requests_rs_queue ON privilege_requests (remote_state_code, status);
 CREATE INDEX idx_privilege_requests_participation_application_id ON privilege_requests (participation_application_id);
 CREATE INDEX idx_privilege_requests_qualifying_license_id ON privilege_requests (qualifying_license_id);
+CREATE INDEX idx_privilege_requests_decided_by ON privilege_requests (decided_by);
+CREATE INDEX idx_privilege_requests_denial_reason_code ON privilege_requests (denial_reason_code);
 
 -- ---------------------------------------------------------------------------
 -- privileges: authored by the remote state (Rule 4 §4.3(d)); owner: epic 8
@@ -91,9 +93,11 @@ CREATE TABLE privileges (
     updated_by                  BIGINT      NOT NULL,
     CONSTRAINT chk_privileges_administrator_status CHECK (administrator_status IN ('active', 'inactive')),
     -- sql_changed: Rule 3 §3.6(d), "any existing compact privilege(s) held shall terminate".
+    -- An expired or lapsed license is qualifying_license_inactive (FLOW-05).
+    -- commission_deactivated: the Commission's override (D-01, epic 10).
     CONSTRAINT chk_privileges_deactivation_reason CHECK (deactivation_reason IN
         ('qualifying_license_adverse_action', 'eligibility_withdrawn', 'qualifying_license_inactive',
-         'qualifying_license_terminated', 'sql_changed', 'state_deactivated')),
+         'qualifying_license_terminated', 'sql_changed', 'state_deactivated', 'commission_deactivated')),
     CONSTRAINT chk_privileges_inactive_has_reason
         CHECK ((administrator_status = 'inactive') = (deactivation_reason IS NOT NULL)),
     CONSTRAINT chk_privileges_inactive_has_time
@@ -109,6 +113,34 @@ CREATE TABLE privileges (
 CREATE INDEX idx_privileges_practitioner_id ON privileges (practitioner_id);
 CREATE INDEX idx_privileges_remote_state_code ON privileges (remote_state_code);
 CREATE INDEX idx_privileges_qualifying_license_id ON privileges (qualifying_license_id);
+
+-- The last privilege number issued in each remote state (FLOW-03: PA-{state}-{n}).
+CREATE TABLE privilege_number_sequences (
+    state_code   CHAR(2)     PRIMARY KEY,
+    last_number  INTEGER     NOT NULL,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_by   BIGINT      NOT NULL,
+    updated_at   TIMESTAMPTZ NOT NULL,
+    updated_by   BIGINT      NOT NULL,
+    CONSTRAINT chk_privilege_number_sequences_last_number CHECK (last_number > 0),
+    CONSTRAINT fk_privilege_number_sequences_state_code FOREIGN KEY (state_code) REFERENCES states (code),
+    CONSTRAINT fk_privilege_number_sequences_created_by FOREIGN KEY (created_by) REFERENCES users (id) DEFERRABLE INITIALLY IMMEDIATE,
+    CONSTRAINT fk_privilege_number_sequences_updated_by FOREIGN KEY (updated_by) REFERENCES users (id) DEFERRABLE INITIALLY IMMEDIATE
+);
+
+-- Returns the next privilege number for a remote state, e.g. PA-KS-000123. The
+-- upsert locks that state's row, so concurrent issuances in one state never share
+-- a number and issuances in different states never wait on each other.
+CREATE FUNCTION next_privilege_number(remote_state_code CHAR(2), actor_user_id BIGINT) RETURNS TEXT
+    LANGUAGE sql AS
+$$
+INSERT INTO privilege_number_sequences AS seq (state_code, last_number, created_by)
+VALUES (remote_state_code, 1, actor_user_id)
+ON CONFLICT (state_code) DO UPDATE
+    SET last_number = seq.last_number + 1, updated_by = actor_user_id
+RETURNING 'PA-' || seq.state_code || '-'
+    || lpad(seq.last_number::text, greatest(6, length(seq.last_number::text)), '0')
+$$;
 
 -- ---------------------------------------------------------------------------
 -- adverse_actions (Rule 4 §4.4(a)-(b)); owner: epic 9
@@ -161,6 +193,8 @@ CREATE INDEX idx_adverse_actions_practitioner_id ON adverse_actions (practitione
 CREATE INDEX idx_adverse_actions_qualifying_license_id ON adverse_actions (qualifying_license_id);
 CREATE INDEX idx_adverse_actions_privilege_id ON adverse_actions (privilege_id);
 CREATE INDEX idx_adverse_actions_reporting_state_code ON adverse_actions (reporting_state_code);
+CREATE INDEX idx_adverse_actions_action_type_code ON adverse_actions (action_type_code);
+CREATE INDEX idx_adverse_actions_order_document_id ON adverse_actions (order_document_id);
 
 -- Optional NPDB categories (Q-17); not in the adopted rule text.
 CREATE TABLE adverse_action_npdb_categories (
@@ -176,6 +210,9 @@ CREATE TABLE adverse_action_npdb_categories (
     CONSTRAINT fk_adverse_action_npdb_categories_created_by FOREIGN KEY (created_by) REFERENCES users (id) DEFERRABLE INITIALLY IMMEDIATE,
     CONSTRAINT fk_adverse_action_npdb_categories_updated_by FOREIGN KEY (updated_by) REFERENCES users (id) DEFERRABLE INITIALLY IMMEDIATE
 );
+
+CREATE INDEX idx_adverse_action_npdb_categories_npdb_category_code
+    ON adverse_action_npdb_categories (npdb_category_code);
 
 -- ---------------------------------------------------------------------------
 -- sii_reports (Rule 4 §4.4(c)-(d)); states and Commission only (ML §8.C); owner: epic 9
@@ -218,13 +255,17 @@ CREATE TABLE sii_reports (
 
 CREATE INDEX idx_sii_reports_practitioner_id ON sii_reports (practitioner_id);
 CREATE INDEX idx_sii_reports_reporting_state_code ON sii_reports (reporting_state_code);
+CREATE INDEX idx_sii_reports_qualifying_license_id ON sii_reports (qualifying_license_id);
+CREATE INDEX idx_sii_reports_privilege_id ON sii_reports (privilege_id);
+CREATE INDEX idx_sii_reports_public_complaint_document_id ON sii_reports (public_complaint_document_id);
+CREATE INDEX idx_sii_reports_closed_by ON sii_reports (closed_by);
 
 -- ---------------------------------------------------------------------------
 -- Audit-column triggers and history tables
 -- ---------------------------------------------------------------------------
 
 SELECT add_audit_columns_trigger(t)
-FROM unnest(ARRAY ['privilege_requests', 'privileges', 'adverse_actions',
+FROM unnest(ARRAY ['privilege_requests', 'privileges', 'privilege_number_sequences', 'adverse_actions',
                    'adverse_action_npdb_categories', 'sii_reports']) AS t;
 
 SELECT create_history_table(t)

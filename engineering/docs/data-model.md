@@ -20,7 +20,7 @@ Rule citations are to the adopted Rules 3 and 4 in `product/context/research-cor
 | Restricted | The full SSN: `read_ssn`, every read audited (ADR-0007) |
 | Internal | System bookkeeping, not shown to users |
 
-Every table also has the audit columns `created_at`, `created_by`, `updated_at`, `updated_by` (ADR-0005), not repeated below.
+Every table also has the audit columns `created_at`, `created_by`, `updated_at`, `updated_by` (ADR-0005), not repeated below. Every foreign key except those audit columns is indexed.
 
 ## Diagram
 
@@ -41,7 +41,7 @@ A person who can sign in, or the system user that workers and jobs write as. Tie
 | `public_id` | UUID, unique, NULL | The Cognito `sub`; NULL until first sign-in (ADR-0003) |
 | `given_name`, `family_name` | TEXT | From Cognito |
 | `role` | TEXT, CHECK | `licensee`, `state_staff`, `state_admin`, `compact_admin`, `admin` (backlog D5) |
-| `state_code` | CHAR(2), FK `states`, NULL | The staff member's state; NULL for `admin` and `compact_admin` |
+| `state_code` | CHAR(2), FK `states`, NULL | The staff member's state. Required for `state_staff` and `state_admin`; NULL for `admin` and `compact_admin`; NULL for `licensee`, because a PA signs up before designating a state (FLOW-01) |
 | `is_active` | BOOLEAN | An inactive user cannot sign in |
 | `permissions` | JSONB object | Per-state permissions, e.g. `{"KS": ["write", "read_private"]}` (D5) |
 
@@ -55,7 +55,7 @@ One row (`id = 1`) of compact-wide configuration. Tier: internal.
 |---|---|---|
 | `time_zone` | TEXT | The reference time zone for every date (ADR-0006); default `America/New_York` |
 
-Later epics add the Commission fee and similar settings here.
+A platform root. The Commission's fees live in `fees`, as rows with no state.
 
 ### `states`
 
@@ -70,6 +70,8 @@ Every US jurisdiction: the 50 states, DC, and five territories. Membership and g
 | `is_live` | BOOLEAN | Accepting applications; only a member can be live |
 | `practice_requirements_url` | TEXT, NULL | Shown to PAs choosing states (S-01) |
 | `jurisprudence_requirement`, `supervision_agreement_requirement`, `prescriptive_authority_requirement`, `other_compliance_requirement` | TEXT, CHECK | `none`, `attestation`, or `proof_upload`: what the state requires before issuing (Rule 3 §3.4(c)(3)–(6)) |
+
+Configuration changes are kept in `states_history`, keyed by `state_code` (states have no numeric id), and events and audit rows about a state use `aggregate_key` / `entity_key`. A state's practice-requirements document is a `documents` row with `owner_type = 'state'` and `owner_key` set to the code.
 
 ### Lookup tables
 
@@ -93,7 +95,7 @@ One action a person or the system took, including staff reads of private data. A
 | `occurred_at` | TIMESTAMPTZ | |
 | `actor_user_id` | BIGINT, FK `users`, NULL | NULL only for actions with no user |
 | `action` | TEXT | e.g. `ssn.revealed` |
-| `entity_type`, `entity_id` | TEXT, BIGINT | What the action touched |
+| `entity_type`, `entity_id`, `entity_key` | TEXT, BIGINT, TEXT | What the action touched: `entity_id` for a numeric id, `entity_key` for a text key such as a state code; never both |
 | `before`, `after` | JSONB, NULL | Changed values; never an SSN or an expunged value |
 | `reason` | TEXT, NULL | Why, where the action requires one (an SSN reveal) |
 | `request_id` | TEXT, NULL | Correlates with logs |
@@ -102,7 +104,7 @@ One action a person or the system took, including staff reads of private data. A
 
 The transactional outbox (backlog D2): an event is written in the same transaction as the change it describes, and the worker delivers it to handlers. F-05 adds the code. Tier: internal.
 
-`domain_events`: `event_id` (UUID, unique), `type` (listed in [FLOW-07](../../product/context/flows/07-domain-event-catalogue.md)), `aggregate_type` and `aggregate_id`, `payload` (JSONB, **IDs only, never PII**), `actor_user_id`, `request_id`, `occurred_at`.
+`domain_events`: `event_id` (UUID, unique), `type` (listed in [FLOW-07](../../product/context/flows/07-domain-event-catalogue.md)), `aggregate_type` with exactly one of `aggregate_id` (numeric) or `aggregate_key` (text, e.g. a state code), `payload` (JSONB, **IDs only, never PII**), `actor_user_id`, `request_id`, `occurred_at`.
 
 `domain_event_deliveries`: one row per `(event_id, handler)`, with `attempts`, `last_error`, `handled_at`, and `dead_lettered_at`. Handlers are idempotent on this key.
 
@@ -161,7 +163,7 @@ A file in object storage owned by one record (D9). `created_by` is the uploader.
 
 | Column | Type | Meaning |
 |---|---|---|
-| `owner_type`, `owner_id` | TEXT CHECK, BIGINT | `practitioner`, `participation_application`, `privilege_request`, `adverse_action`, `sii_report`; no foreign key |
+| `owner_type`, `owner_id`, `owner_key` | TEXT CHECK, BIGINT, TEXT | `practitioner`, `participation_application`, `privilege_request`, `adverse_action`, `sii_report`, `ingestion_batch` with `owner_id`; `state` with `owner_key` (the code). No foreign key. All three are NULL while a file is uploaded ahead of its owner, e.g. an adverse action whose only evidence is the order (FLOW-05) |
 | `kind` | TEXT | What it proves; free text until Q-07 |
 | `storage_key` | TEXT, unique | S3 (RustFS locally) object key |
 | `file_name`, `content_type`, `size_bytes` | | |
@@ -194,18 +196,33 @@ A PA's application to participate in the compact, decided by their state of qual
 | `practitioner_id` | FK | |
 | `kind` | TEXT CHECK | `initial` or `change_sql` (Rule 3 §3.6(a)) |
 | `sql_state_code` | FK `states` | The designated state of qualifying license. There is no basis column: adopted Rule 3 §3.4(a)(2) dropped the draft's tests |
-| `qualifying_license_id` | FK, NULL | |
-| `status` | TEXT CHECK | `draft`, `submitted`, `info_requested`, `eligible`, `denied`, `withdrawn`, `eligibility_withdrawn` (FLOW-06) |
+| `qualifying_license_id` | FK, NULL | The on-file license the SQL linked. Required once `eligible`, because privilege requests build on it (FLOW-03) |
+| `claimed_license_number`, `claimed_license_expires_on` | TEXT, DATE | What the PA entered; the SQL's case view compares it with the on-file license (FLOW-02) |
+| `status` | TEXT CHECK | `draft`, `submitted`, `info_requested`, `eligible`, `denied`, `withdrawn`, `eligibility_withdrawn` (FLOW-06), and `superseded` |
 | `opened_at` | TIMESTAMPTZ | Received by the SQL; starts the 60-day clock (Rule 3 §3.7(a)). Required once out of `draft` |
 | `request_note` | TEXT | The SQL's request for information (D15) |
 | `license_verified_at`, `license_verified_by` | | Set together |
 | `cbc_completed_on` | DATE | The background check's completion date; never a result (Rule 4 §4.2) |
-| `decided_at`, `decided_by` | | Required for `eligible`, `denied`, `eligibility_withdrawn` |
+| `decided_at`, `decided_by` | | Required for `eligible`, `denied`, `eligibility_withdrawn`, `superseded` |
 | `denial_reason_code`, `denial_reason_detail` | FK `ref_denial_reasons`, TEXT | A code is required for `denied`; use an `eligibility` reason |
 | `withdrawn_at` | TIMESTAMPTZ | Required for `withdrawn` |
 | `eligibility_withdrawn_at`, `eligibility_withdrawal_reason` | | Required for `eligibility_withdrawn` (Rule 3 §3.9(b)) |
+| `superseded_at` | TIMESTAMPTZ | Required for `superseded`: a later `change_sql` application became eligible (Rule 3 §3.6) |
 
-The database enforces: `eligible` needs `license_verified_at` and `cbc_completed_on` (FLOW-02); one open application (`draft`, `submitted`, `info_requested`) per practitioner. The queue index is `(sql_state_code, status)`.
+The database enforces: `eligible` needs a linked license, `license_verified_at`, and `cbc_completed_on` (FLOW-02); one open application (`draft`, `submitted`, `info_requested`) per practitioner; one `eligible` application per practitioner, so a `change_sql` application that becomes eligible supersedes the old one in the same transaction, and the issuance check "participation still eligible" can only find the current one. The queue index is `(sql_state_code, status)`.
+
+### `fees`
+
+The versioned fee schedule. Tier: public. Owner: epic 7, which writes it in S-01; epics 8 and 9 read it.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `state_code` | FK `states`, NULL | The state charging the fee; NULL for the Commission's own fee |
+| `fee_type` | TEXT CHECK | `participation` (the SQL and Commission fees to apply, Rule 3 §3.4(a)(7)), `privilege` (the remote state and Commission fees per privilege, §3.4(c)(4)), `renewal` (A-05) |
+| `amount_cents` | INTEGER | Zero or more |
+| `effective_from` | DATE | A new amount is a new row; the amount in force on a day is the latest on or before it. One row per state (or the Commission), type, and date |
+
+Changes are kept in `fees_history`.
 
 ### `privilege_requests`
 
@@ -233,15 +250,17 @@ A compact privilege issued by a remote state (Rule 4 §4.3(d)). Tier: the state,
 |---|---|---|
 | `privilege_request_id` | FK, unique | |
 | `practitioner_id`, `remote_state_code`, `qualifying_license_id` | FKs | |
-| `privilege_number` | TEXT, unique | `PA-{state}-{n}` |
+| `privilege_number` | TEXT, unique | `PA-{state}-{n}`, from `next_privilege_number(state_code, actor_user_id)` |
 | `state_privilege_identifier` | TEXT, NULL | The remote state's own identifier, if it issues one (Rule 4 §4.3(d)(1)) |
 | `issued_at` | TIMESTAMPTZ | |
 | `expires_on` | DATE | Pinned from the request; inclusive |
 | `administrator_status` | TEXT CHECK | `active` or `inactive`, set by a state or the Commission |
-| `deactivation_reason` | TEXT CHECK | `qualifying_license_adverse_action`, `eligibility_withdrawn`, `qualifying_license_inactive`, `qualifying_license_terminated`, `sql_changed` (Rule 3 §3.6(d)), `state_deactivated`. Set, with `deactivated_at`, exactly when `inactive` |
+| `deactivation_reason` | TEXT CHECK | `qualifying_license_adverse_action`, `eligibility_withdrawn`, `qualifying_license_inactive`, `qualifying_license_terminated`, `sql_changed` (Rule 3 §3.6(d)), `state_deactivated`, `commission_deactivated` (the Commission's override). An expired or lapsed license is `qualifying_license_inactive` (FLOW-05). Set, with `deactivated_at`, exactly when `inactive` |
 | `deactivation_note` | TEXT, NULL | |
 
 The status a user sees (active, expired, encumbered, inactive) is computed (F-02 phase 3), never stored (D1).
+
+`privilege_number_sequences` holds the last number issued per remote state. Take the next with `next_privilege_number(state_code, actor_user_id)`, which returns e.g. `PA-KS-000123`; its upsert locks only that state's row, so issuances in different states never wait on each other. Owner: epic 8.
 
 ### `adverse_actions` and `adverse_action_npdb_categories`
 
@@ -279,11 +298,11 @@ A report that significant investigative information exists (Rule 4 §4.4(c)–(d
 
 ### History tables
 
-`practitioners_history`, `qualifying_licenses_history`, `participation_applications_history`, `privilege_requests_history`, `privileges_history`, `adverse_actions_history`, and `sii_reports_history`. Columns: `entity_id`, `changed_at`, `changed_by`, `effective_at`, and `previous`, `updated`, `removed` as JSONB. Append-only (ADR-0008). Tier: the same as the entity's, since history copies its values.
+`practitioners_history`, `qualifying_licenses_history`, `participation_applications_history`, `fees_history`, `privilege_requests_history`, `privileges_history`, `adverse_actions_history`, and `sii_reports_history`, plus `states_history`, which has `state_code` in place of `entity_id`. Columns: `entity_id`, `changed_at`, `changed_by`, `effective_at`, and `previous`, `updated`, `removed` as JSONB. Append-only (ADR-0008). Tier: the same as the entity's, since history copies its values.
 
 ## Computed status
 
-A status a rule derives is computed on read, never stored (D1). Three SQL functions are the only place status day arithmetic lives (ADR-0006). Each takes the date to evaluate; each has a view that evaluates it as of `compact_today()`. End dates are inclusive. Tier: follows the underlying record. Models: `licensing_api/repo/status.py`.
+A status a rule derives is computed on read, never stored (D1). Three SQL functions are the only place status day arithmetic lives (ADR-0006). Each takes the date to evaluate; each has a view that evaluates it as of `compact_today()`. End dates are inclusive. Tier: follows the underlying record. Models: `licensing_api/repo/status.py`. The functions read tables several epics own, so the platform owns them (ADR-0005): an epic that needs one changed asks the tech lead.
 
 ### `qualifying_license_status_on(as_of)` and `v_qualifying_license_status`
 
@@ -321,14 +340,15 @@ Returns, for every practitioner, `is_barred` and `eligible_again_on` (ML §4.A.8
 
 Named here so the owning epic creates them with the conventions above. Not created yet.
 
-| Table or columns | Owner |
-|---|---|
-| `fees`, `transactions`, `transaction_line_items`, privilege-request proof rows | Epic 8, privilege and payment |
-| `licensure_denials` (Rule 4 §4.3(c)(14)), state administrator contacts, state fees | Epic 7, license records and SQL review |
-| `ingestion_batches`, `qualifying_licenses.ingestion_batch_id` | Epic 13, state data ingestion |
-| `renewal_checks`, `privileges.renewed_at` | Epic 9, status and renewal |
-| `attestations` catalogue and accepted attestations | Epic 6, participation |
-| `practitioner_other_names` (Rule 4 §4.3(c)(2)), address and email change log (Rule 4 §4.3(e)(1)–(2)) | Epic 5, accounts and profile |
-| NCCPA lookup source and `fetched_at` | Epic 14, NCCPA |
-| Adverse actions a PA reports from a non-participating state (ML §4.A(12)) | Epic 9 |
-| `case_messages` | Deferred (backlog §5.1) |
+| Table or columns | Owner | Notes |
+|---|---|---|
+| `transactions`, `transaction_line_items`, privilege-request proof rows | Epic 8, privilege and payment | `transactions` needs a unique processor transaction or webhook event key, so a replayed webhook is a no-op (FLOW-03). Line items reference `privilege_request_id` and carry `state_code` |
+| `licensure_denials` (Rule 4 §4.3(c)(14)) | Epic 7, license records and SQL review | |
+| `state_contacts`: administrator contacts and the ops, adverse-action, and report distribution lists, by state and list type | Epic 7 (S-01 writes it) | F-11 reads it to address state notifications; the Commission's lists are rows with no state |
+| `ingestion_batches`, `qualifying_licenses.ingestion_batch_id`, `api_credentials` (a machine credential scoped to one state) | Epic 13, state data ingestion | `ingestion_batch_id` goes on epic 7's table: tell its owner |
+| `renewal_checks`, `privilege_requests.renews_privilege_id`, `privileges.renewed_at` | Epic 9, status and renewal | A renewal keeps the privilege number, so the renewal request links to the privilege it renews. The two columns go on epic 8's tables: tell its owner |
+| `attestations` catalogue and accepted attestations | Epic 6, participation | Covers both application and privilege attestations, including the PA's consent to service of process (Rule 3 §3.4(a)(3)) |
+| `practitioner_other_names` (Rule 4 §4.3(c)(2)), address and email change log (Rule 4 §4.3(e)(1)–(2)), `practitioner_email_changes` (the pending new address, a hash of the 15-minute code, and its expiry; FLOW-07) | Epic 5, accounts and profile | |
+| `credential_lookups`: each NCCPA lookup, its result, source, and `fetched_at` | Epic 14, NCCPA | A table of its own, so `practitioners` (a shared root) does not change |
+| Adverse actions a PA reports from a non-participating state (ML §4.A(12)) | Epic 9 | |
+| `case_messages` | Deferred (backlog §5.1) | |

@@ -137,6 +137,17 @@ CREATE TABLE practitioners (
 );
 
 CREATE INDEX idx_practitioners_current_sql_state_code ON practitioners (current_sql_state_code);
+CREATE INDEX idx_practitioners_sex_code ON practitioners (sex_code);
+CREATE INDEX idx_practitioners_identity_entered_by ON practitioners (identity_entered_by);
+CREATE INDEX idx_practitioners_identity_verified_by_state ON practitioners (identity_verified_by_state);
+CREATE INDEX idx_practitioners_residence_entered_by ON practitioners (residence_entered_by);
+CREATE INDEX idx_practitioners_residence_verified_by_state ON practitioners (residence_verified_by_state);
+CREATE INDEX idx_practitioners_contact_entered_by ON practitioners (contact_entered_by);
+CREATE INDEX idx_practitioners_contact_verified_by_state ON practitioners (contact_verified_by_state);
+CREATE INDEX idx_practitioners_education_entered_by ON practitioners (education_entered_by);
+CREATE INDEX idx_practitioners_education_verified_by_state ON practitioners (education_verified_by_state);
+CREATE INDEX idx_practitioners_certification_entered_by ON practitioners (certification_entered_by);
+CREATE INDEX idx_practitioners_certification_verified_by_state ON practitioners (certification_verified_by_state);
 CREATE INDEX idx_practitioners_legal_last_name ON practitioners (lower(legal_last_name));
 
 -- ---------------------------------------------------------------------------
@@ -170,8 +181,12 @@ CREATE TABLE practitioner_ssn (
 CREATE TABLE documents (
     id            BIGSERIAL   PRIMARY KEY,
     public_id     UUID        NOT NULL DEFAULT gen_random_uuid() UNIQUE,
-    owner_type    TEXT        NOT NULL,
-    owner_id      BIGINT      NOT NULL,
+    -- All NULL while a file is uploaded ahead of the record that will own it, such
+    -- as an adverse action whose only evidence is the order (FLOW-05). A state owner
+    -- is keyed by its code (owner_key); every other owner by its id (owner_id).
+    owner_type    TEXT,
+    owner_id      BIGINT,
+    owner_key     TEXT,
     -- What the document is; free text until Q-07 settles the list.
     kind          TEXT        NOT NULL,
     storage_key   TEXT        NOT NULL UNIQUE,
@@ -185,14 +200,20 @@ CREATE TABLE documents (
     updated_at    TIMESTAMPTZ NOT NULL,
     updated_by    BIGINT      NOT NULL,
     CONSTRAINT chk_documents_owner_type CHECK (owner_type IN
-        ('practitioner', 'participation_application', 'privilege_request', 'adverse_action', 'sii_report')),
+        ('practitioner', 'participation_application', 'privilege_request', 'adverse_action', 'sii_report',
+         'state', 'ingestion_batch')),
+    CONSTRAINT chk_documents_owner CHECK (
+        (owner_type IS NULL AND owner_id IS NULL AND owner_key IS NULL)
+        OR (owner_type = 'state' AND owner_key IS NOT NULL AND owner_id IS NULL)
+        -- owner_type IS NOT NULL: with a NULL type the <> comparison is NULL, and CHECK passes NULL.
+        OR (owner_type IS NOT NULL AND owner_type <> 'state' AND owner_id IS NOT NULL AND owner_key IS NULL)),
     CONSTRAINT chk_documents_scan_status CHECK (scan_status IN ('pending', 'clean', 'infected', 'error')),
     CONSTRAINT chk_documents_size_bytes CHECK (size_bytes >= 0),
     CONSTRAINT fk_documents_created_by FOREIGN KEY (created_by) REFERENCES users (id) DEFERRABLE INITIALLY IMMEDIATE,
     CONSTRAINT fk_documents_updated_by FOREIGN KEY (updated_by) REFERENCES users (id) DEFERRABLE INITIALLY IMMEDIATE
 );
 
-CREATE INDEX idx_documents_owner ON documents (owner_type, owner_id);
+CREATE INDEX idx_documents_owner ON documents (owner_type, owner_id, owner_key);
 
 -- ---------------------------------------------------------------------------
 -- qualifying_licenses: SQL-authored (Rule 4 §4.3(c)(11)); owner: epic 7
@@ -250,6 +271,10 @@ CREATE TABLE participation_applications (
     -- No SQL basis column: adopted Rule 3 §3.4(a)(2) dropped the draft's basis tests.
     sql_state_code                 CHAR(2)     NOT NULL,
     qualifying_license_id          BIGINT,
+    -- What the PA says their license is, before the SQL links an on-file record;
+    -- the SQL's case view compares the two (FLOW-02).
+    claimed_license_number         TEXT,
+    claimed_license_expires_on     DATE,
     status                         TEXT        NOT NULL DEFAULT 'draft',
     -- Received by the SQL; starts the 60-day completeness clock (Rule 3 §3.7(a)).
     opened_at                      TIMESTAMPTZ,
@@ -265,22 +290,30 @@ CREATE TABLE participation_applications (
     withdrawn_at                   TIMESTAMPTZ,
     eligibility_withdrawn_at       TIMESTAMPTZ,          -- Rule 3 §3.9(b)
     eligibility_withdrawal_reason  TEXT,
+    -- Replaced by a later change_sql application that became eligible (Rule 3 §3.6).
+    superseded_at                  TIMESTAMPTZ,
     created_at                     TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_by                     BIGINT      NOT NULL,
     updated_at                     TIMESTAMPTZ NOT NULL,
     updated_by                     BIGINT      NOT NULL,
     CONSTRAINT chk_participation_applications_kind CHECK (kind IN ('initial', 'change_sql')),
     CONSTRAINT chk_participation_applications_status CHECK (status IN
-        ('draft', 'submitted', 'info_requested', 'eligible', 'denied', 'withdrawn', 'eligibility_withdrawn')),
+        ('draft', 'submitted', 'info_requested', 'eligible', 'denied', 'withdrawn', 'eligibility_withdrawn',
+         'superseded')),
     CONSTRAINT chk_participation_applications_opened
         CHECK (status = 'draft' OR opened_at IS NOT NULL),
     CONSTRAINT chk_participation_applications_decided
-        CHECK (status NOT IN ('eligible', 'denied', 'eligibility_withdrawn')
+        CHECK (status NOT IN ('eligible', 'denied', 'eligibility_withdrawn', 'superseded')
                OR (decided_at IS NOT NULL AND decided_by IS NOT NULL)),
-    -- FLOW-02: a decision of eligible needs the license verified and the background check completed.
+    -- FLOW-02: a decision of eligible needs a linked, verified license and the background
+    -- check completed. Privilege requests build on the linked license (FLOW-03).
     CONSTRAINT chk_participation_applications_eligible_requirements
-        CHECK (status NOT IN ('eligible', 'eligibility_withdrawn')
-               OR (license_verified_at IS NOT NULL AND cbc_completed_on IS NOT NULL)),
+        CHECK (status NOT IN ('eligible', 'eligibility_withdrawn', 'superseded')
+               OR (qualifying_license_id IS NOT NULL
+                   AND license_verified_at IS NOT NULL
+                   AND cbc_completed_on IS NOT NULL)),
+    CONSTRAINT chk_participation_applications_superseded
+        CHECK (status <> 'superseded' OR superseded_at IS NOT NULL),
     CONSTRAINT chk_participation_applications_denial_reason
         CHECK (status <> 'denied' OR denial_reason_code IS NOT NULL),
     CONSTRAINT chk_participation_applications_withdrawn
@@ -304,10 +337,47 @@ CREATE TABLE participation_applications (
 CREATE UNIQUE INDEX uq_participation_applications_one_open
     ON participation_applications (practitioner_id)
     WHERE status IN ('draft', 'submitted', 'info_requested');
+-- One eligible application per practitioner: a change_sql application that becomes
+-- eligible supersedes the old one in the same transaction.
+CREATE UNIQUE INDEX uq_participation_applications_one_eligible
+    ON participation_applications (practitioner_id)
+    WHERE status = 'eligible';
 -- The SQL's review queue.
 CREATE INDEX idx_participation_applications_sql_queue ON participation_applications (sql_state_code, status);
 CREATE INDEX idx_participation_applications_practitioner_id ON participation_applications (practitioner_id);
 CREATE INDEX idx_participation_applications_qualifying_license_id ON participation_applications (qualifying_license_id);
+CREATE INDEX idx_participation_applications_license_verified_by ON participation_applications (license_verified_by);
+CREATE INDEX idx_participation_applications_decided_by ON participation_applications (decided_by);
+CREATE INDEX idx_participation_applications_denial_reason_code ON participation_applications (denial_reason_code);
+
+-- ---------------------------------------------------------------------------
+-- fees: versioned fee schedule; owner: epic 7 (S-01 writes it), read by epics 8 and 9
+-- ---------------------------------------------------------------------------
+-- state_code NULL is the Commission's own fee of that type. A new amount is a new
+-- row with a later effective_from; the amount in force is the latest one on or
+-- before the day in question.
+
+CREATE TABLE fees (
+    id              BIGSERIAL   PRIMARY KEY,
+    public_id       UUID        NOT NULL DEFAULT gen_random_uuid() UNIQUE,
+    state_code      CHAR(2),
+    -- participation: the SQL and Commission fees to apply (Rule 3 §3.4(a)(7));
+    -- privilege: the remote state and Commission fees per privilege (§3.4(c)(4));
+    -- renewal: per renewed privilege (A-05).
+    fee_type        TEXT        NOT NULL,
+    amount_cents    INTEGER     NOT NULL,
+    effective_from  DATE        NOT NULL,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_by      BIGINT      NOT NULL,
+    updated_at      TIMESTAMPTZ NOT NULL,
+    updated_by      BIGINT      NOT NULL,
+    CONSTRAINT uq_fees_schedule UNIQUE NULLS NOT DISTINCT (state_code, fee_type, effective_from),
+    CONSTRAINT chk_fees_fee_type CHECK (fee_type IN ('participation', 'privilege', 'renewal')),
+    CONSTRAINT chk_fees_amount_cents CHECK (amount_cents >= 0),
+    CONSTRAINT fk_fees_state_code FOREIGN KEY (state_code) REFERENCES states (code),
+    CONSTRAINT fk_fees_created_by FOREIGN KEY (created_by) REFERENCES users (id) DEFERRABLE INITIALLY IMMEDIATE,
+    CONSTRAINT fk_fees_updated_by FOREIGN KEY (updated_by) REFERENCES users (id) DEFERRABLE INITIALLY IMMEDIATE
+);
 
 -- ---------------------------------------------------------------------------
 -- Audit-column triggers and history tables
@@ -315,7 +385,7 @@ CREATE INDEX idx_participation_applications_qualifying_license_id ON participati
 
 SELECT add_audit_columns_trigger(t)
 FROM unnest(ARRAY ['practitioners', 'practitioner_ssn', 'documents', 'qualifying_licenses',
-                   'participation_applications']) AS t;
+                   'participation_applications', 'fees']) AS t;
 
 SELECT create_history_table(t)
-FROM unnest(ARRAY ['practitioners', 'qualifying_licenses', 'participation_applications']) AS t;
+FROM unnest(ARRAY ['practitioners', 'qualifying_licenses', 'participation_applications', 'fees']) AS t;

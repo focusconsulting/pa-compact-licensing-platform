@@ -26,7 +26,9 @@ class AuditLogEntry(SQLModel, table=True):
     actor_user_id: int | None = Field(default=None, foreign_key='users.id')
     action: str
     entity_type: str
+    # entity_id for records with a numeric id; entity_key for records keyed by text, such as a state.
     entity_id: int | None = None
+    entity_key: str | None = None
     before: dict[str, Any] | None = Field(default=None, sa_column=Column(JSONB, nullable=True))
     after: dict[str, Any] | None = Field(default=None, sa_column=Column(JSONB, nullable=True))
     reason: str | None = None
