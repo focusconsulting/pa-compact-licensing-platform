@@ -24,6 +24,8 @@ class DeactivationReason(StrEnum):
     # A new state of qualifying license terminates existing privileges (Rule 3 §3.6(d)).
     SQL_CHANGED = 'sql_changed'
     STATE_DEACTIVATED = 'state_deactivated'
+    # The Commission's override (D-01).
+    COMMISSION_DEACTIVATED = 'commission_deactivated'
 
 
 class Privilege(AuditColumns, table=True):
@@ -52,3 +54,17 @@ class Privilege(AuditColumns, table=True):
     deactivation_reason: str | None = None
     deactivated_at: datetime | None = Field(default=None, sa_type=TimestampTZ)
     deactivation_note: str | None = None
+
+
+class PrivilegeNumberSequence(AuditColumns, table=True):
+    """The last privilege number issued in each remote state. Owner: epic 8.
+
+    Use ``SELECT next_privilege_number(:state_code, :actor_user_id)`` to take the
+    next number (e.g. ``PA-KS-000123``); never update this table directly.
+    """
+
+    # SQLModel defines __tablename__ as a declared_attr method; assigning a string is its documented way to name a table.
+    __tablename__ = 'privilege_number_sequences'  # type: ignore[assignment]
+
+    state_code: str = Field(primary_key=True, foreign_key='states.code', max_length=2)
+    last_number: int

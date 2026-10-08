@@ -54,6 +54,10 @@ ALTER TABLE users
     DROP CONSTRAINT chk_users_role,
     ADD CONSTRAINT chk_users_role
         CHECK (role IN ('admin', 'state_staff', 'state_admin', 'compact_admin', 'licensee')),
+    -- Only state staff need a state. A PA signs up before designating one (FLOW-01).
+    DROP CONSTRAINT chk_users_state_code,
+    ADD CONSTRAINT chk_users_state_code
+        CHECK (state_code IS NOT NULL OR role IN ('admin', 'compact_admin', 'licensee')),
     ADD CONSTRAINT chk_users_permissions_object
         CHECK (jsonb_typeof(permissions) = 'object');
 
@@ -167,6 +171,29 @@ WHERE u.email = 'system@pa-compact.invalid';
 
 ALTER TABLE users
     ADD CONSTRAINT fk_users_state_code FOREIGN KEY (state_code) REFERENCES states (code);
+
+CREATE INDEX idx_users_state_code ON users (state_code);
+
+-- History for state configuration (S-01). States are keyed by code, so this table
+-- carries state_code where entity history tables carry entity_id (ADR-0005).
+CREATE TABLE states_history (
+    id            BIGSERIAL   PRIMARY KEY,
+    state_code    CHAR(2)     NOT NULL,
+    changed_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    changed_by    BIGINT      NOT NULL,
+    effective_at  TIMESTAMPTZ,
+    previous      JSONB,
+    updated       JSONB,
+    removed       JSONB,
+    CONSTRAINT fk_states_history_state_code FOREIGN KEY (state_code) REFERENCES states (code),
+    CONSTRAINT fk_states_history_changed_by FOREIGN KEY (changed_by) REFERENCES users (id)
+);
+
+CREATE INDEX idx_states_history_entity ON states_history (state_code, changed_at);
+
+CREATE TRIGGER trg_states_history_append_only
+    BEFORE UPDATE OR DELETE ON states_history
+    FOR EACH ROW EXECUTE FUNCTION prevent_mutation();
 
 -- ---------------------------------------------------------------------------
 -- Lookup tables: lists that wait on a Commission answer, so an answer is a data change
@@ -284,11 +311,15 @@ CREATE TABLE audit_log (
     actor_user_id  BIGINT,
     action         TEXT        NOT NULL,
     entity_type    TEXT        NOT NULL,
+    -- entity_id for records with a numeric id; entity_key for records keyed by
+    -- text, such as a state's code.
     entity_id      BIGINT,
+    entity_key     TEXT,
     before         JSONB,
     after          JSONB,
     reason         TEXT,
     request_id     TEXT,
+    CONSTRAINT chk_audit_log_one_entity_reference CHECK (entity_id IS NULL OR entity_key IS NULL),
     CONSTRAINT fk_audit_log_actor_user_id FOREIGN KEY (actor_user_id) REFERENCES users (id)
 );
 
@@ -308,16 +339,21 @@ CREATE TABLE domain_events (
     event_id        UUID        NOT NULL DEFAULT gen_random_uuid() UNIQUE,
     type            TEXT        NOT NULL,
     aggregate_type  TEXT        NOT NULL,
-    aggregate_id    BIGINT      NOT NULL,
+    -- aggregate_id for records with a numeric id; aggregate_key for records keyed
+    -- by text, such as a state's code. Exactly one is set.
+    aggregate_id    BIGINT,
+    aggregate_key   TEXT,
     -- IDs only; no PII (data dictionary).
     payload         JSONB       NOT NULL DEFAULT '{}'::jsonb,
     actor_user_id   BIGINT,
     request_id      TEXT,
     occurred_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT chk_domain_events_one_aggregate_reference
+        CHECK ((aggregate_id IS NULL) <> (aggregate_key IS NULL)),
     CONSTRAINT fk_domain_events_actor_user_id FOREIGN KEY (actor_user_id) REFERENCES users (id)
 );
 
-CREATE INDEX idx_domain_events_aggregate ON domain_events (aggregate_type, aggregate_id);
+CREATE INDEX idx_domain_events_aggregate ON domain_events (aggregate_type, aggregate_id, aggregate_key);
 CREATE INDEX idx_domain_events_actor_user_id ON domain_events (actor_user_id);
 
 -- One row per (event, handler); handlers are idempotent on this key (FLOW-07).

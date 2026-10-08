@@ -80,3 +80,19 @@ class SiiReportHistory(HistoryRecord, table=True):
     __tablename__ = 'sii_reports_history'  # type: ignore[assignment]
 
     entity_id: int = Field(foreign_key='sii_reports.id')
+
+
+class StateHistory(HistoryRecord, table=True):
+    """Changes to a state's configuration (S-01). Keyed by ``state_code``: states have no numeric id."""
+
+    # SQLModel defines __tablename__ as a declared_attr method; assigning a string is its documented way to name a table.
+    __tablename__ = 'states_history'  # type: ignore[assignment]
+
+    state_code: str = Field(foreign_key='states.code', max_length=2)
+
+
+class FeeHistory(HistoryRecord, table=True):
+    # SQLModel defines __tablename__ as a declared_attr method; assigning a string is its documented way to name a table.
+    __tablename__ = 'fees_history'  # type: ignore[assignment]
+
+    entity_id: int = Field(foreign_key='fees.id')

@@ -5,19 +5,22 @@ from licensing_api.repo.audit_log import AuditLogEntry
 from licensing_api.repo.compact_settings import CompactSettings
 from licensing_api.repo.document import Document
 from licensing_api.repo.domain_event import DomainEvent, DomainEventDelivery
+from licensing_api.repo.fee import Fee
 from licensing_api.repo.history import (
     AdverseActionHistory,
+    FeeHistory,
     ParticipationApplicationHistory,
     PractitionerHistory,
     PrivilegeHistory,
     PrivilegeRequestHistory,
     QualifyingLicenseHistory,
     SiiReportHistory,
+    StateHistory,
 )
 from licensing_api.repo.notification import Notification
 from licensing_api.repo.participation_application import ParticipationApplication
 from licensing_api.repo.practitioner import Practitioner, PractitionerSsn
-from licensing_api.repo.privilege import Privilege
+from licensing_api.repo.privilege import Privilege, PrivilegeNumberSequence
 from licensing_api.repo.privilege_request import PrivilegeRequest
 from licensing_api.repo.qualifying_license import QualifyingLicense
 from licensing_api.repo.reference import (
@@ -39,6 +42,8 @@ __all__ = [
     'Document',
     'DomainEvent',
     'DomainEventDelivery',
+    'Fee',
+    'FeeHistory',
     'Notification',
     'ParticipationApplication',
     'ParticipationApplicationHistory',
@@ -47,6 +52,7 @@ __all__ = [
     'PractitionerSsn',
     'Privilege',
     'PrivilegeHistory',
+    'PrivilegeNumberSequence',
     'PrivilegeRequest',
     'PrivilegeRequestHistory',
     'QualifyingLicense',
@@ -58,5 +64,6 @@ __all__ = [
     'SiiReport',
     'SiiReportHistory',
     'State',
+    'StateHistory',
     'User',
 ]

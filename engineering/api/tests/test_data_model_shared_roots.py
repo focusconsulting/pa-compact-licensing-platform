@@ -205,3 +205,64 @@ def test_ssn_is_masked_in_logs():
         'ssn_last4': '****',
         'name': 'A',
     }
+
+
+async def test_a_pa_can_sign_up_without_a_state(db_session):
+    user = await make_user(db_session, role='licensee', state_code=None)
+
+    assert user.state_code is None
+
+
+async def test_state_staff_need_a_state(db_session):
+    await assert_rejected(
+        db_session,
+        'INSERT INTO users (email, role, state_code, is_active, created_by) '
+        "VALUES ('staff@example.com', 'state_staff', NULL, TRUE, 1)",
+    )
+
+
+async def test_an_event_can_reference_a_state_by_code(db_session):
+    await db_session.execute(
+        text(
+            'INSERT INTO domain_events (type, aggregate_type, aggregate_key) '
+            "VALUES ('state.configured', 'state', 'KS')"
+        )
+    )
+
+
+async def test_an_event_references_its_aggregate_exactly_once(db_session):
+    await assert_rejected(
+        db_session,
+        "INSERT INTO domain_events (type, aggregate_type) VALUES ('state.configured', 'state')",
+    )
+    await assert_rejected(
+        db_session,
+        'INSERT INTO domain_events (type, aggregate_type, aggregate_id, aggregate_key) '
+        "VALUES ('state.configured', 'state', 1, 'KS')",
+    )
+
+
+async def test_an_audit_entry_references_a_record_one_way(db_session):
+    await assert_rejected(
+        db_session,
+        'INSERT INTO audit_log (action, entity_type, entity_id, entity_key) '
+        "VALUES ('state.updated', 'state', 1, 'KS')",
+    )
+
+
+async def test_every_domain_foreign_key_is_indexed(db_session):
+    # Audit columns are written on every row and never looked up, so they are left unindexed (ADR-0005).
+    result = await db_session.execute(
+        text(
+            "SELECT rel.relname || '.' || att.attname "
+            'FROM pg_constraint con '
+            'JOIN pg_class rel ON rel.oid = con.conrelid '
+            'JOIN pg_attribute att ON att.attrelid = con.conrelid AND att.attnum = con.conkey[1] '
+            "WHERE con.contype = 'f' AND con.connamespace = 'public'::regnamespace "
+            "AND att.attname NOT IN ('created_by', 'updated_by', 'changed_by') "
+            'AND NOT EXISTS (SELECT 1 FROM pg_index i '
+            'WHERE i.indrelid = con.conrelid AND i.indkey[0] = con.conkey[1])'
+        )
+    )
+
+    assert list(result.scalars()) == []

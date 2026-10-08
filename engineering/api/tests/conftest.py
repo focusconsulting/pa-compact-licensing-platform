@@ -1,17 +1,23 @@
 import base64
 import uuid
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator, Callable, Generator
 from unittest.mock import patch
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi.testclient import TestClient
 from jose import jwt as jose_jwt
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncConnection,
+    AsyncSession,
+    AsyncTransaction,
+    create_async_engine,
+)
 from sqlalchemy.pool import NullPool
 
 from licensing_api.__main__ import app
 from licensing_api.config import Settings, get_settings
+from licensing_api.dependencies import get_db_session
 
 TEST_SETTINGS = Settings(
     cognito_client_id='test-client-id', cognito_user_pool_id='us-east-1_testpool'
@@ -79,6 +85,43 @@ async def db_session(client) -> AsyncGenerator[AsyncSession]:
             await session.close()
             await transaction.rollback()
     await engine.dispose()
+
+
+@pytest.fixture
+def route_db_session(client) -> Generator[AsyncSession]:
+    """Gives every route in the test one session whose work is rolled back when the test ends.
+
+    Use it for any test that calls a route which writes. The session lives on the
+    app's event loop, so read it in the test through ``client.portal.call``. A
+    route's commit releases a savepoint inside the outer transaction, which is
+    still rolled back.
+    """
+
+    async def _open() -> tuple[AsyncConnection, AsyncTransaction, AsyncSession]:
+        connection = await app.state.db_engine.connect()
+        transaction = await connection.begin()
+        session = AsyncSession(
+            bind=connection, join_transaction_mode='create_savepoint', expire_on_commit=False
+        )
+        return connection, transaction, session
+
+    connection, transaction, session = client.portal.call(_open)
+
+    async def _session_override() -> AsyncGenerator[AsyncSession]:
+        yield session
+
+    app.dependency_overrides[get_db_session] = _session_override
+    try:
+        yield session
+    finally:
+        app.dependency_overrides.pop(get_db_session, None)
+
+        async def _close() -> None:
+            await session.close()
+            await transaction.rollback()
+            await connection.close()
+
+        client.portal.call(_close)
 
 
 @pytest.fixture(scope='module')

@@ -24,7 +24,9 @@ class DomainEvent(SQLModel, table=True):
     event_id: UUID = Field(default_factory=uuid4, unique=True)
     type: str
     aggregate_type: str
-    aggregate_id: int
+    # Exactly one: aggregate_id for records with a numeric id, aggregate_key for records keyed by text, such as a state.
+    aggregate_id: int | None = None
+    aggregate_key: str | None = None
     payload: dict[str, Any] = Field(
         default_factory=dict,
         sa_column=Column(JSONB, nullable=False, server_default=text("'{}'::jsonb")),
