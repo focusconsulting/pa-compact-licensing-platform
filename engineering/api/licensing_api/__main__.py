@@ -26,7 +26,7 @@ from licensing_api.migrations import run_migrations
 from licensing_api.request_logger import RequestLoggingMiddleware, UnhandledExceptionMiddleware
 from licensing_api.routes import health, user
 
-_SENSITIVE_PATTERN = re.compile(r'password|token|secret|cognito', re.IGNORECASE)
+_SENSITIVE_PATTERN = re.compile(r'password|token|secret|cognito|ssn', re.IGNORECASE)
 _MASK = '****'
 _LOG_RECORD_KEYS = frozenset(logging.LogRecord('', 0, '', 0, '', (), None).__dict__.keys())
 
