@@ -49,7 +49,7 @@ The goal is that once Phase 2 merges, every vertical can start its data and API 
 - Every entity table has a `<table>_history` table that cannot be updated or deleted outside the audited expungement path.
 - Status functions and views return the right status for every case in the fixture matrix, as of any date, in the reference time zone.
 - A SQLModel model exists for every table, and a test fails if a model and its table disagree.
-- `engineering/docs/data-model.md` documents every table and column, its rule citation, its confidentiality tier, and its owning epic, plus the tables reserved for later epics.
+- `engineering/docs/data-model.md` documents every table and column, its rule citation, its confidentiality tier, and its owning epic.
 - ADR-0005 to ADR-0008 are written.
 
 ### Key Discoveries
