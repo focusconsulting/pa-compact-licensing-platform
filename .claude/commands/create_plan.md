@@ -30,7 +30,7 @@ This is a monorepo with these areas:
 
 Please provide:
 1. Which area does this work affect? (client, api, iac, docs, or cross-cutting)
-2. The task/issue description (Jira ticket, GitHub issue #, beads ID, or description)
+2. The task/issue description (Jira ticket key such as SCRUM-35, beads ID, or description)
 3. Any relevant context, constraints, or specific requirements
 
 Tip: You can specify the area directly: `/create_plan api #123` or `/create_plan iac bd-a1b2`
@@ -66,9 +66,9 @@ Then wait for the user's input.
    - Related ADRs in `engineering/adrs/`
    - If no spec or story exists, say so and ask before planning
 
-4. **If a GitHub issue is mentioned**:
-   - Fetch issue details: `gh issue view <number> --json title,body,labels,assignees`
-   - Read any linked PRs or related issues
+4. **If a Jira ticket is mentioned** (e.g. `SCRUM-35`):
+   - Fetch the ticket with the Atlassian MCP tools
+   - Read any linked tickets and PRs
 
 5. **If a beads ID is mentioned**:
    - Get task details: `bd show <id> --json`
