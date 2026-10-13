@@ -64,7 +64,7 @@ Listed so the names are reserved and the producers know where they plug in. Two 
 ## Runtime
 
 - Production: the Worker (`python -m licensing_api.worker`) runs as an ECS service draining `domain_events`; scheduled jobs are EventBridge Scheduler → ECS run-task on the same image (decision D8).
-- Local and test: `WORKER_MODE=inline` drains after each request, so a developer sees the email land in maildev without a second container.
+- Local: Docker Compose runs the same Worker as a service, so a developer sees the email land in maildev. Tests drain `domain_events` by calling the dispatcher from test code; no setting switches the Worker inline (constitution Principle IV).
 - A handler that throws is retried, then dead-lettered with an alarm; replaying an event is a no-op.
 
 ## Evidence
