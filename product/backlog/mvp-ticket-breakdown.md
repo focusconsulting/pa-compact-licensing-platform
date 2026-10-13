@@ -124,18 +124,20 @@ UI terms: **Compact Privilege**, **Qualifying License**, **State of Qualifying L
 | D10 | SSN | Separate table, pgcrypto with KMS-wrapped key, last-4 elsewhere, full read needs `read_ssn` + audit | Rule names SSN as identifier |
 | D11 | UI | Next.js static export; USWDS via trussworks with theme-token overrides; i18n from day one (en); MSW for mocks | In repo already |
 | D12 | Environments | `dev` (merge → deploy), `test` (tag → deploy), `prod` (tag + approval); one Terraform, per-env tfvars; plan on PR / apply on merge | QASP: dev/test/prod, one-command deploy; `test` is the SOW §4.2 demo environment |
-| D13 | Local dev | `docker compose up` gives Postgres, maildev, RustFS, cognito-local, mock payment and credentialing providers, the Worker; seed script | Every ticket testable offline. v4: no Redis |
+| D13 | Local dev | `docker compose up` gives Postgres, maildev, RustFS, cognito-local, a mock malware scanner, mock payment and credentialing providers, the Worker; seed script | Every ticket testable offline. v4: no Redis |
 | D14 | Open source & CI | Public repo under a Commission GitHub org from Sprint 1 (Q-01) → free Actions minutes, CodeQL, secret scanning, Dependabot | SOW §4.2, §5.1, §7.5; security scans day one at zero cost |
 | D15 | SQL → PA information requests | **Note + resubmit.** "Request information" stores a `request_note` on the application, flips it to `info_requested`, and emails the PA a link; the PA edits the application (including adding documents via F-12) and resubmits (back to `submitted`). Every note and resubmission is in history. No message thread, no remote-state requests at pilot | Satisfies R3r §3.4(a)(4) with zero new tables. The thread (v3 D15) is the §5.1 fallback if usability round 2 shows note + resubmit fails |
 
-### 2.2 Local-dev fakes (F-14) — what each ticket can assume
+### 2.2 Local-dev mocks (F-14) — what each ticket can assume
 
-| Concern | Local | Test/Prod | Switch |
+Every mock runs as a container outside the API; only endpoint and credential settings differ between environments (constitution Principle IV).
+
+| Concern | Local | Test/Prod | Settings |
 |---|---|---|---|
-| Email | maildev (SMTP :1025, web UI :1080) | SES | `EMAIL_BACKEND=smtp \| ses \| console` |
+| Email | maildev (SMTP :1025, web UI :1080) | SES SMTP interface | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD` |
 | Object storage | RustFS (S3 API) | S3 | `S3_ENDPOINT_URL` |
-| Malware scan | `scan_status=clean` immediately | GuardDuty | `DOCUMENT_SCAN=none \| guardduty` |
-| Identity | cognito-local (JWKS + hosted-UI-less SRP) or `AUTH_MODE=local` dev JWT issuer using the test RSA keypair already in `tests/conftest.py` | Cognito | `AUTH_MODE` |
+| Malware scan | mock scanner container that tags RustFS objects as GuardDuty does (`GuardDutyMalwareScanStatus`) | GuardDuty Malware Protection for S3 | `S3_ENDPOINT_URL` |
+| Identity | cognito-local (JWKS + hosted-UI-less SRP) | Cognito | `COGNITO_ENDPOINT_URL`, `COGNITO_USER_POOL_ID`, `COGNITO_CLIENT_ID` |
 | Payments | mock provider container (amount cents `.00` approve / `.99` decline; posts the real webhook shape) | the processor's sandbox → live | `PAYMENT_PROVIDER__URL`, `PAYMENT_PROVIDER__SECRET` |
 | Worker | Docker Compose service | ECS service | — |
 | Scheduler | `just job <name>` | EventBridge → ECS run-task | — |
@@ -242,7 +244,7 @@ AC: `just lint && just test`, `pnpm lint && pnpm test` green; `/api/me` works on
 #### F-14 · Local development stack and fakes
 
 **1.5d · must · A · F-01 → every ticket**
-docker-compose: Postgres, maildev, RustFS (bucket auto-created), cognito-local (or `AUTH_MODE=local` issuer — pick whichever gets a working login in <1 day); env switches from §2.2; `just up`, `just seed`, `just job <name>`; `client` proxies to local API; Playwright can run against it; README "run the whole system locally in 5 minutes".
+docker-compose: Postgres, maildev, RustFS (bucket auto-created), cognito-local, a mock malware scanner, mock payment and credentialing providers, the Worker; endpoint settings from §2.2, with no switch that changes the code path (constitution Principle IV); `just up`, `just seed`, `just job <name>`; `client` proxies to local API; Playwright can run against it; README "run the whole system locally in 5 minutes".
 AC: fresh clone → `just up` → register a PA, log in, receive the welcome email in maildev, upload a file to RustFS, complete a fake payment — all with no AWS credentials.
 
 #### F-02 · Canonical data model v1 `CONTRACT`
@@ -304,13 +306,13 @@ AC: Checkov clean; A on securityheaders.com; `docs/security/asvs-mapping.md` aga
 #### F-11 · Notifications `CONTRACT`
 
 **1.5d · must · A · F-05 → every notifying ticket**
-`notify(template, recipient, ctx, idempotency_key)` writes a `notifications` row; Worker sends via `EMAIL_BACKEND`; SES domain + DKIM/SPF/DMARC in Terraform; Jinja HTML+text base layout with env banner outside prod; catalogue `docs/notifications.md` (event → recipient → template, from FLOW-07); per-state distribution lists on `states`. Recipient rule for adverse actions follows the Q-20 default (states with a QL, request, or privilege for the PA) until the Commission answers.
+`notify(template, recipient, ctx, idempotency_key)` writes a `notifications` row; Worker sends over SMTP (maildev locally, the SES SMTP interface deployed); SES domain + DKIM/SPF/DMARC in Terraform; Jinja HTML+text base layout with env banner outside prod; catalogue `docs/notifications.md` (event → recipient → template, from FLOW-07); per-state distribution lists on `states`. Recipient rule for adverse actions follows the Q-20 default (states with a QL, request, or privilege for the PA) until the Commission answers.
 AC: duplicate idempotency key sends once; templates snapshot-tested; maildev shows mail locally; SES sandbox verified on DEV.
 
 #### F-12 · Document storage
 
 **1d · must · A · F-02, F-14 → L-03, P-01, A-02**
-Private bucket (KMS, versioning); presigned POST with size/type limits; presigned GET after permission check (owner scoping follows F-04: the PA for their own, the SQL/RS for their cases, commission for all); GuardDuty scan → `scan_status`, downloads blocked until clean; RustFS locally; `FilePickerField` wired; `documents` rows are part of the retained record (R5 §5.3(e)(4)). Consumers: L-03 documents step (proof of SQL basis, NCCPA card — Q-07), P-01 per-state proofs where S-01 configures `proof_upload` (R3r §3.4(c)(3)–(6)), A-02 optional attachment, D-01 document list.
+Private bucket (KMS, versioning); presigned POST with size/type limits; presigned GET after permission check (owner scoping follows F-04: the PA for their own, the SQL/RS for their cases, commission for all); GuardDuty scan → `scan_status` from the object's `GuardDutyMalwareScanStatus` tag, downloads blocked until clean; RustFS and a mock scanner container that writes the same tag locally; `FilePickerField` wired; `documents` rows are part of the retained record (R5 §5.3(e)(4)). Consumers: L-03 documents step (proof of SQL basis, NCCPA card — Q-07), P-01 per-state proofs where S-01 configures `proof_upload` (R3r §3.4(c)(3)–(6)), A-02 optional attachment, D-01 document list.
 AC: 20 MB ok / 21 MB rejected; EICAR blocked in test env; document appears in practitioner history; state A cannot fetch state B's case document.
 
 #### F-13 · Worker service and scheduled jobs
