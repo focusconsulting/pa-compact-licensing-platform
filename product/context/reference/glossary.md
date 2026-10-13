@@ -15,10 +15,10 @@ Companion to `product/backlog/mvp-ticket-breakdown.md`, `product/context/flows/`
 | **RS** | Remote State | A participating state where the PA is not licensed and is seeking or holds a compact privilege (ML §2.S); issues the privilege |
 | **CP** | Compact Privilege | Authorization from a remote state to practise there under the compact (ML §2.B). Never "practice privilege" or "compact license" in the UI |
 | **CBC** | Criminal Background Check | Fingerprint-based check run by the SQL within 60 days of application (Rule 3 §3.4(b)(2)). The system stores only the completion date, never results (Rule 4/5 §5.2(g)) |
-| **CHRI** | Criminal History Record Information | The results of a CBC; must never be stored or reported through the data system (ML §8.B.4, R5 §5.2(g)) |
+| **CHRI** | Criminal History Record Information | The results of a CBC; must never be stored or reported through the data system (ML §8.B.4, Rule 4 §4.2(g)) |
 | **SII** | Significant Investigative Information | Investigative information a board has reason to believe is not groundless and would be more than a minor infraction (ML §2.U). Visible only to participating-state and commission users, never to the PA or public (ML §8.C) |
 | **AA** | Adverse Action | Any disciplinary action against a license, application, or privilege: denial, censure, revocation, suspension, probation, monitoring, restriction (ML §2.A) |
-| **UDS** | Uniform Data Set | The per-PA record every participating state must submit (ML §8.B, R5 §5.3): identity, licensure, adverse actions, SII existence, denials |
+| **UDS** | Uniform Data Set | The per-PA record every participating state must submit (ML §8.B, Rule 4 §4.3): identity, licensure, adverse actions, SII existence, denials |
 | **NPDB** | National Practitioner Data Bank | Federal repository of practitioner discipline; its action-category taxonomy is used as the "basis for action" pick-list on adverse actions |
 | **NCCPA** | National Commission on Certification of Physician Assistants | Certifying body; current NCCPA certification is an eligibility requirement (ML §4.A.2) |
 | **PANCE** | Physician Assistant National Certifying Examination | The NCCPA exam participating states must use for licensure (ML §3.A.7) |
@@ -37,12 +37,15 @@ Companion to `product/backlog/mvp-ticket-breakdown.md`, `product/context/flows/`
 
 ## Rule citation keys used in the backlog
 
+New citations, in code, ADRs, plans, and docs, use the first two keys. The draft keys appear only in older backlog text.
+
 | Key | Document |
 |---|---|
 | **ML** | PA Compact Model Legislation (`human-sourced-docs/pa-compact-model-legislation.pdf`), cited by section, e.g. ML §4.B |
-| **R2 / R2r** | Draft Rule 2, State of Qualifying License; `r` = the later redline (`pa-compact-rule-2-and-3-drafts.pdf`) |
-| **R3 / R3r** | Draft Rule 3, Compact Privilege; `r` = redline approved by the rules committee Feb 9 2026 |
-| **R5** | Draft Rule 5, Data System — renumbered to Rule 4 on Nov 10 2025; same text (`pa-draft-rules-2_3_5.pdf`) |
+| **Rule N** | Adopted rule N, cited by section and subsection, e.g. Rule 3 §3.7(b)(1). Rules 3 and 4 were adopted on 2026-04-06 |
+| **R2 / R2r** | Draft Rule 2, State of Qualifying License; `r` = the later redline (`pa-compact-rule-2-and-3-drafts.pdf`). Not adopted |
+| **R3 / R3r** | Draft Rule 3, Compact Privilege; `r` = redline approved by the rules committee Feb 9 2026. Superseded by Rule 3 |
+| **R5** | Draft Rule 5, Data System — renumbered to Rule 4 on Nov 10 2025 (`pa-draft-rules-2_3_5.pdf`). Superseded by Rule 4 |
 | **Nov10 / Feb9 / Nov3** | Rules committee minutes of Nov 10 2025 and Feb 9 2026; full commission minutes of Nov 3 2025 |
 
 ## Engineering and delivery acronyms
