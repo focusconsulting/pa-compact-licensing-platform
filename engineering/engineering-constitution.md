@@ -279,7 +279,7 @@ that documentation says, not whether it exists:
   permissions are documented under `engineering/docs/`, and
   updated in the same PR as the code that changes them.
 - **Architecture diagram.** C4 context and container diagrams live in
-  `engineering/docs/` as Mermaid, and a PR that adds or
+  `engineering/docs/` as Mermaid or Structurizr, and a PR that adds or
   removes a component, service, or integration updates them.
 - **Dependencies and licenses.** Every dependency is listed with its
   license in an inventory generated from the lockfiles. Third-party
