@@ -42,7 +42,7 @@ When this command is invoked:
 
 ```bash
 # Find the next ADR number
-ls docs/architecture_decision_records/ | grep -E '^[0-9]{4}-' | sort -r | head -1
+ls engineering/adrs/ | grep -E '^[0-9]{4}-' | sort -r | head -1
 
 # If no ADRs exist, start with 0001
 # Otherwise, increment the highest number
@@ -53,8 +53,8 @@ ls docs/architecture_decision_records/ | grep -E '^[0-9]{4}-' | sort -r | head -
 If the decision came from a planning session or has related context:
 
 1. **Check for related documents**:
-   - Recent plans in `thoughts/shared/plans/`
-   - Research in `thoughts/shared/research/`
+   - Recent plans in `engineering/thoughts/shared/plans/`
+   - Research in `engineering/thoughts/shared/research/`
    - Related beads tasks: `bd list`
 
 2. **Research the codebase** if needed:
@@ -69,7 +69,7 @@ If the decision came from a planning session or has related context:
 
 ### Step 3: Draft the ADR
 
-Create the file at: `docs/architecture_decision_records/NNNN-short-title.md`
+Create the file at: `engineering/adrs/NNNN-short-title.md`
 
 Where:
 - `NNNN` is the zero-padded number (0001, 0002, etc.)
@@ -80,7 +80,7 @@ Examples:
 - `0002-adopt-repository-pattern.md`
 - `0003-terraform-for-infrastructure.md`
 
-Use the template from `docs/architecture_decision_records/0000-adr-template.md`:
+Use the template from `engineering/adrs/0000-adr-template.md`:
 
 ```markdown
 # ADR-NNNN: [Short Title]
@@ -153,7 +153,7 @@ Accepted
 
 - GitHub Issue: #XXX (if applicable)
 - Beads Task: bd-XXXX (if applicable)
-- Implementation Plan: `thoughts/shared/plans/YYYY-MM-DD-xxx.md` (if applicable)
+- Implementation Plan: `engineering/thoughts/shared/plans/YYYY-MM-DD-xxx.md` (if applicable)
 
 ## Notes
 
@@ -172,7 +172,7 @@ I've drafted ADR-NNNN: [Title]
 - Key driver: [main reason]
 - Trade-off accepted: [main downside and mitigation]
 
-Please review the full ADR at `docs/architecture_decision_records/NNNN-title.md`.
+Please review the full ADR at `engineering/adrs/NNNN-title.md`.
 
 Would you like me to adjust anything before we finalize it?
 ```
@@ -180,7 +180,7 @@ Would you like me to adjust anything before we finalize it?
 ### Step 5: Commit the ADR
 
 ```bash
-git add docs/architecture_decision_records/
+git add engineering/adrs/
 git commit -m "docs(adr): ADR-NNNN [short title]
 
 [One-line summary of the decision]"
@@ -192,7 +192,7 @@ If there's a related beads task or plan:
 
 ```bash
 # Add comment to related beads task
-bd comment <id> "ADR-NNNN documents the architectural decision: docs/architecture_decision_records/NNNN-title.md"
+bd comment <id> "ADR-NNNN documents the architectural decision: engineering/adrs/NNNN-title.md"
 ```
 
 If created during `/create_plan`, remind the user to reference the ADR in the plan.

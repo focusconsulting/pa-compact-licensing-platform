@@ -57,7 +57,7 @@ The deferred list in `product/backlog/mvp-ticket-breakdown.md` §5.1, and its "D
 - **RS staff** — state board user in a Remote State
 - **Commission** — commission staff (`compact_admin`)
 - **Web** — Next.js client · **API** — FastAPI · **DB** — Postgres (tables + `domain_events` outbox, one transaction)
-- **Worker** — event dispatcher + scheduled jobs (ECS task) · **Email** — SES (maildev locally) · **Pay** — Authorize.net (fake provider locally)
+- **Worker** — event dispatcher + scheduled jobs (ECS task) · **Email** — SES (maildev locally) · **Pay** — card processor (mock provider container locally)
 
 ## Shape of every write
 

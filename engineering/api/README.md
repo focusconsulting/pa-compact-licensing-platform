@@ -2,13 +2,19 @@
 
 ## Getting started
 
-See the prerequisites in [root README](../README.md)
+See the prerequisites in the [root README](../../README.md#prerequisites).
+Docker must be running.
 
-Set your local environment variables:
+Set your local environment variables. The example values work as-is
+against `just infra`:
 
 ```shell
-cp ./.env.example ./env
+cp .env.example .env
 ```
+
+Variables already exported in your shell take precedence over `.env`; see
+[Troubleshooting](../../README.md#troubleshooting) if settings fail to
+validate.
 
 ### 1. Install dependencies
 
@@ -79,8 +85,42 @@ just typecheck
 just build
 ```
 
-This builds the production (`app`) stage and tags the image as `pa-compact-health-api:latest` and
-`pa-compact-health-api:<git-sha>`.
+This builds the production (`app`) stage and tags the image as `pa-compact-api:latest` and
+`pa-compact-api:<git-sha>`.
+
+## Architecture
+
+FastAPI application served by Uvicorn (development) and Gunicorn
+(containers), targeting Python 3.13. The rules this code follows are in
+the [engineering constitution](../engineering-constitution.md).
+
+**Request lifecycle:**
+
+1. `CORSMiddleware` → `UnhandledExceptionMiddleware` →
+   `RequestLoggingMiddleware` (registered outermost-first, executed
+   innermost-first)
+2. FastAPI exception handlers normalize `AppError`, `HTTPException`, and
+   `RequestValidationError` into `{"code": "...", "details": [...]}`
+   JSON responses
+3. Secured routes inject `get_auth_claims`, which validates a Cognito ID
+   token against the pool's JWKS and returns
+   `AuthClaims(sub: UUID, email: str)`
+
+**Layers:** `routes/` (HTTP handlers and their Pydantic models),
+`repo/` (async query functions), `migrations.py` (yoyo migrations run
+at startup).
+
+**Backing services:**
+
+- PostgreSQL: primary store, async via asyncpg and SQLModel
+- Redis: available through the `get_redis` dependency; used today for
+  health checks, intended for permission caching keyed on
+  `AuthClaims.sub`
+- AWS Cognito: identity provider
+
+**Observability:** structured JSON logs for all app and Uvicorn output
+([ADR-0001](../adrs/0001-structured-json-logging.md));
+OpenTelemetry traces exported over OTLP/gRPC.
 
 ## All available tasks
 

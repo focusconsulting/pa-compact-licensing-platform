@@ -81,7 +81,7 @@ Then wait for the user's research query.
    - IMPORTANT: Wait for ALL sub-agent tasks to complete before proceeding
    - Compile all sub-agent results (both codebase and thoughts findings)
    - Prioritize live codebase findings as primary source of truth
-   - Use thoughts/ findings as supplementary historical context
+   - Use engineering/thoughts/ findings as supplementary historical context
    - Connect findings across different components
    - Include specific file paths and line numbers for reference
    - Highlight patterns, connections, and architectural decisions
@@ -96,16 +96,16 @@ Then wait for the user's research query.
    echo "repository: $(basename $(git remote get-url origin 2>/dev/null || echo 'local') .git)"
    ```
 
-   Filename: `thoughts/shared/research/<area>/YYYY-MM-DD-description.md`
+   Filename: `engineering/thoughts/shared/research/<area>/YYYY-MM-DD-description.md`
    - Area options: `client/`, `api/`, `iac/`, `general/`
    - Format: `YYYY-MM-DD-description.md` where:
      - YYYY-MM-DD is today's date
      - description is a brief kebab-case description of the research topic
    - Examples:
-     - `thoughts/shared/research/client/2025-01-22-component-patterns.md`
-     - `thoughts/shared/research/api/2025-01-22-authentication-flow.md`
-     - `thoughts/shared/research/iac/2025-01-22-terraform-modules.md`
-     - `thoughts/shared/research/general/2025-01-22-cross-cutting-patterns.md`
+     - `engineering/thoughts/shared/research/client/2025-01-22-component-patterns.md`
+     - `engineering/thoughts/shared/research/api/2025-01-22-authentication-flow.md`
+     - `engineering/thoughts/shared/research/iac/2025-01-22-terraform-modules.md`
+     - `engineering/thoughts/shared/research/general/2025-01-22-cross-cutting-patterns.md`
 
 6. **Generate research document:**
    Structure the document with YAML frontmatter followed by content:
@@ -150,10 +150,10 @@ Then wait for the user's research query.
    ## Architecture Documentation
    [Current patterns, conventions, and design implementations found]
 
-   ## Historical Context (from thoughts/)
-   [Relevant insights from thoughts/ directory with references]
-   - `thoughts/shared/research/something.md` - Previous research
-   - `thoughts/shared/plans/feature.md` - Related planning
+   ## Historical Context (from engineering/thoughts/)
+   [Relevant insights from engineering/thoughts/ directory with references]
+   - `engineering/thoughts/shared/research/something.md` - Previous research
+   - `engineering/thoughts/shared/plans/feature.md` - Related planning
 
    ## Open Questions
    [Any areas that need further investigation]
@@ -161,7 +161,7 @@ Then wait for the user's research query.
 
 7. **Commit and present findings:**
    ```bash
-   git add thoughts/shared/research/
+   git add engineering/thoughts/shared/research/
    git commit -m "docs: research on [topic]"
    ```
 
@@ -176,7 +176,7 @@ Then wait for the user's research query.
 ## Important notes:
 - Always use parallel Task agents to maximize efficiency and minimize context usage
 - Always run fresh codebase research - never rely solely on existing research documents
-- The thoughts/ directory provides historical context to supplement live findings
+- The engineering/thoughts/ directory provides historical context to supplement live findings
 - Focus on finding concrete file paths and line numbers for developer reference
 - Research documents should be self-contained with all necessary context
 - Each sub-agent prompt should be specific and focused on read-only documentation operations

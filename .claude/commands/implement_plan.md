@@ -1,10 +1,10 @@
 ---
-description: Implement technical plans from thoughts/shared/plans with verification
+description: Implement technical plans from engineering/thoughts/shared/plans with verification
 ---
 
 # Implement Plan
 
-You are tasked with implementing an approved technical plan from `thoughts/shared/plans/`. These plans contain phases with specific changes and success criteria.
+You are tasked with implementing an approved technical plan from `engineering/thoughts/shared/plans/`. These plans contain phases with specific changes and success criteria.
 
 ## Getting Started
 
@@ -19,11 +19,11 @@ When given a plan path:
 If no plan path provided, ask for one or list available plans:
 ```bash
 # List plans by component
-echo "=== Client Plans ===" && ls -lt thoughts/shared/plans/client/ 2>/dev/null | head -5
-echo "=== API Plans ===" && ls -lt thoughts/shared/plans/api/ 2>/dev/null | head -5
-echo "=== IaC Plans ===" && ls -lt thoughts/shared/plans/iac/ 2>/dev/null | head -5
-echo "=== Docs Plans ===" && ls -lt thoughts/shared/plans/docs/ 2>/dev/null | head -5
-echo "=== Cross-cutting Plans ===" && ls -lt thoughts/shared/plans/cross-cutting/ 2>/dev/null | head -5
+echo "=== Client Plans ===" && ls -lt engineering/thoughts/shared/plans/client/ 2>/dev/null | head -5
+echo "=== API Plans ===" && ls -lt engineering/thoughts/shared/plans/api/ 2>/dev/null | head -5
+echo "=== IaC Plans ===" && ls -lt engineering/thoughts/shared/plans/iac/ 2>/dev/null | head -5
+echo "=== Docs Plans ===" && ls -lt engineering/thoughts/shared/plans/docs/ 2>/dev/null | head -5
+echo "=== Cross-cutting Plans ===" && ls -lt engineering/thoughts/shared/plans/cross-cutting/ 2>/dev/null | head -5
 ```
 
 ## Implementation Philosophy
@@ -178,7 +178,7 @@ git commit -m "feat: implement Phase N - [description]
 - Change 1
 - Change 2
 
-Plan: thoughts/shared/plans/YYYY-MM-DD-xxx.md
+Plan: engineering/thoughts/shared/plans/YYYY-MM-DD-xxx.md
 Task: bd-XXXX or #XXX"
 ```
 

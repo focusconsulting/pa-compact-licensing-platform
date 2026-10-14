@@ -12,13 +12,13 @@ When this command is invoked:
 
 1. **If the path to a handoff document was provided**:
    - Immediately read the handoff document FULLY
-   - Immediately read any research or plan documents that it links to under `thoughts/shared/plans` or `thoughts/shared/research`. Do NOT use a sub-agent to read these critical files.
+   - Immediately read any research or plan documents that it links to under `engineering/thoughts/shared/plans` or `engineering/thoughts/shared/research`. Do NOT use a sub-agent to read these critical files.
    - Begin the analysis process by ingesting relevant context from the handoff document, reading additional files it mentions
    - Then propose a course of action to the user and confirm, or ask for clarification on direction.
 
 2. **If a task ID (like bd-XXXX or issue-XXX) was provided**:
    - Pull latest changes: `git pull`
-   - Locate the most recent handoff document for the task in `thoughts/shared/handoffs/<task-id>/`
+   - Locate the most recent handoff document for the task in `engineering/thoughts/shared/handoffs/<task-id>/`
    - List the directory contents to find the most recent file (by timestamp in filename)
    - **If no files exist**: tell the user "I can't find any handoff documents for that task. Can you provide a path?"
    - **If one file exists**: proceed with that handoff
@@ -32,12 +32,12 @@ When this command is invoked:
    I'll help you resume work from a handoff document.
 
    You can provide:
-   - A full path: `/resume_handoff thoughts/shared/handoffs/bd-a1b2/2025-01-22_14-30-00_description.md`
+   - A full path: `/resume_handoff engineering/thoughts/shared/handoffs/bd-a1b2/2025-01-22_14-30-00_description.md`
    - A task ID: `/resume_handoff bd-a1b2` or `/resume_handoff issue-123`
 
    Let me check for recent handoffs...
    ```
-   Then run `ls -lt thoughts/shared/handoffs/*/` to show available handoffs.
+   Then run `ls -lt engineering/thoughts/shared/handoffs/*/` to show available handoffs.
 
 ## Process Steps
 

@@ -10,11 +10,11 @@ This command helps clean up working documents after a PR has been merged or a ta
 
 | Document Type | Retention | Reason |
 |---------------|-----------|--------|
-| ADRs (`docs/architecture_decision_records/`) | **Forever** | Architectural decisions - reference value |
-| Plans (`thoughts/shared/plans/`) | **Delete after PR merge** | Embedded in PR description |
-| Handoffs (`thoughts/shared/handoffs/`) | **Delete after task closes** | Session continuity only |
-| PR descriptions (`thoughts/shared/prs/`) | **Never commit** | Local working files |
-| Research (`thoughts/shared/research/`) | **Keep if reusable** | Delete one-off research |
+| ADRs (`engineering/adrs/`) | **Forever** | Architectural decisions - reference value |
+| Plans (`engineering/thoughts/shared/plans/`) | **Delete after PR merge** | Embedded in PR description |
+| Handoffs (`engineering/thoughts/shared/handoffs/`) | **Delete after task closes** | Session continuity only |
+| PR descriptions (`engineering/thoughts/shared/prs/`) | **Never commit** | Local working files |
+| Research (`engineering/thoughts/shared/research/`) | **Keep if reusable** | Delete one-off research |
 
 ## Steps
 
@@ -28,10 +28,10 @@ gh pr list --state merged --limit 10 --json number,title,mergedAt,headRefName
 bd list --status=closed --limit 10
 
 # List current plans
-ls -la thoughts/shared/plans/*/
+ls -la engineering/thoughts/shared/plans/*/
 
 # List current handoffs
-ls -la thoughts/shared/handoffs/*/
+ls -la engineering/thoughts/shared/handoffs/*/
 ```
 
 ### 2. For a specific merged PR / closed task
@@ -40,8 +40,8 @@ If the user specifies a task ID (e.g., `bd-f7a3`):
 
 ```bash
 # Find associated files
-find thoughts/shared/plans -name "*bd-f7a3*" -o -name "*<task-id>*"
-find thoughts/shared/handoffs -name "*bd-f7a3*" -o -name "*<task-id>*"
+find engineering/thoughts/shared/plans -name "*bd-f7a3*" -o -name "*<task-id>*"
+find engineering/thoughts/shared/handoffs -name "*bd-f7a3*" -o -name "*<task-id>*"
 
 # Verify the PR was merged
 gh pr list --state merged --search "bd-f7a3"
@@ -51,20 +51,20 @@ gh pr list --state merged --search "bd-f7a3"
 
 ```bash
 # Remove plan file(s) for the task
-rm thoughts/shared/plans/<component>/<date>-<task-id>-*.md
+rm engineering/thoughts/shared/plans/<component>/<date>-<task-id>-*.md
 
 # Remove any empty directories
-find thoughts/shared/plans -type d -empty -delete
+find engineering/thoughts/shared/plans -type d -empty -delete
 ```
 
 ### 4. Delete handoff files (after confirming task closed)
 
 ```bash
 # Remove handoff directory for the task
-rm -rf thoughts/shared/handoffs/<task-id>/
+rm -rf engineering/thoughts/shared/handoffs/<task-id>/
 
 # Remove any empty directories
-find thoughts/shared/handoffs -type d -empty -delete
+find engineering/thoughts/shared/handoffs -type d -empty -delete
 ```
 
 ### 5. Clean up stale research (optional)
@@ -73,10 +73,10 @@ Ask the user if any research docs should be kept:
 
 ```bash
 # List research files
-ls -la thoughts/shared/research/*/
+ls -la engineering/thoughts/shared/research/*/
 
 # Remove one-off research (with user confirmation)
-rm thoughts/shared/research/<component>/<file>.md
+rm engineering/thoughts/shared/research/<component>/<file>.md
 ```
 
 ### 6. Commit the cleanup
@@ -93,11 +93,11 @@ git push
 **Cleanup complete for <task-id>:**
 
 Deleted:
-- thoughts/shared/plans/<component>/<plan-file>.md
-- thoughts/shared/handoffs/<task-id>/
+- engineering/thoughts/shared/plans/<component>/<plan-file>.md
+- engineering/thoughts/shared/handoffs/<task-id>/
 
 Retained:
-- docs/architecture_decision_records/NNNN-*.md (architectural decisions - kept forever)
+- engineering/adrs/NNNN-*.md (architectural decisions - kept forever)
 
 The implementation plan content is preserved in PR #XX.
 ```
@@ -108,17 +108,17 @@ For periodic maintenance, clean up all stale files:
 
 ```bash
 # Delete plans older than 30 days (assumes PR is merged by then)
-find thoughts/shared/plans -name "*.md" -mtime +30 -type f
+find engineering/thoughts/shared/plans -name "*.md" -mtime +30 -type f
 
 # Delete handoffs older than 14 days
-find thoughts/shared/handoffs -name "*.md" -mtime +14 -type f
+find engineering/thoughts/shared/handoffs -name "*.md" -mtime +14 -type f
 
 # Preview before deleting
-find thoughts/shared/plans -name "*.md" -mtime +30 -type f -exec echo "Would delete: {}" \;
+find engineering/thoughts/shared/plans -name "*.md" -mtime +30 -type f -exec echo "Would delete: {}" \;
 
 # Actually delete (with user confirmation)
-find thoughts/shared/plans -name "*.md" -mtime +30 -type f -delete
-find thoughts/shared/handoffs -name "*.md" -mtime +14 -type f -delete
+find engineering/thoughts/shared/plans -name "*.md" -mtime +30 -type f -delete
+find engineering/thoughts/shared/handoffs -name "*.md" -mtime +14 -type f -delete
 ```
 
 ## Important Notes

@@ -183,7 +183,7 @@ bd where
 ### With `/create_plan`
 ```bash
 # After creating a plan, link it to a task
-bd comment <id> "Plan: thoughts/shared/plans/2025-01-22-feature.md"
+bd comment <id> "Plan: engineering/thoughts/shared/plans/2025-01-22-feature.md"
 ```
 
 ### With `/implement_plan`
@@ -198,7 +198,7 @@ bd close <id> --reason "Implemented per plan, PR #123"
 ### With `/create_handoff`
 ```bash
 # Note the handoff in the task
-bd comment <id> "Handoff: thoughts/shared/handoffs/<id>/2025-01-22.md"
+bd comment <id> "Handoff: engineering/thoughts/shared/handoffs/<id>/2025-01-22.md"
 ```
 
 ## Quick Reference Card

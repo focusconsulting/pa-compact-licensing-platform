@@ -116,7 +116,7 @@ Card only at pilot. eCheck.Net is reachable through the same Accept.js path (`ba
 
 ## Local development
 
-`PAYMENT_PROVIDER=fake` renders a stub card page that approves or declines by the amount's cents (`.00` approve, `.99` decline) and posts the same webhook payload shape. (`.50` pending-settlement arrives with ACH.)
+Locally and in CI, `PAYMENT_PROVIDER__URL` and `PAYMENT_PROVIDER__SECRET` point at a mock provider container in Docker Compose; the API runs the same code path as in production (constitution Principle IV). The mock renders a stub card page that approves or declines by the amount's cents (`.00` approve, `.99` decline) and posts the same webhook payload shape. (`.50` pending-settlement arrives with ACH.)
 
 ## Evidence
 
