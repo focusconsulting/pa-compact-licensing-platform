@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted. The Redis permission cache is superseded by [ADR-0009](0009-route-authorization-and-change-context.md): permissions are read from the database per request (backlog D5).
 
 ## Date
 

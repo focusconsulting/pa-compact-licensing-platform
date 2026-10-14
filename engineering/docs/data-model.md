@@ -113,7 +113,7 @@ The `conviction` denial reason names a category, not a record; whether naming it
 
 ### `audit_log`
 
-One action a person or the system took, including staff reads of private data. Append-only (ADR-0008). Tier: internal; readable by `compact_admin` and `admin`.
+One action a person or the system took, including staff reads of private data. Append-only (ADR-0008); written with `audit_log.write` ([platform contract](platform-contract.md)). Tier: internal; readable by `compact_admin` and `admin`.
 
 | Column | Type | Meaning |
 |---|---|---|
@@ -127,7 +127,7 @@ One action a person or the system took, including staff reads of private data. A
 
 ### `domain_events` and `domain_event_deliveries`
 
-The transactional outbox (backlog D2): an event is written in the same transaction as the change it describes, and the worker delivers it to handlers. The two tables are a work queue: the worker claims undelivered `(event, handler)` pairs, retries failures, and dead-letters an event that keeps failing. F-05 adds the code and decides whether to build the dispatcher or adopt a Postgres queue library such as [pgqueuer](https://github.com/janbjorge/pgqueuer). Tier: internal.
+The transactional outbox (backlog D2): an event is written in the same transaction as the change it describes, and the worker delivers it to handlers. The two tables are a work queue: the worker claims undelivered `(event, handler)` pairs, retries failures, and dead-letters an event that keeps failing. Events are written with `emit` ([platform contract](platform-contract.md)); F-05 adds the dispatcher and decides whether to build it or adopt a Postgres queue library such as [pgqueuer](https://github.com/janbjorge/pgqueuer). Tier: internal.
 
 `domain_events`: `event_id` (UUID, unique), `type` (listed in [FLOW-07](../../product/context/flows/07-domain-event-catalogue.md)), `aggregate_type` with exactly one of `aggregate_id` (numeric) or `aggregate_key` (text, e.g. a state code), `payload` (JSONB, **IDs only, never PII**), `actor_user_id`, `request_id`, `occurred_at`.
 
@@ -325,7 +325,7 @@ A report that significant investigative information exists (Rule 4 §4.4(c)–(d
 
 ### History tables
 
-`practitioners_history`, `qualifying_licenses_history`, `participation_applications_history`, `fees_history`, `privilege_requests_history`, `privileges_history`, `adverse_actions_history`, and `sii_reports_history`, plus `states_history`, which has `state_code` in place of `entity_id`. Columns: `entity_id`, `changed_at`, `changed_by`, `effective_at`, and `previous`, `updated`, `removed` as JSONB. Append-only (ADR-0008). Tier: the same as the entity's, since history copies its values.
+`practitioners_history`, `qualifying_licenses_history`, `participation_applications_history`, `fees_history`, `privilege_requests_history`, `privileges_history`, `adverse_actions_history`, and `sii_reports_history`, plus `states_history`, which has `state_code` in place of `entity_id`. Columns: `entity_id`, `changed_at`, `changed_by`, `effective_at`, and `previous`, `updated`, `removed` as JSONB. Append-only (ADR-0008). Written with `history.write` ([platform contract](platform-contract.md)). Tier: the same as the entity's, since history copies its values.
 
 ## Status functions
 
