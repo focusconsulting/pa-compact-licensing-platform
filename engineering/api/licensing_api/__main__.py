@@ -23,7 +23,11 @@ from licensing_api.errors import (
     validation_error_handler,
 )
 from licensing_api.migrations import run_migrations
-from licensing_api.request_logger import RequestLoggingMiddleware, UnhandledExceptionMiddleware
+from licensing_api.request_logger import (
+    RequestIdMiddleware,
+    RequestLoggingMiddleware,
+    UnhandledExceptionMiddleware,
+)
 from licensing_api.routes import health, user
 
 _SENSITIVE_PATTERN = re.compile(r'password|token|secret|cognito|ssn', re.IGNORECASE)
@@ -169,6 +173,8 @@ app.add_middleware(
 )
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(UnhandledExceptionMiddleware)
+# Outermost, so the ID is set before the request is logged and is on every response, including a 500.
+app.add_middleware(RequestIdMiddleware)
 
 app.add_exception_handler(AppError, app_error_handler)  # type: ignore[arg-type]
 app.add_exception_handler(HTTPException, http_exception_handler)  # type: ignore[arg-type]
