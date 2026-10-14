@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import Column
+from sqlalchemy import Column, insert
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import Field, SQLModel
 
-from licensing_api.repo.base import TimestampTZ, utc_now
+from licensing_api.context import ChangeContext, actor_id
+from licensing_api.repo.base import DOTTED_NAME, TimestampTZ, entity_ref, utc_now
 
 
 class AuditLogEntry(SQLModel, table=True):
@@ -33,3 +36,40 @@ class AuditLogEntry(SQLModel, table=True):
     after: dict[str, Any] | None = Field(default=None, sa_column=Column(JSONB, nullable=True))
     reason: str | None = None
     request_id: str | None = None
+
+
+async def write(
+    session: AsyncSession,
+    ctx: ChangeContext,
+    action: str,
+    entity: SQLModel,
+    *,
+    before: Mapping[str, Any] | None = None,
+    after: Mapping[str, Any] | None = None,
+    reason: str | None = None,
+) -> AuditLogEntry:
+    """Record an action on ``entity``, including a staff read of private data, in the caller's transaction.
+
+    ``action`` is ``<entity>.<verb>``, e.g. ``ssn.revealed``. ``before`` and ``after``
+    must never hold an SSN or an expunged value (ADR-0007, ADR-0008).
+    """
+    if not DOTTED_NAME.fullmatch(action):
+        raise ValueError(f'Audit action {action!r} must be "<entity>.<verb>" in lower snake case')
+    await session.flush()
+    ref = entity_ref(entity)
+    statement = (
+        insert(AuditLogEntry)
+        .values(
+            actor_user_id=actor_id(ctx.actor),
+            action=action,
+            entity_type=ref.type,
+            entity_id=ref.id,
+            entity_key=ref.key,
+            before=dict(before) if before is not None else None,
+            after=dict(after) if after is not None else None,
+            reason=reason,
+            request_id=ctx.request_id,
+        )
+        .returning(AuditLogEntry)
+    )
+    return (await session.scalars(statement)).one()
