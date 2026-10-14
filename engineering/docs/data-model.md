@@ -102,11 +102,13 @@ One action a person or the system took, including staff reads of private data. A
 
 ### `domain_events` and `domain_event_deliveries`
 
-The transactional outbox (backlog D2): an event is written in the same transaction as the change it describes, and the worker delivers it to handlers. F-05 adds the code. Tier: internal.
+The transactional outbox (backlog D2): an event is written in the same transaction as the change it describes, and the worker delivers it to handlers. The two tables are a work queue: the worker claims undelivered `(event, handler)` pairs, retries failures, and dead-letters an event that keeps failing. F-05 adds the code and decides whether to build the dispatcher or adopt a Postgres queue library such as [pgqueuer](https://github.com/janbjorge/pgqueuer). Tier: internal.
 
 `domain_events`: `event_id` (UUID, unique), `type` (listed in [FLOW-07](../../product/context/flows/07-domain-event-catalogue.md)), `aggregate_type` with exactly one of `aggregate_id` (numeric) or `aggregate_key` (text, e.g. a state code), `payload` (JSONB, **IDs only, never PII**), `actor_user_id`, `request_id`, `occurred_at`.
 
 `domain_event_deliveries`: one row per `(event_id, handler)`, with `attempts`, `last_error`, `handled_at`, and `dead_lettered_at`. Handlers are idempotent on this key.
+
+`handler` is a name registered with the handler, `<owning module>.<what it does>` in lower snake case, e.g. `notifications.send_privilege_issued`. It is never derived from the Python import path: renaming a module would change the key, and the worker would handle events again. A handler keeps its name for as long as its delivery rows exist.
 
 ### `notifications`
 
@@ -335,20 +337,3 @@ Returns, for every practitioner, `is_barred` and `eligible_again_on` (ML §4.A.8
 - Once it ends, the bar lasts two years from the first unrestricted day: `eligible_again_on = effective_until + 1 day + 2 years`. With several actions, the latest end wins.
 - `eligible_again_on` is NULL while any such action has no end date, and for a PA never barred.
 - Actions that start after `as_of`, and actions against a privilege, do not bar (FLOW-05).
-
-## Reserved for later epics
-
-Named here so the owning epic creates them with the conventions above. Not created yet.
-
-| Table or columns | Owner | Notes |
-|---|---|---|
-| `transactions`, `transaction_line_items`, privilege-request proof rows | Epic 8, privilege and payment | `transactions` needs a unique processor transaction or webhook event key, so a replayed webhook is a no-op (FLOW-03). Line items reference `privilege_request_id` and carry `state_code` |
-| `licensure_denials` (Rule 4 §4.3(c)(14)) | Epic 7, license records and SQL review | |
-| `state_contacts`: administrator contacts and the ops, adverse-action, and report distribution lists, by state and list type | Epic 7 (S-01 writes it) | F-11 reads it to address state notifications; the Commission's lists are rows with no state |
-| `ingestion_batches`, `qualifying_licenses.ingestion_batch_id`, `api_credentials` (a machine credential scoped to one state) | Epic 13, state data ingestion | `ingestion_batch_id` goes on epic 7's table: tell its owner |
-| `renewal_checks`, `privilege_requests.renews_privilege_id`, `privileges.renewed_at` | Epic 9, status and renewal | A renewal keeps the privilege number, so the renewal request links to the privilege it renews. The two columns go on epic 8's tables: tell its owner |
-| `attestations` catalogue and accepted attestations | Epic 6, participation | Covers both application and privilege attestations, including the PA's consent to service of process (Rule 3 §3.4(a)(3)) |
-| `practitioner_other_names` (Rule 4 §4.3(c)(2)), address and email change log (Rule 4 §4.3(e)(1)–(2)), `practitioner_email_changes` (the pending new address, a hash of the 15-minute code, and its expiry; FLOW-07) | Epic 5, accounts and profile | |
-| `credential_lookups`: each NCCPA lookup, its result, source, and `fetched_at` | Epic 14, NCCPA | A table of its own, so `practitioners` (a shared root) does not change |
-| Adverse actions a PA reports from a non-participating state (ML §4.A(12)) | Epic 9 | |
-| `case_messages` | Deferred (backlog §5.1) | |

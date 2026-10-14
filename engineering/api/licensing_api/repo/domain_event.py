@@ -43,6 +43,7 @@ class DomainEventDelivery(SQLModel, table=True):
     __tablename__ = 'domain_event_deliveries'  # type: ignore[assignment]
 
     event_id: UUID = Field(primary_key=True, foreign_key='domain_events.event_id')
+    # A registered name such as 'notifications.send_privilege_issued', never the import path, which changes on a rename.
     handler: str = Field(primary_key=True)
     attempts: int = 0
     last_error: str | None = None

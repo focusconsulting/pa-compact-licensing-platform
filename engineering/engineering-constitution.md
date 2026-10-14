@@ -101,7 +101,7 @@ contractual minimum, not the target.
 
 API tests run against real Postgres and Redis (Docker Compose locally
 and in CI), not mocks. External services are mocked at their boundary:
-Cognito, Authorize.net, SES. Prefer tests that exercise an endpoint
+Cognito, the payment processor, SES. Prefer tests that exercise an endpoint
 end to end through the API over unit tests of its internals. Shared
 fixtures live in [`conftest.py`](api/tests/conftest.py).
 
@@ -279,7 +279,7 @@ that documentation says, not whether it exists:
   permissions are documented under `engineering/docs/`, and
   updated in the same PR as the code that changes them.
 - **Architecture diagram.** C4 context and container diagrams live in
-  `engineering/docs/` as Mermaid, and a PR that adds or
+  `engineering/docs/` as Mermaid or Structurizr, and a PR that adds or
   removes a component, service, or integration updates them.
 - **Dependencies and licenses.** Every dependency is listed with its
   license in an inventory generated from the lockfiles. Third-party
@@ -317,12 +317,10 @@ following the root [`README.md`](../README.md), with nothing learned by word of 
 
 ### XIII. Dates and deadlines follow one calendar
 
-The compact rules run on calendar dates and day counts: a privilege
-expires on its qualifying license's expiration date, an incomplete
-application is withdrawn after 60 days, expiry notices go out at 60,
-30, and 7 days, and an adverse action is reported within five business
-days ([Rule 4 §4.4](../product/context/research-corpus/sources/rule-4-compact-data-system--confidentiality-information-sharing.md)).
-An off-by-one here is a compliance defect.
+The compact rules run on calendar dates and day counts. The specific
+deadlines belong in the specs and ADRs that implement them; this
+principle governs how every one of them is computed. An off-by-one
+here is a compliance defect.
 
 - **Dates are dates.** Calendar dates (expiration, issue, order,
   effective, and birth dates) are stored as `DATE` and never converted
@@ -331,17 +329,16 @@ An off-by-one here is a compliance defect.
   are stored as `timestamptz` and sent as ISO 8601 in UTC. The client
   converts to local time for display only.
 - **One reference time zone.** Which calendar day an instant falls on
-  ("today", "60 days after submission", whether a privilege has
+  ("today", "N days after submission", whether a privilege has
   expired) is decided in one reference time zone, recorded in an ADR
   and read from one setting. No code uses the server's local time
   zone.
 - **One place for day arithmetic.** Day counts and business-day counts
   go through a single module; business days follow one holiday
-  calendar, recorded in the same ADR. No inline `timedelta(days=60)`
+  calendar, recorded in the same ADR. No inline `timedelta(days=…)`
   in feature code.
 - **End dates are inclusive.** A date-bound status holds through its
-  end date (a privilege is active on its expiration date) unless a rule
-  says otherwise
+  end date unless a rule says otherwise
   ([FLOW-06](../product/context/flows/06-state-machines.md)).
 - **Boundaries are tested.** Tests freeze time and cover the last day,
   the day after, deadlines that span weekends and holidays, and
@@ -370,25 +367,36 @@ release is still serving traffic during a rolling deploy.
 
 ## Technology Stack
 
-**Backend Framework**: FastAPI (ASGI)
+Documentation links point at the version in the lockfile; a PR that
+moves a dependency to a new version updates its link. FastAPI, SQLModel,
+USWDS, react-uswds, i18next, and React Hook Form publish only current
+docs.
+
+**Backend Framework**: [FastAPI](https://fastapi.tiangolo.com/) (ASGI)
 
 - uvicorn locally, gunicorn with uvicorn workers in containers
 - Cognito ID tokens verified with `python-jose` against the pool's JWKS
 - `domain_events` Worker as a separate process on the same image
+- [Pydantic 2.12](https://docs.pydantic.dev/2.12/) for request and
+  response models
 
 **Database**: PostgreSQL (Aurora PostgreSQL 16)
 
-- SQLModel / SQLAlchemy async with `asyncpg`
+- [SQLModel](https://sqlmodel.tiangolo.com/) /
+  [SQLAlchemy 2.0](https://docs.sqlalchemy.org/en/20/) async with
+  `asyncpg`
 - Migrations: plain SQL under
   [`engineering/api/db-migrations/`](api/db-migrations/), applied by
-  `yoyo` under a lock at startup
+  [`yoyo` 9.0](https://ollycope.com/software/yoyo/9.0.0/) under a lock
+  at startup
   ([`migrations.py`](api/licensing_api/migrations.py)); schema only, no
   seed data ([Principle IV](#iv-no-mock-code-in-production))
 - Local and CI: Docker Compose (real Postgres, not mocks)
 
 **Cache**: Redis (ElastiCache) — only where it adds measured value
 
-**Frontend**: Next.js (App Router), React, TypeScript (`strict`)
+**Frontend**: [Next.js 14](https://nextjs.org/docs/14/app) (App Router),
+[React 18](https://18.react.dev/), TypeScript (`strict`)
 
 - Built as a static export (`output: "export"` in
   [`next.config.js`](client/next.config.js)) and served from S3 through
@@ -398,14 +406,16 @@ release is still serving traffic during a rolling deploy.
   ([`client.yml`](../.github/workflows/client.yml)), so an API change
   must not break the client version that is live
 - Cognito sign-in in the browser via `amazon-cognito-identity-js`
-- USWDS via `@trussworks/react-uswds`
-- Forms: `react-hook-form`
-- Strings: `i18next` / `react-i18next`
+- [USWDS 3](https://designsystem.digital.gov/) via
+  [`@trussworks/react-uswds`](https://trussworks.github.io/react-uswds/)
+- Forms: [`react-hook-form`](https://react-hook-form.com/docs)
+- Strings: [`i18next`](https://www.i18next.com/) /
+  [`react-i18next`](https://react.i18next.com/)
 - Component catalogue: Storybook
 
-**Payments**: Authorize.net Accept UI lightbox; card data never reaches
-our systems. Locally and in CI, a mock server outside the app stands in
-for Authorize.net ([Principle IV](#iv-no-mock-code-in-production)).
+**Payments**: processor not yet selected; card data never reaches our
+systems. Locally and in CI, a mock server outside the app stands in
+for the processor ([Principle IV](#iv-no-mock-code-in-production)).
 
 **Email**: SES; maildev locally
 
@@ -419,14 +429,18 @@ settings come from [`.env.example`](api/.env.example)
 
 **Package Managers**: `uv` (Python), `pnpm` (Node)
 
-**Configuration**: `pydantic-settings` for env-driven values only
+**Configuration**:
+[`pydantic-settings`](https://docs.pydantic.dev/2.12/concepts/pydantic_settings/)
+for env-driven values only
 ([`config.py`](api/licensing_api/config.py))
 
 **Quality**:
 
 - `ruff` (lint + format), `pyright`
-- `pytest` + `pytest-asyncio`, `coverage` (branch)
-- `eslint`, `tsc --noEmit`, `vitest` + Testing Library
+- [`pytest` 9.0](https://docs.pytest.org/en/9.0.x/) + `pytest-asyncio`,
+  `coverage` (branch)
+- `eslint`, `tsc --noEmit`, [`vitest` 3](https://v3.vitest.dev/) +
+  Testing Library
 - `pre-commit` ([config](../.pre-commit-config.yaml)): ruff, gitleaks,
   markdownlint, file hygiene
 - Codecov for coverage reporting ([`codecov.yml`](../codecov.yml))
@@ -469,8 +483,8 @@ records. Treat all of it as sensitive.
 - Criminal background check results or criminal history record
   information. The system stores the check's completion date only;
   schemas reject anything more, and denial reasons are free of it.
-- Card numbers or bank details. Payment entry happens on
-  Authorize.net's hosted form.
+- Card numbers or bank details. Payment entry happens on the
+  payment processor's hosted form.
 
 **Confidentiality tiers.** Every field belongs to one tier, and the
 tier is enforced in the API's response models, not the client:
