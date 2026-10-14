@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import Field, SQLModel
 
-from licensing_api.context import ChangeContext, actor_id
+from licensing_api.context import ChangeContext, actor_id, require_attributed
 from licensing_api.repo.base import TimestampTZ, entity_ref, utc_now
 
 
@@ -121,7 +121,9 @@ async def emit(
         )
         .returning(DomainEvent)
     )
-    return (await session.scalars(statement)).one()
+    event = (await session.scalars(statement)).one()
+    require_attributed(ctx.actor, event.actor_user_id)
+    return event
 
 
 def _json_value(value: int | str | UUID | date | None) -> int | str | None:

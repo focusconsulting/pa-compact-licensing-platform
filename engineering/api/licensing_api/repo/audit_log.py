@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import Field, SQLModel
 
-from licensing_api.context import ChangeContext, actor_id
+from licensing_api.context import ChangeContext, actor_id, require_attributed
 from licensing_api.repo.base import DOTTED_NAME, TimestampTZ, entity_ref, utc_now
 
 
@@ -72,4 +72,6 @@ async def write(
         )
         .returning(AuditLogEntry)
     )
-    return (await session.scalars(statement)).one()
+    entry = (await session.scalars(statement)).one()
+    require_attributed(ctx.actor, entry.actor_user_id)
+    return entry

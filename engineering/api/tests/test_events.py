@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from licensing_api.context import Actor, ChangeContext, system_context
+from licensing_api.context import Actor, ChangeContext, UnknownActorError, system_context
 from licensing_api.events import HandlerRegistry, handler
 from licensing_api.repo.base import entity_ref
 from licensing_api.repo.domain_event import (
@@ -169,3 +169,15 @@ def test_registry_returns_the_handlers_for_an_event():
     assert registry.for_event(EventType.PRIVILEGE_ISSUED) == (issued, either)
     assert registry.for_event(EventType.PRIVILEGE_DENIED) == (either,)
     assert registry.for_event(EventType.SII_CLOSED) == ()
+
+
+async def test_emit_refuses_an_actor_that_matches_no_user(db_session):
+    privilege = await make_issued_privilege(db_session)
+
+    with pytest.raises(UnknownActorError):
+        await emit(
+            db_session,
+            ChangeContext(Actor(uuid.uuid4()), None),
+            EventType.PRIVILEGE_ISSUED,
+            privilege,
+        )

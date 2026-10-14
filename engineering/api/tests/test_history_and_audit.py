@@ -5,8 +5,9 @@ from datetime import datetime, timezone
 
 import pytest
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 
-from licensing_api.context import Actor, ChangeContext, system_context
+from licensing_api.context import Actor, ChangeContext, UnknownActorError, system_context
 from licensing_api.repo import audit_log, history
 from licensing_api.repo.history import PrivilegeHistory, StateHistory
 from licensing_api.repo.state import State
@@ -145,3 +146,22 @@ async def test_audit_rejects_an_action_that_is_not_entity_dot_verb(db_session):
 
     with pytest.raises(ValueError, match='<entity>.<verb>'):
         await audit_log.write(db_session, system_context(), 'Revealed SSN', state)
+
+
+async def test_audit_refuses_an_actor_that_matches_no_user(db_session):
+    state = await db_session.get(State, 'KS')
+    assert state is not None
+
+    with pytest.raises(UnknownActorError):
+        await audit_log.write(
+            db_session, ChangeContext(Actor(uuid.uuid4()), None), 'state.configured', state
+        )
+
+
+async def test_history_refuses_an_actor_that_matches_no_user(db_session):
+    privilege = await make_issued_privilege(db_session)
+
+    with pytest.raises(IntegrityError):
+        await history.write(
+            db_session, ChangeContext(Actor(uuid.uuid4()), None), privilege, before=None
+        )

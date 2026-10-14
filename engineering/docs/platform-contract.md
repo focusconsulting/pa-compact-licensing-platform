@@ -31,6 +31,8 @@ await session.commit()
 | `actor_id(actor)` | `users.id` as a subquery, for an audit column set in a statement |
 | `stamp_update(entity, ctx)` | Sets `updated_by` on a changed row; refresh before reading it back |
 
+Every helper refuses a write it cannot attribute: an actor whose `sub` matches no user raises `UnknownActorError` (`emit`, `audit_log.write`) or an integrity error (`history.write`, `notify`), and the caller's transaction must not commit.
+
 Request IDs come from `RequestIdMiddleware`: the caller's `X-Request-ID` when it is a short token, otherwise a new one, returned on every response.
 
 ### Helpers

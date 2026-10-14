@@ -32,6 +32,21 @@ def actor_id(actor: Actor) -> ScalarSelect[int]:
     return select(col(User.id)).where(col(User.public_id) == actor.sub).scalar_subquery()
 
 
+class UnknownActorError(LookupError):
+    """The actor's ``sub`` matches no user, so the write could not be attributed. The caller's transaction must not commit."""
+
+
+def require_attributed(actor: Actor, resolved_id: int | None) -> int:
+    """The id a write resolved for ``actor``; raises ``UnknownActorError`` when it resolved none.
+
+    For columns that allow NULL (``audit_log.actor_user_id``, ``domain_events.actor_user_id``),
+    where an unknown actor would otherwise be recorded as no one.
+    """
+    if resolved_id is None:
+        raise UnknownActorError(f'No user has sub {actor.sub}; the change cannot be attributed')
+    return resolved_id
+
+
 @dataclass(frozen=True)
 class ChangeContext:
     actor: Actor
