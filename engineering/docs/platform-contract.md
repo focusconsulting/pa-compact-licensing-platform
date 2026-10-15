@@ -45,8 +45,9 @@ Request IDs come from `RequestIdMiddleware`: the caller's `X-Request-ID` when it
 | `audit_log.write(session, ctx, action, entity, *, before=None, after=None, reason=None) -> AuditLogEntry` | `repo/audit_log.py` | Reads of private data and security events only. `action` is `<entity>.<verb>`. `before`/`after` are for security events on rows with no history, such as a permission change. Never pass an SSN or an expunged value |
 | `handler(name, *event_types)` | `events.py` | Decorator returning a frozen `Handler`; `name` is `<owning module>.<what it does>` and never changes while its deliveries exist |
 | `HandlerRegistry(handlers)` | `events.py` | Built by the Worker from a constant tuple; rejects duplicate names |
+| `notify(session, ctx, *, template, recipient_email, recipient_user_id=None, context, idempotency_key) -> Notification` | `repo/notification.py` | Queues one email as a `pending` row; the Worker sends it. A repeated key queues nothing and returns the first row. Called from handlers, not routes. Copies the address at call time |
 
-A handler is `async def run(session, ctx, event) -> None`. It is called with the system context and the event's request ID, and must be safe to run twice for the same event.
+A handler is `async def run(session, ctx, event) -> None`. It is called with the system context and the event's request ID, and must be safe to run twice for the same event. A handler that emails uses `<event_id>:<handler name>` as the idempotency key, so a retry sends once.
 
 ## Declaring a route
 
@@ -89,7 +90,7 @@ async def list_applications(
 
 ## Signatures the tracks implement
 
-These are fixed here so the tracks build in parallel. Each becomes code, with tests, in the track named.
+These are fixed here so the tracks build in parallel. Each becomes code, with tests, in the track named. Each track's plan links this page.
 
 ### `.3` events, history, audit, the privilege cascade
 
@@ -112,3 +113,27 @@ async def dispatch_events(
     transaction, and record the outcome in domain_event_deliveries; retry, then dead-letter.
     Returns the number handled. Tests drain the outbox by calling it."""
 ```
+
+Also `.3`: the event-catalogue test (every `EventType` has a test), `GET /commission/audit`, and the day-arithmetic module (ADR-0006).
+
+### `.4` API rules, client generation, demo seed
+
+Builds on `require`, `public`, `route_access`, `Data`, `Paged`, `page_query`, and `paginate`. Adds the persona routers (`/me`, `/public`, `/states/{state_code}`, `/commission`, `/admin`), a test that every route returns `Data`, `Paged`, or no body, the OpenAPI drift check, the generated client and mocks, `just seed demo`, and moves `/me` to `Data`.
+
+### `.5` worker and notifications
+
+Builds on `handler`, `HandlerRegistry`, `system_context`, `notify`, and `.3`'s `dispatch_events`.
+
+```python
+# licensing_api/notifications/sender.py
+async def send_pending(
+    session_factory: async_sessionmaker[AsyncSession], settings: Settings, *, batch_size: int = 100,
+) -> int:
+    """Claim pending notifications with FOR UPDATE SKIP LOCKED, render each template, send it over
+    SMTP (maildev locally, SES's SMTP interface deployed), and mark it sent or failed with the error.
+    Returns the number sent."""
+```
+
+### `.6` documents
+
+Builds on `require` (download permission, with record scoping in the query), `ChangeContext`, `history.write` (documents are part of the retained record), and `audit_log.write` (a staff download of a private document is a read that is audited).
