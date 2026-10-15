@@ -367,21 +367,27 @@ release is still serving traffic during a rolling deploy.
 
 ### XV. Pull requests stay reviewable
 
-A pull request changes at most 600 lines of production code, counting
-lines added and lines removed, so one reviewer can review it in one
-sitting. Larger work is split into pull requests that each merge on
-their own, or stacked.
+A pull request changes at most 600 lines of production code written for
+a person to review, counting lines added and lines removed, so one
+reviewer can review it in one sitting. Larger work is split into pull
+requests that each merge on their own, or stacked.
 
-Tests and docs do not count against the limit:
+These do not count against the limit:
 
 - **Tests**: [`engineering/api/tests/`](api/tests/),
   [`engineering/client/src/tests/`](client/src/tests/), `*.test.ts`
   and `*.test.tsx` files, and end-to-end specs.
 - **Docs**: Markdown files, including ADRs, plans,
   [`engineering/docs/`](docs/), and READMEs.
+- **Lockfiles**: `uv.lock`, `pnpm-lock.yaml`, and `.terraform.lock.hcl`.
+- **Generated code**: anything a command writes rather than a person,
+  such as the OpenAPI document and the TypeScript client and mocks
+  generated from it. The pull request names the command that produced
+  it.
 
-Everything else counts, including migrations, configuration, and
-Terraform. A pull request over the limit says why in its description.
+Hand-written code counts wherever it lives, including migrations,
+configuration, and Terraform. A pull request over the limit says why in
+its description.
 
 ## Technology Stack
 
