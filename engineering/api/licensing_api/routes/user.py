@@ -1,10 +1,10 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from pydantic import BaseModel, ConfigDict, Field
 
-from licensing_api.context import current_user
+from licensing_api.permissions import Role, require
 from licensing_api.repo.user import User
 
 router = APIRouter()
@@ -27,5 +27,5 @@ class CurrentUser(BaseModel):
     name='Get current user',
     description='Returns information about the current user',
 )
-async def get_me(user: Annotated[User, Depends(current_user)]) -> CurrentUser:
-    return CurrentUser.model_validate(user)
+async def get_me(caller: Annotated[User, require(*Role)]) -> CurrentUser:
+    return CurrentUser.model_validate(caller)
