@@ -365,6 +365,24 @@ release is still serving traffic during a rolling deploy.
 - **Schema only.** Migrations carry no seed or test data
   ([Principle IV](#iv-no-mock-code-in-production)).
 
+### XV. Pull requests stay reviewable
+
+A pull request changes at most 600 lines of production code, counting
+lines added and lines removed, so one reviewer can review it in one
+sitting. Larger work is split into pull requests that each merge on
+their own, or stacked.
+
+Tests and docs do not count against the limit:
+
+- **Tests**: [`engineering/api/tests/`](api/tests/),
+  [`engineering/client/src/tests/`](client/src/tests/), `*.test.ts`
+  and `*.test.tsx` files, and end-to-end specs.
+- **Docs**: Markdown files, including ADRs, plans,
+  [`engineering/docs/`](docs/), and READMEs.
+
+Everything else counts, including migrations, configuration, and
+Terraform. A pull request over the limit says why in its description.
+
 ## Technology Stack
 
 Documentation links point at the version in the lockfile; a PR that
@@ -504,4 +522,4 @@ part of the technical plan, covering: what data is involved, its tier,
 where it flows, how it's protected at each step, and what could go
 wrong.
 
-Version: 0.1.0 | Created: 10/05/2026 | Last amended: 10/06/2026
+Version: 0.2.0 | Created: 10/05/2026 | Last amended: 10/15/2026

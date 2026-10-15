@@ -192,7 +192,7 @@ X-01 must land before any UI ticket: it produces the token overrides, the compon
 | F-04 RBAC | every state/commission endpoint | Permission matrix as data, DB read per request, no cache |
 | P-02 Authorize.net account | end-to-end demo | mock provider first; adapter second; sandbox creds requested in Sprint 1 (Q-02) |
 | X-01 design system | every UI ticket | Sprint 1, product/design + engineer B |
-| One reviewer | throughput | Contract tickets get careful review; feature tickets lean on `/code-review` + skim; PRs ≤600 lines |
+| One reviewer | throughput | Contract tickets get careful review; feature tickets lean on `/code-review` + skim; PRs ≤600 lines of production code, tests and docs excluded (constitution Principle XV) |
 | Client decisions | see §6 | Each has a default. SOW §8.5.2 gives the Commission 5 business days for prioritisation, policy clarifications, and acceptance (was 2 and 3). The earlier SOW's sentence letting Focus proceed on reasonable assumptions after the window was removed; a late decision is now notified and logged (§8.5.1) and settled by schedule adjustment, reprioritisation, or change request. Building to a default before the answer is at Focus's risk of rework (§7 risk 12) |
 | NCCPA contract and API documentation | N-01 | mock provider first; adapter second; contract started in Sprint 1 (Q-24) |
 | Two representative states and their data structures | L-02 | Named by the Commission in Sprint 1 (Q-25); mock data and the ingestion specification are the product ticket's output by Sprint 3 |
