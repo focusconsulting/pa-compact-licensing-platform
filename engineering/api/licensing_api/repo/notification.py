@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import Column, text
@@ -11,8 +11,11 @@ from sqlalchemy.dialects.postgresql import JSONB, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import Field, col, select
 
-from licensing_api.context import ChangeContext, actor_id
 from licensing_api.repo.base import AuditColumns, TimestampTZ
+
+if TYPE_CHECKING:
+    # Annotations only: licensing_api.context imports the repo package, so a runtime import would be circular.
+    from licensing_api.context import ChangeContext
 
 
 class NotificationStatus(StrEnum):
@@ -72,7 +75,7 @@ async def notify(
             recipient_email=recipient_email,
             context=dict(context),
             idempotency_key=idempotency_key,
-            created_by=actor_id(ctx.actor),
+            created_by=ctx.user_id,
         )
         .on_conflict_do_nothing(index_elements=['idempotency_key'])
         .returning(Notification)
