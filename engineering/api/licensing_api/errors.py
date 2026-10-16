@@ -10,6 +10,7 @@ class ErrorCode(StrEnum):
     InvalidToken = 'INVALID_TOKEN'
     UserNotFound = 'USER_NOT_FOUND'
     UserInactive = 'USER_INACTIVE'
+    Forbidden = 'FORBIDDEN'
     ValidationError = 'VALIDATION_ERROR'
     HttpError = 'HTTP_ERROR'
 

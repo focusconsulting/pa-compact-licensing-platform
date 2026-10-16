@@ -10,10 +10,11 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from licensing_api.dependencies import get_db_engine, get_redis
+from licensing_api.permissions import public
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix='/health', tags=['health'])
+router = APIRouter(prefix='/health', tags=['health'], dependencies=[public()])
 
 
 class LiveResp(BaseModel):

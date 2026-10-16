@@ -1,0 +1,88 @@
+"""The success shapes every route returns, and the paging and sorting query parameters (backlog D3)."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Annotated, Any
+
+from fastapi import Depends, Query
+from pydantic import BaseModel
+
+from licensing_api.errors import AppError, ErrorCode
+
+MAX_PAGE_SIZE = 100
+
+
+class Data[T](BaseModel):
+    """``{"data": ...}``: one resource. Errors use ``ErrorResponse``, never this."""
+
+    data: T
+
+
+class Page(BaseModel):
+    number: int
+    size: int
+    total: int
+
+
+class Paged[T](BaseModel):
+    """``{"data": [...], "page": {...}}``: one page of a list."""
+
+    data: list[T]
+    page: Page
+
+
+@dataclass(frozen=True)
+class SortKey:
+    field: str
+    descending: bool
+
+
+@dataclass(frozen=True)
+class PageQuery:
+    """A validated ``?page=&page_size=&sort=`` request."""
+
+    page: int
+    page_size: int
+    sort: tuple[SortKey, ...]
+
+    @property
+    def offset(self) -> int:
+        return (self.page - 1) * self.page_size
+
+    def page_of(self, total: int) -> Page:
+        return Page(number=self.page, size=self.page_size, total=total)
+
+
+def page_query(*sortable: str, default_sort: str) -> Any:
+    """``Depends`` reading ``?page=1&page_size=25&sort=field,-field``; ``-`` sorts descending.
+
+    Only fields in ``sortable`` may be sorted on; anything else is a 422.
+    """
+    defaults = _parse_sort(default_sort)
+    if unknown := [key.field for key in defaults if key.field not in sortable]:
+        raise ValueError(f'default_sort names fields that are not sortable: {unknown}')
+
+    async def read(
+        page: Annotated[int, Query(ge=1)] = 1,
+        page_size: Annotated[int, Query(ge=1, le=MAX_PAGE_SIZE)] = 25,
+        sort: Annotated[str | None, Query()] = None,
+    ) -> PageQuery:
+        keys = _parse_sort(sort) if sort else defaults
+        if unknown := [key.field for key in keys if key.field not in sortable]:
+            raise AppError(
+                422,
+                ErrorCode.ValidationError,
+                [f'query.sort: cannot sort by {field}' for field in unknown],
+            )
+        return PageQuery(page=page, page_size=page_size, sort=keys)
+
+    return Depends(read)
+
+
+def _parse_sort(value: str) -> tuple[SortKey, ...]:
+    return tuple(
+        SortKey(field=part.removeprefix('-'), descending=part.startswith('-'))
+        for part in (piece.strip() for piece in value.split(','))
+        if part
+    )
