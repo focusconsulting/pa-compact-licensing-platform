@@ -113,7 +113,7 @@ The `conviction` denial reason names a category, not a record; whether naming it
 
 ### `audit_log`
 
-One action a person or the system took, including staff reads of private data. Append-only (ADR-0008); written with `audit_log.write` ([platform contract](platform-contract.md)). Tier: internal; readable by `compact_admin` and `admin`.
+A staff read of private data or a security event, such as a permission change; changes to records are in history, not here. Append-only (ADR-0008); written with `audit_log.write` ([platform contract](platform-contract.md)). Tier: internal; readable by `compact_admin` and `admin`.
 
 | Column | Type | Meaning |
 |---|---|---|

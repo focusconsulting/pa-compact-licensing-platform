@@ -163,8 +163,8 @@ The compact rules make the data system the system of record
 ([Rule 4 §4.3(e)](../product/context/research-corpus/sources/rule-4-compact-data-system--confidentiality-information-sharing.md)): every change is retained. The architecture follows from that.
 
 - **One transaction per write.** A write validates, then writes the
-  rows, a history row, an audit row, and a `domain_events` row in one
-  transaction, then returns. Nothing sends email, calls another
+  rows, a history row, and a `domain_events` row in one transaction,
+  then returns. Nothing sends email, calls another
   service, or cascades to other records inside a request.
 - **Side effects run in the Worker.** The Worker drains `domain_events`
   and fans out to handlers. Handlers are idempotent on
@@ -179,10 +179,14 @@ The compact rules make the data system the system of record
   and adverse actions; jobs write history, not status.
 - **No hard deletes** of practitioner, application, privilege,
   adverse-action, or transaction data.
-- **Audit columns come from the token.** `created_by` and `updated_by`
-  are set from `AuthClaims.sub` with a sub-query in the same statement,
-  not by looking up the user's `id` first
-  ([ADR-0004](adrs/0004-jwt-auth-claims-as-user-identity.md)).
+- **History records changes; the audit log records access.** Every
+  change to a record is in its history table. `audit_log` holds what
+  history cannot: staff reads of private data and security events, such
+  as a permission change, a deactivation, or an expungement.
+- **Audit columns come from the signed-in user.** `created_by` and
+  `updated_by` are the `users.id` of the user the request loaded to
+  check permissions; the Worker and jobs write as the system user
+  ([ADR-0009](adrs/0009-route-authorization-and-change-context.md)).
 
 Deviations require an ADR.
 
@@ -195,8 +199,10 @@ Parameter Store, injected at runtime. `gitleaks` runs on every commit
 
 **Least privilege.** Application roles, per-state staff permissions,
 and AWS IAM roles are opt-in. Every role/permission grants the minimum
-needed. No superuser shortcuts in application code; Commission users
-pass state checks only where a route says so.
+needed. Routes check permissions, never roles: a role is a named set
+of permissions, and Commission users reach state data only through
+permissions their role grants. No superuser shortcuts in application
+code.
 
 **Input validation.** Every boundary validates: request bodies, path
 and query params, file uploads, webhooks, external service responses.
@@ -520,7 +526,7 @@ tier is enforced in the API's response models, not the client:
 - **Restricted**: the full SSN. Shown as last four digits; a full
   reveal requires the `readSSN` permission and is audit-logged.
 
-Staff reads of private data are audit-logged, not just writes.
+Staff reads of private data are audit-logged; changes are kept in history.
 
 **Security impact assessment.** New features that touch PII or
 confidential disciplinary data require a security impact assessment as
@@ -528,4 +534,4 @@ part of the technical plan, covering: what data is involved, its tier,
 where it flows, how it's protected at each step, and what could go
 wrong.
 
-Version: 0.2.0 | Created: 10/05/2026 | Last amended: 10/15/2026
+Version: 0.3.0 | Created: 10/05/2026 | Last amended: 10/16/2026

@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted. The Redis permission cache is superseded by [ADR-0009](0009-route-authorization-and-change-context.md): permissions are read from the database per request (backlog D5).
+Accepted; partly superseded by [ADR-0009](0009-route-authorization-and-change-context.md). The token's `sub` still identifies the request's user. Permissions are read from the database per request (backlog D5), so there is no Redis cache; and because every request loads the caller's `users` row to check them, writes use that row's `id` rather than resolving `sub` in a subquery.
 
 ## Date
 

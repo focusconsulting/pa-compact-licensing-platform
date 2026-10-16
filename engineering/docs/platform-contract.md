@@ -4,19 +4,22 @@ The functions every feature calls to record a change, and the signatures the epi
 
 ## Recording a change
 
-A write validates, then changes its rows, writes history, audit, and an event, and commits once (constitution Principle VI). Nothing sends email or cascades inside the request: handlers do that later.
+A write validates, then changes its rows, writes a history row and an event, and commits once (constitution Principle VI). Nothing sends email or cascades inside the request: handlers do that later.
 
 ```python
 before = history.snapshot(license)
 license.state_reported_status = body.status
-stamp_update(license, ctx)
+license.updated_by = ctx.user_id
 await history.write(session, ctx, license, before=before)
-await audit_log.write(session, ctx, 'qualifying_license.status_changed', license,
-                      before={'state_reported_status': before['state_reported_status']},
-                      after={'state_reported_status': body.status})
 await emit(session, ctx, EventType.QUALIFYING_LICENSE_STATUS_CHANGED, license,
            {'qualifying_license_id': license.id})
 await session.commit()
+```
+
+History records changes; the audit log records access. A change to a record never writes an audit row. `audit_log.write` is for a staff read of private data or a security event:
+
+```python
+await audit_log.write(session, ctx, 'ssn.revealed', practitioner, reason=body.reason)
 ```
 
 ### Context
@@ -25,13 +28,10 @@ await session.commit()
 
 | Name | Use |
 |---|---|
-| `ChangeContext(actor, request_id)` | Passed to every write helper |
+| `ChangeContext(user_id, request_id)` | Passed to every write helper; `user_id` goes into audit columns, history, events, and the audit log |
+| `current_user` | FastAPI dependency: the active user the token belongs to, linked by email on first sign-in. Runs once per request |
 | `change_context` | FastAPI dependency: the caller's context for this request |
-| `system_context(request_id=None)` | The Worker's and jobs' context, as the system user |
-| `actor_id(actor)` | `users.id` as a subquery, for an audit column set in a statement |
-| `stamp_update(entity, ctx)` | Sets `updated_by` on a changed row; refresh before reading it back |
-
-Every helper refuses a write it cannot attribute: an actor whose `sub` matches no user raises `UnknownActorError` (`emit`, `audit_log.write`) or an integrity error (`history.write`, `notify`), and the caller's transaction must not commit.
+| `system_context(session, request_id=None)` | The Worker's and jobs' context, as the system user |
 
 Request IDs come from `RequestIdMiddleware`: the caller's `X-Request-ID` when it is a short token, otherwise a new one, returned on every response.
 
@@ -42,7 +42,7 @@ Request IDs come from `RequestIdMiddleware`: the caller's `X-Request-ID` when it
 | `emit(session, ctx, event_type, aggregate, payload=None) -> DomainEvent` | `repo/domain_event.py` | Raises `OutsideTransactionError` with no open transaction. Payload values are IDs, codes, and dates, never PII. `EventType` lists FLOW-07's pilot events; adding one means adding a row there |
 | `history.snapshot(entity) -> dict` | `repo/history.py` | Take before changing the entity |
 | `history.write(session, ctx, entity, *, before, effective_at=None) -> HistoryRecord \| None` | `repo/history.py` | `before=None` for a new row. Writes nothing when nothing changed. Raises `ValueError` for a model with no history table |
-| `audit_log.write(session, ctx, action, entity, *, before=None, after=None, reason=None) -> AuditLogEntry` | `repo/audit_log.py` | `action` is `<entity>.<verb>`. Never pass an SSN or an expunged value |
+| `audit_log.write(session, ctx, action, entity, *, before=None, after=None, reason=None) -> AuditLogEntry` | `repo/audit_log.py` | Reads of private data and security events only. `action` is `<entity>.<verb>`. `before`/`after` are for security events on rows with no history, such as a permission change. Never pass an SSN or an expunged value |
 | `handler(name, *event_types)` | `events.py` | Decorator returning a frozen `Handler`; `name` is `<owning module>.<what it does>` and never changes while its deliveries exist |
 | `HandlerRegistry(handlers)` | `events.py` | Built by the Worker from a constant tuple; rejects duplicate names |
 
