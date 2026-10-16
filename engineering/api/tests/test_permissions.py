@@ -22,7 +22,14 @@ from licensing_api.errors import (
     http_exception_handler,
     validation_error_handler,
 )
-from licensing_api.permissions import Permission, Role, public, require, route_access
+from licensing_api.permissions import (
+    ROLE_PERMISSIONS,
+    Permission,
+    Role,
+    public,
+    require,
+    route_access,
+)
 from licensing_api.repo.user import User
 from tests.conftest import TEST_SETTINGS
 from tests.factories import make_user
@@ -30,38 +37,48 @@ from tests.factories import make_user
 router = APIRouter()
 
 
-@router.get('/staff-only', name='Staff only', description='Any state staff')
-async def staff_only(
-    caller: Annotated[User, require(Role.STATE_STAFF, Role.STATE_ADMIN)],
-) -> dict[str, str]:
+@router.get('/signed-in', name='Signed in', description='Any active user')
+async def signed_in(caller: Annotated[User, require()]) -> dict[str, str]:
     return {'email': caller.email}
 
 
 @router.get(
     '/states/{state_code}/write',
     name='State write',
-    description='Staff with write in the path state, or a compact admin',
-    dependencies=[
-        require(
-            Role.STATE_STAFF,
-            Role.STATE_ADMIN,
-            Role.COMPACT_ADMIN,
-            permission=Permission.WRITE,
-            state_param='state_code',
-        )
-    ],
+    description='Write in the path state',
+    dependencies=[require(Permission.WRITE, state_param='state_code')],
 )
 async def state_write(state_code: str) -> dict[str, str]:
     return {'state': state_code}
 
 
 @router.get(
+    '/states/{state_code}/private',
+    name='State private read',
+    description='Read private data in the path state',
+    dependencies=[require(Permission.READ_PRIVATE, state_param='state_code')],
+)
+async def state_private(state_code: str) -> dict[str, str]:
+    return {'state': state_code}
+
+
+@router.get(
     '/own-state/write',
     name='Own state write',
-    description='Staff with write in their own state',
-    dependencies=[require(Role.STATE_STAFF, permission=Permission.WRITE)],
+    description="Write in the caller's own state",
+    dependencies=[require(Permission.WRITE)],
 )
 async def own_state_write() -> dict[str, str]:
+    return {'ok': 'yes'}
+
+
+@router.get(
+    '/me/record',
+    name='Own record',
+    description='A PA managing their own record',
+    dependencies=[require(Permission.MANAGE_OWN_RECORD)],
+)
+async def own_record() -> dict[str, str]:
     return {'ok': 'yes'}
 
 
@@ -70,12 +87,12 @@ async def open_route() -> dict[str, str]:
     return {'ok': 'yes'}
 
 
-async def _staff_email(caller: Annotated[User, require(Role.STATE_STAFF)]) -> str:
+async def _writer_email(caller: Annotated[User, require(Permission.WRITE)]) -> str:
     return caller.email
 
 
 @router.get('/nested', name='Nested', description='Declares access through another dependency')
-async def nested(email: Annotated[str, Depends(_staff_email)]) -> dict[str, str]:
+async def nested(email: Annotated[str, Depends(_writer_email)]) -> dict[str, str]:
     return {'email': email}
 
 
@@ -145,27 +162,14 @@ def _staff(add_user: Callable[..., User], email: str, permissions: dict[str, lis
     return add_user(email, role='state_staff', state_code='KS', permissions=permissions)
 
 
-def test_a_listed_role_is_admitted(guard, auth_header):
-    client, add_user = guard
-    _staff(add_user, 'staff@example.com', {})
-
-    response = client.get('/staff-only', headers=auth_header('staff@example.com'))
-
-    assert response.status_code == 200
-    assert response.json() == {'email': 'staff@example.com'}
-
-
-def test_an_unlisted_role_is_forbidden(guard, auth_header):
+def test_any_active_user_passes_a_route_with_no_permission(guard, auth_header):
     client, add_user = guard
     add_user('pa@example.com', role='licensee')
 
-    response = client.get('/staff-only', headers=auth_header('pa@example.com'))
+    response = client.get('/signed-in', headers=auth_header('pa@example.com'))
 
-    assert response.status_code == 403
-    assert response.json() == {
-        'code': ErrorCode.Forbidden,
-        'details': ['Your role cannot use this route'],
-    }
+    assert response.status_code == 200
+    assert response.json() == {'email': 'pa@example.com'}
 
 
 @pytest.mark.parametrize(
@@ -176,9 +180,10 @@ def test_an_unlisted_role_is_forbidden(guard, auth_header):
         ({'KS': ['write']}, '/states/NE/write', 403),
         ({'KS': ['read_private']}, '/states/KS/write', 403),
         ({'NE': ['write']}, '/states/KS/write', 403),
+        ({'KS': ['not_a_permission']}, '/states/KS/write', 403),
     ],
 )
-def test_state_staff_need_the_permission_in_the_path_state(
+def test_state_staff_need_the_grant_in_the_path_state(
     guard, auth_header, permissions, path, status
 ):
     client, add_user = guard
@@ -192,9 +197,7 @@ def test_state_staff_need_the_permission_in_the_path_state(
 @pytest.mark.parametrize(
     ('permissions', 'status'), [({'KS': ['write']}, 200), ({'NE': ['write']}, 403)]
 )
-def test_state_staff_need_the_permission_in_their_own_state(
-    guard, auth_header, permissions, status
-):
+def test_state_staff_need_the_grant_in_their_own_state(guard, auth_header, permissions, status):
     client, add_user = guard
     _staff(add_user, 'staff@example.com', permissions)
 
@@ -203,61 +206,42 @@ def test_state_staff_need_the_permission_in_their_own_state(
     assert response.status_code == status
 
 
-def test_a_compact_admin_passes_state_checks_only_where_listed(guard, auth_header):
+def test_a_missing_permission_is_forbidden(guard, auth_header):
+    client, add_user = guard
+    _staff(add_user, 'staff@example.com', {})
+
+    response = client.get('/states/KS/write', headers=auth_header('staff@example.com'))
+
+    assert response.status_code == 403
+    assert response.json() == {
+        'code': ErrorCode.Forbidden,
+        'details': ['You need the write permission'],
+    }
+
+
+def test_a_commission_user_reads_any_state_but_writes_none(guard, auth_header):
     client, add_user = guard
     add_user('commission@example.com', role='compact_admin')
     headers = auth_header('commission@example.com')
 
-    assert client.get('/states/KS/write', headers=headers).status_code == 200
-    assert client.get('/staff-only', headers=headers).status_code == 403
+    assert client.get('/states/KS/private', headers=headers).status_code == 200
+    assert client.get('/states/NE/private', headers=headers).status_code == 200
+    assert client.get('/states/KS/write', headers=headers).status_code == 403
 
 
-def test_an_unknown_user_is_not_found(guard, auth_header):
+def test_only_a_licensee_manages_their_own_record(guard, auth_header):
+    client, add_user = guard
+    add_user('pa@example.com', role='licensee')
+    _staff(add_user, 'staff@example.com', {'KS': ['write', 'admin']})
+
+    assert client.get('/me/record', headers=auth_header('pa@example.com')).status_code == 200
+    assert client.get('/me/record', headers=auth_header('staff@example.com')).status_code == 403
+
+
+def test_an_unknown_caller_keeps_its_error_code(guard, auth_header):
     client, _ = guard
 
-    response = client.get('/staff-only', headers=auth_header('nobody@example.com'))
-
-    assert response.status_code == 403
-    assert response.json()['code'] == ErrorCode.UserNotFound
-
-
-def test_an_inactive_user_is_refused(guard, auth_header):
-    client, add_user = guard
-    add_user('gone@example.com', role='state_staff', state_code='KS', is_active=False)
-
-    response = client.get('/staff-only', headers=auth_header('gone@example.com'))
-
-    assert response.status_code == 403
-    assert response.json()['code'] == ErrorCode.UserInactive
-
-
-def test_first_sign_in_links_the_token_to_the_user_by_email(guard, auth_header):
-    client, add_user = guard
-    user = add_user('new@example.com', linked=False, role='state_staff', state_code='KS')
-
-    response = client.get('/staff-only', headers=auth_header('new@example.com'))
-
-    assert response.status_code == 200
-    assert user.public_id == uuid.uuid5(uuid.NAMESPACE_URL, 'new@example.com')
-
-
-def test_an_inactive_user_is_not_linked(guard, auth_header):
-    client, add_user = guard
-    user = add_user(
-        'gone@example.com', linked=False, role='state_staff', state_code='KS', is_active=False
-    )
-
-    response = client.get('/staff-only', headers=auth_header('gone@example.com'))
-
-    assert response.json()['code'] == ErrorCode.UserInactive
-    assert user.public_id is None
-
-
-def test_a_user_linked_to_another_sub_is_not_this_caller(guard, auth_header):
-    client, add_user = guard
-    add_user('shared@example.com', public_id=uuid.uuid4(), role='state_staff', state_code='KS')
-
-    response = client.get('/staff-only', headers=auth_header('shared@example.com'))
+    response = client.get('/signed-in', headers=auth_header('nobody@example.com'))
 
     assert response.status_code == 403
     assert response.json()['code'] == ErrorCode.UserNotFound
@@ -269,14 +253,8 @@ def test_a_public_route_needs_no_token(guard):
     assert client.get('/open').status_code == 200
 
 
-def test_require_needs_a_role():
-    with pytest.raises(ValueError, match='at least one role'):
-        require()
-
-
-def test_a_permission_needs_a_staff_role():
-    with pytest.raises(ValueError, match='only to state staff'):
-        require(Role.COMPACT_ADMIN, permission=Permission.WRITE)
+def test_every_role_has_permissions():
+    assert set(ROLE_PERMISSIONS) == set(Role)
 
 
 def test_route_access_reads_each_declaration():
@@ -286,11 +264,10 @@ def test_route_access_reads_each_declaration():
         if hasattr(route, 'dependant')
     }
 
-    assert access['/open'] is not None and access['/open'].roles is None
+    assert access['/open'] is not None and access['/open'].signed_in is False
+    assert access['/signed-in'] is not None and access['/signed-in'].permission is None
     assert access['/states/{state_code}/write'] is not None
+    assert access['/states/{state_code}/write'].permission == Permission.WRITE
     assert access['/states/{state_code}/write'].state_param == 'state_code'
-    assert access['/staff-only'] is not None
-    assert access['/staff-only'].roles == {Role.STATE_STAFF, Role.STATE_ADMIN}
+    assert access['/nested'] is not None and access['/nested'].permission == Permission.WRITE
     assert access['/undeclared'] is None
-    assert access['/nested'] is not None
-    assert access['/nested'].roles == {Role.STATE_STAFF}

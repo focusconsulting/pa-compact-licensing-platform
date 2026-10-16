@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Annotated, Any
@@ -9,16 +10,14 @@ from typing import Annotated, Any
 from fastapi import Depends, Request
 from fastapi.dependencies.models import Dependant
 from fastapi.routing import APIRoute
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from licensing_api.auth import AuthClaims, get_auth_claims
-from licensing_api.dependencies import get_db_session
+from licensing_api.context import current_user
 from licensing_api.errors import AppError, ErrorCode
-from licensing_api.repo.user import User, get_user_by_email, get_user_by_public_id
+from licensing_api.repo.user import User
 
 
 class Role(StrEnum):
-    """``chk_users_role``."""
+    """``chk_users_role``. Routes never check a role; they check the permissions it grants."""
 
     LICENSEE = 'licensee'
     STATE_STAFF = 'state_staff'
@@ -28,22 +27,37 @@ class Role(StrEnum):
 
 
 class Permission(StrEnum):
-    """Held per state in ``users.permissions`` (D5). ``read_general`` is implicit for staff and not listed."""
-
+    # Granted by role, in every state.
+    MANAGE_OWN_RECORD = 'manage_own_record'
+    READ_GENERAL = 'read_general'
+    COMPACT_ADMIN = 'compact_admin'
+    # Granted per state in users.permissions (D5); READ_PRIVATE also comes with the Commission roles.
     READ_PRIVATE = 'read_private'
     READ_SSN = 'read_ssn'
     WRITE = 'write'
     ADMIN = 'admin'
 
 
-STAFF_ROLES = frozenset({Role.STATE_STAFF, Role.STATE_ADMIN})
+# What each role may do everywhere. Commission roles can read any state's records but write none
+# (constitution Principle VII); a state's writes come only from a per-state grant.
+ROLE_PERMISSIONS: Mapping[Role, frozenset[Permission]] = {
+    Role.LICENSEE: frozenset({Permission.MANAGE_OWN_RECORD}),
+    Role.STATE_STAFF: frozenset({Permission.READ_GENERAL}),
+    Role.STATE_ADMIN: frozenset({Permission.READ_GENERAL}),
+    Role.COMPACT_ADMIN: frozenset(
+        {Permission.READ_GENERAL, Permission.READ_PRIVATE, Permission.COMPACT_ADMIN}
+    ),
+    Role.ADMIN: frozenset(
+        {Permission.READ_GENERAL, Permission.READ_PRIVATE, Permission.COMPACT_ADMIN}
+    ),
+}
 
 
 @dataclass(frozen=True)
 class RouteAccess:
-    """A route's declaration. ``roles`` is None for a public route."""
+    """A route's declaration. ``signed_in`` is False for a public route."""
 
-    roles: frozenset[Role] | None
+    signed_in: bool
     permission: Permission | None = None
     state_param: str | None = None
 
@@ -52,37 +66,30 @@ class RouteAccess:
 _ACCESS = '__route_access__'
 
 
-def require(
-    *roles: Role, permission: Permission | None = None, state_param: str | None = None
-) -> Any:
-    """``Depends`` admitting an active caller whose role is in ``roles``; yields the caller's ``User``.
+def held_permissions(user: User, state_code: str | None) -> frozenset[str]:
+    """Everything ``user`` may do in ``state_code``: their role's permissions plus that state's grants.
 
-    When ``permission`` is set, state staff must also hold it in the route's state: the
-    path parameter named ``state_param``, or their own ``state_code``. Other listed roles
-    pass without it, so ``compact_admin`` and ``admin`` reach a state route only when the
-    route lists them (constitution Principle VII). Which rows the caller may see is the
-    route's query's job (Principle II).
+    A grant naming no ``Permission`` matches nothing, so a bad value in ``users.permissions`` denies.
     """
-    if not roles:
-        raise ValueError('require() needs at least one role; use public() for an open route')
-    if permission is not None and not STAFF_ROLES & set(roles):
-        raise ValueError('A permission applies only to state staff; list a staff role')
-    allowed = frozenset(roles)
-    access = RouteAccess(roles=allowed, permission=permission, state_param=state_param)
+    granted = user.permissions.get(state_code.upper(), []) if state_code else []
+    return ROLE_PERMISSIONS[Role(user.role)] | frozenset(granted)
 
-    async def check(
-        request: Request,
-        claims: Annotated[AuthClaims, Depends(get_auth_claims)],
-        session: Annotated[AsyncSession, Depends(get_db_session)],
-    ) -> User:
-        user = await _signed_in_user(session, claims)
-        if user.role not in allowed:
-            raise AppError(403, ErrorCode.Forbidden, ['Your role cannot use this route'])
-        if permission is not None and user.role in STAFF_ROLES:
-            state = request.path_params.get(state_param) if state_param else user.state_code
-            held = user.permissions.get(state.upper(), []) if state else []
-            if permission not in held:
-                raise AppError(403, ErrorCode.Forbidden, [f'You need {permission} in this state'])
+
+def require(permission: Permission | None = None, *, state_param: str | None = None) -> Any:
+    """``Depends`` admitting an active caller who holds ``permission``; yields the caller's ``User``.
+
+    The state is the path parameter named ``state_param``, or the caller's own
+    ``state_code``. With no ``permission``, any active user passes. Which rows the
+    caller may see is the route's query's job (constitution Principle II).
+    """
+    access = RouteAccess(signed_in=True, permission=permission, state_param=state_param)
+
+    async def check(request: Request, user: Annotated[User, Depends(current_user)]) -> User:
+        if permission is None:
+            return user
+        state = request.path_params.get(state_param) if state_param else user.state_code
+        if permission not in held_permissions(user, state):
+            raise AppError(403, ErrorCode.Forbidden, [f'You need the {permission} permission'])
         return user
 
     setattr(check, _ACCESS, access)
@@ -93,7 +100,7 @@ async def _open() -> None:
     return None
 
 
-setattr(_open, _ACCESS, RouteAccess(roles=None))
+setattr(_open, _ACCESS, RouteAccess(signed_in=False))
 
 
 def public() -> Any:
@@ -115,22 +122,3 @@ def _find_access(dependant: Dependant) -> RouteAccess | None:
         if found is not None:
             return found
     return None
-
-
-async def _signed_in_user(session: AsyncSession, claims: AuthClaims) -> User:
-    """The user the token belongs to, linking the token's ``sub`` on first sign-in (ADR-0009).
-
-    A user is linked by email only while they have no ``sub``: a user already linked to
-    another ``sub`` (the same email in another Cognito pool) is not this caller.
-    """
-    user = await get_user_by_public_id(session, claims.sub)
-    if user is None:
-        user = await get_user_by_email(session, claims.email)
-        if user is None or user.public_id is not None:
-            raise AppError(403, ErrorCode.UserNotFound, ['User not found'])
-        if user.is_active:
-            user.public_id = claims.sub
-            await session.commit()
-    if not user.is_active:
-        raise AppError(403, ErrorCode.UserInactive, ['User is inactive'])
-    return user
