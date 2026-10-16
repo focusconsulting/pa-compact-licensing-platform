@@ -19,7 +19,7 @@ $$
 SELECT ql.id,
        CASE
            WHEN ql.terminated_on IS NOT NULL AND ql.terminated_on <= as_of THEN 'terminated'
-           WHEN ql.state_reported_status <> 'active' THEN ql.state_reported_status
+           WHEN ql.state_reported_status != 'active' THEN ql.state_reported_status
            WHEN ql.expires_on IS NOT NULL AND as_of > ql.expires_on THEN 'expired'
            WHEN EXISTS (SELECT 1
                         FROM adverse_actions aa
