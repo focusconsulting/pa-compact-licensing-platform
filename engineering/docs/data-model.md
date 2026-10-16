@@ -304,7 +304,7 @@ A report that significant investigative information exists (Rule 4 §4.4(c)–(d
 
 ## Computed status
 
-A status a rule derives is computed on read, never stored (D1). Three SQL functions are the only place status day arithmetic lives (ADR-0006). Each takes the date to evaluate; each has a view that evaluates it as of `compact_today()`. End dates are inclusive. Tier: follows the underlying record. Models: `licensing_api/repo/status.py`. The functions read tables several epics own, so the platform owns them (ADR-0005): an epic that needs one changed asks the tech lead.
+A status a rule derives is computed on read, never stored (D1). Three SQL functions are the only place status day arithmetic lives (ADR-0006). Each takes the date to evaluate; each has a view that evaluates it as of `compact_today()`. End dates are inclusive. Tier: follows the underlying record. The queries, the view models, and the rule each case encodes are in `licensing_api/repo/status.py`; the `post-apply` migration hook creates or replaces the functions and views on every startup (ADR-0005). The functions read tables several epics own, so the platform owns them (ADR-0005): an epic that needs one changed asks the tech lead.
 
 ### `qualifying_license_status_on(as_of)` and `v_qualifying_license_status`
 

@@ -1,6 +1,6 @@
 # Data Model Diagram
 
-The PA Compact Data System's schema as of migration `20261007_120000_data_model_status_views`: every table, every column, and every foreign key. It was generated from the database those migrations build, so it shows the schema as it is, not as planned. What each table and column means is in the [data dictionary](data-model.md).
+The PA Compact Data System's schema as of migration `20261007_110000_data_model_core_entities_b`: every table, every column, and every foreign key. It was generated from the database those migrations build, so it shows the schema as it is, not as planned. What each table and column means is in the [data dictionary](data-model.md).
 
 There are two diagrams so the relationships stay legible. Together they show all 112 foreign keys:
 

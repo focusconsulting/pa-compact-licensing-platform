@@ -439,6 +439,8 @@ Compute license status, privilege status, and compact eligibility on read, as of
 
 **File**: `engineering/api/db-migrations/20261007_120000_data_model_status_views.sql`
 
+**Changed in review (PR #82, 2026-10-16).** The functions are SQLAlchemy queries in `licensing_api/repo/status.py`, created by the `post-apply` hook on every startup, instead of this migration (ADR-0005 point 7).
+
 - `qualifying_license_status_on(as_of DATE)` returns one row per license: `active` when `state_reported_status = 'active'`, `as_of <= expires_on`, `terminated_on` is NULL or later than `as_of`, and no in-force adverse action against it; otherwise `expired`, `terminated`, `encumbered`, or the reported status. View `v_qualifying_license_status` = the function at `compact_today()`.
 - `privilege_status_on(as_of DATE)` returns `status` and `status_reason` per privilege, with precedence `inactive` (with `deactivation_reason`), `expired` (`as_of > expires_on`), `encumbered` (an adverse action against the privilege with `effective_from <= as_of` and `effective_until` NULL or `>= as_of`), else `active`. View `v_privilege_status`.
 - `compact_eligibility_on(as_of DATE)` returns per practitioner `eligible_again_on`: NULL when no adverse action against a qualifying license applies; the latest `effective_until + 1 day + 2 years` when all have ended (two years from the first unrestricted day); and barred with no date while any is still in force (ML §4.A.8). View `v_compact_eligibility`.
