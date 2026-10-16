@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date, datetime
 from enum import StrEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import Column, insert, text
@@ -11,8 +11,11 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import Field, SQLModel
 
-from licensing_api.context import ChangeContext, actor_id, require_attributed
 from licensing_api.repo.base import TimestampTZ, entity_ref, utc_now
+
+if TYPE_CHECKING:
+    # Annotations only: licensing_api.context imports the repo package, so a runtime import would be circular.
+    from licensing_api.context import ChangeContext
 
 
 class EventType(StrEnum):
@@ -116,14 +119,12 @@ async def emit(
             aggregate_id=ref.id,
             aggregate_key=ref.key,
             payload={key: _json_value(value) for key, value in (payload or {}).items()},
-            actor_user_id=actor_id(ctx.actor),
+            actor_user_id=ctx.user_id,
             request_id=ctx.request_id,
         )
         .returning(DomainEvent)
     )
-    event = (await session.scalars(statement)).one()
-    require_attributed(ctx.actor, event.actor_user_id)
-    return event
+    return (await session.scalars(statement)).one()
 
 
 def _json_value(value: int | str | UUID | date | None) -> int | str | None:

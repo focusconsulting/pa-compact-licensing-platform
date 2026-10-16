@@ -7,14 +7,13 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import insert
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import Field, SQLModel
 
-from licensing_api.context import ChangeContext, actor_id
 from licensing_api.repo.adverse_action import AdverseAction
 from licensing_api.repo.base import TimestampTZ, entity_ref, utc_now
 from licensing_api.repo.fee import Fee
@@ -25,6 +24,10 @@ from licensing_api.repo.privilege_request import PrivilegeRequest
 from licensing_api.repo.qualifying_license import QualifyingLicense
 from licensing_api.repo.sii_report import SiiReport
 from licensing_api.repo.state import State
+
+if TYPE_CHECKING:
+    # Annotations only: licensing_api.context imports the repo package, so a runtime import would be circular.
+    from licensing_api.context import ChangeContext
 
 # Keys and audit columns: the history row records them itself.
 _UNTRACKED = frozenset({'id', 'public_id', 'created_at', 'created_by', 'updated_at', 'updated_by'})
@@ -166,7 +169,7 @@ async def write(
         insert(history_table)
         .values(
             **key,
-            changed_by=actor_id(ctx.actor),
+            changed_by=ctx.user_id,
             effective_at=effective_at,
             previous=dict(before) if before is not None else None,
             updated=updated or None,

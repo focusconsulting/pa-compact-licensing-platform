@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from licensing_api.context import Actor, ChangeContext, UnknownActorError, system_context
+from licensing_api.context import ChangeContext, system_context
 from licensing_api.events import HandlerRegistry, handler
 from licensing_api.repo.base import entity_ref
 from licensing_api.repo.domain_event import (
@@ -47,22 +47,27 @@ def test_event_types_match_the_flow_07_catalogue():
 
 async def test_emit_refuses_without_an_open_transaction(db_session):
     with pytest.raises(OutsideTransactionError):
-        await emit(db_session, system_context(), EventType.SII_FLAGGED, State(code='KS'))
+        await emit(
+            db_session,
+            ChangeContext(user_id=1, request_id=None),
+            EventType.SII_FLAGGED,
+            State(code='KS'),
+        )
 
 
 async def test_emit_refuses_after_the_change_is_committed(db_session):
+    ctx = await system_context(db_session)
     privilege = await make_issued_privilege(db_session)
     await db_session.commit()
 
     with pytest.raises(OutsideTransactionError):
-        await emit(db_session, system_context(), EventType.PRIVILEGE_ISSUED, privilege)
+        await emit(db_session, ctx, EventType.PRIVILEGE_ISSUED, privilege)
 
 
 async def test_emit_writes_the_event_with_the_actor_and_request_id(db_session: AsyncSession):
-    sub = uuid.uuid4()
-    user = await make_user(db_session, public_id=sub)
+    user = await make_user(db_session)
     privilege = await make_issued_privilege(db_session)
-    ctx = ChangeContext(actor=Actor(sub=sub), request_id='req-1')
+    ctx = ChangeContext(user_id=user.id, request_id='req-1')
 
     event = await emit(
         db_session,
@@ -96,7 +101,7 @@ async def test_emit_references_a_state_by_code_as_the_system_user(db_session):
     state = await db_session.get(State, 'KS')
     assert state is not None
 
-    event = await emit(db_session, system_context(), EventType.SII_FLAGGED, state)
+    event = await emit(db_session, await system_context(db_session), EventType.SII_FLAGGED, state)
 
     assert (event.aggregate_type, event.aggregate_id, event.aggregate_key) == ('states', None, 'KS')
     assert event.actor_user_id == await system_user_id(db_session)
@@ -110,7 +115,10 @@ async def test_entity_ref_rejects_an_unflushed_row():
 
 async def test_entity_ref_rejects_a_composite_key(db_session):
     event = await emit(
-        db_session, system_context(), EventType.SII_FLAGGED, await _kansas(db_session)
+        db_session,
+        await system_context(db_session),
+        EventType.SII_FLAGGED,
+        await _kansas(db_session),
     )
     delivery = DomainEventDelivery(event_id=event.event_id, handler='tests.example')
     db_session.add(delivery)
@@ -169,15 +177,3 @@ def test_registry_returns_the_handlers_for_an_event():
     assert registry.for_event(EventType.PRIVILEGE_ISSUED) == (issued, either)
     assert registry.for_event(EventType.PRIVILEGE_DENIED) == (either,)
     assert registry.for_event(EventType.SII_CLOSED) == ()
-
-
-async def test_emit_refuses_an_actor_that_matches_no_user(db_session):
-    privilege = await make_issued_privilege(db_session)
-
-    with pytest.raises(UnknownActorError):
-        await emit(
-            db_session,
-            ChangeContext(Actor(uuid.uuid4()), None),
-            EventType.PRIVILEGE_ISSUED,
-            privilege,
-        )

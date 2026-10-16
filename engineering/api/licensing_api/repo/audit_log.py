@@ -2,19 +2,22 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import Column, insert
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import Field, SQLModel
 
-from licensing_api.context import ChangeContext, actor_id, require_attributed
 from licensing_api.repo.base import DOTTED_NAME, TimestampTZ, entity_ref, utc_now
+
+if TYPE_CHECKING:
+    # Annotations only: licensing_api.context imports the repo package, so a runtime import would be circular.
+    from licensing_api.context import ChangeContext
 
 
 class AuditLogEntry(SQLModel, table=True):
-    """One action a person or the system took, including staff reads of private data.
+    """A read of private data or a security event. Changes to records are in history, not here.
 
     Append-only: the ``prevent_mutation`` trigger rejects updates and deletes
     outside an expungement transaction (ADR-0008). A full SSN reveal is recorded
@@ -48,10 +51,12 @@ async def write(
     after: Mapping[str, Any] | None = None,
     reason: str | None = None,
 ) -> AuditLogEntry:
-    """Record an action on ``entity``, including a staff read of private data, in the caller's transaction.
+    """Record a staff read of private data or a security event on ``entity``, in the caller's transaction.
 
-    ``action`` is ``<entity>.<verb>``, e.g. ``ssn.revealed``. ``before`` and ``after``
-    must never hold an SSN or an expunged value (ADR-0007, ADR-0008).
+    For example ``ssn.revealed``, ``document.downloaded``, ``user.permissions_changed``.
+    A change to a record is not audited: ``history.write`` records it. ``before`` and
+    ``after`` are for security events on rows with no history, such as a permission
+    change, and never hold an SSN or an expunged value (ADR-0007, ADR-0008).
     """
     if not DOTTED_NAME.fullmatch(action):
         raise ValueError(f'Audit action {action!r} must be "<entity>.<verb>" in lower snake case')
@@ -60,7 +65,7 @@ async def write(
     statement = (
         insert(AuditLogEntry)
         .values(
-            actor_user_id=actor_id(ctx.actor),
+            actor_user_id=ctx.user_id,
             action=action,
             entity_type=ref.type,
             entity_id=ref.id,
@@ -72,6 +77,4 @@ async def write(
         )
         .returning(AuditLogEntry)
     )
-    entry = (await session.scalars(statement)).one()
-    require_attributed(ctx.actor, entry.actor_user_id)
-    return entry
+    return (await session.scalars(statement)).one()

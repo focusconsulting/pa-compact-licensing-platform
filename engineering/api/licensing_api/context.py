@@ -4,74 +4,64 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Annotated
-from uuid import UUID
 
 from fastapi import Depends, Request
-from sqlalchemy import ScalarSelect
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col, select
 
 from licensing_api.auth import AuthClaims, get_auth_claims
-from licensing_api.repo.base import AuditColumns
-from licensing_api.repo.user import SYSTEM_USER_EMAIL, User
-
-
-@dataclass(frozen=True)
-class Actor:
-    """A signed-in user by Cognito ``sub``, or the system user when ``sub`` is None."""
-
-    sub: UUID | None
-
-
-SYSTEM = Actor(sub=None)
-
-
-def actor_id(actor: Actor) -> ScalarSelect[int]:
-    """``users.id`` for ``actor`` as a subquery, so the write resolves it in the same statement (ADR-0004)."""
-    if actor.sub is None:
-        return select(col(User.id)).where(col(User.email) == SYSTEM_USER_EMAIL).scalar_subquery()
-    return select(col(User.id)).where(col(User.public_id) == actor.sub).scalar_subquery()
-
-
-class UnknownActorError(LookupError):
-    """The actor's ``sub`` matches no user, so the write could not be attributed. The caller's transaction must not commit."""
-
-
-def require_attributed(actor: Actor, resolved_id: int | None) -> int:
-    """The id a write resolved for ``actor``; raises ``UnknownActorError`` when it resolved none.
-
-    For columns that allow NULL (``audit_log.actor_user_id``, ``domain_events.actor_user_id``),
-    where an unknown actor would otherwise be recorded as no one.
-    """
-    if resolved_id is None:
-        raise UnknownActorError(f'No user has sub {actor.sub}; the change cannot be attributed')
-    return resolved_id
+from licensing_api.dependencies import get_db_session
+from licensing_api.errors import AppError, ErrorCode
+from licensing_api.repo.user import (
+    SYSTEM_USER_EMAIL,
+    User,
+    get_user_by_email,
+    get_user_by_public_id,
+)
 
 
 @dataclass(frozen=True)
 class ChangeContext:
-    actor: Actor
+    """``user_id`` is the ``users.id`` written to audit columns, history, events, and the audit log."""
+
+    user_id: int
     request_id: str | None
 
 
+async def current_user(
+    claims: Annotated[AuthClaims, Depends(get_auth_claims)],
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+) -> User:
+    """The active user the token belongs to, linking the token's ``sub`` on first sign-in (ADR-0009).
+
+    A user is linked by email only while they have no ``sub``: a user already linked to
+    another ``sub`` (the same email in the other Cognito pool, D4) is not this caller.
+    FastAPI runs this once per request, however many dependencies ask for it.
+    """
+    user = await get_user_by_public_id(session, claims.sub)
+    if user is None:
+        user = await get_user_by_email(session, claims.email)
+        if user is None or user.public_id is not None:
+            raise AppError(403, ErrorCode.UserNotFound, ['User not found'])
+        if user.is_active:
+            user.public_id = claims.sub
+            await session.commit()
+    if not user.is_active:
+        raise AppError(403, ErrorCode.UserInactive, ['User is inactive'])
+    return user
+
+
 async def change_context(
-    request: Request, claims: Annotated[AuthClaims, Depends(get_auth_claims)]
+    request: Request, user: Annotated[User, Depends(current_user)]
 ) -> ChangeContext:
     """The context for writes made on behalf of this request's caller."""
-    return ChangeContext(actor=Actor(sub=claims.sub), request_id=request_id_of(request))
+    return ChangeContext(user_id=user.id, request_id=request_id_of(request))
 
 
-def stamp_update(entity: AuditColumns, ctx: ChangeContext) -> None:
-    """Set ``updated_by`` to the context's actor on a changed row; the flush resolves it (ADR-0004).
-
-    The attribute is expired after the flush: refresh the row before reading it.
-    """
-    # setattr: the column is typed int, and SQLAlchemy accepts a SQL expression in its place at flush.
-    setattr(entity, 'updated_by', actor_id(ctx.actor))  # noqa: B010
-
-
-def system_context(request_id: str | None = None) -> ChangeContext:
+async def system_context(session: AsyncSession, request_id: str | None = None) -> ChangeContext:
     """The context for writes made by the Worker and jobs, as the system user (ADR-0005)."""
-    return ChangeContext(actor=SYSTEM, request_id=request_id)
+    statement = select(col(User.id)).where(col(User.email) == SYSTEM_USER_EMAIL)
+    return ChangeContext(user_id=(await session.scalars(statement)).one(), request_id=request_id)
 
 
 def request_id_of(request: Request) -> str | None:
