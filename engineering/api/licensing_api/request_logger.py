@@ -1,10 +1,44 @@
 import logging
+import re
 import time
+from uuid import uuid4
 
+from starlette.datastructures import MutableHeaders
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 logger = logging.getLogger(__name__)
+
+REQUEST_ID_HEADER = 'X-Request-ID'
+# Limits an inbound ID to a short token, so a caller cannot write arbitrary text into the logs.
+_VALID_REQUEST_ID = re.compile(r'[A-Za-z0-9._-]{1,128}')
+
+
+class RequestIdMiddleware:
+    """Give each request an ID: the caller's ``X-Request-ID`` if it is a short token, else a new one.
+
+    The ID is in ``request.state.request_id``, on the response, and in the request log line (ADR-0009).
+    """
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope['type'] != 'http':
+            await self.app(scope, receive, send)
+            return
+        inbound = (
+            dict(scope['headers']).get(REQUEST_ID_HEADER.lower().encode(), b'').decode('latin-1')
+        )
+        request_id = inbound if _VALID_REQUEST_ID.fullmatch(inbound) else uuid4().hex
+        scope.setdefault('state', {})['request_id'] = request_id
+
+        async def send_with_id(message: Message) -> None:
+            if message['type'] == 'http.response.start':
+                MutableHeaders(scope=message)[REQUEST_ID_HEADER] = request_id
+            await send(message)
+
+        await self.app(scope, receive, send_with_id)
 
 
 class UnhandledExceptionMiddleware:
@@ -52,6 +86,7 @@ class RequestLoggingMiddleware:
             logger.info(
                 '',
                 extra={
+                    'request_id': scope.get('state', {}).get('request_id'),
                     'method': scope['method'],
                     'path': scope['path'],
                     'status': status_code,

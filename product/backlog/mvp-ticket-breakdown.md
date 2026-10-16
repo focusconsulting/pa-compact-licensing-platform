@@ -227,7 +227,7 @@ Capacity: ticket sizes total **63.75 nominal engineer-days** (must 56.25, rule 1
 
 ## 4. Tickets
 
-Common acceptance criteria on every ticket (not repeated): 100% coverage enforced (engineering constitution; SOW §5.2 floor is 90%); 0 lint errors/warnings against the GSA 18F Front-End Guide (SOW §5.2); pa11y + axe clean on new screens; OpenAPI updated + TS client regenerated on API change; migrations forward-only; audit + history rows on every mutation; domain event emitted for every state change and listed in `docs/events.md` (FLOW-07); runs against the local stack with no AWS; docstrings/JSDoc; docs updated in the same PR (SOW §5.2: documentation "complete and current at each sprint").
+Common acceptance criteria on every ticket (not repeated): 100% coverage enforced (engineering constitution; SOW §5.2 floor is 90%); 0 lint errors/warnings against the GSA 18F Front-End Guide (SOW §5.2); pa11y + axe clean on new screens; OpenAPI updated + TS client regenerated on API change; migrations forward-only; a history row on every mutation and an audit row on every staff read of private data or security event; domain event emitted for every state change and listed in `docs/events.md` (FLOW-07); runs against the local stack with no AWS; docstrings/JSDoc; docs updated in the same PR (SOW §5.2: documentation "complete and current at each sprint").
 
 Format: size · tier · lane · depends → blocks.
 

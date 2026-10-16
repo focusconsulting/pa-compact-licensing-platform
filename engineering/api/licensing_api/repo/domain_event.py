@@ -1,14 +1,56 @@
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Any
+from collections.abc import Mapping
+from datetime import date, datetime
+from enum import StrEnum
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import Column, text
+from sqlalchemy import Column, insert, text
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import Field, SQLModel
 
-from licensing_api.repo.base import TimestampTZ, utc_now
+from licensing_api.repo.base import TimestampTZ, entity_ref, utc_now
+
+if TYPE_CHECKING:
+    # Annotations only: licensing_api.context imports the repo package, so a runtime import would be circular.
+    from licensing_api.context import ChangeContext
+
+
+class EventType(StrEnum):
+    """Every event the pilot emits. FLOW-07's "Events the pilot builds" table is the source; a test keeps them equal."""
+
+    PRACTITIONER_REGISTERED = 'practitioner.registered'
+    PRACTITIONER_PROFILE_CHANGED = 'practitioner.profile_changed'
+    PRACTITIONER_EMAIL_CHANGE_REQUESTED = 'practitioner.email_change_requested'
+    APPLICATION_SUBMITTED = 'application.submitted'
+    APPLICATION_INFO_REQUESTED = 'application.info_requested'
+    APPLICATION_RESUBMITTED = 'application.resubmitted'
+    APPLICATION_ELIGIBLE = 'application.eligible'
+    APPLICATION_DENIED = 'application.denied'
+    APPLICATION_WITHDRAWN = 'application.withdrawn'
+    APPLICATION_ELIGIBILITY_WITHDRAWN = 'application.eligibility_withdrawn'
+    PRIVILEGE_REQUESTED = 'privilege.requested'
+    PAYMENT_DECLINED = 'payment.declined'
+    PRIVILEGE_ISSUED = 'privilege.issued'
+    PRIVILEGE_DENIED = 'privilege.denied'
+    PRIVILEGE_DEACTIVATED = 'privilege.deactivated'
+    PRIVILEGE_EXPIRING = 'privilege.expiring'
+    PRIVILEGE_EXPIRED = 'privilege.expired'
+    QUALIFYING_LICENSE_STATUS_CHANGED = 'qualifying_license.status_changed'
+    ADVERSE_ACTION_REPORTED = 'adverse_action.reported'
+    ADVERSE_ACTION_LIFTED = 'adverse_action.lifted'
+    SII_FLAGGED = 'sii.flagged'
+    SII_CLOSED = 'sii.closed'
+
+
+# IDs, codes, and dates only: an event is read by every handler and kept forever, so it never carries PII.
+EventPayload = Mapping[str, int | str | UUID | date | None]
+
+
+class OutsideTransactionError(RuntimeError):
+    """``emit`` was called with no open transaction, so the event could be committed apart from its change."""
 
 
 class DomainEvent(SQLModel, table=True):
@@ -50,3 +92,44 @@ class DomainEventDelivery(SQLModel, table=True):
     handled_at: datetime | None = Field(default=None, sa_type=TimestampTZ)
     dead_lettered_at: datetime | None = Field(default=None, sa_type=TimestampTZ)
     created_at: datetime = Field(default_factory=utc_now, sa_type=TimestampTZ)
+
+
+async def emit(
+    session: AsyncSession,
+    ctx: ChangeContext,
+    event_type: EventType,
+    aggregate: SQLModel,
+    payload: EventPayload | None = None,
+) -> DomainEvent:
+    """Write an event in the caller's transaction, beside the change it describes (the outbox, D2).
+
+    Flushes first, so ``aggregate`` has its key. The caller commits.
+    """
+    if not session.in_transaction():
+        raise OutsideTransactionError(
+            f'{event_type} must be emitted inside the transaction that makes the change'
+        )
+    await session.flush()
+    ref = entity_ref(aggregate)
+    statement = (
+        insert(DomainEvent)
+        .values(
+            type=event_type,
+            aggregate_type=ref.type,
+            aggregate_id=ref.id,
+            aggregate_key=ref.key,
+            payload={key: _json_value(value) for key, value in (payload or {}).items()},
+            actor_user_id=ctx.user_id,
+            request_id=ctx.request_id,
+        )
+        .returning(DomainEvent)
+    )
+    return (await session.scalars(statement)).one()
+
+
+def _json_value(value: int | str | UUID | date | None) -> int | str | None:
+    if isinstance(value, UUID):
+        return str(value)
+    if isinstance(value, date):
+        return value.isoformat()
+    return value
