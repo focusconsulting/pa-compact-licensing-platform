@@ -22,7 +22,10 @@ def run_migrations() -> None:
     with backend.lock():
         pending = backend.to_apply(all_migrations)
         if settings.environment != 'LOCAL_DEV':  # pragma: no cover
-            pending = [m for m in pending if not m.id.startswith(_LOCAL_DEV_ONLY_PREFIX)]
-        backend.apply_migrations(pending)
+            pending = pending.filter(lambda m: not m.id.startswith(_LOCAL_DEV_ONLY_PREFIX))
+        backend.apply_migrations_only(pending)
+        # Every startup, not only when a migration applied: the status functions are
+        # defined in code (ADR-0005), so a release that changes one ships no migration.
+        backend.run_post_apply(all_migrations)
 
     logger.info('Database migrations complete')
