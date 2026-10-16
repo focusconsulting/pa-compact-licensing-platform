@@ -56,8 +56,7 @@ A handler is `async def run(session, ctx, event) -> None`. It is called with the
 @router.get('/states/{state_code}/applications', name=..., description=...)
 async def list_applications(
     state_code: str,
-    caller: Annotated[User, require(Role.STATE_STAFF, Role.STATE_ADMIN, Role.COMPACT_ADMIN,
-                                    permission=Permission.WRITE, state_param='state_code')],
+    caller: Annotated[User, require(Permission.READ_PRIVATE, state_param='state_code')],
     query: Annotated[PageQuery, page_query('submitted_at', 'status', default_sort='-submitted_at')],
     session: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> Paged[ApplicationOut]:
@@ -68,9 +67,10 @@ async def list_applications(
 
 | Name | Contract |
 |---|---|
-| `require(*roles, permission=None, state_param=None)` | Yields the caller's `User`. Unknown user `403 USER_NOT_FOUND`, inactive `403 USER_INACTIVE`, role not listed or state permission missing `403 FORBIDDEN`. `permission` is checked only for state staff, in the `state_param` path state or their own; other listed roles pass. Links the token to a user by email on first sign-in, only while that user has no `sub` |
+| `require(permission=None, *, state_param=None)` | Yields the caller's `User` (from `current_user`). The caller passes when they hold `permission` through their role or as a grant in the route's state: the `state_param` path state, or their own. With no `permission`, any active user passes. Unknown user `403 USER_NOT_FOUND`, inactive `403 USER_INACTIVE`, missing permission `403 FORBIDDEN` |
 | `public()` | For a route anyone may call, signed in or not; use in `dependencies=[...]` |
-| `Role`, `Permission` | The values in `users.role` and `users.permissions` |
+| `Permission` | What a route asks for. `manage_own_record`, `read_general`, `compact_admin` come from a role; `read_private`, `read_ssn`, `write`, `admin` are granted per state in `users.permissions` (the Commission roles also hold `read_private` everywhere) |
+| `ROLE_PERMISSIONS` | Each role's permissions. A role is never checked directly: change what a role may do here, not in routes |
 
 `require` decides who may call a route, not which rows they see: a record outside the caller's scope is filtered by the route's query and returns `404` (constitution Principle II).
 
