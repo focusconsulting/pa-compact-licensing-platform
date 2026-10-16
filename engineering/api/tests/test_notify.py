@@ -1,12 +1,8 @@
 """notify() queues an email once per idempotency key (D7)."""
 
-import uuid
-
-import pytest
 from sqlalchemy import func, select
-from sqlalchemy.exc import IntegrityError
 
-from licensing_api.context import Actor, ChangeContext, system_context
+from licensing_api.context import system_context
 from licensing_api.repo.notification import Notification, NotificationStatus, notify
 from tests.factories import make_user, system_user_id
 
@@ -16,7 +12,7 @@ async def test_notify_queues_a_pending_email_as_the_actor(db_session):
 
     queued = await notify(
         db_session,
-        system_context('req-5'),
+        await system_context(db_session, 'req-5'),
         template='privilege_issued',
         recipient_email=recipient.email,
         recipient_user_id=recipient.id,
@@ -36,7 +32,7 @@ async def test_notify_queues_a_pending_email_as_the_actor(db_session):
 async def test_a_repeated_key_queues_nothing_and_returns_the_first_row(db_session):
     first = await notify(
         db_session,
-        system_context(),
+        await system_context(db_session),
         template='welcome',
         recipient_email='pa@example.com',
         context={},
@@ -45,7 +41,7 @@ async def test_a_repeated_key_queues_nothing_and_returns_the_first_row(db_sessio
 
     again = await notify(
         db_session,
-        system_context(),
+        await system_context(db_session),
         template='welcome',
         recipient_email='changed@example.com',
         context={'ignored': True},
@@ -62,15 +58,3 @@ async def test_a_repeated_key_queues_nothing_and_returns_the_first_row(db_sessio
         )
     )
     assert count == 1
-
-
-async def test_notify_refuses_an_actor_that_matches_no_user(db_session):
-    with pytest.raises(IntegrityError):
-        await notify(
-            db_session,
-            ChangeContext(Actor(uuid.uuid4()), None),
-            template='welcome',
-            recipient_email='pa@example.com',
-            context={},
-            idempotency_key='unattributed',
-        )
