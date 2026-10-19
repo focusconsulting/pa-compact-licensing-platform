@@ -161,10 +161,11 @@ resource "aws_ecs_task_definition" "api_task" {
         { name = "ENVIRONMENT", value = upper(var.environment_name) },
         { name = "LOG_LEVEL", value = "INFO" },
         { name = "OTEL_ENABLED", value = "true" },
+        { name = "CORS_ORIGINS", value = jsonencode(["https://${var.dns_name}"]) },
       ]
       secrets = [
         {
-          name      = "DB_USERNAME"
+          name      = "DB_USER"
           valueFrom = "${aws_secretsmanager_secret.db_credentials.arn}:username::"
         },
         {
