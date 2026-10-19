@@ -78,9 +78,6 @@ jobs:
           until docker compose exec -T postgres pg_isready -U licensing -d licensing; do
             echo "Waiting for postgres..."; sleep 1
           done
-          until docker compose exec -T redis redis-cli ping | grep -q PONG; do
-            echo "Waiting for redis..."; sleep 1
-          done
 
       - name: Run tests with coverage
         run: |

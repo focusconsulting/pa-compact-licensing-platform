@@ -366,7 +366,7 @@ After structure approval:
 
 ## Testing Strategy
 
-### API Tests (through the endpoint, against real Postgres and Redis):
+### API Tests (through the endpoint, against real Postgres):
 - [What to test]
 - [Key edge cases, including permission and state-scope failures]
 

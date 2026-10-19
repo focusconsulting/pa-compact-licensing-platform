@@ -8,7 +8,6 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from typing import Any, cast
 
-import redis.asyncio as aioredis
 import uvicorn
 from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
@@ -148,10 +147,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     app.state.session_factory = async_sessionmaker(engine, expire_on_commit=False)
     app.state.db_engine = engine
 
-    app.state.redis = aioredis.from_url(settings.redis_url, decode_responses=True)
     yield
     await engine.dispose()
-    await app.state.redis.aclose()
 
 
 if settings.otel_enabled:

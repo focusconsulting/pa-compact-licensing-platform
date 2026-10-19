@@ -81,6 +81,8 @@ Mutation helpers accept the full `AuthClaims` object and look up the user intern
 
 For permission caching: permissions will be stored in Redis using `AuthClaim.sub` (the Cognito subject UUID) as the key suffix (e.g., `permissions:{sub}`). This key is stable, already available at the start of every request, and meaningful across services without a DB lookup.
 
+> **Update (2026-10-19):** Redis was removed (bd `2xz.2`); permissions are read from Postgres on each request and nothing is cached. The identity decision above stands. If a cache is reintroduced, key it on `sub` as described.
+
 ## Consequences
 
 ### Positive
