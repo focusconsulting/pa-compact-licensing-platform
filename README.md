@@ -167,6 +167,7 @@ pnpm check             # Everything CI checks: lint, typecheck, tests at 100% co
 pnpm test              # Run tests (vitest)
 pnpm lint              # ESLint (Airbnb), Stylelint, Prettier; zero warnings
 pnpm format            # Fix formatting and auto-fixable lint
+pnpm a11y              # Build, serve, and scan pages with pa11y-ci (axe, WCAG 2 AA, includes contrast)
 pnpm storybook         # Run Storybook
 pnpm build             # Production build
 ```

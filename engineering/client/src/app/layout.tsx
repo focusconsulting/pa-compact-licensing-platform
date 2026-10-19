@@ -9,6 +9,10 @@ import { AuthProvider } from "src/contexts/AuthContext";
 import I18nProvider from "src/components/I18nProvider";
 
 export const metadata: Metadata = {
+  title: {
+    default: "PA Compact Data System",
+    template: "%s | PA Compact Data System",
+  },
   icons: [`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/img/logo.svg`],
 };
 
