@@ -1,4 +1,4 @@
-from licensing_api.config import Settings
+from licensing_api.config import Settings, get_settings, settings
 
 
 def test_jwks_url_defaults_to_the_cognito_service_for_the_region():
@@ -19,3 +19,7 @@ def test_jwks_url_uses_the_configured_endpoint():
     assert (
         settings.cognito_jwks_url == 'http://localhost:9229/local_licensing/.well-known/jwks.json'
     )
+
+
+def test_get_settings_returns_the_process_settings():
+    assert get_settings() is settings

@@ -19,21 +19,16 @@ function DatePickerField({
   optional = false,
 }: DatePickerFieldProps) {
   const { t } = useTranslation("common");
+  // Must be rendered inside a react-hook-form FormProvider.
   const form = useFormContext();
-  const register = form?.register;
-  const reg =
-    id && register
-      ? register(id, { required: false, shouldUnregister: true })
-      : null;
+  const reg = form.register(id, { required: false, shouldUnregister: true });
 
-  const updateValue = (val?: string) => {
-    const date = val?.split("/");
-    if (date) {
-      const [month, day, year] = date;
-      const newVal = `${year}-${month}-${day}`;
-      form.setValue(id, newVal);
-      void reg?.onChange({ target: { id, value: newVal } });
-    }
+  // The picker sends MM/DD/YYYY, or an empty string when the field is cleared.
+  const updateValue = (val = "") => {
+    const [month, day, year] = val.split("/");
+    const newVal = month && day && year ? `${year}-${month}-${day}` : null;
+    form.setValue(id, newVal);
+    void reg.onChange({ target: { id, value: newVal } });
   };
 
   useEffect(() => {

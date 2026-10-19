@@ -49,20 +49,22 @@ export default function LoginPage() {
     }
   }
 
-  async function handleNewPassword(e: React.FormEvent) {
+  async function handleNewPassword(
+    e: React.FormEvent,
+    challenge: { user: CognitoUser; userAttributes: Record<string, string> },
+  ) {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
-    if (!pendingChallenge) return;
     setError(null);
     setIsSubmitting(true);
     try {
       await completeNewPassword(
-        pendingChallenge.user,
+        challenge.user,
         newPassword,
-        pendingChallenge.userAttributes,
+        challenge.userAttributes,
       );
       router.push("/");
     } catch (err: unknown) {
@@ -83,7 +85,7 @@ export default function LoginPage() {
               {error}
             </Alert>
           )}
-          <Form onSubmit={handleNewPassword}>
+          <Form onSubmit={(e) => handleNewPassword(e, pendingChallenge)}>
             <Label htmlFor="new-password">New password</Label>
             <TextInput
               id="new-password"

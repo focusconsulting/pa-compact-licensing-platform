@@ -2,6 +2,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
 
+import { useForm, useFormContext } from "react-hook-form";
+
 import FormStep from "./FormStep";
 
 describe("FormStep component", () => {
@@ -115,5 +117,23 @@ describe("FormStep component", () => {
     );
     await user.click(screen.getByRole("button", { name: /Back/ }));
     expect(onBack).toHaveBeenCalled();
+  });
+
+  it("provides the form to its children when given one", () => {
+    function WithForm() {
+      const form = useForm({ defaultValues: { name: "Ada" } });
+      return (
+        <FormStep form={form}>
+          <Reader />
+        </FormStep>
+      );
+    }
+    function Reader() {
+      return <p>{useFormContext().getValues("name") as string}</p>;
+    }
+
+    render(<WithForm />);
+
+    expect(screen.getByText("Ada")).toBeInTheDocument();
   });
 });

@@ -46,7 +46,7 @@ def _mask_sensitive(obj: object) -> object:
     return obj
 
 
-def _configure_otel() -> None:  # pragma: no cover
+def _configure_otel(app: FastAPI) -> None:  # pragma: no cover
     """Configure OpenTelemetry SDK to export traces and metrics to the ADOT sidecar.
 
     Imports are lazy so local dev and tests don't pay the import cost when
@@ -57,6 +57,7 @@ def _configure_otel() -> None:  # pragma: no cover
     from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
     from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
     from opentelemetry.instrumentation.asyncpg import AsyncPGInstrumentor
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
     from opentelemetry.sdk.metrics import MeterProvider
     from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
     from opentelemetry.sdk.resources import Resource
@@ -84,6 +85,9 @@ def _configure_otel() -> None:  # pragma: no cover
 
     # Auto-instrument asyncpg (DB query tracing)
     AsyncPGInstrumentor().instrument()
+
+    # Trace every request; after the providers above, so it uses them
+    FastAPIInstrumentor.instrument_app(app)
 
     logger.info('OpenTelemetry configured', extra={'endpoint': settings.otel_collector_endpoint})
 
@@ -151,9 +155,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     await engine.dispose()
 
 
-if settings.otel_enabled:
-    _configure_otel()
-
 app = FastAPI(
     title='PA Compact Licensing API',
     description='APIs supporting the PA Compact Commission Data System',
@@ -185,10 +186,9 @@ api_router.include_router(health.router)
 api_router.include_router(user.router)
 app.include_router(api_router)
 
-if settings.otel_enabled:
-    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-
-    FastAPIInstrumentor.instrument_app(app)
+# Only deployed tasks export telemetry (to the ADOT sidecar); tests and local runs leave it off.
+if settings.otel_enabled:  # pragma: no cover
+    _configure_otel(app)
 
 if __name__ == '__main__':
     uvicorn.run(

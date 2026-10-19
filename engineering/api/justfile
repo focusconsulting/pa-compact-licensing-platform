@@ -37,7 +37,7 @@ test env-file=".env" *args:
 
 # Run tests with coverage report
 test-coverage env-file=".env" *args:
-    uv run --env-file {{ env-file }} coverage run --branch --source=licensing_api -m pytest {{ args }}
+    uv run --env-file {{ env-file }} coverage run -m pytest {{ args }}
     uv run coverage report
 
 # Open HTML coverage report in browser

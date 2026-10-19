@@ -56,15 +56,15 @@ export function SelectField({
         defaultValue={defaultValue ?? ""}
         name={selectReg?.name ?? id ?? ""}
         required={required}
-        inputRef={(inputRef ?? selectReg?.ref ?? undefined) as React.RefObject<HTMLSelectElement> | undefined}
-        onBlur={selectReg?.onBlur ?? undefined}
-        onChange={onChange ?? selectReg?.onChange ?? undefined}
+        inputRef={(inputRef ?? selectReg?.ref) as React.RefObject<HTMLSelectElement> | undefined}
+        onBlur={selectReg?.onBlur}
+        onChange={onChange ?? selectReg?.onChange}
       >
         {/*TODO: This should be selected by default. Selecting this option shouldn't count as a value*/}
         <option hidden={required} disabled={required} key={null} value="">
           {placeholder}
         </option>
-        {optionElements?.length && optionElements}
+        {optionElements}
       </Select>
     </>
   );
