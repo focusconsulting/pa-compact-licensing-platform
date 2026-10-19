@@ -31,6 +31,7 @@ from licensing_api.repo.reference import (
 )
 from licensing_api.repo.sii_report import SiiReport
 from licensing_api.repo.state import State
+from licensing_api.repo.status import CompactEligibility, PrivilegeStatus, QualifyingLicenseStatus
 from licensing_api.repo.user import User
 
 __all__ = [
@@ -38,6 +39,7 @@ __all__ = [
     'AdverseActionHistory',
     'AdverseActionNpdbCategory',
     'AuditLogEntry',
+    'CompactEligibility',
     'CompactSettings',
     'Document',
     'DomainEvent',
@@ -55,8 +57,10 @@ __all__ = [
     'PrivilegeNumberSequence',
     'PrivilegeRequest',
     'PrivilegeRequestHistory',
+    'PrivilegeStatus',
     'QualifyingLicense',
     'QualifyingLicenseHistory',
+    'QualifyingLicenseStatus',
     'RefAdverseActionType',
     'RefDenialReason',
     'RefNpdbCategory',
