@@ -30,11 +30,12 @@ This should be run before launching the service. Everytime it is invoked, the da
 
 You might need to reset the data for testing if a test doesn't clean up properly after itself. However, tests should be written such that the clean up after themselves.
 
-Test data can be defined [ahead of time](./db-migrations/30000101_000000_test_data.sql).
-
 ```bash
 just infra
 ```
+
+Then load local users with `just seed` (from [`seed/users.sql`](./seed/users.sql); safe to rerun).
+Migrations hold schema only; seed data lives in `seed/` and never reaches the production image.
 
 ### 3. Run the API with hot reload
 
