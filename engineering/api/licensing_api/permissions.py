@@ -19,22 +19,35 @@ from licensing_api.repo.user import User
 class Role(StrEnum):
     """``chk_users_role``. Routes never check a role; they check the permissions it grants."""
 
+    # A PA. Manages their own profile, applications, payments, and privileges.
     LICENSEE = 'licensee'
+    # A state licensing board employee, tied to one state. What they may do there comes from
+    # their per-state grants.
     STATE_STAFF = 'state_staff'
+    # State staff who also manage their own state's users and settings (fees, proofs, contacts).
     STATE_ADMIN = 'state_admin'
+    # Commission staff. Read every state, configure the compact, and override a privilege.
     COMPACT_ADMIN = 'compact_admin'
+    # System operator: Focus during the pilot, then Commission IT.
     ADMIN = 'admin'
 
 
 class Permission(StrEnum):
     # Granted by role, in every state.
+    # Act on the caller's own practitioner record; the route's query limits it to theirs.
     MANAGE_OWN_RECORD = 'manage_own_record'
+    # See the non-private fields of practitioners, licenses, and privileges. Every staff role has it.
     READ_GENERAL = 'read_general'
+    # Configure the compact: fees, which states are live, report lists, privilege overrides.
     COMPACT_ADMIN = 'compact_admin'
     # Granted per state in users.permissions (D5); READ_PRIVATE also comes with the Commission roles.
+    # See private fields: date of birth, address, and the SSN's last four digits.
     READ_PRIVATE = 'read_private'
+    # Reveal a full SSN. Every reveal is audited (ADR-0007).
     READ_SSN = 'read_ssn'
+    # Change the state's records: licenses, eligibility decisions, privileges, adverse actions.
     WRITE = 'write'
+    # Manage the state's staff users, their grants, and the state's settings.
     ADMIN = 'admin'
 
 
