@@ -71,13 +71,7 @@ jobs:
         run: uv sync --frozen
 
       - name: Start services
-        run: docker compose up -d
-
-      - name: Wait for services to be healthy
-        run: |
-          until docker compose exec -T postgres pg_isready -U licensing -d licensing; do
-            echo "Waiting for postgres..."; sleep 1
-          done
+        run: docker compose up -d --wait postgres
 
       - name: Run tests with coverage
         run: |

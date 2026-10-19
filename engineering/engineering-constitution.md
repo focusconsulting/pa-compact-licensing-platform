@@ -99,7 +99,7 @@ user, keep their `401`/`403` codes.
 [RFP](../product/context/research-corpus/sources/pa-compact-commission-data-system-rfp.md)'s QASP floor of 90% is the
 contractual minimum, not the target.
 
-API tests run against real Postgres and other services (Docker Compose locally
+API tests run against real Postgres (Docker Compose locally
 and in CI), not mocks. External services are mocked at their boundary:
 Cognito, the payment processor, SES. Prefer tests that exercise an endpoint
 end to end through the API over unit tests of its internals. Shared
@@ -212,7 +212,7 @@ source" is not a justification to skip.
 
 **Encryption.** TLS on every connection, including the hops inside the
 VPC: CloudFront to the load balancer, the load balancer to the API, and
-the API to Postgres and other services. A hop without TLS requires an ADR. RDS and S3 are
+the API to Postgres. A hop without TLS requires an ADR. RDS and S3 are
 encrypted at rest. SSNs are additionally
 encrypted at the column level.
 
@@ -455,8 +455,9 @@ for the processor ([Principle IV](#iv-no-mock-code-in-production)).
 ([Principle XII](#xii-a-fresh-clone-runs-from-the-readme))
 
 **Local services**: [Docker Compose](api/docker-compose.yaml) in
-`engineering/api/` runs Postgres and other services (`just infra`); local
-settings come from [`.env`](api/.env)
+`engineering/api/` runs Postgres, maildev, RustFS, and the Cognito mock
+([`engineering/mocks/`](mocks/)) (`just infra`, or `just up` for the whole
+system); local settings come from [`.env.example`](api/.env.example)
 
 **Package Managers**: `uv` (Python), `pnpm` (Node)
 
