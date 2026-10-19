@@ -1,8 +1,10 @@
 """require() and public(), through routes as clients call them (ADR-0009)."""
 
+import re
 import uuid
 from collections.abc import AsyncGenerator, Callable, Generator
 from functools import partial
+from pathlib import Path
 from typing import Annotated, Any
 from unittest.mock import patch
 
@@ -271,3 +273,27 @@ def test_route_access_reads_each_declaration():
     assert access['/states/{state_code}/write'].state_param == 'state_code'
     assert access['/nested'] is not None and access['/nested'].permission == Permission.WRITE
     assert access['/undeclared'] is None
+
+
+_ROLES_DOC = Path(__file__).parents[2] / 'docs/roles-and-permissions.md'
+
+
+def _doc_table(heading: str) -> dict[str, list[str]]:
+    """The rows under ``## heading``: each row's first-column code name to its other code names."""
+    section = _ROLES_DOC.read_text().split(f'## {heading}\n')[1].split('\n## ')[0]
+    rows = (line.split('|')[1:-1] for line in section.splitlines() if line.startswith('| `'))
+    return {
+        re.findall(r'`([a-z_]+)`', cells[0])[0]: re.findall(r'`([a-z_]+)`', cells[-1])
+        for cells in rows
+    }
+
+
+def test_the_roles_doc_matches_role_permissions():
+    documented = {role: set(held) for role, held in _doc_table('Roles').items()}
+    assert documented == {
+        role.value: {p.value for p in held} for role, held in ROLE_PERMISSIONS.items()
+    }
+
+
+def test_the_roles_doc_describes_every_permission():
+    assert set(_doc_table('Permissions')) == {permission.value for permission in Permission}

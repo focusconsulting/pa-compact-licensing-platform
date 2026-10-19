@@ -50,7 +50,7 @@ A handler is `async def run(session, ctx, event) -> None`. It is called with the
 
 ## Declaring a route
 
-`licensing_api/permissions.py`. Every `/api` route declares who may call it; `tests/test_route_access.py` fails on one that does not.
+`licensing_api/permissions.py`. Every `/api` route declares who may call it; `tests/test_route_access.py` fails on one that does not. What each role and permission means is in [Roles and Permissions](roles-and-permissions.md).
 
 ```python
 @router.get('/states/{state_code}/applications', name=..., description=...)

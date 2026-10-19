@@ -6,6 +6,7 @@ The PA Compact Data System's relational data model: every table, what each colum
 - Dates and the reference time zone: [ADR-0006](../adrs/0006-reference-time-zone-and-dates.md)
 - SSN storage: [ADR-0007](../adrs/0007-ssn-storage.md)
 - Expungement and append-only history: [ADR-0008](../adrs/0008-expungement-and-append-only-history.md)
+- Who may see and change what: [Roles and Permissions](roles-and-permissions.md)
 - Plan: [F-02 base data model](../thoughts/shared/plans/api/2026-10-07-F-02-canonical-data-model.md)
 
 Rule citations are to the adopted Rules 3 and 4 in `product/context/research-corpus/sources/` and to the model legislation (ML).
@@ -40,10 +41,10 @@ A person who can sign in, or the system user that workers and jobs write as. Tie
 | `email` | TEXT, unique | Sign-in address |
 | `public_id` | UUID, unique, NULL | The Cognito `sub`; NULL until first sign-in (ADR-0003) |
 | `given_name`, `family_name` | TEXT | From Cognito |
-| `role` | TEXT, CHECK | `licensee`, `state_staff`, `state_admin`, `compact_admin`, `admin` (backlog D5) |
+| `role` | TEXT, CHECK | `licensee`, `state_staff`, `state_admin`, `compact_admin`, `admin` (backlog D5; see [Roles and Permissions](roles-and-permissions.md)) |
 | `state_code` | CHAR(2), FK `states`, NULL | The staff member's state. Required for `state_staff` and `state_admin`; NULL for `admin` and `compact_admin`; NULL for `licensee`, because a PA signs up before designating a state (FLOW-01) |
 | `is_active` | BOOLEAN | An inactive user cannot sign in |
-| `permissions` | JSONB object | Per-state permissions, e.g. `{"KS": ["write", "read_private"]}` (D5) |
+| `permissions` | JSONB object | Per-state grants, e.g. `{"KS": ["write", "read_private"]}` (D5; see [Roles and Permissions](roles-and-permissions.md#grants)) |
 
 The system user is `system@pa-compact.invalid`: inactive, no `public_id`, its own creator.
 
