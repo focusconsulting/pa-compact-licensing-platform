@@ -62,3 +62,14 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+
+  # JavaScript (engineering/e2e/, Playwright)
+  - package-ecosystem: npm
+    directory: /engineering/e2e
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      e2e-all:
+        patterns: ["*"]
