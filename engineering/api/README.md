@@ -105,6 +105,9 @@ the [engineering constitution](../engineering-constitution.md).
 3. Secured routes inject `get_auth_claims`, which validates a Cognito ID
    token against the pool's JWKS and returns
    `AuthClaims(sub: UUID, email: str)`
+4. Every `/api` route declares who may call it with `require(permission)`
+   or `public()`; what each role and permission allows is in
+   [Roles and Permissions](../docs/roles-and-permissions.md)
 
 **Layers:** `routes/` (HTTP handlers and their Pydantic models),
 `repo/` (async query functions), `migrations.py` (yoyo migrations run

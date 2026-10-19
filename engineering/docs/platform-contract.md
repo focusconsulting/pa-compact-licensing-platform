@@ -1,6 +1,6 @@
 # Platform Contract
 
-The functions every feature calls to record a change, and the signatures the epic 2 tracks implement. Decided in [ADR-0009](../adrs/0009-route-authorization-and-change-context.md); planned in the [contract step plan](../thoughts/shared/plans/api/2026-10-14-bd-4gi.2-platform-contract.md). Changing a signature here is a platform change: it needs the tech lead's review.
+The functions every feature calls to record a change and declare a route, and the signatures the epic 2 tracks implement. Decided in [ADR-0009](../adrs/0009-route-authorization-and-change-context.md); planned in the [contract step plan](../thoughts/shared/plans/api/2026-10-14-bd-4gi.2-platform-contract.md). Changing a signature here is a platform change: it needs the tech lead's review.
 
 ## Recording a change
 
@@ -47,6 +47,45 @@ Request IDs come from `RequestIdMiddleware`: the caller's `X-Request-ID` when it
 | `HandlerRegistry(handlers)` | `events.py` | Built by the Worker from a constant tuple; rejects duplicate names |
 
 A handler is `async def run(session, ctx, event) -> None`. It is called with the system context and the event's request ID, and must be safe to run twice for the same event.
+
+## Declaring a route
+
+`licensing_api/permissions.py`. Every `/api` route declares who may call it; `tests/test_route_access.py` fails on one that does not. What each role and permission means is in [Roles and Permissions](roles-and-permissions.md).
+
+```python
+@router.get('/states/{state_code}/applications', name=..., description=...)
+async def list_applications(
+    state_code: str,
+    caller: Annotated[User, require(Permission.READ_PRIVATE, state_param='state_code')],
+    query: Annotated[PageQuery, page_query('submitted_at', 'status', default_sort='-submitted_at')],
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+) -> Paged[ApplicationOut]:
+    rows, total = await paginate(session, applications_in_state(state_code), query,
+                                 {'submitted_at': col(...), 'status': col(...)}, tiebreaker=col(...id))
+    return Paged(data=[ApplicationOut.model_validate(r) for r in rows], page=query.page_of(total))
+```
+
+| Name | Contract |
+|---|---|
+| `require(permission=None, *, state_param=None)` | Yields the caller's `User` (from `current_user`). The caller passes when they hold `permission` through their role or as a grant in the route's state: the `state_param` path state, or their own. With no `permission`, any active user passes. Unknown user `403 USER_NOT_FOUND`, inactive `403 USER_INACTIVE`, missing permission `403 FORBIDDEN` |
+| `public()` | For a route anyone may call, signed in or not; use in `dependencies=[...]` |
+| `Permission` | What a route asks for. `manage_own_record`, `read_general`, `compact_admin` come from a role; `read_private`, `read_ssn`, `write`, `admin` are granted per state in `users.permissions` (the Commission roles also hold `read_private` everywhere) |
+| `ROLE_PERMISSIONS` | Each role's permissions. A role is never checked directly: change what a role may do here, not in routes |
+
+`require` decides who may call a route, not which rows they see: a record outside the caller's scope is filtered by the route's query and returns `404` (constitution Principle II).
+
+## Response shapes
+
+`licensing_api/responses.py` and `licensing_api/repo/pagination.py`. Errors keep `{"code", "details"}` (`errors.py`).
+
+| Name | Contract |
+|---|---|
+| `Data[T]` | `{"data": ...}` for one resource |
+| `Paged[T]` | `{"data": [...], "page": {"number", "size", "total"}}` for a list |
+| `page_query(*sortable, default_sort)` | Reads `?page=` (from 1), `?page_size=` (1–100, default 25), `?sort=field,-field`; an unlisted sort field is `422 VALIDATION_ERROR` |
+| `paginate(session, statement, query, columns, tiebreaker) -> (rows, total)` | `columns` maps sort names to columns; `tiebreaker` is a unique column sorted last |
+
+`/me` still returns its body unwrapped: the deployed client reads that shape, and `.4` moves it to `Data` with the regenerated client.
 
 ## Signatures the tracks implement
 
