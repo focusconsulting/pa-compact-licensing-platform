@@ -5,6 +5,7 @@ import basic from "./en/basic.json";
 import address from "./en/address.json";
 import date from "./en/date.json";
 import country from "./en/country.json";
+
 export const defaultNS = "common";
 
 // Resources are bundled, so init completes synchronously and needs no loading state.

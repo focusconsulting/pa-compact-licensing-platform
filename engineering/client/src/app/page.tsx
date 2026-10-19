@@ -44,7 +44,9 @@ function Dashboard() {
               <tr>
                 <th>Name</th>
                 <td>
-                  {[user.given_name, user.family_name].filter(Boolean).join(" ") || "—"}
+                  {[user.given_name, user.family_name]
+                    .filter(Boolean)
+                    .join(" ") || "—"}
                 </td>
               </tr>
               <tr>

@@ -1,6 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { CognitoUser, CognitoUserSession } from "amazon-cognito-identity-js";
 import {
   completeNewPassword as cognitoCompleteNewPassword,
@@ -28,10 +35,12 @@ interface AuthContextValue extends AuthState {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function sessionToState(session: CognitoUserSession): Omit<AuthState, "isLoading"> {
+function sessionToState(
+  session: CognitoUserSession,
+): Omit<AuthState, "isLoading"> {
   return {
     idToken: session.getIdToken().getJwtToken(),
-    email: session.getIdToken().payload["email"] as string,
+    email: session.getIdToken().payload.email as string,
   };
 }
 
@@ -55,33 +64,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .catch(() => setState({ isLoading: false, idToken: null, email: null }));
   }, []);
 
-  async function signIn(email: string, password: string): Promise<SignInResult> {
-    const result = await cognitoSignIn(email, password);
-    if (result.type === "success") {
-      setState({ isLoading: false, ...sessionToState(result.session) });
-    }
-    return result;
-  }
+  const signIn = useCallback(
+    async (email: string, password: string): Promise<SignInResult> => {
+      const result = await cognitoSignIn(email, password);
+      if (result.type === "success") {
+        setState({ isLoading: false, ...sessionToState(result.session) });
+      }
+      return result;
+    },
+    [],
+  );
 
-  async function completeNewPassword(
-    user: CognitoUser,
-    newPassword: string,
-    userAttributes: Record<string, string>,
-  ): Promise<void> {
-    const session = await cognitoCompleteNewPassword(user, newPassword, userAttributes);
-    setState({ isLoading: false, ...sessionToState(session) });
-  }
+  const completeNewPassword = useCallback(
+    async (
+      user: CognitoUser,
+      newPassword: string,
+      userAttributes: Record<string, string>,
+    ): Promise<void> => {
+      const session = await cognitoCompleteNewPassword(
+        user,
+        newPassword,
+        userAttributes,
+      );
+      setState({ isLoading: false, ...sessionToState(session) });
+    },
+    [],
+  );
 
-  function signOut(): void {
+  const signOut = useCallback((): void => {
     cognitoSignOut();
     setState({ isLoading: false, idToken: null, email: null });
-  }
+  }, []);
 
-  return (
-    <AuthContext.Provider value={{ ...state, signIn, completeNewPassword, signOut }}>
-      {children}
-    </AuthContext.Provider>
+  // Memoised so consumers re-render only when the auth state changes.
+  const value = useMemo(
+    () => ({ ...state, signIn, completeNewPassword, signOut }),
+    [state, signIn, completeNewPassword, signOut],
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextValue {

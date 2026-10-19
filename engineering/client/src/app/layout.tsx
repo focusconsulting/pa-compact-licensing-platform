@@ -14,12 +14,9 @@ export const metadata: Metadata = {
 
 interface LayoutProps {
   children: React.ReactNode;
-  params: {
-    locale: string;
-  };
 }
 
-export default function RootLayout({ children, params }: LayoutProps) {
+export default function RootLayout({ children }: LayoutProps) {
   return (
     <html lang="en">
       <body>

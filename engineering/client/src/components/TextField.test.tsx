@@ -1,6 +1,5 @@
 import { screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 
 import { TextField } from "./TextField";
 import { renderWithForm } from "../tests/util";
@@ -19,10 +18,10 @@ describe("TextField component", () => {
   });
 
   it("renders optional correctly", () => {
-    renderWithForm(
-      <TextField id="optional" label="optional" optional />,
-    );
-    expect(screen.getByRole("textbox", { name: /optional/ })).not.toBeRequired();
+    renderWithForm(<TextField id="optional" label="optional" optional />);
+    expect(
+      screen.getByRole("textbox", { name: /optional/ }),
+    ).not.toBeRequired();
   });
 
   it("renders with hint", () => {
@@ -42,15 +41,13 @@ describe("TextField component", () => {
         onChange={() => {}}
       />,
     );
-    expect(screen.getByRole("textbox", { name: /some-name/ })).toHaveDisplayValue(
-      "hello",
-    );
+    expect(
+      screen.getByRole("textbox", { name: /some-name/ }),
+    ).toHaveDisplayValue("hello");
   });
 
   it("renders disabled state", () => {
-    renderWithForm(
-      <TextField id="some-id" label="some-name" disabled />,
-    );
+    renderWithForm(<TextField id="some-id" label="some-name" disabled />);
     expect(screen.getByRole("textbox", { name: /some-name/ })).toBeDisabled();
   });
 });

@@ -1,9 +1,9 @@
 import { Label, TextInput } from "@trussworks/react-uswds";
 import { useTranslation } from "react-i18next";
 
-import "/src/styles/form.scss";
+import "src/styles/form.scss";
 import { useFormContext } from "react-hook-form";
-import { ChangeEventHandler, default as React, FormEventHandler } from "react";
+import React, { ChangeEventHandler, FormEventHandler } from "react";
 
 export interface TextFieldProps {
   id: string;
@@ -53,7 +53,7 @@ export function TextField({
         {label}
       </Label>
       {hint && (
-        <span className="usa-hint" id={id + "Hint"}>
+        <span className="usa-hint" id={`${id}Hint`}>
           {hint}
         </span>
       )}

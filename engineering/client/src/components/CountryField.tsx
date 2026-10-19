@@ -1,11 +1,10 @@
-import SelectField from "./SelectField.jsx";
-
-import "/src/styles/form.scss";
 import { useTranslation } from "react-i18next";
+
+import { SelectField } from "./SelectField";
+import "src/styles/form.scss";
 
 export interface CountryFieldProps {
   id: string;
-  className?: string;
   label?: string;
   required?: boolean;
   birthCountry?: boolean;

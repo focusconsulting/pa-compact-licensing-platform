@@ -12,9 +12,15 @@ describe("DateFields component", () => {
 
   it("renders month, day, and year inputs", () => {
     renderWithForm(<DateFields id="some-id" />);
-    expect(screen.getByRole("combobox", { name: /Month/ })).toBeInstanceOf(HTMLSelectElement);
-    expect(screen.getByRole("textbox", { name: /Day/ })).toBeInstanceOf(HTMLInputElement);
-    expect(screen.getByRole("textbox", { name: /Year/ })).toBeInstanceOf(HTMLInputElement);
+    expect(screen.getByRole("combobox", { name: /Month/ })).toBeInstanceOf(
+      HTMLSelectElement,
+    );
+    expect(screen.getByRole("textbox", { name: /Day/ })).toBeInstanceOf(
+      HTMLInputElement,
+    );
+    expect(screen.getByRole("textbox", { name: /Year/ })).toBeInstanceOf(
+      HTMLInputElement,
+    );
   });
 
   it("is required by default", () => {
@@ -26,12 +32,7 @@ describe("DateFields component", () => {
 
   it("renders optional correctly", () => {
     renderWithForm(
-      <DateFields
-        id="some-id"
-        optionalYear
-        optionalMonth
-        optionalDay
-      />,
+      <DateFields id="some-id" optionalYear optionalMonth optionalDay />,
     );
     expect(screen.getByRole("combobox", { name: /Month/ })).not.toBeRequired();
     expect(screen.getByRole("textbox", { name: /Day/ })).not.toBeRequired();
@@ -59,7 +60,10 @@ describe("DateFields component", () => {
     await user.type(screen.getByRole("textbox", { name: /Day/ }), "20");
     await user.clear(screen.getByRole("textbox", { name: /Year/ }));
     await user.type(screen.getByRole("textbox", { name: /Year/ }), "2026");
-    await user.selectOptions(screen.getByRole("combobox", { name: /Month/ }), "02");
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: /Month/ }),
+      "02",
+    );
 
     await user.click(screen.getByRole("button", { name: "Submit" }));
     expect(handler).toHaveBeenCalledWith(

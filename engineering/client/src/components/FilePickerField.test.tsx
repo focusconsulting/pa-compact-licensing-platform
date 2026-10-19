@@ -54,9 +54,15 @@ describe("FilePickerField component", () => {
   it("stores the chosen file's name", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
-    renderWithForm(<FilePickerField id="doc" label="Upload document" optional />, { onSubmit });
+    renderWithForm(
+      <FilePickerField id="doc" label="Upload document" optional />,
+      { onSubmit },
+    );
 
-    await user.upload(document.querySelector<HTMLInputElement>('input[type="file"]')!, new File(["x"], "proof.pdf"));
+    await user.upload(
+      document.querySelector<HTMLInputElement>('input[type="file"]')!,
+      new File(["x"], "proof.pdf"),
+    );
     await user.click(screen.getByRole("button", { name: "Submit" }));
 
     expect(onSubmit.mock.calls[0][0].doc).toBe("proof.pdf");
@@ -78,10 +84,13 @@ describe("FilePickerField component", () => {
   it("restores a file name inside a field array", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
-    renderWithForm(<FilePickerField id="proofs.0.file" label="Upload document" />, {
-      defaultValues: { proofs: [{ file: "first.pdf" }] },
-      onSubmit,
-    });
+    renderWithForm(
+      <FilePickerField id="proofs.0.file" label="Upload document" />,
+      {
+        defaultValues: { proofs: [{ file: "first.pdf" }] },
+        onSubmit,
+      },
+    );
 
     await user.click(screen.getByRole("button", { name: "Submit" }));
     expect(onSubmit.mock.calls[0][0].proofs).toEqual([{ file: "first.pdf" }]);

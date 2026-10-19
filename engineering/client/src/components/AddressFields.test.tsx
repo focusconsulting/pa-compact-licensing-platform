@@ -8,14 +8,24 @@ import { renderWithForm } from "../tests/util";
 describe("AddressFields component", () => {
   it("renders fieldset with the given label as legend", () => {
     renderWithForm(
-      <AddressFields id="home" label="Home Address" hint="Enter your address" />,
+      <AddressFields
+        id="home"
+        label="Home Address"
+        hint="Enter your address"
+      />,
     );
-    expect(screen.getByRole("group", { name: /Home Address/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole("group", { name: /Home Address/ }),
+    ).toBeInTheDocument();
   });
 
   it("renders address line 1 and line 2 text inputs", () => {
     renderWithForm(
-      <AddressFields id="home" label="Home Address" hint="Enter your address" />,
+      <AddressFields
+        id="home"
+        label="Home Address"
+        hint="Enter your address"
+      />,
     );
     expect(
       screen.getByRole("textbox", { name: /Address line 1/i }),
@@ -27,7 +37,11 @@ describe("AddressFields component", () => {
 
   it("renders city, state, and zip inputs", () => {
     renderWithForm(
-      <AddressFields id="home" label="Home Address" hint="Enter your address" />,
+      <AddressFields
+        id="home"
+        label="Home Address"
+        hint="Enter your address"
+      />,
     );
     expect(screen.getByRole("textbox", { name: /City/i })).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: /State/i })).toBeInTheDocument();
@@ -36,14 +50,22 @@ describe("AddressFields component", () => {
 
   it("renders a country select field", () => {
     renderWithForm(
-      <AddressFields id="home" label="Home Address" hint="Enter your address" />,
+      <AddressFields
+        id="home"
+        label="Home Address"
+        hint="Enter your address"
+      />,
     );
     expect(screen.getByRole("combobox")).toBeInTheDocument();
   });
 
   it("displays the hint text", () => {
     renderWithForm(
-      <AddressFields id="home" label="Home Address" hint="Enter your mailing address" />,
+      <AddressFields
+        id="home"
+        label="Home Address"
+        hint="Enter your mailing address"
+      />,
     );
     expect(screen.getByText("Enter your mailing address")).toBeInTheDocument();
   });

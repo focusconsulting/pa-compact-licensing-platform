@@ -1,9 +1,9 @@
 import { Fieldset } from "@trussworks/react-uswds";
 import { useTranslation } from "react-i18next";
 
-import TextField from "./TextField.jsx";
+import { TextField } from "./TextField";
 
-import "/src/styles/form.scss";
+import "src/styles/form.scss";
 
 export interface NameFieldsProps {
   id?: string;
@@ -17,16 +17,16 @@ function NameFields({ id, className, label }: NameFieldsProps) {
   return (
     <Fieldset legend={label} className={[className, "legend-lg"].join(" ")}>
       <TextField
-        id={id ? id + "FirstName" : "firstName"}
+        id={id ? `${id}FirstName` : "firstName"}
         label={t("basic:fields.name.firstNameTitle")}
       />
       <TextField
-        id={id ? id + "MiddleName" : "middleName"}
+        id={id ? `${id}MiddleName` : "middleName"}
         label={t("basic:fields.name.middleNameTitle")}
         optional
       />
       <TextField
-        id={id ? id + "LastName" : "lastName"}
+        id={id ? `${id}LastName` : "lastName"}
         label={t("basic:fields.name.lastNameTitle")}
       />
     </Fieldset>

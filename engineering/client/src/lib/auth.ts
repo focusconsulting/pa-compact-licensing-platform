@@ -7,18 +7,18 @@ import {
 
 // Lazily initialized — CognitoUserPool accesses localStorage which is browser-only.
 // Module-level initialization would throw during Next.js static pre-rendering.
-let _userPool: CognitoUserPool | null = null;
+let userPool: CognitoUserPool | null = null;
 
 function getUserPool(): CognitoUserPool {
-  if (!_userPool) {
-    _userPool = new CognitoUserPool({
+  if (!userPool) {
+    userPool = new CognitoUserPool({
       UserPoolId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID!,
       ClientId: process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID!,
       // Unset in AWS, so the SDK calls Cognito; the local stack points it at the Cognito mock.
       endpoint: process.env.NEXT_PUBLIC_COGNITO_ENDPOINT_URL || undefined,
     });
   }
-  return _userPool;
+  return userPool;
 }
 
 export type SignInResult =
@@ -46,9 +46,16 @@ export function signIn(email: string, password: string): Promise<SignInResult> {
       onFailure: reject,
       newPasswordRequired: (userAttributes) => {
         // Cognito rejects attempts to write back read-only attributes
-        delete userAttributes.email_verified;
-        delete userAttributes.email;
-        resolve({ type: "newPasswordRequired", user, userAttributes });
+        const {
+          email_verified: readOnlyEmailVerified,
+          email: readOnlyEmail,
+          ...writable
+        } = userAttributes as Record<string, string>;
+        resolve({
+          type: "newPasswordRequired",
+          user,
+          userAttributes: writable,
+        });
       },
     });
   });

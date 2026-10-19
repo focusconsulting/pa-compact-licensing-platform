@@ -47,9 +47,16 @@ describe("DatePickerField component", () => {
   it("stores a typed date as YYYY-MM-DD", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
-    renderWithForm(<DatePickerField id="dob" label="Date of birth" />, { onSubmit });
+    renderWithForm(<DatePickerField id="dob" label="Date of birth" />, {
+      onSubmit,
+    });
 
-    await user.type(document.getElementById("dob")!.parentElement!.querySelector("input:not([type=hidden])")!, "01/15/2000");
+    await user.type(
+      document
+        .getElementById("dob")!
+        .parentElement!.querySelector("input:not([type=hidden])")!,
+      "01/15/2000",
+    );
     await user.click(screen.getByRole("button", { name: "Submit" }));
 
     expect(onSubmit.mock.calls[0][0].dob).toBe("2000-01-15");
@@ -58,8 +65,15 @@ describe("DatePickerField component", () => {
   it("clears the value when the date is cleared", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
-    renderWithForm(<DatePickerField id="dob" label="Date of birth" optional />, { onSubmit });
-    const input = document.getElementById("dob")!.parentElement!.querySelector<HTMLInputElement>("input:not([type=hidden])")!;
+    renderWithForm(
+      <DatePickerField id="dob" label="Date of birth" optional />,
+      { onSubmit },
+    );
+    const input = document
+      .getElementById("dob")!
+      .parentElement!.querySelector<HTMLInputElement>(
+        "input:not([type=hidden])",
+      )!;
 
     await user.type(input, "01/15/2000");
     await user.clear(input);

@@ -7,9 +7,15 @@ import { renderWithForm } from "../tests/util";
 describe("NameFields component", () => {
   it("renders first, middle, and last name fields", () => {
     renderWithForm(<NameFields label="Legal Name" />);
-    expect(screen.getByRole("textbox", { name: /First name/ })).toBeInTheDocument();
-    expect(screen.getByRole("textbox", { name: /Middle name/ })).toBeInTheDocument();
-    expect(screen.getByRole("textbox", { name: /Last name/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: /First name/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: /Middle name/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: /Last name/ }),
+    ).toBeInTheDocument();
   });
 
   it("renders fieldset legend", () => {
@@ -23,7 +29,9 @@ describe("NameFields component", () => {
     renderWithForm(<NameFields label="Legal Name" />);
     expect(screen.getByRole("textbox", { name: /First name/ })).toBeRequired();
     expect(screen.getByRole("textbox", { name: /Last name/ })).toBeRequired();
-    expect(screen.getByRole("textbox", { name: /Middle name/ })).not.toBeRequired();
+    expect(
+      screen.getByRole("textbox", { name: /Middle name/ }),
+    ).not.toBeRequired();
   });
 
   it("uses id prefix for field ids when provided", () => {

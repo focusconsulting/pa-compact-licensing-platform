@@ -14,7 +14,12 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "lcov"],
       // Constitution Principle III: 100% line and branch coverage.
-      thresholds: { lines: 100, branches: 100, functions: 100, statements: 100 },
+      thresholds: {
+        lines: 100,
+        branches: 100,
+        functions: 100,
+        statements: 100,
+      },
       include: ["src/**/*.{ts,tsx}"],
       exclude: [
         "src/tests/**",
