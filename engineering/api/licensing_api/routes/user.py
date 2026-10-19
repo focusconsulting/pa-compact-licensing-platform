@@ -3,12 +3,9 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from licensing_api.auth import AuthClaims, get_auth_claims
-from licensing_api.dependencies import get_db_session
-from licensing_api.errors import AppError, ErrorCode
-from licensing_api.repo.user import get_user_by_email, get_user_by_public_id
+from licensing_api.context import current_user
+from licensing_api.repo.user import User
 
 router = APIRouter()
 
@@ -30,20 +27,5 @@ class CurrentUser(BaseModel):
     name='Get current user',
     description='Returns information about the current user',
 )
-async def get_me(
-    claims: Annotated[AuthClaims, Depends(get_auth_claims)],
-    session: Annotated[AsyncSession, Depends(get_db_session)],
-) -> CurrentUser:
-    user = await get_user_by_public_id(session, claims.sub)
-    if user is None:
-        user = await get_user_by_email(session, claims.email)
-        if user is None:
-            raise AppError(403, ErrorCode.UserNotFound, ['User not found'])
-        if user.public_id is None:
-            user.public_id = claims.sub
-            await session.commit()
-
-    if not user.is_active:
-        raise AppError(403, ErrorCode.UserInactive, ['User is inactive'])
-
+async def get_me(user: Annotated[User, Depends(current_user)]) -> CurrentUser:
     return CurrentUser.model_validate(user)
