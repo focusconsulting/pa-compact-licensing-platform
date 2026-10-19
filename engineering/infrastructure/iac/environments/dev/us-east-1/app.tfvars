@@ -1,13 +1,15 @@
 aws_region       = "us-east-1"
 environment_name = "dev"
 tf_state_bucket  = "focus-dev-pacompact-terraform-state"
-dns_name        = "site.dev-pacompact.aws.focusconsulting.io"
+dns_name         = "site.dev-pacompact.aws.focusconsulting.io"
 
 # Database
-db_username = "licensing"
-db_password = "password"
+db_username             = "licensing"
 db_instance_class       = "db.t4g.medium"
 backup_retention_period = 1
+
+# DEV has a jumpbox for SSM tunnels; its security group ID is in dev-jumpbox-sgid-tfvar
+jumpbox_enabled = true
 
 # ECS — ECR image URI, e.g. 123456789012.dkr.ecr.us-east-1.amazonaws.com/licensing-api
 repo_name = "126942145463.dkr.ecr.us-east-1.amazonaws.com/pacompact-app-dev"

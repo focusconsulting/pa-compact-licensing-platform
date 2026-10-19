@@ -37,12 +37,6 @@ variable "db_username" {
   description = "Database master username"
 }
 
-variable "db_password" {
-  type        = string
-  description = "Database master password"
-  sensitive   = true
-}
-
 variable "repo_name" {
   type        = string
   description = "ECR repository URI for the API container image"
@@ -77,4 +71,10 @@ variable "cognito_logout_url" {
   type        = string
   description = "Cognito logout redirect URL. Defaults to https://<dns_name> if not set."
   default     = null
+}
+
+variable "jumpbox_enabled" {
+  type        = bool
+  description = "Allow ingress from the jumpbox whose security group ID is in the <environment>-jumpbox-sgid-tfvar secret. Only DEV has a jumpbox."
+  default     = false
 }
