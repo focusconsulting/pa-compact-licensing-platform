@@ -96,10 +96,16 @@ jobs:
           cache: pnpm
           cache-dependency-path: engineering/client/pnpm-lock.yaml
 
-      - name: Install dependencies (and the Chrome pa11y drives)
+      - name: Install dependencies
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: "true"
         run: pnpm install --frozen-lockfile
 
+      # pnpm's side-effects cache can skip puppeteer's Chrome download, so pa11y
+      # uses the Chrome the runner already has.
       - name: Build, serve, and scan
+        env:
+          PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: pnpm a11y
 
   deploy:
