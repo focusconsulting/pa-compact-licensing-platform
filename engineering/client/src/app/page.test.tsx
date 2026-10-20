@@ -25,7 +25,7 @@ beforeEach(() => {
 });
 
 const mockUser = {
-  id: 1,
+  user_id: "8f14e45f-ceea-467f-a0e6-2b5c3d1a9e2b",
   email: "user@example.com",
   given_name: "Jane",
   family_name: "Doe",

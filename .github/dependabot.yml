@@ -1,8 +1,8 @@
 version: 2
 updates:
-  # JavaScript (client/)
+  # JavaScript (engineering/client/)
   - package-ecosystem: npm
-    directory: /client
+    directory: /engineering/client
     schedule:
       interval: weekly
       day: monday
@@ -11,9 +11,9 @@ updates:
       npm-all:
         patterns: ["*"]
 
-  # Python / uv (api/)
-  - package-ecosystem: pip
-    directory: /api
+  # Python / uv (engineering/api/)
+  - package-ecosystem: uv
+    directory: /engineering/api
     schedule:
       interval: weekly
       day: monday
@@ -24,7 +24,7 @@ updates:
 
   # Terraform providers — app component
   - package-ecosystem: terraform
-    directory: /infrastructure/iac/components/app/terraform
+    directory: /engineering/infrastructure/iac/components/app/terraform
     schedule:
       interval: weekly
       day: monday
@@ -35,7 +35,7 @@ updates:
 
   # Terraform providers — ecr component
   - package-ecosystem: terraform
-    directory: /infrastructure/iac/components/ecr/terraform
+    directory: /engineering/infrastructure/iac/components/ecr/terraform
     schedule:
       interval: weekly
       day: monday

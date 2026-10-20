@@ -7,7 +7,7 @@ import { authFetch } from "src/lib/api";
 import { Button } from "@trussworks/react-uswds";
 
 interface CurrentUser {
-  id: number;
+  user_id: string; // the user's public UUID
   email: string;
   given_name: string | null;
   family_name: string | null;

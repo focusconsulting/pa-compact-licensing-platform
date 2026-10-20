@@ -6,6 +6,7 @@ import "src/styles/styles.scss";
  */
 import { Metadata } from "next";
 import { AuthProvider } from "src/contexts/AuthContext";
+import I18nProvider from "src/components/I18nProvider";
 
 export const metadata: Metadata = {
   icons: [`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/img/logo.svg`],
@@ -22,7 +23,9 @@ export default function RootLayout({ children, params }: LayoutProps) {
   return (
     <html lang="en">
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <I18nProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </I18nProvider>
       </body>
     </html>
   );
