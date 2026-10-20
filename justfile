@@ -36,3 +36,10 @@ seed name="users":
 # Run the end-to-end tests against the running system (start it with `just up` first)
 e2e:
     cd engineering/e2e && pnpm install && pnpm exec playwright install chromium && pnpm test
+
+# Everything CI checks, for the API, client, mocks, and e2e specs (the API's tests need `just services`)
+check:
+    cd engineering/api && just check
+    cd engineering/client && pnpm check
+    cd engineering/mocks/cognito && pnpm typecheck && pnpm test
+    cd engineering/e2e && pnpm typecheck

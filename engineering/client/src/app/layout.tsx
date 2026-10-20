@@ -20,6 +20,7 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
+/** Root layout for every page: sets the page title and provides i18n and the signed-in user. */
 export default function RootLayout({ children }: LayoutProps) {
   return (
     <html lang="en">

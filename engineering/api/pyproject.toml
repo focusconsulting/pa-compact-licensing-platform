@@ -56,12 +56,16 @@ target-version = "py313"
 quote-style="single"
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "B", "C4", "UP"]
+# D101-D103: every public class, method, and function has a docstring (2xz.4).
+select = ["E", "F", "W", "I", "B", "C4", "UP", "D101", "D102", "D103"]
 ignore = [
   "E501",  # line length handled by formatter
   "B904",  # raise-without-from in exception re-wrapping is intentional
   "UP017", # datetime.UTC not recognized by pyright 1.1.x stubs; use timezone.utc
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D"]  # test names say what they check
 
 [tool.pyright]
 pythonVersion = "3.13"

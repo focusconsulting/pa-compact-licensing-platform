@@ -4,6 +4,8 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    """API configuration, read from environment variables, with defaults for local development."""
+
     db_host: str = 'localhost'
     db_port: int = 5432
     db_name: str = 'licensing'
@@ -26,14 +28,17 @@ class Settings(BaseSettings):
 
     @property
     def db_url(self) -> str:
+        """The asyncpg URL the app's database engine connects with."""
         return f'postgresql+asyncpg://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}'
 
     @property
     def sync_db_url(self) -> str:
+        """The plain ``postgresql://`` URL yoyo migrations connect with."""
         return f'postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}'
 
     @property
     def cognito_jwks_url(self) -> str:
+        """The user pool's JWKS URL, under ``cognito_endpoint_url`` when it is set (the local Cognito mock)."""
         endpoint = (
             self.cognito_endpoint_url or f'https://cognito-idp.{self.cognito_region}.amazonaws.com'
         )
@@ -44,4 +49,5 @@ settings = Settings()
 
 
 def get_settings() -> Settings:
+    """The process's ``Settings``, as a dependency so tests can override it."""
     return settings

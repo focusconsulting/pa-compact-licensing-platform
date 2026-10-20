@@ -14,6 +14,7 @@ export interface DateFieldsProps {
   optionalYear?: boolean;
 }
 
+/** Month, day, and year inputs, stored in the form as one YYYY-MM-DD value. */
 export function DateFields({
   id,
   name,

@@ -12,6 +12,7 @@ export interface DatePickerFieldProps {
   optional?: boolean;
 }
 
+/** A USWDS date picker whose value is stored in the form as YYYY-MM-DD, or null when cleared. */
 function DatePickerField({
   id,
   label,

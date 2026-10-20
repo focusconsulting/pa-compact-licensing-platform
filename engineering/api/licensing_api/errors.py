@@ -7,6 +7,8 @@ from pydantic import BaseModel
 
 
 class ErrorCode(StrEnum):
+    """The machine-readable ``code`` in every error response."""
+
     InvalidToken = 'INVALID_TOKEN'
     UserNotFound = 'USER_NOT_FOUND'
     UserInactive = 'USER_INACTIVE'
@@ -16,6 +18,8 @@ class ErrorCode(StrEnum):
 
 
 class ErrorResponse(BaseModel):
+    """``{"code": ..., "details": [...]}``: the body of every error response."""
+
     code: ErrorCode
     details: list[str]
 
@@ -30,6 +34,7 @@ class AppError(HTTPException):
 
 
 async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
+    """Render an ``AppError`` as an ``ErrorResponse`` with its status code."""
     return JSONResponse(
         status_code=exc.status_code,
         content=ErrorResponse(code=exc.code, details=exc.details).model_dump(),
@@ -47,6 +52,7 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
 
 
 async def validation_error_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+    """Render a request validation failure as a 422 ``ErrorResponse``, one ``location: message`` detail per error."""
     details = [f'{".".join(str(loc) for loc in e["loc"])}: {e["msg"]}' for e in exc.errors()]
     return JSONResponse(
         status_code=422,

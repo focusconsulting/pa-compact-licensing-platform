@@ -10,6 +10,8 @@ from licensing_api.repo.base import AuditColumns, TimestampTZ
 
 
 class ApplicationKind(StrEnum):
+    """Why a participation application was made: a first application, or a change of state of qualifying license."""
+
     INITIAL = 'initial'
     # Designating a new state of qualifying license (Rule 3 §3.6(a)).
     CHANGE_SQL = 'change_sql'

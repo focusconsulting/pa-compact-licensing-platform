@@ -45,6 +45,9 @@ test-coverage-report:
     uv run coverage html --directory .coverage_report
     {{ open_cmd }} .coverage_report/index.html
 
+# Everything CI checks: lint (ruff, docstrings, pyright) and tests at 100% coverage
+check: lint test-coverage
+
 # Run all linting (ruff + pyright)
 lint: lint-ruff typecheck
 

@@ -24,6 +24,7 @@ class RequestIdMiddleware:
         self.app = app
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        """Store the request's ID in ``scope["state"]`` and add it to the response headers; non-HTTP scopes pass through."""
         if scope['type'] != 'http':
             await self.app(scope, receive, send)
             return
@@ -52,6 +53,7 @@ class UnhandledExceptionMiddleware:
         self.app = app
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        """Run the request, turning any exception that escapes into a logged 500 response."""
         if scope['type'] != 'http':
             await self.app(scope, receive, send)
             return
@@ -64,10 +66,13 @@ class UnhandledExceptionMiddleware:
 
 
 class RequestLoggingMiddleware:
+    """Log one structured line per HTTP request: request ID, method, path, status, and elapsed milliseconds."""
+
     def __init__(self, app: ASGIApp) -> None:
         self.app = app
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        """Time the request and log it when it finishes, even if it raised; the status is 500 if no response started."""
         if scope['type'] != 'http':
             await self.app(scope, receive, send)
             return

@@ -10,6 +10,10 @@ export interface CountryFieldProps {
   birthCountry?: boolean;
 }
 
+/**
+ * A select of countries. With `birthCountry`, also offers former countries
+ * (such as Yugoslavia) that can appear as a place of birth.
+ */
 function CountryField({
   id,
   label,
@@ -17,10 +21,10 @@ function CountryField({
   birthCountry = false,
 }: CountryFieldProps) {
   const { t } = useTranslation("country");
-  const options = t("countries", { returnObjects: true });
-  if (birthCountry) {
-    options.concat(t("birthCountries", { returnObjects: true })).sort();
-  }
+  const countries = t("countries", { returnObjects: true });
+  const options = birthCountry
+    ? countries.concat(t("birthCountries", { returnObjects: true })).sort()
+    : countries;
 
   return (
     <SelectField id={id} label={label} options={options} required={required} />

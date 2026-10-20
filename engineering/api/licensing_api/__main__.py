@@ -93,7 +93,10 @@ def _configure_otel(app: FastAPI) -> None:  # pragma: no cover
 
 
 class JsonFormatter(logging.Formatter):
+    """Render each log record as one line of JSON, masking values under sensitive keys."""
+
     def format(self, record: logging.LogRecord) -> str:
+        """The record as JSON: timestamp, level, logger, message, any ``extra`` fields, and the exception."""
         log_entry: dict[str, object] = {
             'timestamp': datetime.fromtimestamp(record.created, tz=timezone.utc)
             .isoformat(timespec='milliseconds')
@@ -144,6 +147,10 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
+    """Run migrations, then hold the database engine for the app's lifetime and dispose of it on shutdown.
+
+    Migrations run in a thread because yoyo is synchronous.
+    """
     logger.info('Starting up', extra={'settings': settings})
     await asyncio.to_thread(run_migrations)
 
