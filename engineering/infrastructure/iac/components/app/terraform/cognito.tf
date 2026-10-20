@@ -68,8 +68,7 @@ resource "aws_cognito_user_pool_client" "web" {
   supported_identity_providers = ["COGNITO"]
 
   explicit_auth_flows = [
-    "ALLOW_USER_SRP_AUTH",      # used by amazon-cognito-identity-js in the browser
-    "ALLOW_USER_PASSWORD_AUTH", # enables AWS CLI token fetch for local testing — remove in production
+    "ALLOW_USER_SRP_AUTH", # used by amazon-cognito-identity-js in the browser
     "ALLOW_REFRESH_TOKEN_AUTH",
   ]
 }

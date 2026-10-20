@@ -1,9 +1,13 @@
+# The jumpbox security group ID is read from Secrets Manager only where a
+# jumpbox exists (var.jumpbox_enabled), so other environments apply without
+# the secret and get no jumpbox ingress.
 data "aws_secretsmanager_secret_version" "jumpbox" {
+  count     = var.jumpbox_enabled ? 1 : 0
   secret_id = "${var.environment_name}-jumpbox-sgid-tfvar"
 }
 
 locals {
-  jumpbox_sg_id = jsondecode(data.aws_secretsmanager_secret_version.jumpbox.secret_string)["jumpbox_sg_id"]
+  jumpbox_sg_ids = [for v in data.aws_secretsmanager_secret_version.jumpbox : jsondecode(v.secret_string)["jumpbox_sg_id"]]
 }
 
 # Security Group for the internal Application Load Balancer
@@ -53,12 +57,15 @@ resource "aws_security_group" "ecs_sg" {
     security_groups = [aws_security_group.alb_sg.id]
   }
 
-  ingress {
-    description     = "All ports from jumpbox (SSM tunnel)"
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    security_groups = [local.jumpbox_sg_id]
+  dynamic "ingress" {
+    for_each = local.jumpbox_sg_ids
+    content {
+      description     = "All ports from jumpbox (SSM tunnel)"
+      from_port       = 0
+      to_port         = 0
+      protocol        = "-1"
+      security_groups = [ingress.value]
+    }
   }
 
   egress {
@@ -87,12 +94,15 @@ resource "aws_security_group" "rds_sg" {
     security_groups = [aws_security_group.ecs_sg.id]
   }
 
-  ingress {
-    description     = "PostgreSQL from jumpbox (SSM tunnel)"
-    from_port       = local.db_port
-    to_port         = local.db_port
-    protocol        = "tcp"
-    security_groups = [local.jumpbox_sg_id]
+  dynamic "ingress" {
+    for_each = local.jumpbox_sg_ids
+    content {
+      description     = "PostgreSQL from jumpbox (SSM tunnel)"
+      from_port       = local.db_port
+      to_port         = local.db_port
+      protocol        = "tcp"
+      security_groups = [ingress.value]
+    }
   }
 
   egress {
@@ -125,12 +135,15 @@ resource "aws_security_group" "redis_sg" {
     security_groups = [aws_security_group.ecs_sg.id]
   }
 
-  ingress {
-    description     = "Redis from jumpbox (SSM tunnel)"
-    from_port       = 6379
-    to_port         = 6379
-    protocol        = "tcp"
-    security_groups = [local.jumpbox_sg_id]
+  dynamic "ingress" {
+    for_each = local.jumpbox_sg_ids
+    content {
+      description     = "Redis from jumpbox (SSM tunnel)"
+      from_port       = 6379
+      to_port         = 6379
+      protocol        = "tcp"
+      security_groups = [ingress.value]
+    }
   }
 
   egress {
