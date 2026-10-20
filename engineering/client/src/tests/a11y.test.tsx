@@ -42,7 +42,9 @@ vi.mock("src/contexts/AuthContext", () => ({
   }),
 }));
 
-describe("accessibility (axe, WCAG 2.1 A and AA)", () => {
+// axe walks every node; the country select alone has ~200 options, which can
+// take over Vitest's 5-second default on a CI runner.
+describe("accessibility (axe, WCAG 2.1 A and AA)", { timeout: 30_000 }, () => {
   it.each([
     [
       "TextField",
