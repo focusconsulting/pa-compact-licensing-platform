@@ -45,6 +45,8 @@ Request IDs come from `RequestIdMiddleware`: the caller's `X-Request-ID` when it
 | `audit_log.write(session, ctx, action, entity, *, before=None, after=None, reason=None) -> AuditLogEntry` | `repo/audit_log.py` | Reads of private data and security events only. `action` is `<entity>.<verb>`. `before`/`after` are for security events on rows with no history, such as a permission change. Never pass an SSN or an expunged value |
 | `handler(name, *event_types)` | `events.py` | Decorator returning a frozen `Handler`; `name` is `<owning module>.<what it does>` and never changes while its deliveries exist |
 | `HandlerRegistry(handlers)` | `events.py` | Built by the Worker from a constant tuple; rejects duplicate names |
+| `deactivate_privileges(session, ctx, *, practitioner_id, reason, effective_at, note=None, remote_state_code=None) -> list[Privilege]` | `repo/cascade.py` | Deactivates every active privilege of the practitioner, or only those in one remote state, in the caller's transaction: status, reason, `deactivated_at` (`effective_at`), note, one history row and one `privilege.deactivated` event each. Already inactive privileges keep their first reason |
+| `dispatch_events(session_factory, registry, *, batch_size=100) -> int` | `worker.py` | Fans new events out to a delivery per registered handler, then runs up to `batch_size` due deliveries, each in its own transaction ([ADR-0012](../adrs/0012-outbox-dispatcher.md)). Returns the number attempted. Tests drain the outbox by calling it |
 | `notify(session, ctx, *, template, recipient_email, recipient_user_id=None, context, idempotency_key) -> Notification` | `repo/notification.py` | Queues one email as a `pending` row; the Worker sends it. A repeated key queues nothing and returns the first row. Called from handlers, not routes. Copies the address at call time |
 
 A handler is `async def run(session, ctx, event) -> None`. The Worker's `dispatch_events` calls it with the system context and the event's request ID, inside a savepoint of a transaction it commits ([ADR-0012](../adrs/0012-outbox-dispatcher.md)): a handler never commits, and when it raises, its writes are rolled back and the delivery is retried, then dead-lettered after five attempts. A query that runs longer than 60 seconds is cancelled and counts as a failure. It must be safe to run twice for the same event, and it must cope with events out of order ([below](#handlers-and-event-order)). A handler that emails uses `<event_id>:<handler name>` as the idempotency key, so a retry sends once.
@@ -149,27 +151,7 @@ These are fixed here so the tracks build in parallel. Each becomes code, with te
 
 ### `.3` events, history, audit, the privilege cascade
 
-```python
-# licensing_api/repo/privilege.py
-async def deactivate_privileges(
-    session: AsyncSession, ctx: ChangeContext, *, practitioner_id: int, reason: DeactivationReason,
-    effective_at: datetime, note: str | None = None, remote_state_code: str | None = None,
-) -> list[Privilege]:
-    """Deactivate every active privilege of the practitioner, or only those in one remote state, in the
-    caller's transaction: sets administrator_status, deactivation_reason, deactivated_at, and the note,
-    with one history row and one ``privilege.deactivated`` event per privilege. The notification to
-    the PA comes from that event's handler."""
-
-# licensing_api/worker.py
-async def dispatch_events(
-    session_factory: async_sessionmaker[AsyncSession], registry: HandlerRegistry, *, batch_size: int = 100,
-) -> int:
-    """Claim undelivered (event, handler) pairs with FOR UPDATE SKIP LOCKED, run each in its own
-    transaction, and record the outcome in domain_event_deliveries; retry, then dead-letter.
-    Returns the number handled. Tests drain the outbox by calling it."""
-```
-
-Also `.3`: the event-catalogue test (every `EventType` has a test), `GET /commission/audit`, and [the day-arithmetic module](#counting-days).
+Implemented: `deactivate_privileges` and `dispatch_events` are in [Helpers](#helpers), the day module in [Counting days](#counting-days), and `GET /commission/audit` lists the audit log for the Commission (`compact_admin`). The event-catalogue test (every `EventType` has a test) lands with the `.5` handlers, the first code that consumes every event type.
 
 ### `.4` API rules, client generation, demo seed
 
