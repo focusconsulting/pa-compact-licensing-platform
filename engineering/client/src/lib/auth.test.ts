@@ -58,9 +58,11 @@ describe("user pool", () => {
 describe("signIn", () => {
   it("signs in with SRP when no auth flow is configured", async () => {
     vi.stubEnv("NEXT_PUBLIC_COGNITO_AUTH_FLOW", "");
-    mockAuthenticateUser.mockImplementation((_: unknown, callbacks: Record<string, Function>) => {
-      callbacks.onSuccess({});
-    });
+    mockAuthenticateUser.mockImplementation(
+      (_: unknown, callbacks: Record<string, Function>) => {
+        callbacks.onSuccess({});
+      },
+    );
 
     await signIn("test@example.com", "password");
 
@@ -70,13 +72,17 @@ describe("signIn", () => {
 
   it("signs in with the configured auth flow", async () => {
     vi.stubEnv("NEXT_PUBLIC_COGNITO_AUTH_FLOW", "USER_PASSWORD_AUTH");
-    mockAuthenticateUser.mockImplementation((_: unknown, callbacks: Record<string, Function>) => {
-      callbacks.onSuccess({});
-    });
+    mockAuthenticateUser.mockImplementation(
+      (_: unknown, callbacks: Record<string, Function>) => {
+        callbacks.onSuccess({});
+      },
+    );
 
     await signIn("test@example.com", "password");
 
-    expect(mockSetAuthenticationFlowType).toHaveBeenCalledWith("USER_PASSWORD_AUTH");
+    expect(mockSetAuthenticationFlowType).toHaveBeenCalledWith(
+      "USER_PASSWORD_AUTH",
+    );
     vi.unstubAllEnvs();
   });
 
