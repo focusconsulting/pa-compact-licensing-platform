@@ -22,7 +22,7 @@ export const test = base.extend<{ expectAccessible: (page: Page) => Promise<void
 
 export { expect };
 
-/** A user from engineering/mocks/cognito/users.json and engineering/api/seed/users.sql. */
+/** A user from engineering/mocks/cognito/db/local_licensing.json and engineering/api/seed/users.sql. */
 export const ADMIN = {
   email: "gustavo.torrico@focusconsulting.io",
   password: "Local-Passw0rd!",
