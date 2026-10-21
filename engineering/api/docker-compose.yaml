@@ -20,8 +20,8 @@ services:
   maildev:
     image: maildev/maildev:2.2.1
     ports:
-      - "1025:1025"
-      - "1080:1080"
+      - "${SMTP_PORT:-1025}:1025"
+      - "${MAILDEV_UI_PORT:-1080}:1080"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:1080/healthz"]
       interval: 2s
@@ -33,8 +33,8 @@ services:
   rustfs:
     image: rustfs/rustfs:1.0.3
     ports:
-      - "9300:9000"
-      - "9301:9001"
+      - "${S3_PORT:-9300}:9000"
+      - "${S3_CONSOLE_PORT:-9301}:9001"
     environment:
       RUSTFS_ACCESS_KEY: rustfsadmin
       RUSTFS_SECRET_KEY: rustfsadmin
