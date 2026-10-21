@@ -89,17 +89,20 @@ No AWS account or credentials are needed.
 | File storage console (RustFS, `rustfsadmin` / `rustfsadmin`) | <http://localhost:9301> |
 
 Sign in as any user in
-[`engineering/mocks/cognito/users.json`](engineering/mocks/cognito/users.json)
+[`engineering/mocks/cognito/db/local_licensing.json`](engineering/mocks/cognito/db/local_licensing.json)
 with `Local-Passw0rd!`, for example `gustavo.torrico@focusconsulting.io`.
 `backfill@example.com` (`Temp-Passw0rd!`) is asked to choose a new password
 on first sign-in.
 
 Each AWS service is replaced by a local one that the app reaches through
-its production client; only URLs differ (constitution Principle IV). The
+its production client; only URLs differ (constitution Principle IV), except
+that sign-in uses password auth instead of SRP
+([ADR-0010](engineering/adrs/0010-local-sign-in-uses-password-auth.md)). The
 names, ports, and settings are in
-[`engineering/api/.env.example`](engineering/api/.env.example). If your
-`.env` predates the local stack, copy the Cognito, SMTP, and S3 settings
-from the example.
+[`engineering/api/.env.example`](engineering/api/.env.example) and
+[`engineering/client/.env.example`](engineering/client/.env.example). If your
+`.env` files predate the local stack, copy the Cognito, SMTP, and S3 settings
+from the examples.
 
 ## Getting Started
 

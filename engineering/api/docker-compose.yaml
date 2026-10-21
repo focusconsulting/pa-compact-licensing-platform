@@ -55,24 +55,8 @@ services:
         aws --endpoint-url http://rustfs:9000 s3api head-bucket --bucket documents 2>/dev/null \
           || aws --endpoint-url http://rustfs:9000 s3api create-bucket --bucket documents
 
-  # Sign-in: the local Cognito mock (engineering/mocks/cognito)
-  cognito-local:
-    build: ../mocks/cognito
-    ports:
-      - "9229:9229"
-    environment:
-      COGNITO_USER_POOL_ID: local_licensing
-      COGNITO_CLIENT_ID: licensing-local-client
-      COGNITO_ENDPOINT_URL: http://localhost:9229
-      SIGNING_KEY_FILE: /data/signing-key.pem
-    volumes:
-      - cognito-data:/data
-
   # Sign-in: cognito-local with the local users (engineering/mocks/cognito)
   cognito-local:
     build: ../mocks/cognito
     ports:
       - "${COGNITO_PORT:-9229}:9229"
-
-volumes:
-  cognito-data:
