@@ -1,0 +1,15 @@
+{
+  "Clients": {
+    "licensing-local-client": {
+      "ClientId": "licensing-local-client",
+      "ClientName": "licensing-local",
+      "UserPoolId": "local_licensing",
+      "ExplicitAuthFlows": [
+        "ALLOW_USER_PASSWORD_AUTH",
+        "ALLOW_REFRESH_TOKEN_AUTH"
+      ],
+      "CreationDate": "2026-01-01T00:00:00.000Z",
+      "LastModifiedDate": "2026-01-01T00:00:00.000Z"
+    }
+  }
+}

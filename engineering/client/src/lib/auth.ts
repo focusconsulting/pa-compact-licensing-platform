@@ -27,9 +27,13 @@ export type SignInResult =
       userAttributes: Record<string, string>;
     };
 
+// SRP unless NEXT_PUBLIC_COGNITO_AUTH_FLOW names another flow: cognito-local has no SRP (ADR-0010).
 export function signIn(email: string, password: string): Promise<SignInResult> {
   return new Promise((resolve, reject) => {
     const user = new CognitoUser({ Username: email, Pool: getUserPool() });
+    user.setAuthenticationFlowType(
+      process.env.NEXT_PUBLIC_COGNITO_AUTH_FLOW || "USER_SRP_AUTH",
+    );
     const authDetails = new AuthenticationDetails({
       Username: email,
       Password: password,
