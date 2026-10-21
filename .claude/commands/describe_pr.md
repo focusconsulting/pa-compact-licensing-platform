@@ -43,7 +43,7 @@ gh pr view --json url,title,number,state,baseRefName
 
 Look for:
 - Implementation plan in `engineering/thoughts/shared/plans/`
-- Related beads task: `bd show <id>`
+- Related Jira ticket: fetch it with the Atlassian MCP `getJiraIssue` tool (the key is usually in the branch name)
 - GitHub issue: `gh issue view <number>`
 
 **Important**: If an implementation plan exists, read it fully. You will embed it in the PR description.
@@ -83,7 +83,7 @@ Write to `engineering/thoughts/shared/prs/<task-id>_description.md`:
 ## Related
 
 - Closes #XXX (GitHub issue)
-- Beads: bd-XXXX
+- Jira: SCRUM-XXX
 - ADR: [Link to ADR if applicable]
 
 ## Changes

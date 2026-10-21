@@ -10,7 +10,7 @@ permissions, but enforcement is deferred to a later phase.
 ## Related
 
 - GitHub Issue: N/A
-- Beads Task: pa-compact-licensing-platform-ks2
+- Jira: N/A (predates the SCRUM project)
 - ADRs: [ADR-0003](../../../docs/architecture_decision_records/0003-users-table-schema-and-auth-design.md)
 - **Area**: cross-cutting
 
@@ -930,7 +930,7 @@ matching public JWKS. `get_settings` is overridden via `app.dependency_overrides
 
 ## References
 
-- Beads task: pa-compact-licensing-platform-ks2
+- Jira: N/A (predates the SCRUM project)
 - FastAPI dependencies pattern: `api/licensing_api/dependencies.py`
 - Terraform secrets pattern: `infrastructure/iac/components/app/terraform/secrets.tf`
 - Next.js app entry: `client/src/app/layout.tsx`

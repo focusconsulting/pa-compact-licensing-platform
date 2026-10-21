@@ -1,6 +1,5 @@
 .claude/
 thoughts/
-.beads/
 node_modules/
 **/node_modules/
 engineering/client/.next/

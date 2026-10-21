@@ -772,7 +772,7 @@ The SOW this backlog was derived from (v1.0, 2026-03-09) was replaced with the r
 ### v4.1 → v4.2 (2026-09-30) — API contract reduced to guardrails; Jira consolidation
 
 - **F-03 is no longer an endpoint contract** (D3). Engineers building a vertical define its routes and models as they go; the platform ticket fixes only the auth dependency, success/error envelopes, pagination conventions, a required permission annotation, and the OpenAPI → TS client → MSW generation pipeline, with one worked example route. Size 1.5 → 1; total 56 → 55.5.
-- **`mvp-jira-tickets.md` created**: the 39 items consolidated into 12 epics, each with one product ticket (requirements + basic wireframes) and one engineering ticket (implementation; engineers create beads as they see fit), scheduled two engineering tickets in flight per sprint. This document remains the reasoning and the deferred list.
+- **`mvp-jira-tickets.md` created**: the 39 items consolidated into 12 epics, each with one product ticket (requirements + basic wireframes) and one engineering ticket (implementation; engineers break it into Jira tasks as they see fit), scheduled two engineering tickets in flight per sprint. This document remains the reasoning and the deferred list.
 
 ### v4 → v4.1 (2026-09-30) — three cuts reversed on CTO review
 

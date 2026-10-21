@@ -91,7 +91,7 @@ The `_mask_sensitive` function is applied unconditionally inside `JsonFormatter.
 ## Related
 
 - GitHub Issue: N/A
-- Beads Task: pa-compact-licensing-platform-vq6
+- Jira: N/A (predates the SCRUM project)
 - Implementation Plan: `thoughts/shared/plans/api/2026-04-03-structured-logging.md`
 
 ## Notes

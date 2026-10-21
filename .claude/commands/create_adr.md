@@ -55,7 +55,7 @@ If the decision came from a planning session or has related context:
 1. **Check for related documents**:
    - Recent plans in `engineering/thoughts/shared/plans/`
    - Research in `engineering/thoughts/shared/research/`
-   - Related beads tasks: `bd list`
+   - Related Jira tickets: search SCRUM with the Atlassian MCP `searchJiraIssuesUsingJql` tool
 
 2. **Research the codebase** if needed:
    - Use **codebase-locator** to find affected areas
@@ -152,7 +152,7 @@ Accepted
 ## Related
 
 - GitHub Issue: #XXX (if applicable)
-- Beads Task: bd-XXXX (if applicable)
+- Jira: SCRUM-XXX (if applicable)
 - Implementation Plan: `engineering/thoughts/shared/plans/YYYY-MM-DD-xxx.md` (if applicable)
 
 ## Notes
@@ -188,12 +188,10 @@ git commit -m "docs(adr): ADR-NNNN [short title]
 
 ### Step 6: Link Related Items
 
-If there's a related beads task or plan:
-
-```bash
-# Add comment to related beads task
-bd comment <id> "ADR-NNNN documents the architectural decision: engineering/adrs/NNNN-title.md"
-```
+If there's a related Jira ticket or plan, offer to add a comment to the ticket with the
+Atlassian MCP `addCommentToJiraIssue` tool: "ADR-NNNN documents the architectural decision:
+engineering/adrs/NNNN-title.md". Confirm the wording with the user first, since it posts
+under their name.
 
 If created during `/create_plan`, remind the user to reference the ADR in the plan.
 

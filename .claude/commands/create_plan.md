@@ -30,10 +30,10 @@ This is a monorepo with these areas:
 
 Please provide:
 1. Which area does this work affect? (client, api, iac, docs, or cross-cutting)
-2. The task/issue description (Jira ticket key such as SCRUM-35, beads ID, or description)
+2. The task/issue description (Jira ticket key such as SCRUM-35, GitHub issue, or description)
 3. Any relevant context, constraints, or specific requirements
 
-Tip: You can specify the area directly: `/create_plan api #123` or `/create_plan iac bd-a1b2`
+Tip: You can specify the area directly: `/create_plan api #123` or `/create_plan iac SCRUM-83`
 ```
 
 Then wait for the user's input.
@@ -70,11 +70,7 @@ Then wait for the user's input.
    - Fetch the ticket with the Atlassian MCP tools
    - Read any linked tickets and PRs
 
-5. **If a beads ID is mentioned**:
-   - Get task details: `bd show <id> --json`
-   - Check dependencies: `bd tree <id>`
-
-6. **Spawn initial research tasks to gather context**:
+5. **Spawn initial research tasks to gather context**:
    Before asking the user any questions, use specialized agents to research in parallel:
 
    - Use the **codebase-locator** agent to find all files related to the task
@@ -87,18 +83,18 @@ Then wait for the user's input.
    - Trace data flow and key functions
    - Return detailed explanations with file:line references
 
-7. **Read all files identified by research tasks**:
+6. **Read all files identified by research tasks**:
    - After research tasks complete, read ALL files they identified as relevant
    - Read them FULLY into the main context
    - This ensures you have complete understanding before proceeding
 
-8. **Analyze and verify understanding**:
+7. **Analyze and verify understanding**:
    - Cross-reference the task requirements with actual code
    - Identify any discrepancies or misunderstandings
    - Note assumptions that need verification
    - Determine true scope based on codebase reality
 
-9. **Present informed understanding and focused questions**:
+8. **Present informed understanding and focused questions**:
    ```
    Based on the task and my research of the codebase, I understand we need to [accurate summary].
 
@@ -119,11 +115,8 @@ Then wait for the user's input.
 
 Before proceeding with detailed research, set up the working environment:
 
-1. **If a beads task ID was provided**:
-   ```bash
-   # Claim the task
-   bd update <task-id> --status in_progress
-   ```
+1. **If a Jira key was provided**: move the ticket to **In Progress** with the Atlassian MCP
+   `transitionJiraIssue` tool.
 
 2. **Create a feature branch** (if not already on one):
    ```bash
@@ -134,7 +127,7 @@ Before proceeding with detailed research, set up the working environment:
    git checkout -b feature/<task-id>-short-description
 
    # Examples:
-   git checkout -b feature/bd-f7a3-integration-tests
+   git checkout -b feature/SCRUM-78-integration-tests
    git checkout -b feature/issue-42-test-coverage
    ```
 
@@ -148,7 +141,7 @@ Before proceeding with detailed research, set up the working environment:
 - `feature/<task-id>-description` for features
 - `fix/<task-id>-description` for bugs
 
-**Note**: If the user is already on a feature branch, skip branch creation but still claim the beads task.
+**Note**: If the user is already on a feature branch, skip branch creation but still move the Jira ticket to In Progress.
 
 ### Step 2: Research & Discovery
 
@@ -254,13 +247,13 @@ After structure approval:
    - Area options: `client/`, `api/`, `iac/`, `docs/`, `cross-cutting/`
    - Format: `YYYY-MM-DD-XXX-description.md` where:
      - YYYY-MM-DD is today's date
-     - XXX is the task ID: the Jira key (e.g. `SCRUM-35`), `issue-123` for a
-       GitHub issue, or `bd-XXXX` for a beads task; omit if there is none
+     - XXX is the task ID: the Jira key (e.g. `SCRUM-35`) or `issue-123` for a
+       GitHub issue; omit if there is none
      - description is a brief kebab-case description
    - Examples:
      - Client feature: `engineering/thoughts/shared/plans/client/2026-10-06-SCRUM-41-login-page.md`
      - API feature: `engineering/thoughts/shared/plans/api/2026-10-06-issue-123-user-authentication.md`
-     - IaC: `engineering/thoughts/shared/plans/iac/2026-10-06-bd-a1b2-staging-env.md`
+     - IaC: `engineering/thoughts/shared/plans/iac/2026-10-06-SCRUM-83-staging-env.md`
      - Cross-cutting: `engineering/thoughts/shared/plans/cross-cutting/2026-10-06-issue-456-ci-cd-pipeline.md`
 
 2. **Use this template structure**:
@@ -278,7 +271,7 @@ After structure approval:
 - **Flows**: [links to each flow in `product/context/flows/` this touches, e.g. FLOW-02]
 - **Compact rules**: [rules the flows cite that this work encodes, using the glossary keys, e.g. ML §4.B, Rule 3 §3.4(d)]
 - **Decisions**: [backlog decisions D1-D15 and open questions Q-xx this depends on]
-- Jira / GitHub issue / beads task: [ID, or N/A]
+- Jira / GitHub issue: [ID, or N/A]
 - ADRs: [links to related ADRs in `engineering/adrs/`]
 - **Area**: [client | api | iac | docs | cross-cutting]
 
@@ -400,7 +393,7 @@ After structure approval:
 
 ## References
 
-- Original issue: #XXX or bd-XXXX
+- Original issue: SCRUM-XXX or #XXX
 - Related research: `engineering/thoughts/shared/research/<area>/[relevant].md`
 - Similar implementation: `[file:line]`
 ````

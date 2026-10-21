@@ -10,7 +10,7 @@ CloudWatch Container Insights.
 ## Related
 
 - GitHub Issue: N/A
-- Beads Task: pa-compact-licensing-platform-p42
+- Jira: N/A (predates the SCRUM project)
 - ADRs: N/A
 - **Area**: cross-cutting (IaC + API)
 

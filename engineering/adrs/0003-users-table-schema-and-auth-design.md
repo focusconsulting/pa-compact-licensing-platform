@@ -229,5 +229,5 @@ transactional migrations matter more than the minor ergonomic benefit of a named
 ## Related
 
 - GitHub Issue: N/A
-- Beads Task: pa-compact-licensing-platform-ks2
-- Implementation Plan: `thoughts/shared/plans/cross-cutting/2026-04-15-bd-pa-compact-licensing-platform-ks2-cognito-auth.md`
+- Jira: N/A (predates the SCRUM project)
+- Implementation Plan: `thoughts/shared/plans/cross-cutting/2026-04-15-cognito-auth.md`

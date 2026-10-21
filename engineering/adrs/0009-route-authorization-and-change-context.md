@@ -16,7 +16,7 @@ Proposed
 
 ## Context
 
-Epic 2's contract step (beads `pa-compact-licensing-platform-4gi.2`) fixes how every feature records a change and how every route declares who may call it. Two earlier decisions pull in different directions:
+Epic 2's contract step (SCRUM-77) fixes how every feature records a change and how every route declares who may call it. Two earlier decisions pull in different directions:
 
 - ADR-0004 identifies the caller by `AuthClaims.sub` and writes `created_by` and `updated_by` through a subquery on `users.public_id`, so a write needs no prior lookup. It also proposed caching permissions in Redis.
 - Backlog decision D5 reads permissions from the database on every request, with no cache at pilot scale.
