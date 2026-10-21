@@ -18,6 +18,7 @@ from sqlalchemy.pool import NullPool
 from licensing_api.__main__ import app
 from licensing_api.config import Settings, get_settings
 from licensing_api.dependencies import get_db_session
+from tests.record_guard import RecordGuard
 
 TEST_SETTINGS = Settings(
     cognito_client_id='test-client-id', cognito_user_pool_id='us-east-1_testpool'
@@ -94,7 +95,7 @@ def route_db_session(client) -> Generator[AsyncSession]:
     Use it for any test that calls a route which writes. The session lives on the
     app's event loop, so read it in the test through ``client.portal.call``. A
     route's commit releases a savepoint inside the outer transaction, which is
-    still rolled back.
+    still rolled back. The test fails if a route commits a change without an event.
     """
 
     async def _open() -> tuple[AsyncConnection, AsyncTransaction, AsyncSession]:
@@ -106,6 +107,7 @@ def route_db_session(client) -> Generator[AsyncSession]:
         return connection, transaction, session
 
     connection, transaction, session = client.portal.call(_open)
+    guard = RecordGuard(session)
 
     async def _session_override() -> AsyncGenerator[AsyncSession]:
         yield session
@@ -122,6 +124,7 @@ def route_db_session(client) -> Generator[AsyncSession]:
             await connection.close()
 
         client.portal.call(_close)
+    assert not guard.violations, guard.violations
 
 
 @pytest.fixture(scope='module')
