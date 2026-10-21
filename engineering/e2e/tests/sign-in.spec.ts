@@ -35,7 +35,8 @@ test.describe("Signing in", () => {
     await page.getByLabel("Password").fill("Not-the-passw0rd");
     await page.getByRole("button", { name: "Sign in" }).click();
 
-    await expect(page.getByText("Incorrect username or password.")).toBeVisible();
+    // The wording is the identity provider's, and cognito-local's differs from Cognito's (ADR-0010).
+    await expect(page.getByRole("heading", { name: "Error" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
     await expectAccessible(page);
   });
