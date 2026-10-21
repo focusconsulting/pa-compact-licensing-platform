@@ -55,3 +55,7 @@ class HandlerRegistry:
 
     def for_event(self, event_type: EventType) -> tuple[Handler, ...]:
         return tuple(h for h in self._handlers if event_type in h.event_types)
+
+    def named(self, name: str) -> Handler | None:
+        """The handler registered as ``name``, or None once it has been removed."""
+        return next((h for h in self._handlers if h.name == name), None)

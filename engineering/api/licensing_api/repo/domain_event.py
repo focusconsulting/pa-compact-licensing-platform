@@ -76,6 +76,8 @@ class DomainEvent(SQLModel, table=True):
     actor_user_id: int | None = Field(default=None, foreign_key='users.id')
     request_id: str | None = None
     occurred_at: datetime = Field(default_factory=utc_now, sa_type=TimestampTZ)
+    # When the dispatcher created this event's delivery rows (ADR-0012).
+    dispatched_at: datetime | None = Field(default=None, sa_type=TimestampTZ)
 
 
 class DomainEventDelivery(SQLModel, table=True):
@@ -92,6 +94,8 @@ class DomainEventDelivery(SQLModel, table=True):
     handled_at: datetime | None = Field(default=None, sa_type=TimestampTZ)
     dead_lettered_at: datetime | None = Field(default=None, sa_type=TimestampTZ)
     created_at: datetime = Field(default_factory=utc_now, sa_type=TimestampTZ)
+    # A failed delivery is not retried before this time.
+    next_attempt_at: datetime = Field(default_factory=utc_now, sa_type=TimestampTZ)
 
 
 async def emit(

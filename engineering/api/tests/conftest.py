@@ -7,10 +7,12 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi.testclient import TestClient
 from jose import jwt as jose_jwt
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncConnection,
     AsyncSession,
     AsyncTransaction,
+    async_sessionmaker,
     create_async_engine,
 )
 from sqlalchemy.pool import NullPool
@@ -86,6 +88,36 @@ async def db_session(client) -> AsyncGenerator[AsyncSession]:
             await session.close()
             await transaction.rollback()
     await engine.dispose()
+
+
+# Tables the Worker's code writes in its own transactions, in the order their rows are deleted.
+_WORKER_TABLES = ('notifications', 'domain_event_deliveries', 'domain_events')
+
+
+@pytest.fixture
+async def committed_sessions(client) -> AsyncGenerator[async_sessionmaker[AsyncSession]]:
+    """Sessions that really commit, for code that opens its own transactions, such as the dispatcher.
+
+    Every Worker-table row the test leaves is deleted afterwards. Rows the test
+    commits elsewhere are its own to remove.
+    """
+    # Pooled, as the Worker's engine is, so timings are realistic.
+    engine = create_async_engine(TEST_SETTINGS.db_url)
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    async with factory() as session:
+        # Raw SQL: these tables are listed by name, and the ORM has nothing to add to a bulk delete.
+        leftovers = {
+            table: (await session.execute(text(f'SELECT count(*) FROM {table}'))).scalar_one()
+            for table in _WORKER_TABLES
+        }
+    assert not any(leftovers.values()), f'Rows left by an earlier test: {leftovers}'
+    try:
+        yield factory
+    finally:
+        async with factory() as session, session.begin():
+            for table in _WORKER_TABLES:
+                await session.execute(text(f'DELETE FROM {table}'))
+        await engine.dispose()
 
 
 @pytest.fixture

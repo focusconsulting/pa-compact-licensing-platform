@@ -47,7 +47,7 @@ Request IDs come from `RequestIdMiddleware`: the caller's `X-Request-ID` when it
 | `HandlerRegistry(handlers)` | `events.py` | Built by the Worker from a constant tuple; rejects duplicate names |
 | `notify(session, ctx, *, template, recipient_email, recipient_user_id=None, context, idempotency_key) -> Notification` | `repo/notification.py` | Queues one email as a `pending` row; the Worker sends it. A repeated key queues nothing and returns the first row. Called from handlers, not routes. Copies the address at call time |
 
-A handler is `async def run(session, ctx, event) -> None`. It is called with the system context and the event's request ID, and must be safe to run twice for the same event. A handler that emails uses `<event_id>:<handler name>` as the idempotency key, so a retry sends once.
+A handler is `async def run(session, ctx, event) -> None`. The Worker's `dispatch_events` calls it with the system context and the event's request ID, inside a savepoint of a transaction it commits ([ADR-0012](../adrs/0012-outbox-dispatcher.md)): a handler never commits, and when it raises, its writes are rolled back and the delivery is retried, then dead-lettered after five attempts. It must be safe to run twice for the same event. A handler that emails uses `<event_id>:<handler name>` as the idempotency key, so a retry sends once.
 
 ## Declaring a route
 
