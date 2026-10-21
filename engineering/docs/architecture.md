@@ -87,7 +87,7 @@ and [`engineering/api/.env.example`](../api/.env.example).
 | In AWS | Locally |
 |---|---|
 | Aurora PostgreSQL | Postgres in Docker Compose |
-| Cognito | The Cognito mock ([`engineering/mocks/cognito`](../mocks/cognito/README.md)) |
+| Cognito | cognito-local ([`engineering/mocks/cognito`](../mocks/cognito/README.md)), signed in to with password auth instead of SRP ([ADR-0010](../adrs/0010-local-sign-in-uses-password-auth.md)) |
 | SES | maildev |
 | S3 | RustFS |
 | Authorize.net, NCCPA | Mock servers, built with the tickets that write their clients |

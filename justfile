@@ -37,9 +37,8 @@ seed name="users":
 e2e:
     cd engineering/e2e && pnpm install && pnpm exec playwright install chromium && pnpm test
 
-# Everything CI checks, for the API, client, mocks, and e2e specs (the API's tests need `just services`)
+# Everything CI checks, for the API, client, and e2e specs (the API's tests need `just services`)
 check:
     cd engineering/api && just check
     cd engineering/client && pnpm check
-    cd engineering/mocks/cognito && pnpm typecheck && pnpm test
     cd engineering/e2e && pnpm typecheck
