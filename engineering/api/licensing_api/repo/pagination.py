@@ -5,6 +5,7 @@ from typing import Any
 
 from sqlalchemy import ColumnElement, Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Mapped
 
 from licensing_api.responses import PageQuery
 
@@ -13,8 +14,9 @@ async def paginate[M](
     session: AsyncSession,
     statement: Select[tuple[M]],
     query: PageQuery,
-    columns: Mapping[str, ColumnElement[Any]],
-    tiebreaker: ColumnElement[Any],
+    # Mapped: what sqlmodel's col() returns for a model field.
+    columns: Mapping[str, ColumnElement[Any] | Mapped[Any]],
+    tiebreaker: ColumnElement[Any] | Mapped[Any],
 ) -> tuple[list[M], int]:
     """One page of ``statement``'s rows and the total row count.
 
