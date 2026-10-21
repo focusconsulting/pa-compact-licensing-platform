@@ -33,10 +33,7 @@ output "client_assets_bucket" {
   value       = aws_s3_bucket.client_assets.bucket
 }
 
-output "redis_endpoint" {
-  description = "ElastiCache Redis endpoint"
-  value       = aws_elasticache_cluster.redis.cache_nodes[0].address
-}
+
 
 output "cloudwatch_log_group" {
   description = "CloudWatch log group for API container logs"

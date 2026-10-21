@@ -1,15 +1,12 @@
-import asyncio
 import logging
-from collections.abc import Awaitable
-from typing import Annotated, cast
+from typing import Annotated
 
-import redis.asyncio as aioredis
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from licensing_api.dependencies import get_db_engine, get_redis
+from licensing_api.dependencies import get_db_engine
 from licensing_api.permissions import public
 
 logger = logging.getLogger(__name__)
@@ -23,7 +20,6 @@ class LiveResp(BaseModel):
 
 class ReadyResp(BaseModel):
     db: bool
-    cache: bool
 
 
 async def check_postgres(engine: AsyncEngine) -> bool:
@@ -33,15 +29,6 @@ async def check_postgres(engine: AsyncEngine) -> bool:
         return True
     except Exception:
         logger.error('Postgres health check failed', exc_info=True)
-        return False
-
-
-async def check_redis(redis: aioredis.Redis) -> bool:
-    try:
-        await cast(Awaitable[bool], redis.ping())
-        return True
-    except Exception:
-        logger.error('Redis health check failed', exc_info=True)
         return False
 
 
@@ -57,14 +44,9 @@ async def live() -> LiveResp:
 @router.get(
     path='/ready',
     name='Ready check',
-    description='Check the database and cache are ready to accept requests',
+    description='Check the database and other services are ready to accept requests',
 )
 async def ready(
     engine: Annotated[AsyncEngine, Depends(get_db_engine)],
-    redis: Annotated[aioredis.Redis, Depends(get_redis)],
 ) -> ReadyResp:
-    db_ok, cache_ok = await asyncio.gather(
-        check_postgres(engine),
-        check_redis(redis),
-    )
-    return ReadyResp(db=db_ok, cache=cache_ok)
+    return ReadyResp(db=await check_postgres(engine))

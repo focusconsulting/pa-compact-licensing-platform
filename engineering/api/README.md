@@ -24,7 +24,7 @@ This step should be run once.
 just install
 ```
 
-### 2. Start local infrastructure (Postgres + Redis)
+### 2. Start local infrastructure (Postgres and more)
 
 This should be run before launching the service. Everytime it is invoked, the data in services is reset.
 
@@ -116,9 +116,6 @@ at startup).
 **Backing services:**
 
 - PostgreSQL: primary store, async via asyncpg and SQLModel
-- Redis: available through the `get_redis` dependency; used today for
-  health checks, intended for permission caching keyed on
-  `AuthClaims.sub`
 - AWS Cognito: identity provider
 
 **Observability:** structured JSON logs for all app and Uvicorn output
@@ -141,7 +138,6 @@ just --list
 | [asyncpg](https://magicstack.github.io/asyncpg/current/)                          | Async PostgreSQL client         | <https://magicstack.github.io/asyncpg/current/>                |
 | [SQLModel](https://sqlmodel.tiangolo.com/)                                        | Async ORM (SQLAlchemy + Pydantic) | <https://sqlmodel.tiangolo.com/>                               |
 | [greenlet](https://greenlet.readthedocs.io/)                                      | Required for SQLAlchemy async engine | <https://greenlet.readthedocs.io/>                          |
-| [redis-py](https://redis.readthedocs.io/en/stable/)                               | Redis client (async)            | <https://redis.readthedocs.io/en/stable/>                      |
 | [pydantic-settings](https://docs.pydantic.dev/latest/concepts/pydantic_settings/) | Environment-based configuration | <https://docs.pydantic.dev/latest/concepts/pydantic_settings/> |
 | [yoyo-migrations](https://ollycope.com/software/yoyo/)                            | Database migrations             | <https://ollycope.com/software/yoyo/>                          |
 | [psycopg2](https://www.psycopg.org/docs/)                                         | Sync PostgreSQL driver (yoyo)   | <https://www.psycopg.org/docs/>                                |

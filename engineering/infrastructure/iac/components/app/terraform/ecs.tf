@@ -157,7 +157,6 @@ resource "aws_ecs_task_definition" "api_task" {
         { name = "DB_HOST", value = aws_rds_cluster.rds_aurora_cluster.endpoint },
         { name = "DB_PORT", value = tostring(local.db_port) },
         { name = "DB_NAME", value = local.db_name },
-        { name = "REDIS_URL", value = "redis://${aws_elasticache_cluster.redis.cache_nodes[0].address}:6379" },
         { name = "ENVIRONMENT", value = upper(var.environment_name) },
         { name = "LOG_LEVEL", value = "INFO" },
         { name = "OTEL_ENABLED", value = "true" },
@@ -188,7 +187,7 @@ resource "aws_ecs_task_definition" "api_task" {
       healthCheck = {
         # Use /live (not /ready) — liveness checks whether the process is alive,
         # not whether dependencies are reachable. Using /ready here causes ECS to
-        # kill and restart tasks whenever DB/Redis is slow, creating restart loops
+        # kill and restart tasks whenever the DB is slow, creating restart loops
         # and slow deployments. The ALB /ready check gates traffic separately.
         command     = ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health/live')\""]
         interval    = 30

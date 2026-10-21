@@ -10,7 +10,7 @@ open_cmd := if os() == "macos" { "open" } else { "xdg-open" }
 install:
     uv sync
 
-# Start local Postgres and Redis containers
+# Start local Postgres and other services
 infra: infra-down
     docker compose -p pa-compact up -d
 

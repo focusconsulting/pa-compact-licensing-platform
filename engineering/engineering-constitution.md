@@ -99,7 +99,7 @@ user, keep their `401`/`403` codes.
 [RFP](../product/context/research-corpus/sources/pa-compact-commission-data-system-rfp.md)'s QASP floor of 90% is the
 contractual minimum, not the target.
 
-API tests run against real Postgres and Redis (Docker Compose locally
+API tests run against real Postgres and other services (Docker Compose locally
 and in CI), not mocks. External services are mocked at their boundary:
 Cognito, the payment processor, SES. Prefer tests that exercise an endpoint
 end to end through the API over unit tests of its internals. Shared
@@ -212,8 +212,8 @@ source" is not a justification to skip.
 
 **Encryption.** TLS on every connection, including the hops inside the
 VPC: CloudFront to the load balancer, the load balancer to the API, and
-the API to Postgres and Redis. A hop without TLS requires an ADR. RDS,
-ElastiCache, and S3 are encrypted at rest. SSNs are additionally
+the API to Postgres and other services. A hop without TLS requires an ADR. RDS and S3 are
+encrypted at rest. SSNs are additionally
 encrypted at the column level.
 
 ### VIII. Maximum observability
@@ -423,7 +423,8 @@ docs.
   seed data ([Principle IV](#iv-no-mock-code-in-production))
 - Local and CI: Docker Compose (real Postgres, not mocks)
 
-**Cache**: Redis (ElastiCache) — only where it adds measured value
+**Cache**: none. Permissions and other per-request data are read from
+Postgres. Adding a cache requires an ADR showing the measured need.
 
 **Frontend**: [Next.js 14](https://nextjs.org/docs/14/app) (App Router),
 [React 18](https://18.react.dev/), TypeScript (`strict`)
@@ -454,8 +455,8 @@ for the processor ([Principle IV](#iv-no-mock-code-in-production)).
 ([Principle XII](#xii-a-fresh-clone-runs-from-the-readme))
 
 **Local services**: [Docker Compose](api/docker-compose.yaml) in
-`engineering/api/` runs Postgres and Redis (`just infra`); local
-settings come from [`.env.example`](api/.env.example)
+`engineering/api/` runs Postgres and other services (`just infra`); local
+settings come from [`.env`](api/.env)
 
 **Package Managers**: `uv` (Python), `pnpm` (Node)
 
@@ -482,7 +483,7 @@ for env-driven values only
 
 - CloudFront in front of both: the client from S3, `/api` from the
   API on ECS Fargate behind an internal ALB
-- Aurora PostgreSQL, ElastiCache, Cognito, Secrets Manager / SSM, ECR
+- Aurora PostgreSQL, Cognito, Secrets Manager / SSM, ECR
 - CloudWatch alarms → SNS → Slack
 - All infrastructure changes go through Terraform; no console changes
   that Terraform doesn't own

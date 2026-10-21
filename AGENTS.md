@@ -29,7 +29,7 @@ When iterating on the API, use these commands from `engineering/api/`:
 - `just format` / `just typecheck` / `just test` — individual stages
 - `just test-coverage` — tests with branch coverage
 - `just dev` — API with hot reload
-- `just infra` / `just infra-down` — Postgres + Redis (resets data)
+- `just infra` / `just infra-down` — Postgres and other services (resets data)
 - `just --list` — full recipe list
 
 When iterating on the client, use these commands from
