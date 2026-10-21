@@ -12,7 +12,7 @@ The goal is that once Phase 2 merges, every vertical can start its data and API 
 - **Flows**: all seven; mainly [FLOW-06 state machines](../../../../../product/context/flows/06-state-machines.md), [FLOW-02](../../../../../product/context/flows/02-sql-eligibility-verification.md), [FLOW-03](../../../../../product/context/flows/03-payment-and-remote-state-issuance.md), [FLOW-05](../../../../../product/context/flows/05-adverse-action-cascade.md), [FLOW-07](../../../../../product/context/flows/07-domain-event-catalogue.md)
 - **Compact rules** (adopted text): Rule 3 §3.3(a)(5), §3.4(a)–(d), §3.5(a), §3.6(a), §3.7(a)–(b), §3.9(b); Rule 4 §4.2(b)(5), §4.2(f), §4.3(c)–(e), §4.4(a)–(d), §4.5(b)–(f); ML §4.A.8, §4.B, §8.C
 - **Decisions**: D1 (computed status), D5 (roles and per-state permissions), D9 (documents), D10 (SSN), D15 (note + resubmit). Questions built to their defaults: Q-03, Q-04, Q-08, Q-10, Q-11, Q-17, Q-20, Q-25. Tensions: TENSION-02, TENSION-03, TENSION-04
-- Jira / GitHub issue / beads task: none (backlog item F-02)
+- Jira: SCRUM-76 (backlog item F-02)
 - ADRs: [ADR-0003](../../../../adrs/0003-users-table-schema-and-auth-design.md) (PKs, `created_by`, TEXT + CHECK), [ADR-0004](../../../../adrs/0004-jwt-auth-claims-as-user-identity.md) (audit columns from the token); new ADR-0005 to ADR-0008 below
 - **Area**: api
 

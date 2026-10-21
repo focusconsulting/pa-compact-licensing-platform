@@ -10,7 +10,7 @@ Fix the signatures every feature builds against: how a change is recorded (`emit
 - **Flows**: [FLOW-07](../../../../../product/context/flows/07-domain-event-catalogue.md) (event names); [FLOW-05](../../../../../product/context/flows/05-adverse-action-cascade.md) and [FLOW-06](../../../../../product/context/flows/06-state-machines.md) (deactivation reasons, signature only)
 - **Compact rules**: Rule 4 §4.3(e) (every change retained), through constitution Principle VI
 - **Decisions**: D2 (outbox), D3 (guardrails), D5 (per-request DB permissions), D7 (email from rows)
-- Beads task: `pa-compact-licensing-platform-4gi.2`; consumers `.3`, `.4`, `.5`, `.6`
+- Jira: SCRUM-77; consumers SCRUM-78, SCRUM-79, SCRUM-80, SCRUM-81
 - ADRs: [ADR-0004](../../../../adrs/0004-jwt-auth-claims-as-user-identity.md), [ADR-0005](../../../../adrs/0005-data-model-conventions.md), [ADR-0008](../../../../adrs/0008-expungement-and-append-only-history.md), [ADR-0009](../../../../adrs/0009-route-authorization-and-change-context.md) (new)
 - **Area**: api
 
@@ -77,7 +77,7 @@ Verified by: `just lint`, `just test-coverage` (100% on new modules), and each o
 - Moving `/me` to the `Data` envelope: the live client reads its current shape; `.4` moves it with the regenerated client.
 - OpenAPI drift check, client generation, persona-namespace routers (`.4`).
 - MFA (`amr`) enforcement, the role × endpoint matrix, the staff CLI (F-04, epic 5).
-- Request ID on every log line through a logging filter: this plan puts it on the request line and the records; the rest is a follow-up bead.
+- Request ID on every log line through a logging filter: this plan puts it on the request line and the records; the rest is a follow-up ticket.
 - The day-arithmetic module (`.3`, ADR-0006).
 
 ## Implementation Approach
@@ -452,6 +452,6 @@ Not applicable: no schema changes; every table exists from F-02.
 
 ## References
 
-- Beads: `pa-compact-licensing-platform-4gi.2` (parent `pa-compact-licensing-platform-4gi`)
+- Jira: SCRUM-77 (epic SCRUM-68)
 - F-02 plan: `engineering/thoughts/shared/plans/api/2026-10-07-F-02-canonical-data-model.md`
 - Existing patterns: `licensing_api/request_logger.py:11` (ASGI middleware), `tests/conftest.py:76` (rolled-back sessions), `tests/factories.py:31` (row builders)

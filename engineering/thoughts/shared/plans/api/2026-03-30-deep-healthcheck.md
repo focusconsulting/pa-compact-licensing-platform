@@ -6,7 +6,7 @@ Update the `GET /v1/health/deep` endpoint to probe both PostgreSQL and Redis ind
 
 ## Related
 
-- Beads Task: pa-compact-licensing-platform-wvq
+- Jira: N/A (predates the SCRUM project)
 - **Area**: api
 
 ## Current State Analysis
@@ -237,7 +237,7 @@ def test_health_deep_redis_down(self, test_client: connexion.FlaskApp) -> None:
 
 ## References
 
-- Beads task: pa-compact-licensing-platform-wvq
+- Jira: N/A (predates the SCRUM project)
 - Health controller: `api/licensing_api/controllers/health.py`
 - Cache singleton: `api/licensing_api/cache/__init__.py:60-98`
 - OpenAPI spec: `api/openapi.yaml:75-118`

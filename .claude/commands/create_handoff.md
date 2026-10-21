@@ -21,22 +21,23 @@ git rev-parse HEAD
 git branch --show-current
 basename $(git remote get-url origin 2>/dev/null || echo "local-repo") .git
 
-# Get beads task info (if working on a task)
-bd show ${BEADS_ID} --json 2>/dev/null || echo "No active beads task"
 ```
+
+If you are working on a Jira ticket (the key is usually in the branch name), fetch it with
+the Atlassian MCP `getJiraIssue` tool.
 
 ### 2. Determine Filepath
 
 Create the handoff at: `engineering/thoughts/shared/handoffs/<task-id>/YYYY-MM-DD_HH-MM-SS_description.md`
 
 Where:
-- `<task-id>` is the beads ID (e.g., `bd-a1b2`), GitHub issue (e.g., `issue-123`), or `general`
+- `<task-id>` is the Jira key (e.g., `SCRUM-78`), GitHub issue (e.g., `issue-123`), or `general`
 - `YYYY-MM-DD` is today's date
 - `HH-MM-SS` is current time in 24-hour format
 - `description` is a brief kebab-case description
 
 Examples:
-- `engineering/thoughts/shared/handoffs/bd-a1b2/2025-01-22_14-30-00_implementing-auth.md`
+- `engineering/thoughts/shared/handoffs/SCRUM-78/2025-01-22_14-30-00_implementing-auth.md`
 - `engineering/thoughts/shared/handoffs/issue-123/2025-01-22_14-30-00_refactor-parser.md`
 - `engineering/thoughts/shared/handoffs/general/2025-01-22_14-30-00_exploring-options.md`
 
@@ -50,7 +51,7 @@ date: [ISO format date-time with timezone]
 git_commit: [Current commit hash]
 branch: [Current branch name]
 repository: [Repository name]
-task_id: [Beads ID or GitHub issue, if applicable]
+task_id: [Jira key or GitHub issue, if applicable]
 status: handoff
 ---
 

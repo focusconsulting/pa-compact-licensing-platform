@@ -24,8 +24,9 @@ This command helps clean up working documents after a PR has been merged or a ta
 # Check for merged PRs with associated plans
 gh pr list --state merged --limit 10 --json number,title,mergedAt,headRefName
 
-# Check for closed beads tasks
-bd list --status=closed --limit 10
+# Check for recently closed Jira tickets: use the Atlassian MCP
+# searchJiraIssuesUsingJql tool with
+# project = SCRUM AND status = Done AND resolved >= -14d
 
 # List current plans
 ls -la engineering/thoughts/shared/plans/*/
@@ -36,15 +37,15 @@ ls -la engineering/thoughts/shared/handoffs/*/
 
 ### 2. For a specific merged PR / closed task
 
-If the user specifies a task ID (e.g., `bd-f7a3`):
+If the user specifies a task ID (e.g., `SCRUM-78`):
 
 ```bash
 # Find associated files
-find engineering/thoughts/shared/plans -name "*bd-f7a3*" -o -name "*<task-id>*"
-find engineering/thoughts/shared/handoffs -name "*bd-f7a3*" -o -name "*<task-id>*"
+find engineering/thoughts/shared/plans -name "*SCRUM-78*" -o -name "*<task-id>*"
+find engineering/thoughts/shared/handoffs -name "*SCRUM-78*" -o -name "*<task-id>*"
 
 # Verify the PR was merged
-gh pr list --state merged --search "bd-f7a3"
+gh pr list --state merged --search "SCRUM-78"
 ```
 
 ### 3. Delete plan files (after confirming PR merged)

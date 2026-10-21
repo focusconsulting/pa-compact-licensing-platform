@@ -55,6 +55,9 @@ pre-commit install           # sets up the git hook
 pre-commit install-hooks     # pre-fetch hook environments
 ```
 
+If `pre-commit install` refuses because `core.hooksPath` is set (left
+over from an older tool), run `git config --unset core.hooksPath` first.
+
 Hooks run automatically on `git commit`. To run them on demand:
 
 ```bash

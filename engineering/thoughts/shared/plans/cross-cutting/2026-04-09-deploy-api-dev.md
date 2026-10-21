@@ -7,7 +7,7 @@ Add a `deploy` job to `.github/workflows/api.yml` that builds the production Doc
 ## Related
 
 - GitHub Issue: N/A
-- Beads Task: pa-compact-licensing-platform-90d
+- Jira: N/A (predates the SCRUM project)
 - ADRs: ADR-0002 (`docs/architecture_decision_records/0002-db-config-decomposition.md`) — explains why no AWS SDK is needed in the container
 - **Area**: cross-cutting
 
@@ -167,7 +167,7 @@ iam:PassRole   # to pass the ECS task execution role
 - [ ] `GET /health/ready` on the DEV load balancer URL returns `{"db": true, "cache": true}`
 - [ ] CloudWatch Logs for the new container show structured JSON log output
 
-**Implementation Note**: After completing Phase 1 and automated verification passes, confirm manual testing before closing the beads task.
+**Implementation Note**: After completing Phase 1 and automated verification passes, confirm manual testing before closing the Jira ticket.
 
 ---
 
@@ -184,7 +184,7 @@ iam:PassRole   # to pass the ECS task execution role
 
 ## References
 
-- Beads task: pa-compact-licensing-platform-90d
+- Jira: N/A (predates the SCRUM project)
 - ADR-0002: `docs/architecture_decision_records/0002-db-config-decomposition.md`
 - Existing CI workflow: `.github/workflows/api.yml`
 - AWS actions used:

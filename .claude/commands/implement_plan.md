@@ -116,28 +116,19 @@ If instructed to execute multiple phases consecutively, skip the pause until the
 
 Do not check off items in the manual testing steps until confirmed by the user.
 
-## Beads Integration
+## Jira Integration
 
-When working on a beads-tracked task:
+When the plan names a Jira ticket, use the Atlassian MCP tools:
 
-```bash
-# At start of implementation - claim task and create branch
-bd update ${BEADS_ID} --status in_progress
+- At the start: `transitionJiraIssue` to **In Progress**, then create the branch if you are not on one:
 
-# Create feature branch (if not already on one)
-git checkout -b feature/${BEADS_ID}-short-description
-# Example: git checkout -b feature/bd-f7a3-integration-tests
+  ```bash
+  git checkout -b feature/${TASK_ID}-short-description
+  # Example: git checkout -b feature/SCRUM-78-events-cascade
+  ```
 
-bd comment ${BEADS_ID} "Starting implementation on branch feature/${BEADS_ID}-..."
-
-# If you discover new tasks
-bd create "Discovered issue: description" -t bug -p 2
-bd dep add ${NEW_ID} ${BEADS_ID}
-
-# At completion
-bd close ${BEADS_ID} --reason "Completed - PR #XXX"
-bd sync
-```
+- If you discover new work: `createJiraIssue` with the [ticket template](../../product/backlog/jira-ticket-template.md), then `createIssueLink` (**Relates** to this ticket, or **Blocks** if it must land first).
+- When the PR opens: `transitionJiraIssue` to **In Review**. The ticket moves to **Done** when the PR merges.
 
 **Branch naming convention:**
 - `feature/<task-id>-short-description` for features
@@ -179,7 +170,7 @@ git commit -m "feat: implement Phase N - [description]
 - Change 2
 
 Plan: engineering/thoughts/shared/plans/YYYY-MM-DD-xxx.md
-Task: bd-XXXX or #XXX"
+Task: SCRUM-XXX or #XXX"
 ```
 
 ## Completion
@@ -215,10 +206,7 @@ When all phases are complete:
    docker compose ps  # verify all services healthy
    ```
 
-2. **Update beads task**:
-   ```bash
-   bd comment ${BEADS_ID} "Implementation complete, all tests passing"
-   ```
+2. **Update the Jira ticket**: add a comment with `addCommentToJiraIssue` saying the implementation is complete and the checks pass (confirm the wording with the user first, since it posts under their name).
 
 3. **Suggest next steps**:
    ```
@@ -227,7 +215,7 @@ When all phases are complete:
    Next steps:
    1. Run `/describe_pr` to generate PR description
    2. Create PR: `gh pr create --fill`
-   3. Close beads task after PR is merged
+   3. Move the Jira ticket to In Review; it closes when the PR merges
 
    Would you like me to proceed with the PR description?
    ```

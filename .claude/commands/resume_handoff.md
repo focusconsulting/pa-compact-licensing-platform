@@ -16,7 +16,7 @@ When this command is invoked:
    - Begin the analysis process by ingesting relevant context from the handoff document, reading additional files it mentions
    - Then propose a course of action to the user and confirm, or ask for clarification on direction.
 
-2. **If a task ID (like bd-XXXX or issue-XXX) was provided**:
+2. **If a task ID (like SCRUM-XXX or issue-XXX) was provided**:
    - Pull latest changes: `git pull`
    - Locate the most recent handoff document for the task in `engineering/thoughts/shared/handoffs/<task-id>/`
    - List the directory contents to find the most recent file (by timestamp in filename)
@@ -32,8 +32,8 @@ When this command is invoked:
    I'll help you resume work from a handoff document.
 
    You can provide:
-   - A full path: `/resume_handoff engineering/thoughts/shared/handoffs/bd-a1b2/2025-01-22_14-30-00_description.md`
-   - A task ID: `/resume_handoff bd-a1b2` or `/resume_handoff issue-123`
+   - A full path: `/resume_handoff engineering/thoughts/shared/handoffs/SCRUM-78/2025-01-22_14-30-00_description.md`
+   - A task ID: `/resume_handoff SCRUM-78` or `/resume_handoff issue-123`
 
    Let me check for recent handoffs...
    ```
@@ -83,9 +83,6 @@ git log --oneline -5
 
 # Check if we're on the right branch
 git branch --show-current
-
-# Check beads task status
-bd show ${TASK_ID} --json 2>/dev/null
 
 # Verify recent changes still exist
 git diff --name-only HEAD~3..HEAD
