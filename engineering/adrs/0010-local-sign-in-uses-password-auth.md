@@ -40,3 +40,28 @@ Writing our own SRP server would work, but it is about 500 lines, SRP maths incl
 - The rest of the sign-in path is shared: the same SDK calls, the `NEW_PASSWORD_REQUIRED` challenge, token refresh, and the API's JWKS verification.
 - cognito-local's error types and messages differ from Cognito's in places (a wrong password is `InvalidPasswordException`, not `NotAuthorizedException`), so the client must not branch on them.
 - We maintain no Cognito code of our own; Dependabot updates the image.
+
+## Notes
+
+### Recognizing an SRP failure on DEV and higher environments
+
+Because client interacts directly with Cognito, API will have no failure logs. The browser's requests to `cognito-idp.<region>.amazonaws.com` will fail. There are two failure modes:
+
+#### 1. Configuration adjustments
+
+Mistakes in configuration may not trigger errors in local envs or CI checks. In both cases, the login page will show Cognito error messages on screen. Two examples:
+
+| Scenario | Browser Error Message at Login page |
+| --- | --- |
+| Terraform config drops `ALLOW_USER_SRP_AUTH` | "USER_SRP_AUTH is not enabled for the client." |
+| Client app tries to use `USER_PASSWORD_AUTH` | "USER_PASSWORD_AUTH flow not enabled for this client." |
+
+#### 2. SRP computation breaks (SDK upgrade, `crypto` or `Buffer` bundling)
+
+As SRP is not exercised locally or in CI, the DEV or higher user would see "Incorrect username or password." at login. A broken SRP computation gets the same error as a mistyped password, so it reads as user error, and repeated retries trigger Cognito's lockout ("Password attempts exceeded").
+
+Both scenarios are recognizable from analysis of the browser network log, in its `cognito-idp.<region>.amazonaws.com` requests. To tell them apart:
+
+- `InitiateAuth` fails: configuration. Check `AuthFlow` in the request body.
+- `InitiateAuth` succeeds and `RespondToAuthChallenge` rejects a known-good password: the SRP computation.
+- No request at all: look for a JS exception in the console.
