@@ -88,6 +88,18 @@ async def list_applications(
 
 `/me` still returns its body unwrapped: the deployed client reads that shape, and `.4` moves it to `Data` with the regenerated client.
 
+## Counting days
+
+`licensing_api/days.py` is the only place feature code counts days (constitution Principle XIII). Calendar days follow [ADR-0006](../adrs/0006-reference-time-zone-and-dates.md); business days skip weekends and federal holidays as observed ([ADR-0011](../adrs/0011-business-days-and-holiday-calendar.md)).
+
+| Function | Contract |
+|---|---|
+| `compact_today(session) -> date` | Today in the reference time zone, from the same SQL function the status views use |
+| `reference_time_zone(session) -> ZoneInfo` | `compact_settings.time_zone` |
+| `compact_date_at(instant, time_zone) -> date` | The day an aware instant falls on; a naive datetime is a `ValueError` |
+| `add_days(day, days)`, `days_between(start, end)` | Calendar days; `days_between` is 0 for the same day |
+| `is_business_day(day)`, `add_business_days(day, days)` | Counting starts the day after `day`, which need not be a business day |
+
 ## Signatures the tracks implement
 
 These are fixed here so the tracks build in parallel. Each becomes code, with tests, in the track named. Each track's plan links this page.
@@ -114,7 +126,7 @@ async def dispatch_events(
     Returns the number handled. Tests drain the outbox by calling it."""
 ```
 
-Also `.3`: the event-catalogue test (every `EventType` has a test), `GET /commission/audit`, and the day-arithmetic module (ADR-0006).
+Also `.3`: the event-catalogue test (every `EventType` has a test), `GET /commission/audit`, and [the day-arithmetic module](#counting-days).
 
 ### `.4` API rules, client generation, demo seed
 
