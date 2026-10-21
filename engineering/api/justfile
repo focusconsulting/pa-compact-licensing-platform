@@ -18,6 +18,10 @@ infra: infra-down
 infra-down:
     docker compose -p pa-compact down -v
 
+# Load local seed data from seed/<name>.sql into the running Postgres (local only; safe to rerun)
+seed name="users":
+    docker compose -p pa-compact exec -T postgres psql -v ON_ERROR_STOP=1 -U licensing -d licensing < seed/{{ name }}.sql
+
 # Run the API with hot reload. Override env file with: just dev env-file=.env.dev
 dev env-file=".env":
     uv run uvicorn licensing_api.__main__:app --reload --env-file {{ env-file }}
