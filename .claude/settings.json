@@ -1,7 +1,6 @@
 {
   "permissions": {
     "allow": [
-      "Skill(beads_workflow)",
       "Skill(commit)",
       "Skill(create_adr)",
       "Skill(create_handoff)",
@@ -17,8 +16,6 @@
       "Bash(basename *)",
       "Bash(cat)",
       "Bash(cat <<*)",
-      "Bash(bd *)",
-      "Bash(bd)",
       "Bash(git *)",
       "Bash(git)",
       "Bash(gh *)",
@@ -97,12 +94,8 @@
       "Bash(jq *)"
     ]
   },
-  "enabledPlugins": {
-    "beads@beads-marketplace": true
-  },
   "autoCompact": false,
   "env": {
-    "MAX_THINKING_TOKENS": "32000",
-    "BEADS_NO_DAEMON": "1"
+    "MAX_THINKING_TOKENS": "32000"
   }
 }

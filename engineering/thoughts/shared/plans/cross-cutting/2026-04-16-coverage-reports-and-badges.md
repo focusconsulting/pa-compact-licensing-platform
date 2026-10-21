@@ -9,7 +9,7 @@ display separate coverage badges on the root README.
 ## Related
 
 - GitHub Issue: N/A
-- Beads Task: pa-compact-licensing-platform-tv3
+- Jira: N/A (predates the SCRUM project)
 - ADRs: N/A
 - **Area**: cross-cutting (API CI + Client CI)
 

@@ -7,7 +7,7 @@ Add a `deploy` job to `.github/workflows/client.yml` that builds the Next.js sta
 ## Related
 
 - GitHub Issue: N/A
-- Beads Task: pa-compact-licensing-platform-1wn
+- Jira: N/A (predates the SCRUM project)
 - ADRs: N/A
 - **Area**: cross-cutting
 
@@ -176,7 +176,7 @@ cloudfront:CreateInvalidation
 - [ ] Visiting the CloudFront domain in a browser loads the frontend
 - [ ] The `/api/health/ready` endpoint is reachable from the browser via the same CloudFront domain
 
-**Implementation Note**: After completing Phase 2 and automated verification passes, confirm manual testing before closing the beads task.
+**Implementation Note**: After completing Phase 2 and automated verification passes, confirm manual testing before closing the Jira ticket.
 
 ---
 
@@ -193,8 +193,8 @@ cloudfront:CreateInvalidation
 
 ## References
 
-- Beads task: pa-compact-licensing-platform-1wn
-- Existing deploy plan (API): `thoughts/shared/plans/cross-cutting/2026-04-09-pa-compact-licensing-platform-90d-deploy-api-dev.md`
+- Jira: N/A (predates the SCRUM project)
+- Existing deploy plan (API): `thoughts/shared/plans/cross-cutting/2026-04-09-deploy-api-dev.md`
 - Client workflow: `.github/workflows/client.yml`
 - CloudFront + S3 Terraform: `infrastructure/iac/components/app/terraform/cdn.tf`
 - Terraform outputs: `infrastructure/iac/components/app/terraform/outputs.tf`

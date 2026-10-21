@@ -5,7 +5,7 @@ Replaces the API's unstructured plaintext logging with structured JSON output (o
 ## Related
 
 - GitHub Issue: N/A
-- Beads: pa-compact-licensing-platform-vq6 (logging), pa-compact-licensing-platform-4ok (DB config)
+- Jira: N/A (predates the SCRUM project)
 - ADR-0001: `docs/architecture_decision_records/0001-structured-json-logging.md`
 - ADR-0002: `docs/architecture_decision_records/0002-db-config-decomposition.md`
 
@@ -123,7 +123,7 @@ Replace ad-hoc text logging with structured JSON output and split the monolithic
 ## Related
 
 - GitHub Issue: N/A
-- Beads Task: N/A
+- Jira: N/A
 - ADRs: ADR-0001 (structured JSON logging), ADR-0002 (DB config decomposition)
 - **Area**: api
 

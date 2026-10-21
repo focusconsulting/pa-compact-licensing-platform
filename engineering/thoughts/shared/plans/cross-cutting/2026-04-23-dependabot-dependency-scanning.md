@@ -7,7 +7,7 @@ Add `.github/dependabot.yml` so GitHub automatically opens PRs when newer stable
 ## Related
 
 - GitHub Issue: N/A
-- Beads Task: pa-compact-licensing-platform-cjd
+- Jira: N/A (predates the SCRUM project)
 - Area: cross-cutting
 
 ## Current State Analysis

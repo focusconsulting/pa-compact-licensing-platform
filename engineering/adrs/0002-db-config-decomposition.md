@@ -80,6 +80,6 @@ Keep `DB_URL` but parse it with `urllib.parse.urlparse` to extract components fo
 ## Related
 
 - GitHub Issue: N/A
-- Beads Task: pa-compact-licensing-platform-4ok
+- Jira: N/A (predates the SCRUM project)
 - Implementation Plan: `thoughts/shared/plans/api/2026-04-03-structured-logging.md`
 - ADR-0001: Structured JSON Logging (the `_mask_sensitive` function referenced here is defined there)

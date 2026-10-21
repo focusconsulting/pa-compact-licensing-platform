@@ -1,5 +1,5 @@
 ---
-description: Create worktree for parallel feature development with beads
+description: Create worktree for parallel feature development on a Jira ticket
 ---
 
 # Create Worktree
@@ -10,9 +10,9 @@ Create an isolated git worktree for implementing a feature in parallel. This all
 
 When invoked:
 
-1. **If a beads ID or GitHub issue provided** (e.g., `/create_worktree bd-a1b2` or `/create_worktree #123`):
+1. **If a Jira key or GitHub issue provided** (e.g., `/create_worktree SCRUM-78` or `/create_worktree #123`):
    - Extract the task/issue identifier
-   - Look up details from beads or GitHub
+   - Look up details in Jira or GitHub
    - Proceed to create the worktree
 
 2. **If no parameters provided**:
@@ -21,32 +21,29 @@ When invoked:
 
    First, let me check what tasks are ready:
    ```
-   Then run `bd ready` and show available tasks.
+   Then search Jira with the Atlassian MCP `searchJiraIssuesUsingJql` tool, for example
+   `project = SCRUM AND status = "To Do" AND issuetype = Task ORDER BY priority DESC, key ASC`,
+   and show the tickets whose blockers are Done.
 
-   Ask: "Which task would you like to work on? Provide a beads ID (e.g., bd-a1b2) or GitHub issue number (e.g., #123)"
+   Ask: "Which task would you like to work on? Provide a Jira key (e.g., SCRUM-78) or GitHub issue number (e.g., #123)"
 
 ## Process Steps
 
 ### Step 1: Gather Information
 
-```bash
-# If beads ID provided
-bd show ${BEADS_ID} --json
-
-# If GitHub issue provided
-gh issue view ${ISSUE_NUM} --json number,title,labels
-```
+- Jira key: fetch the ticket with the Atlassian MCP `getJiraIssue` tool, including `issuelinks`.
+- GitHub issue: `gh issue view ${ISSUE_NUM} --json number,title,labels`
 
 Determine:
 - Task/issue identifier for naming
 - Brief description for branch name
-- Any dependencies or blockers
+- Any blockers (Blocks links whose blocking ticket is not Done)
 
 ### Step 2: Create Worktree
 
 ```bash
 # Set variables
-TASK_ID="${BEADS_ID}"  # e.g., "bd-a1b2" or "issue-123"
+TASK_ID="SCRUM-78"  # the Jira key, or "issue-123"
 SHORT_DESC="brief-description"  # from task title, kebab-case
 BRANCH_NAME="feature/${TASK_ID}-${SHORT_DESC}"
 REPO_NAME=$(basename $(git rev-parse --show-toplevel))
@@ -65,30 +62,18 @@ git worktree add -b "${BRANCH_NAME}" "${WORKTREE_PATH}" origin/main
 cd "${WORKTREE_PATH}"
 
 # Install API dependencies
-cd api && uv sync && cd ..
+cd engineering/api && uv sync && cd ../..
 
 # Install client dependencies
-cd client && pnpm install && cd ..
-
-# Set beads to no-daemon mode for worktrees
-export BEADS_NO_DAEMON=1
-
-# Verify beads works (shares database with main repo)
-bd ready
+cd engineering/client && pnpm install && cd ../..
 ```
 
 ### Step 4: Claim the Task
 
-```bash
-# Update task status in beads
-bd update ${BEADS_ID} --status in_progress
+With the Atlassian MCP tools:
 
-# Add comment noting worktree
-bd comment ${BEADS_ID} "Starting work in worktree: ${WORKTREE_PATH}"
-
-# Sync changes
-bd sync
-```
+- `transitionJiraIssue` to **In Progress** (look the transition ID up with `getTransitionsForJiraIssue`).
+- Assign the ticket to the user if it is unassigned (`editJiraIssue`, after confirming with them).
 
 ### Step 5: Confirm with User
 
@@ -99,14 +84,13 @@ Present the summary:
 
 **Location**: ${WORKTREE_PATH}
 **Branch**: ${BRANCH_NAME}
-**Task**: ${BEADS_ID} - ${TASK_TITLE}
+**Task**: ${TASK_ID} - ${TASK_TITLE}
 
 ## Next Steps
 
 1. **Open a new terminal** and navigate to the worktree:
    ```bash
    cd ${WORKTREE_PATH}
-   export BEADS_NO_DAEMON=1
    ```
 
 2. **Start Claude Code** in the worktree:
@@ -123,16 +107,14 @@ Present the summary:
 
 - Check worktree status: `git worktree list`
 - Remove when done: `git worktree remove ${WORKTREE_PATH}`
-- Sync beads: `bd sync`
 ```
 
 ## Notes
 
 ### Worktree Isolation
 - Each worktree has its own working directory
-- They share the same `.git` directory and beads database
+- They share the same `.git` directory
 - Each should have its own dependencies installed (api via uv, client via pnpm)
-- Use `BEADS_NO_DAEMON=1` to avoid database locking issues
 
 ### Naming Conventions
 - Worktree path: `../<repo>-worktrees/<task-id>/`
@@ -142,19 +124,15 @@ Present the summary:
 
 ```bash
 # In the worktree
-# 1. Commit final changes
-git add .
-git commit -m "feat: complete <description> - ${BEADS_ID}"
+# 1. Commit final changes (use the /commit skill)
 
 # 2. Push branch
 git push -u origin ${BRANCH_NAME}
 
-# 3. Create PR
-gh pr create --fill
+# 3. Create PR (use /describe_pr for the body)
+gh pr create --base main --body-file engineering/thoughts/shared/prs/${TASK_ID}_description.md
 
-# 4. Close beads task
-bd close ${BEADS_ID} --reason "Completed in PR #XXX"
-bd sync
+# 4. Move the Jira ticket to In Review; it moves to Done when the PR merges
 
 # 5. Return to main repo
 cd /path/to/main/repo
@@ -165,12 +143,6 @@ git branch -d ${BRANCH_NAME}  # Delete local branch
 ```
 
 ### Troubleshooting
-
-**Beads database locked**:
-```bash
-export BEADS_NO_DAEMON=1
-bd --no-daemon ready
-```
 
 **Worktree out of sync**:
 ```bash

@@ -7,7 +7,7 @@ Replace ad-hoc text logging with structured JSON output and split the monolithic
 ## Related
 
 - GitHub Issue: N/A
-- Beads Task: N/A
+- Jira: N/A
 - ADRs: ADR-0001 (structured JSON logging), ADR-0002 (DB config decomposition)
 - **Area**: api
 

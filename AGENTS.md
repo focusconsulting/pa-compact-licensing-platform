@@ -108,135 +108,57 @@ Prefer the project's own tools:
 | Research and notes | `research_codebase`, `thoughts-locator` | |
 | Planning | `/create_plan` | `EnterPlanMode` (ephemeral) |
 | Committing and PRs | `/commit`, `/describe_pr` | |
-| Parallel work | `/create_worktree` (use `BEADS_NO_DAEMON=1` in worktrees) | |
+| Parallel work | `/create_worktree` | |
 
 When stuck: re-read this file and the constitution, look for an
 existing implementation to follow, and ask rather than guess.
 
-<!-- BEGIN BEADS INTEGRATION v:1 profile:full hash:f65d5d33 -->
-## Issue Tracking with bd (beads)
+## Issue tracking in Jira
 
-**IMPORTANT**: This project uses **bd (beads)** for ALL issue tracking. Do NOT use markdown TODOs, task lists, or other tracking methods.
+All work is tracked in the Jira project **SCRUM** at
+<https://focusdigital.atlassian.net/browse/SCRUM>. Do not keep markdown
+TODO lists or a second tracker.
 
-### Why bd?
+- The ticket key (for example `SCRUM-78`) is the `<task-id>` in branch
+  names, plan and handoff filenames, commit messages, and PR titles.
+- Write tickets with the
+  [Jira ticket template](product/backlog/jira-ticket-template.md): every
+  ticket has a summary and acceptance criteria, and links the flows and
+  rules it encodes.
+- Epics hold tasks. Each epic starts with a product step (`.0`) and a
+  contract step (`.1`); its other tasks build against the contract.
+- Link tickets instead of describing order in prose: **Blocks** for
+  "builds on", **Relates** for work found while doing another ticket,
+  **Duplicate** when one ticket absorbs another.
+- Statuses: To Do → In Progress → In Review → Done. Move the ticket to In
+  Progress when you start it and In Review when its PR opens; it is Done
+  when the PR merges.
+- Agents read and write tickets with the Atlassian MCP tools
+  (`searchJiraIssuesUsingJql`, `getJiraIssue`, `createJiraIssue`,
+  `editJiraIssue`, `transitionJiraIssue`, `createIssueLink`,
+  `addCommentToJiraIssue`). If they are not connected, ask the user to
+  run `/mcp` and connect Atlassian.
+- Use only labels that already exist in SCRUM; ask before adding one.
 
-- Dependency-aware: Track blockers and relationships between issues
-- Git-friendly: Dolt-powered version control with native sync
-- Agent-optimized: JSON output, ready work detection, discovered-from links
-- Prevents duplicate tracking systems and confusion
+## Session completion
 
-### Quick Start
+Before ending a work session:
 
-**Check for ready work:**
-
-```bash
-bd ready --json
-```
-
-**Create new issues:**
-
-```bash
-bd create "Issue title" --description="Detailed context" -t bug|feature|task -p 0-4 --json
-bd create "Issue title" --description="What this issue is about" -p 1 --deps discovered-from:bd-123 --json
-```
-
-**Claim and update:**
-
-```bash
-bd update <id> --claim --json
-bd update bd-42 --priority 1 --json
-```
-
-**Complete work:**
-
-```bash
-bd close bd-42 --reason "Completed" --json
-```
-
-### Issue Types
-
-- `bug` - Something broken
-- `feature` - New functionality
-- `task` - Work item (tests, docs, refactoring)
-- `epic` - Large feature with subtasks
-- `chore` - Maintenance (dependencies, tooling)
-
-### Priorities
-
-- `0` - Critical (security, data loss, broken builds)
-- `1` - High (major features, important bugs)
-- `2` - Medium (default, nice-to-have)
-- `3` - Low (polish, optimization)
-- `4` - Backlog (future ideas)
-
-### Workflow for AI Agents
-
-1. **Check ready work**: `bd ready` shows unblocked issues
-2. **Claim your task atomically**: `bd update <id> --claim`
-3. **Work on it**: Implement, test, document
-4. **Discover new work?** Create linked issue:
-   - `bd create "Found bug" --description="Details about what was found" -p 1 --deps discovered-from:<parent-id>`
-5. **Complete**: `bd close <id> --reason "Done"`
-
-### Quality
-
-- Use `--acceptance` and `--design` fields when creating issues
-- Use `--validate` to check description completeness
-
-### Lifecycle
-
-- `bd defer <id>` / `bd supersede <id>` for issue management
-- `bd stale` / `bd orphans` / `bd lint` for hygiene
-- `bd human <id>` to flag for human decisions
-- `bd formula list` / `bd mol pour <name>` for structured workflows
-
-### Auto-Sync
-
-bd automatically syncs via Dolt:
-
-- Each write auto-commits to Dolt history
-- Use `bd dolt push`/`bd dolt pull` for remote sync
-- No manual export/import needed!
-
-### Important Rules
-
-- ✅ Use bd for ALL task tracking
-- ✅ Always use `--json` flag for programmatic use
-- ✅ Link discovered work with `discovered-from` dependencies
-- ✅ Check `bd ready` before asking "what should I work on?"
-- ❌ Do NOT create markdown TODO lists
-- ❌ Do NOT use external issue trackers
-- ❌ Do NOT duplicate tracking systems
-
-For more details, see README.md and docs/QUICKSTART.md.
-
-## Session Completion
-
-**When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
-
-**MANDATORY WORKFLOW:**
-
-1. **File issues for remaining work** - Create issues for anything that needs follow-up
-2. **Run quality gates** (if code changed) - Tests, linters, builds
-3. **Update issue status** - Close finished work, update in-progress items
-4. **PUSH TO REMOTE** - This is MANDATORY:
+1. Create Jira tickets for any follow-up work, linked to the ticket that
+   found it.
+2. Run the quality gates for every component you changed.
+3. Update ticket status: close finished work and note where in-progress
+   work stands.
+4. Push the branch:
 
    ```bash
    git pull --rebase
-   bd dolt push
    git push
-   git status  # MUST show "up to date with origin"
+   git status  # must show "up to date with origin"
    ```
 
-5. **Clean up** - Clear stashes, prune remote branches
-6. **Verify** - All changes committed AND pushed
-7. **Hand off** - Provide context for next session
+5. Clear stashes and prune merged branches.
+6. Use `/create_handoff` if work is still in progress.
 
-**CRITICAL RULES:**
-
-- Work is NOT complete until `git push` succeeds
-- NEVER stop before pushing - that leaves work stranded locally
-- NEVER say "ready to push when you are" - YOU must push
-- If push fails, resolve and retry until it succeeds
-
-<!-- END BEADS INTEGRATION -->
+Work is not complete until `git push` succeeds. If it fails, resolve and
+retry.
