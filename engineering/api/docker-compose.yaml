@@ -12,7 +12,7 @@ services:
   cognito-local:
     build: ../mocks/cognito
     ports:
-      - "9229:9229"
+      - "${COGNITO_PORT:-9229}:9229"
 
 volumes:
   pgdata:

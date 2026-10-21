@@ -28,6 +28,31 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
+describe("user pool", () => {
+  // The pool is created once per module, so each case loads a fresh copy.
+  async function poolConfig() {
+    vi.resetModules();
+    const { CognitoUserPool } = await import("amazon-cognito-identity-js");
+    const auth = await import("./auth");
+    auth.signOut();
+    return vi.mocked(CognitoUserPool).mock.calls[0][0];
+  }
+
+  it("uses the configured endpoint", async () => {
+    vi.stubEnv("NEXT_PUBLIC_COGNITO_ENDPOINT_URL", "http://localhost:9229");
+
+    expect((await poolConfig()).endpoint).toBe("http://localhost:9229");
+    vi.unstubAllEnvs();
+  });
+
+  it("leaves the endpoint to the SDK when none is configured", async () => {
+    vi.stubEnv("NEXT_PUBLIC_COGNITO_ENDPOINT_URL", "");
+
+    expect((await poolConfig()).endpoint).toBeUndefined();
+    vi.unstubAllEnvs();
+  });
+});
+
 describe("signIn", () => {
   it("signs in with SRP when no auth flow is configured", async () => {
     vi.stubEnv("NEXT_PUBLIC_COGNITO_AUTH_FLOW", "");

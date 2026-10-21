@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     cognito_user_pool_id: str = 'invalid'
     cognito_region: str = 'us-east-1'
     cognito_client_id: str = 'invalid'
+    # The Cognito API base URL. Unset in AWS; the local stack points it at the Cognito mock.
+    cognito_endpoint_url: str | None = None
 
     cors_origins: list[str] = ['http://localhost:3000']
 
@@ -32,7 +34,10 @@ class Settings(BaseSettings):
 
     @property
     def cognito_jwks_url(self) -> str:
-        return f'https://cognito-idp.{self.cognito_region}.amazonaws.com/{self.cognito_user_pool_id}/.well-known/jwks.json'
+        endpoint = (
+            self.cognito_endpoint_url or f'https://cognito-idp.{self.cognito_region}.amazonaws.com'
+        )
+        return f'{endpoint.rstrip("/")}/{self.cognito_user_pool_id}/.well-known/jwks.json'
 
 
 settings = Settings()

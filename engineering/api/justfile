@@ -12,7 +12,7 @@ install:
 
 # Start local Postgres and other services
 infra: infra-down
-    docker compose -p pa-compact up -d
+    docker compose -p pa-compact up -d --build
 
 # Stop local infrastructure containers
 infra-down:

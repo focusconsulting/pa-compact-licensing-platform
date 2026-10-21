@@ -16,7 +16,7 @@ Accepted
 
 ## Context
 
-The browser signs in to Cognito with SRP through `amazon-cognito-identity-js`, and the deployed app client allows only `ALLOW_USER_SRP_AUTH` and `ALLOW_REFRESH_TOKEN_AUTH`. The local stack (beads `pa-compact-licensing-platform-2xz.3`) needs a Cognito stand-in that needs no AWS account, issues ID tokens the API verifies against a JWKS, and gives each user a UUID `sub`.
+The browser signs in to Cognito with SRP through `amazon-cognito-identity-js`, and the deployed app client allows only `ALLOW_USER_SRP_AUTH` and `ALLOW_REFRESH_TOKEN_AUTH`. The local stack needs a Cognito stand-in that needs no AWS account, issues ID tokens the API verifies against a JWKS, and gives each user a UUID `sub`.
 
 No emulator does real SRP with Cognito-shaped tokens:
 

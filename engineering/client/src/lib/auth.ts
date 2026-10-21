@@ -14,6 +14,8 @@ function getUserPool(): CognitoUserPool {
     _userPool = new CognitoUserPool({
       UserPoolId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID!,
       ClientId: process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID!,
+      // Unset in AWS, so the SDK calls Cognito; the local stack points it at the Cognito mock.
+      endpoint: process.env.NEXT_PUBLIC_COGNITO_ENDPOINT_URL || undefined,
     });
   }
   return _userPool;
