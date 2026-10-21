@@ -16,7 +16,7 @@ up: install services
 # Install API and client dependencies, and create local settings files from the examples if missing
 install:
     test -f engineering/api/.env || cp engineering/api/.env.example engineering/api/.env
-    test -f engineering/client/.env.local || cp engineering/client/.env.example engineering/client/.env.local
+    test -f engineering/client/.env || cp engineering/client/.env.example engineering/client/.env
     cd engineering/api && uv sync
     cd engineering/client && pnpm install
 
@@ -25,7 +25,7 @@ services:
     {{ compose }} up -d --wait --build
     {{ compose }} wait rustfs-init >/dev/null
 
-# Stop the local services, keeping their data
+# Stop the local services
 down:
     {{ compose }} down
 

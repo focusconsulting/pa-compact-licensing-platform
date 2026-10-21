@@ -76,7 +76,7 @@ just up
 ```
 
 That installs dependencies, creates `engineering/api/.env` and
-`engineering/client/.env.local` from their examples if missing, starts the
+`engineering/client/.env` from their examples if missing, starts the
 local services, applies migrations, loads the local users, and runs the API
 and client. Ctrl-C stops the API and client; `just down` stops the services.
 No AWS account or credentials are needed.
@@ -125,7 +125,7 @@ just dev               # Run API with hot reload (localhost:8000/docs)
 
 ```bash
 cd engineering/client
-cp .env.example .env.local   # public settings only, no secrets
+cp .env.example .env         # public settings only, no secrets
 pnpm install                 # Install Node dependencies
 pnpm dev                     # Run dev server (localhost:3000)
 ```

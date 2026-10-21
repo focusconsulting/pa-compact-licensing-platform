@@ -308,9 +308,8 @@ following the root [`README.md`](../README.md), with nothing learned by word of 
 - **Complete examples.** Every setting the API or client reads appears
   in its `.env.example` ([API](api/.env.example),
   [client](client/.env.example)) with a value that works locally. Copying it to
-  `.env` (API) or `.env.local` (client) is enough to run the app and
-  its tests against Docker Compose, with no cloud credentials and no
-  access to a shared environment.
+  `.env` in the same directory is enough to run the app and its tests against Docker Compose, with
+  no cloud credentials and no access to a shared environment.
 - **No secrets in examples.** Example files hold local-only values;
   the client's holds only public `NEXT_PUBLIC_*` settings.
 - **One home for setup.** Setup steps live in the root

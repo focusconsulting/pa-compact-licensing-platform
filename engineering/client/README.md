@@ -5,7 +5,7 @@
 Please make sure you have followed the [prerequisites](../../README.md#prerequisites)
 in the root README.
 
-1. Copy the local settings: `cp .env.example .env.local`. These are public
+1. Copy the local settings: `cp .env.example .env`. These are public
    `NEXT_PUBLIC_*` values only; never put secrets in them
 1. Run `pnpm install`
 1. Run `pnpm dev`
