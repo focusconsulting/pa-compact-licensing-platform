@@ -13,6 +13,7 @@ install:
 # Start the local services (Postgres, maildev, RustFS, Cognito mock), resetting their data
 infra: infra-down
     docker compose -p pa-compact up -d --wait --build
+    docker compose -p pa-compact wait rustfs-init >/dev/null
 
 # Stop local infrastructure containers
 infra-down:
