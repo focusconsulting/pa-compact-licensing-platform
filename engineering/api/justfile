@@ -10,13 +10,18 @@ open_cmd := if os() == "macos" { "open" } else { "xdg-open" }
 install:
     uv sync
 
-# Start local Postgres and other services
+# Start the local services (Postgres, maildev, RustFS, Cognito mock), resetting their data
 infra: infra-down
-    docker compose -p pa-compact up -d --build
+    docker compose -p pa-compact up -d --wait --build
+    docker compose -p pa-compact wait rustfs-init >/dev/null
 
 # Stop local infrastructure containers
 infra-down:
     docker compose -p pa-compact down -v
+
+# Apply database migrations without starting the API
+migrate env-file=".env":
+    uv run --env-file {{ env-file }} python -c 'from licensing_api.migrations import run_migrations; run_migrations()'
 
 # Load local seed data from seed/<name>.sql into the running Postgres (local only; safe to rerun)
 seed name="users":

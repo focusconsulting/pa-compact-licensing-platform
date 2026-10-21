@@ -29,7 +29,8 @@ When iterating on the API, use these commands from `engineering/api/`:
 - `just format` / `just typecheck` / `just test` — individual stages
 - `just test-coverage` — tests with branch coverage
 - `just dev` — API with hot reload
-- `just infra` / `just infra-down` — Postgres and other services (resets data)
+- `just infra` / `just infra-down` — the local services: Postgres, maildev, RustFS, Cognito mock (resets data)
+- `just up` (repo root) — the whole system locally, with no AWS account
 - `just --list` — full recipe list
 
 When iterating on the client, use these commands from

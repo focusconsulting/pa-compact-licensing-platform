@@ -1,3 +1,6 @@
+# The local stack: every external service the app uses, replaced by a local
+# server it reaches through its production client (constitution Principle IV).
+# Names, ports, and settings follow the contract in .env.example.
 services:
   postgres:
     image: postgres:16-alpine
@@ -7,12 +10,59 @@ services:
       POSTGRES_USER: licensing
       POSTGRES_PASSWORD: secret123
       POSTGRES_DB: licensing
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "licensing", "-d", "licensing"]
+      interval: 1s
+      timeout: 2s
+      retries: 30
+
+  # Email: SMTP on 1025; read mail at http://localhost:1080
+  maildev:
+    image: maildev/maildev:2.2.1
+    ports:
+      - "${SMTP_PORT:-1025}:1025"
+      - "${MAILDEV_UI_PORT:-1080}:1080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:1080/healthz"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+  # File storage: S3 API on 9300; console at http://localhost:9301. Published
+  # on 93xx because Zscaler holds 9000 and 9010 on Focus laptops.
+  rustfs:
+    image: rustfs/rustfs:1.0.3
+    ports:
+      - "${S3_PORT:-9300}:9000"
+      - "${S3_CONSOLE_PORT:-9301}:9001"
+    environment:
+      RUSTFS_ACCESS_KEY: rustfsadmin
+      RUSTFS_SECRET_KEY: rustfsadmin
+      RUSTFS_CONSOLE_ENABLE: "true"
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:9000/health"]
+      interval: 1s
+      timeout: 2s
+      retries: 30
+
+  # Creates the documents bucket with AWS's own CLI, then exits.
+  rustfs-init:
+    image: amazon/aws-cli:2.31.18
+    depends_on:
+      rustfs:
+        condition: service_healthy
+    environment:
+      AWS_ACCESS_KEY_ID: rustfsadmin
+      AWS_SECRET_ACCESS_KEY: rustfsadmin
+      AWS_REGION: us-east-1
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        aws --endpoint-url http://rustfs:9000 s3api head-bucket --bucket documents 2>/dev/null \
+          || aws --endpoint-url http://rustfs:9000 s3api create-bucket --bucket documents
 
   # Sign-in: cognito-local with the local users (engineering/mocks/cognito)
   cognito-local:
     build: ../mocks/cognito
     ports:
       - "${COGNITO_PORT:-9229}:9229"
-
-volumes:
-  pgdata:

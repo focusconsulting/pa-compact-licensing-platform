@@ -43,7 +43,7 @@ product/                          Product context: flows, evidence, research cor
   - [uv](https://docs.astral.sh/uv/) (Python package manager)
   - [pnpm](https://pnpm.io/) 10+
   - [just](https://github.com/casey/just) (task runner)
-- Docker, running (local Postgres and more for the API, and image builds)
+- Docker, running (local Postgres for the API, and image builds)
 - [pre-commit](https://pre-commit.com/) (`pipx install pre-commit` or `brew install pre-commit`)
 
 ## Pre-commit hooks
@@ -67,6 +67,43 @@ markdownlint, and generic file checks (trailing whitespace, EOF, merge
 conflicts, large files, YAML/JSON validity). The same hooks run in CI via
 `.github/workflows/lint.yml`.
 
+## Run the whole system locally
+
+From a fresh clone, with the prerequisites above and Docker running:
+
+```bash
+just up
+```
+
+That installs dependencies, creates `engineering/api/.env` and
+`engineering/client/.env` from their examples if missing, starts the
+local services, applies migrations, loads the local users, and runs the API
+and client. Ctrl-C stops the API and client; `just down` stops the services.
+No AWS account or credentials are needed.
+
+| What | Where |
+|---|---|
+| The app | <http://localhost:3000> |
+| API docs | <http://localhost:8000/docs> |
+| Email (maildev) | <http://localhost:1080> |
+| File storage console (RustFS, `rustfsadmin` / `rustfsadmin`) | <http://localhost:9301> |
+
+Sign in as any user in
+[`engineering/mocks/cognito/db/local_licensing.json`](engineering/mocks/cognito/db/local_licensing.json)
+with `Local-Passw0rd!`, for example `gustavo.torrico@focusconsulting.io`.
+`backfill@example.com` (`Temp-Passw0rd!`) is asked to choose a new password
+on first sign-in.
+
+Each AWS service is replaced by a local one that the app reaches through
+its production client; only URLs differ (constitution Principle IV), except
+that sign-in uses password auth instead of SRP
+([ADR-0010](engineering/adrs/0010-local-sign-in-uses-password-auth.md)). The
+names, ports, and settings are in
+[`engineering/api/.env.example`](engineering/api/.env.example) and
+[`engineering/client/.env.example`](engineering/client/.env.example). If your
+`.env` files predate the local stack, copy the Cognito, SMTP, and S3 settings
+from the examples.
+
 ## Getting Started
 
 ### API
@@ -76,7 +113,9 @@ cd engineering/api
 export UV_PYTHON=$(asdf which python) # use the python from asdf
 cp .env.example .env   # local settings; works as-is with `just infra`
 just install           # Install Python dependencies
-just infra             # Start Postgres and other services (resets its data)
+just infra             # Start the local services (resets their data)
+just migrate           # Apply migrations
+just seed              # Load the local users
 just dev               # Run API with hot reload (localhost:8000/docs)
 ```
 
@@ -86,7 +125,7 @@ just dev               # Run API with hot reload (localhost:8000/docs)
 
 ```bash
 cd engineering/client
-cp .env.example .env.local   # public settings only, no secrets
+cp .env.example .env         # public settings only, no secrets
 pnpm install                 # Install Node dependencies
 pnpm dev                     # Run dev server (localhost:3000)
 ```
@@ -107,7 +146,7 @@ pnpm dev                     # Run dev server (localhost:3000)
 From `engineering/api/`:
 
 ```bash
-just infra             # Start Postgres and other services
+just infra             # Start the local services
 just infra-down        # Stop them and delete their data
 just test              # Run tests
 just test-coverage     # Run tests with coverage

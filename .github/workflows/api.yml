@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    paths: [engineering/api/**]
+    paths: [engineering/api/**, engineering/mocks/**]
   workflow_dispatch:
 
 defaults:
@@ -71,13 +71,9 @@ jobs:
         run: uv sync --frozen
 
       - name: Start services
-        run: docker compose up -d
-
-      - name: Wait for services to be healthy
         run: |
-          until docker compose exec -T postgres pg_isready -U licensing -d licensing; do
-            echo "Waiting for postgres..."; sleep 1
-          done
+          docker compose up -d --wait --build
+          docker compose wait rustfs-init >/dev/null
 
       - name: Run tests with coverage
         run: |
