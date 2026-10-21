@@ -8,5 +8,11 @@ services:
       POSTGRES_PASSWORD: secret123
       POSTGRES_DB: licensing
 
+  # Sign-in: cognito-local with the local users (engineering/mocks/cognito)
+  cognito-local:
+    build: ../mocks/cognito
+    ports:
+      - "${COGNITO_PORT:-9229}:9229"
+
 volumes:
   pgdata:

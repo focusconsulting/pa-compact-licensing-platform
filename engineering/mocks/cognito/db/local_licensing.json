@@ -1,0 +1,142 @@
+{
+  "Options": {
+    "Id": "local_licensing",
+    "UsernameAttributes": [
+      "email"
+    ]
+  },
+  "Users": {
+    "gustavo.torrico@focusconsulting.io": {
+      "Username": "gustavo.torrico@focusconsulting.io",
+      "Password": "Local-Passw0rd!",
+      "UserStatus": "CONFIRMED",
+      "Enabled": true,
+      "UserCreateDate": "2026-01-01T00:00:00.000Z",
+      "UserLastModifiedDate": "2026-01-01T00:00:00.000Z",
+      "Attributes": [
+        {
+          "Name": "sub",
+          "Value": "00000000-0000-4000-8000-000000000001"
+        },
+        {
+          "Name": "email",
+          "Value": "gustavo.torrico@focusconsulting.io"
+        },
+        {
+          "Name": "email_verified",
+          "Value": "true"
+        }
+      ]
+    },
+    "jamie.albinson@focusconsulting.io": {
+      "Username": "jamie.albinson@focusconsulting.io",
+      "Password": "Local-Passw0rd!",
+      "UserStatus": "CONFIRMED",
+      "Enabled": true,
+      "UserCreateDate": "2026-01-01T00:00:00.000Z",
+      "UserLastModifiedDate": "2026-01-01T00:00:00.000Z",
+      "Attributes": [
+        {
+          "Name": "sub",
+          "Value": "00000000-0000-4000-8000-000000000002"
+        },
+        {
+          "Name": "email",
+          "Value": "jamie.albinson@focusconsulting.io"
+        },
+        {
+          "Name": "email_verified",
+          "Value": "true"
+        }
+      ]
+    },
+    "michael.kalish@focusconsulting.io": {
+      "Username": "michael.kalish@focusconsulting.io",
+      "Password": "Local-Passw0rd!",
+      "UserStatus": "CONFIRMED",
+      "Enabled": true,
+      "UserCreateDate": "2026-01-01T00:00:00.000Z",
+      "UserLastModifiedDate": "2026-01-01T00:00:00.000Z",
+      "Attributes": [
+        {
+          "Name": "sub",
+          "Value": "00000000-0000-4000-8000-000000000003"
+        },
+        {
+          "Name": "email",
+          "Value": "michael.kalish@focusconsulting.io"
+        },
+        {
+          "Name": "email_verified",
+          "Value": "true"
+        }
+      ]
+    },
+    "robert.antonucci@focusconsulting.io": {
+      "Username": "robert.antonucci@focusconsulting.io",
+      "Password": "Local-Passw0rd!",
+      "UserStatus": "CONFIRMED",
+      "Enabled": true,
+      "UserCreateDate": "2026-01-01T00:00:00.000Z",
+      "UserLastModifiedDate": "2026-01-01T00:00:00.000Z",
+      "Attributes": [
+        {
+          "Name": "sub",
+          "Value": "00000000-0000-4000-8000-000000000004"
+        },
+        {
+          "Name": "email",
+          "Value": "robert.antonucci@focusconsulting.io"
+        },
+        {
+          "Name": "email_verified",
+          "Value": "true"
+        }
+      ]
+    },
+    "inactive@example.com": {
+      "Username": "inactive@example.com",
+      "Password": "Local-Passw0rd!",
+      "UserStatus": "CONFIRMED",
+      "Enabled": true,
+      "UserCreateDate": "2026-01-01T00:00:00.000Z",
+      "UserLastModifiedDate": "2026-01-01T00:00:00.000Z",
+      "Attributes": [
+        {
+          "Name": "sub",
+          "Value": "00000000-0000-4000-8000-000000000005"
+        },
+        {
+          "Name": "email",
+          "Value": "inactive@example.com"
+        },
+        {
+          "Name": "email_verified",
+          "Value": "true"
+        }
+      ]
+    },
+    "backfill@example.com": {
+      "Username": "backfill@example.com",
+      "Password": "Temp-Passw0rd!",
+      "UserStatus": "FORCE_CHANGE_PASSWORD",
+      "Enabled": true,
+      "UserCreateDate": "2026-01-01T00:00:00.000Z",
+      "UserLastModifiedDate": "2026-01-01T00:00:00.000Z",
+      "Attributes": [
+        {
+          "Name": "sub",
+          "Value": "00000000-0000-4000-8000-000000000006"
+        },
+        {
+          "Name": "email",
+          "Value": "backfill@example.com"
+        },
+        {
+          "Name": "email_verified",
+          "Value": "true"
+        }
+      ]
+    }
+  }
+}

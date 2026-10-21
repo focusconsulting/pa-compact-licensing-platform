@@ -54,3 +54,11 @@ updates:
     groups:
       actions-all:
         patterns: ["*"]
+
+  # cognito-local image (engineering/mocks/cognito/, local tooling)
+  - package-ecosystem: docker
+    directory: /engineering/mocks/cognito
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5

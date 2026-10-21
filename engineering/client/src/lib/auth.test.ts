@@ -4,11 +4,13 @@ import type { CognitoUserSession } from "amazon-cognito-identity-js";
 const mockGetCurrentUser = vi.hoisted(() => vi.fn());
 const mockAuthenticateUser = vi.hoisted(() => vi.fn());
 const mockCompleteNewPasswordChallenge = vi.hoisted(() => vi.fn());
+const mockSetAuthenticationFlowType = vi.hoisted(() => vi.fn());
 
 vi.mock("amazon-cognito-identity-js", () => ({
   CognitoUserPool: vi.fn().mockReturnValue({ getCurrentUser: mockGetCurrentUser }),
   CognitoUser: vi.fn().mockImplementation(() => ({
     authenticateUser: mockAuthenticateUser,
+    setAuthenticationFlowType: mockSetAuthenticationFlowType,
     completeNewPasswordChallenge: mockCompleteNewPasswordChallenge,
     signOut: vi.fn(),
   })),
@@ -26,7 +28,56 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
+describe("user pool", () => {
+  // The pool is created once per module, so each case loads a fresh copy.
+  async function poolConfig() {
+    vi.resetModules();
+    const { CognitoUserPool } = await import("amazon-cognito-identity-js");
+    const auth = await import("./auth");
+    auth.signOut();
+    return vi.mocked(CognitoUserPool).mock.calls[0][0];
+  }
+
+  it("uses the configured endpoint", async () => {
+    vi.stubEnv("NEXT_PUBLIC_COGNITO_ENDPOINT_URL", "http://localhost:9229");
+
+    expect((await poolConfig()).endpoint).toBe("http://localhost:9229");
+    vi.unstubAllEnvs();
+  });
+
+  it("leaves the endpoint to the SDK when none is configured", async () => {
+    vi.stubEnv("NEXT_PUBLIC_COGNITO_ENDPOINT_URL", "");
+
+    expect((await poolConfig()).endpoint).toBeUndefined();
+    vi.unstubAllEnvs();
+  });
+});
+
 describe("signIn", () => {
+  it("signs in with SRP when no auth flow is configured", async () => {
+    vi.stubEnv("NEXT_PUBLIC_COGNITO_AUTH_FLOW", "");
+    mockAuthenticateUser.mockImplementation((_: unknown, callbacks: Record<string, Function>) => {
+      callbacks.onSuccess({});
+    });
+
+    await signIn("test@example.com", "password");
+
+    expect(mockSetAuthenticationFlowType).toHaveBeenCalledWith("USER_SRP_AUTH");
+    vi.unstubAllEnvs();
+  });
+
+  it("signs in with the configured auth flow", async () => {
+    vi.stubEnv("NEXT_PUBLIC_COGNITO_AUTH_FLOW", "USER_PASSWORD_AUTH");
+    mockAuthenticateUser.mockImplementation((_: unknown, callbacks: Record<string, Function>) => {
+      callbacks.onSuccess({});
+    });
+
+    await signIn("test@example.com", "password");
+
+    expect(mockSetAuthenticationFlowType).toHaveBeenCalledWith("USER_PASSWORD_AUTH");
+    vi.unstubAllEnvs();
+  });
+
   it("resolves with success on successful authentication", async () => {
     const mockSession = {} as CognitoUserSession;
     mockAuthenticateUser.mockImplementation((_: unknown, callbacks: Record<string, Function>) => {
