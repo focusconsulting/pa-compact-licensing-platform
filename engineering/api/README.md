@@ -24,7 +24,7 @@ This step should be run once.
 just install
 ```
 
-### 2. Start local infrastructure (Postgres)
+### 2. Start local infrastructure (Postgres and more)
 
 This should be run before launching the service. Everytime it is invoked, the data in services is reset.
 

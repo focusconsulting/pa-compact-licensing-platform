@@ -44,7 +44,7 @@ async def live() -> LiveResp:
 @router.get(
     path='/ready',
     name='Ready check',
-    description='Check the database is ready to accept requests',
+    description='Check the database and other services are ready to accept requests',
 )
 async def ready(
     engine: Annotated[AsyncEngine, Depends(get_db_engine)],

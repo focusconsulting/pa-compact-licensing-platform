@@ -43,7 +43,7 @@ product/                          Product context: flows, evidence, research cor
   - [uv](https://docs.astral.sh/uv/) (Python package manager)
   - [pnpm](https://pnpm.io/) 10+
   - [just](https://github.com/casey/just) (task runner)
-- Docker, running (local Postgres for the API, and image builds)
+- Docker, running (local Postgres and more for the API, and image builds)
 - [pre-commit](https://pre-commit.com/) (`pipx install pre-commit` or `brew install pre-commit`)
 
 ## Pre-commit hooks
@@ -76,7 +76,7 @@ cd engineering/api
 export UV_PYTHON=$(asdf which python) # use the python from asdf
 cp .env.example .env   # local settings; works as-is with `just infra`
 just install           # Install Python dependencies
-just infra             # Start Postgres (resets its data)
+just infra             # Start Postgres and other services (resets its data)
 just dev               # Run API with hot reload (localhost:8000/docs)
 ```
 
@@ -107,7 +107,7 @@ pnpm dev                     # Run dev server (localhost:3000)
 From `engineering/api/`:
 
 ```bash
-just infra             # Start Postgres
+just infra             # Start Postgres and other services
 just infra-down        # Stop them and delete their data
 just test              # Run tests
 just test-coverage     # Run tests with coverage
