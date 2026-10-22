@@ -89,10 +89,16 @@ jobs:
           files: engineering/api/coverage.xml
           fail_ci_if_error: true
 
+  # e2e.yml runs itself on pull requests; here it runs only before a deploy.
+  e2e:
+    needs: changes
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.api == 'true')
+    uses: ./.github/workflows/e2e.yml
+
   deploy:
     name: Deploy to DEV
     runs-on: ubuntu-latest
-    needs: [changes, lint, test]
+    needs: [changes, lint, test, e2e]
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.api == 'true')
     permissions:
       id-token: write

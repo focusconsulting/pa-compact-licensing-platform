@@ -14,8 +14,8 @@ just e2e    # in another
 `E2E_BASE_URL` points the tests elsewhere (default `http://localhost:3000`).
 CI runs them on every pull request that touches `engineering/`, against the
 same local stack, in [`e2e.yml`](../../.github/workflows/e2e.yml); the test
-step must finish in 5 minutes. On `main` they run before the client's DEV
-deploy, which waits on them.
+step must finish in 5 minutes. On `main` they run before the client's and the
+API's DEV deploys, which wait on them.
 
 ## Writing tests
 

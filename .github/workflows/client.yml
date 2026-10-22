@@ -80,9 +80,10 @@ jobs:
           files: engineering/client/coverage/lcov.info
           fail_ci_if_error: true
 
-  # e2e.yml runs itself on pull requests; here it gates the deploy.
+  # e2e.yml runs itself on pull requests; here it runs only before a deploy.
   e2e:
-    if: github.event_name != 'pull_request'
+    needs: changes
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.client == 'true')
     uses: ./.github/workflows/e2e.yml
 
   deploy:

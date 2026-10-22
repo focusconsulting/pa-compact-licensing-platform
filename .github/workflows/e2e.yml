@@ -2,7 +2,7 @@ name: E2E
 
 # Playwright against the whole local stack: Docker Compose services, the API,
 # and the client's static build, with no AWS credentials.
-# On main it runs from client.yml, whose DEV deploy waits on it.
+# On main it runs from client.yml and api.yml, whose DEV deploys wait on it.
 on:
   workflow_call:
   pull_request:
