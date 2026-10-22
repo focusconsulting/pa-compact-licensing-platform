@@ -80,38 +80,15 @@ jobs:
           files: engineering/client/coverage/lcov.info
           fail_ci_if_error: true
 
-  a11y:
-    name: Accessibility (pa11y-ci, WCAG 2 AA)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: pnpm/action-setup@v6
-        with:
-          package_json_file: engineering/client/package.json
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "24"
-          cache: pnpm
-          cache-dependency-path: engineering/client/pnpm-lock.yaml
-
-      - name: Install dependencies
-        env:
-          PUPPETEER_SKIP_DOWNLOAD: "true"
-        run: pnpm install --frozen-lockfile
-
-      # pnpm's side-effects cache can skip puppeteer's Chrome download, so pa11y
-      # uses the Chrome the runner already has.
-      - name: Build, serve, and scan
-        env:
-          PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
-        run: pnpm a11y
+  # e2e.yml runs itself on pull requests; here it gates the deploy.
+  e2e:
+    if: github.event_name != 'pull_request'
+    uses: ./.github/workflows/e2e.yml
 
   deploy:
     name: Deploy to DEV
     runs-on: ubuntu-latest
-    needs: [changes, lint, test, a11y]
+    needs: [changes, lint, test, e2e]
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.client == 'true')
     permissions:
       id-token: write
