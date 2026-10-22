@@ -3,7 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CognitoUser } from "amazon-cognito-identity-js";
-import { Alert, Button, Form, Label, TextInput } from "@trussworks/react-uswds";
+import {
+  Alert,
+  AlertHeading,
+  AlertText,
+  Button,
+  Form,
+  Label,
+  TextInput,
+} from "@trussworks/react-uswds";
 import { useAuth } from "src/contexts/AuthContext";
 
 export default function LoginPage() {
@@ -75,8 +83,9 @@ export default function LoginPage() {
           <h1>Set a new password</h1>
           <p>You must set a new password before continuing.</p>
           {error && (
-            <Alert type="error" heading="Error" headingLevel="h2" slim>
-              {error}
+            <Alert type="error" slim>
+              <AlertHeading level="h2">Error</AlertHeading>
+              <AlertText>{error}</AlertText>
             </Alert>
           )}
           <Form onSubmit={(e) => handleNewPassword(e, pendingChallenge)}>
@@ -112,8 +121,9 @@ export default function LoginPage() {
       <div className="grid-container">
         <h1>Sign in</h1>
         {error && (
-          <Alert type="error" heading="Error" headingLevel="h2" slim>
-            {error}
+          <Alert type="error" slim>
+            <AlertHeading level="h2">Error</AlertHeading>
+            <AlertText>{error}</AlertText>
           </Alert>
         )}
         <Form onSubmit={handleSignIn}>
