@@ -49,6 +49,36 @@ Request IDs come from `RequestIdMiddleware`: the caller's `X-Request-ID` when it
 
 A handler is `async def run(session, ctx, event) -> None`. The Worker's `dispatch_events` calls it with the system context and the event's request ID, inside a savepoint of a transaction it commits ([ADR-0012](../adrs/0012-outbox-dispatcher.md)): a handler never commits, and when it raises, its writes are rolled back and the delivery is retried, then dead-lettered after five attempts. It must be safe to run twice for the same event. A handler that emails uses `<event_id>:<handler name>` as the idempotency key, so a retry sends once.
 
+#### Renaming or removing an event type
+
+Stored events keep their type forever, and the dispatcher does not run a handler for an event whose type is no longer in `EventType`: it logs `outcome=dead_lettered` and moves on. So a rename or removal takes two releases:
+
+1. Add the new type, emit it instead of the old one, and subscribe handlers to both. The old type stays in `EventType`.
+2. Once every event of the old type is delivered, remove it from `EventType` and FLOW-07, and add it to `_RETIRED_EVENT_TYPES` in `tests/test_events.py`. Ship a migration that stops the release while any are still in flight:
+
+```sql
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM domain_events e
+        WHERE e.type = '<old type>'
+          AND (
+              e.dispatched_at IS NULL
+              OR EXISTS (
+                  SELECT 1 FROM domain_event_deliveries d
+                  WHERE d.event_id = e.event_id AND d.handled_at IS NULL
+              )
+          )
+    ) THEN
+        RAISE EXCEPTION '<old type> events are still being delivered';
+    END IF;
+END
+$$;
+```
+
+A dead-lettered delivery counts as in flight: replay or delete it first.
+
 ## Declaring a route
 
 `licensing_api/permissions.py`. Every `/api` route declares who may call it; `tests/test_route_access.py` fails on one that does not. What each role and permission means is in [Roles and Permissions](roles-and-permissions.md).

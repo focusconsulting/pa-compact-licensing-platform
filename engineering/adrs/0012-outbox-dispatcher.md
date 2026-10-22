@@ -59,4 +59,5 @@ Build the dispatcher on the existing tables, as `dispatch_events` in `licensing_
 
 - `domain_events.dispatched_at` and `domain_event_deliveries.next_attempt_at` are added (migration `20261021_090000_event_dispatch.sql`).
 - A handler must not commit; the dispatcher commits for it.
+- An event's type is stored as text and kept forever. Fan-out matches it as a string, so an event whose type has left `EventType` gets no deliveries and is logged as `outcome=dead_lettered` rather than stopping fan-out. Renaming or removing a type takes two releases ([platform contract](../docs/platform-contract.md#renaming-or-removing-an-event-type)).
 - A delivery is retried for about eight minutes before it dead-letters. A dead-lettered delivery is replayed by clearing its `dead_lettered_at` and `attempts`.

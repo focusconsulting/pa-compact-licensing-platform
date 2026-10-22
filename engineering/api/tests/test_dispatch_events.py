@@ -92,6 +92,35 @@ async def test_an_event_no_handler_wants_is_marked_dispatched(committed_sessions
     assert event.dispatched_at is not None
 
 
+async def test_an_event_whose_type_left_the_enum_does_not_stop_fan_out(committed_sessions, caplog):
+    issued = Recorder()
+    registry = HandlerRegistry([handler('tests.issued', EventType.PRIVILEGE_ISSUED)(issued)])
+    async with committed_sessions() as session, session.begin():
+        system = await system_context(session)
+        await session.execute(
+            insert(DomainEvent).values(
+                type='privilege.renamed_away',
+                aggregate_type='states',
+                aggregate_key='KS',
+                actor_user_id=system.user_id,
+            )
+        )
+    event_id = await _emit(committed_sessions, EventType.PRIVILEGE_ISSUED)
+
+    with caplog.at_level(logging.ERROR, logger='licensing_api.worker'):
+        assert await dispatch_events(committed_sessions, registry) == 1
+
+    assert [call[0] for call in issued.calls] == [event_id]
+    async with committed_sessions() as session:
+        events = (await session.scalars(select(DomainEvent))).all()
+    assert all(event.dispatched_at is not None for event in events)
+    [record] = caplog.records
+    assert (record.__dict__['event_type'], record.__dict__['outcome']) == (
+        'privilege.renamed_away',
+        'dead_lettered',
+    )
+
+
 async def test_a_failing_handler_is_retried_after_a_delay(committed_sessions, caplog):
     flaky = Recorder(failures=1)
     registry = HandlerRegistry([handler('tests.flaky', EventType.PRIVILEGE_ISSUED)(flaky)])

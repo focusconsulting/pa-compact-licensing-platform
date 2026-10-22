@@ -53,7 +53,8 @@ class HandlerRegistry:
             by_name[declared.name] = declared
         self._handlers = tuple(by_name.values())
 
-    def for_event(self, event_type: EventType) -> tuple[Handler, ...]:
+    def for_event(self, event_type: str) -> tuple[Handler, ...]:
+        """Takes the stored string, so an event whose type left ``EventType`` matches no handler."""
         return tuple(h for h in self._handlers if event_type in h.event_types)
 
     def named(self, name: str) -> Handler | None:

@@ -21,6 +21,7 @@ MAX_ATTEMPTS = 5
 # Doubles after each failure: 30 s, 1 min, 2 min, 4 min.
 FIRST_RETRY_DELAY = timedelta(seconds=30)
 _MAX_ERROR_LENGTH = 2000
+_EVENT_TYPES = frozenset(EventType)
 
 
 async def dispatch_events(
@@ -61,8 +62,19 @@ async def _fan_out(
         deliveries = [
             {'event_id': event.event_id, 'handler': declared.name}
             for event in events
-            for declared in registry.for_event(EventType(event.type))
+            for declared in registry.for_event(event.type)
         ]
+        for event in events:
+            if event.type not in _EVENT_TYPES:
+                # Marked dispatched like the rest, so one bad row cannot stop fan-out.
+                logger.error(
+                    'Event type is not an EventType; no handler will run',
+                    extra={
+                        'event_id': str(event.event_id),
+                        'event_type': event.type,
+                        'outcome': 'dead_lettered',
+                    },
+                )
         if deliveries:
             await session.execute(
                 insert(DomainEventDelivery).values(deliveries).on_conflict_do_nothing()
