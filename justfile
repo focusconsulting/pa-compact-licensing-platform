@@ -32,3 +32,7 @@ down:
 # Load local seed data from engineering/api/seed/<name>.sql (safe to rerun)
 seed name="users":
     cd engineering/api && just seed {{ name }}
+
+# Run the end-to-end tests against the running system (start it with `just up` first)
+e2e:
+    cd engineering/e2e && pnpm install && pnpm exec playwright install chromium && pnpm test

@@ -1,0 +1,85 @@
+name: E2E
+
+# Playwright against the whole local stack: Docker Compose services, the API,
+# and the client's static build, with no AWS credentials.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths: [engineering/**, .github/workflows/e2e.yml]
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: engineering/api/uv.lock
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: engineering/client/package.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: |
+            engineering/client/pnpm-lock.yaml
+            engineering/e2e/pnpm-lock.yaml
+
+      - name: Start the local services
+        working-directory: engineering/api
+        run: docker compose -p pa-compact up -d --wait --build
+
+      - name: Start the API (migrated and seeded)
+        working-directory: engineering/api
+        run: |
+          cp .env.example .env
+          uv sync --frozen
+          uv run --env-file .env python -c 'from licensing_api.migrations import run_migrations; run_migrations()'
+          docker compose -p pa-compact exec -T postgres psql -v ON_ERROR_STOP=1 -U licensing -d licensing < seed/users.sql
+          nohup uv run uvicorn licensing_api.__main__:app --port 8000 --env-file .env > api.log 2>&1 &
+          for i in $(seq 30); do curl -sf localhost:8000/api/health/ready && break; sleep 1; done
+
+      - name: Build and serve the client
+        working-directory: engineering/client
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: "true" # only the a11y job needs pa11y's Chrome
+        run: |
+          cp .env.example .env.local
+          pnpm install --frozen-lockfile
+          pnpm build
+          nohup pnpm exec serve out -l 3000 > serve.log 2>&1 &
+          for i in $(seq 30); do curl -sf localhost:3000/login >/dev/null && break; sleep 1; done
+
+      - name: Install Playwright
+        working-directory: engineering/e2e
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
+
+      - name: Run the end-to-end tests
+        working-directory: engineering/e2e
+        timeout-minutes: 5
+        run: pnpm test
+
+      - name: Keep the report and logs
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-report
+          path: |
+            engineering/e2e/playwright-report
+            engineering/e2e/test-results
+            engineering/api/api.log
+          retention-days: 7
