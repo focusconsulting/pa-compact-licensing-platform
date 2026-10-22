@@ -4,6 +4,7 @@ import { describe, it, expect, vi } from "vitest";
 
 import { DateFields } from "./DateFields";
 import { renderWithForm } from "../tests/util";
+import { expectNoAxeViolations } from "../tests/axe";
 
 describe("DateFields component", () => {
   // DateFields labels are " Month", " Day", " Year" (name prefix + label joined with space)
@@ -69,5 +70,12 @@ describe("DateFields component", () => {
     expect(handler).toHaveBeenCalledWith(
       expect.objectContaining({ "some-id": "2026-02-20" }),
     );
+  });
+
+  it("has no axe violations", async () => {
+    const { container } = renderWithForm(
+      <DateFields id="dob" name="Date of birth" />,
+    );
+    await expectNoAxeViolations(container);
   });
 });

@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 
 import { useAuth } from "src/contexts/AuthContext";
 import { authFetch } from "src/lib/api";
+import { expectNoAxeViolations } from "src/tests/axe";
 import Home from "./page";
 
 vi.mock("src/lib/api");
@@ -127,5 +128,29 @@ describe("Home (Dashboard) page", () => {
     await waitFor(() =>
       expect(screen.getByText("Inactive")).toBeInTheDocument(),
     );
+  });
+
+  it("has no axe violations once the user loads", async () => {
+    vi.mocked(authFetch).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockUser),
+    } as Response);
+
+    const { container } = render(<Home />);
+    await screen.findByText("user@example.com");
+
+    await expectNoAxeViolations(container);
+  });
+
+  it("has no axe violations when the user fails to load", async () => {
+    vi.mocked(authFetch).mockResolvedValue({
+      ok: false,
+      status: 403,
+    } as Response);
+
+    const { container } = render(<Home />);
+    await screen.findByText("403");
+
+    await expectNoAxeViolations(container);
   });
 });

@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 
 import DisplayField from "./DisplayField";
 import { renderWithForm } from "../tests/util";
+import { expectNoAxeViolations } from "../tests/axe";
 
 describe("DisplayField component", () => {
   it("renders label and value", () => {
@@ -49,5 +50,12 @@ describe("DisplayField component", () => {
       { defaultValues: { dateField: "2025-03-15" } },
     );
     expect(screen.getByText("03/15/2025")).toBeInTheDocument();
+  });
+
+  it("has no axe violations", async () => {
+    const { container } = renderWithForm(
+      <DisplayField id="shown" label="Licence number" value="PA-123" />,
+    );
+    await expectNoAxeViolations(container);
   });
 });

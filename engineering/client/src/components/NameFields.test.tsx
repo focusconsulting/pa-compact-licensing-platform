@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 
 import NameFields from "./NameFields";
 import { renderWithForm } from "../tests/util";
+import { expectNoAxeViolations } from "../tests/axe";
 
 describe("NameFields component", () => {
   it("renders first, middle, and last name fields", () => {
@@ -63,5 +64,12 @@ describe("NameFields component", () => {
     const fieldset = screen.getByRole("group", { name: "Legal Name" });
     const inputs = fieldset.querySelectorAll("input");
     expect(inputs).toHaveLength(3);
+  });
+
+  it("has no axe violations", async () => {
+    const { container } = renderWithForm(
+      <NameFields id="name" label="Legal name" />,
+    );
+    await expectNoAxeViolations(container);
   });
 });

@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 
 import { TextField } from "./TextField";
 import { renderWithForm } from "../tests/util";
+import { expectNoAxeViolations } from "../tests/axe";
 
 describe("TextField component", () => {
   it("renders with label and id", () => {
@@ -49,5 +50,12 @@ describe("TextField component", () => {
   it("renders disabled state", () => {
     renderWithForm(<TextField id="some-id" label="some-name" disabled />);
     expect(screen.getByRole("textbox", { name: /some-name/ })).toBeDisabled();
+  });
+
+  it("has no axe violations", async () => {
+    const { container } = renderWithForm(
+      <TextField id="first" label="First name" hint="As on your licence" />,
+    );
+    await expectNoAxeViolations(container);
   });
 });

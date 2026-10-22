@@ -5,6 +5,7 @@ import { describe, it, expect, vi } from "vitest";
 
 import { SelectField } from "./SelectField";
 import { renderWithForm } from "../tests/util";
+import { expectNoAxeViolations } from "../tests/axe";
 
 describe("SelectField component", () => {
   const options = [
@@ -95,5 +96,12 @@ describe("SelectField component", () => {
     );
 
     expect(ref.current).toBe(screen.getByRole("combobox", { name: "Pick" }));
+  });
+
+  it("has no axe violations", async () => {
+    const { container } = renderWithForm(
+      <SelectField id="pick" label="State" options={[["KS", "Kansas"]]} />,
+    );
+    await expectNoAxeViolations(container);
   });
 });

@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 
 import DatePickerField from "./DatePickerField";
 import { renderWithForm } from "../tests/util";
+import { expectNoAxeViolations } from "../tests/axe";
 
 describe("DatePickerField component", () => {
   it("renders the label", () => {
@@ -80,5 +81,12 @@ describe("DatePickerField component", () => {
     await user.click(screen.getByRole("button", { name: "Submit" }));
 
     expect(onSubmit.mock.calls[0][0].dob).toBeNull();
+  });
+
+  it("has no axe violations", async () => {
+    const { container } = renderWithForm(
+      <DatePickerField id="start" label="Start date" />,
+    );
+    await expectNoAxeViolations(container);
   });
 });

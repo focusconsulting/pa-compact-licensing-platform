@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { useAuth } from "src/contexts/AuthContext";
+import { expectNoAxeViolations } from "src/tests/axe";
 import LoginPage from "./page";
 
 const mockPush = vi.hoisted(() => vi.fn());
@@ -224,5 +225,30 @@ describe("LoginPage", () => {
     await waitFor(() =>
       expect(screen.getByText("Password change failed")).toBeInTheDocument(),
     );
+  });
+
+  it("has no axe violations on the sign-in form", async () => {
+    const { container } = render(<LoginPage />);
+    await expectNoAxeViolations(container);
+  });
+
+  it("has no axe violations on the set-password form", async () => {
+    const user = userEvent.setup();
+    mockSignIn.mockResolvedValue({
+      type: "newPasswordRequired",
+      user: {},
+      userAttributes: {},
+    });
+
+    const { container } = render(<LoginPage />);
+    await user.type(
+      screen.getByRole("textbox", { name: /Email address/i }),
+      "test@example.com",
+    );
+    await user.type(document.getElementById("password")!, "password");
+    await user.click(screen.getByRole("button", { name: /Sign in/i }));
+    await screen.findByRole("heading", { name: /Set a new password/i });
+
+    await expectNoAxeViolations(container);
   });
 });

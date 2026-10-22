@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 
 import Card from "./Card";
+import { expectNoAxeViolations } from "../tests/axe";
 
 describe("Card component", () => {
   it("renders children", () => {
@@ -20,5 +21,10 @@ describe("Card component", () => {
     const card = screen.getByText("Content");
     expect(card).toHaveClass("custom-class");
     expect(card).toHaveClass("bg-white");
+  });
+
+  it("has no axe violations", async () => {
+    const { container } = render(<Card>Content</Card>);
+    await expectNoAxeViolations(container);
   });
 });
