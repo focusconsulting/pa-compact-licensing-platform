@@ -2,13 +2,13 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-vi.mock("src/lib/api");
-vi.mock("src/contexts/AuthContext");
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
-
 import { useAuth } from "src/contexts/AuthContext";
 import { authFetch } from "src/lib/api";
 import Home from "./page";
+
+vi.mock("src/lib/api");
+vi.mock("src/contexts/AuthContext");
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 const mockSignOut = vi.fn();
 
@@ -77,7 +77,8 @@ describe("Home (Dashboard) page", () => {
     const user = userEvent.setup();
     vi.mocked(authFetch).mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ ...mockUser, given_name: null, family_name: null }),
+      json: () =>
+        Promise.resolve({ ...mockUser, given_name: null, family_name: null }),
     } as Response);
 
     render(<Home />);
@@ -92,7 +93,12 @@ describe("Home (Dashboard) page", () => {
     vi.mocked(authFetch).mockResolvedValue({
       ok: true,
       json: () =>
-        Promise.resolve({ ...mockUser, given_name: null, family_name: null, state_code: null }),
+        Promise.resolve({
+          ...mockUser,
+          given_name: null,
+          family_name: null,
+          state_code: null,
+        }),
     } as Response);
 
     render(<Home />);
@@ -105,7 +111,9 @@ describe("Home (Dashboard) page", () => {
 
     render(<Home />);
 
-    await waitFor(() => expect(screen.getByText("Failed to load user")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("Failed to load user")).toBeInTheDocument(),
+    );
   });
 
   it("shows an inactive user's status", async () => {
@@ -116,6 +124,8 @@ describe("Home (Dashboard) page", () => {
 
     render(<Home />);
 
-    await waitFor(() => expect(screen.getByText("Inactive")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("Inactive")).toBeInTheDocument(),
+    );
   });
 });

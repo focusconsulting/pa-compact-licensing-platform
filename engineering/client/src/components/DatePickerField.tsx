@@ -2,7 +2,7 @@ import { useFormContext } from "react-hook-form";
 import { DatePicker, Label } from "@trussworks/react-uswds";
 import { useTranslation } from "react-i18next";
 
-import "/src/styles/form.scss";
+import "src/styles/form.scss";
 import { useEffect } from "react";
 
 export interface DatePickerFieldProps {
@@ -31,11 +31,12 @@ function DatePickerField({
     void reg.onChange({ target: { id, value: newVal } });
   };
 
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       form.setValue(id, null);
-    };
-  }, [form, id]);
+    },
+    [form, id],
+  );
 
   return (
     <>
@@ -47,7 +48,7 @@ function DatePickerField({
         {label}
       </Label>
       {hint && (
-        <span className="usa-hint" id={id + "Hint"}>
+        <span className="usa-hint" id={`${id}Hint`}>
           {hint}
         </span>
       )}

@@ -2,7 +2,7 @@ import { Button, Form, RequiredMarker } from "@trussworks/react-uswds";
 import { FormEvent, ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import "/src/styles/form.scss";
+import "src/styles/form.scss";
 import { FieldValues, FormProvider, UseFormReturn } from "react-hook-form";
 import loader from "../assets/loader.svg";
 
@@ -45,39 +45,33 @@ function FormStep<T extends FieldValues>({
   };
 
   const requiredMarker = (
-    <>
-      <p className="margin-bottom-2 font-body-md required-text-subtitle">
-        {t("common:requiredText")} (<RequiredMarker />
-        ).
-      </p>
-    </>
+    <p className="margin-bottom-2 font-body-md required-text-subtitle">
+      {t("common:requiredText")} (<RequiredMarker />
+      ).
+    </p>
   );
 
   const buttons = (
-    <>
-      <div className="button-container width-full border-top border-base-lighter margin-top-9 padding-top-3">
-        {onBack && (
-          <Button type="button" onClick={onBack} outline>
-            {t("common:backTitle")}
-          </Button>
-        )}
-        <Button type="submit" form="form">
-          {submitIcon}
-          {submitTitle ?? t("common:nextTitle")}
+    <div className="button-container width-full border-top border-base-lighter margin-top-9 padding-top-3">
+      {onBack && (
+        <Button type="button" onClick={onBack} outline>
+          {t("common:backTitle")}
         </Button>
-      </div>
-    </>
+      )}
+      <Button type="submit" form="form">
+        {submitIcon}
+        {submitTitle ?? t("common:nextTitle")}
+      </Button>
+    </div>
   );
 
   const overlay = (
-    <>
-      <div className="width-full height-full overlay">
-        <img
-          src={loader}
-          alt="A spinner indicating the form is being submitted"
-        />
-      </div>
-    </>
+    <div className="width-full height-full overlay">
+      <img
+        src={loader}
+        alt="A spinner indicating the form is being submitted"
+      />
+    </div>
   );
 
   return (

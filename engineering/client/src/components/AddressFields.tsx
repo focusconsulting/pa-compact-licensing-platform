@@ -1,12 +1,11 @@
 import { Fieldset } from "@trussworks/react-uswds";
 import { useTranslation } from "react-i18next";
-
-import CountryField from "./CountryField.jsx";
-import TextField from "./TextField.jsx";
-
-import "/src/styles/form.scss";
 import { useFormContext } from "react-hook-form";
 import { ChangeEvent, useState, useEffect } from "react";
+
+import CountryField from "./CountryField";
+import { TextField } from "./TextField";
+import "src/styles/form.scss";
 
 export interface AddressFieldsProps {
   id: string;
@@ -32,12 +31,12 @@ function AddressFields({ id, label, hint, className }: AddressFieldsProps) {
     if (line1 != null) setLine1State(line1);
     if (line2 != null) setLine2State(line2);
     const val = [line1 ?? line1State, line2 ?? line2State].join("\n");
-    if (val != "\n") form?.setValue(id, val);
+    if (val !== "\n") form?.setValue(id, val);
   }
 
   useEffect(() => {
     const val = [line1State, line2State].join("\n");
-    if (val != "\n") form?.setValue(id, val);
+    if (val !== "\n") form?.setValue(id, val);
     return () => {
       form?.setValue(id, null);
     };
@@ -50,12 +49,12 @@ function AddressFields({ id, label, hint, className }: AddressFieldsProps) {
       </span>
 
       <CountryField
-        id={id + "Country"}
+        id={`${id}Country`}
         label={t("address:fields.address.countryTitle")}
       />
       <TextField
         value={line1State}
-        id={id + "Line1"}
+        id={`${id}Line1`}
         label={t("address:fields.address.address1Title")}
         onChange={(e: ChangeEvent<HTMLInputElement>) =>
           updateValue({ line1: e.target.value })
@@ -63,7 +62,7 @@ function AddressFields({ id, label, hint, className }: AddressFieldsProps) {
       />
       <TextField
         value={line2State}
-        id={id + "Line2"}
+        id={`${id}Line2`}
         label={t("address:fields.address.address2Title")}
         hint={t("address:fields.address.address2Subtitle")}
         onChange={(e: ChangeEvent<HTMLInputElement>) =>
@@ -72,16 +71,16 @@ function AddressFields({ id, label, hint, className }: AddressFieldsProps) {
         optional
       />
       <TextField
-        id={id + "City"}
+        id={`${id}City`}
         label={t("address:fields.address.cityTitle")}
         optional
       />
       <TextField
-        id={id + "State"}
+        id={`${id}State`}
         label={t("address:fields.address.stateTitle")}
       />
       <TextField
-        id={id + "Zip"}
+        id={`${id}Zip`}
         label={t("address:fields.address.zipTitle")}
         optional
       />

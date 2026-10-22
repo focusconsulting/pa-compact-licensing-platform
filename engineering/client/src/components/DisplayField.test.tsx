@@ -6,9 +6,7 @@ import { renderWithForm } from "../tests/util";
 
 describe("DisplayField component", () => {
   it("renders label and value", () => {
-    renderWithForm(
-      <DisplayField id="field1" label="Name" value="John Doe" />,
-    );
+    renderWithForm(<DisplayField id="field1" label="Name" value="John Doe" />);
     expect(screen.getByText("Name")).toBeInTheDocument();
     expect(screen.getByText("John Doe")).toBeInTheDocument();
   });
@@ -27,9 +25,7 @@ describe("DisplayField component", () => {
   });
 
   it("does not render hint when not provided", () => {
-    renderWithForm(
-      <DisplayField id="field1" label="Name" value="John" />,
-    );
+    renderWithForm(<DisplayField id="field1" label="Name" value="John" />);
     expect(screen.queryByText("Enter your name")).not.toBeInTheDocument();
     expect(screen.getByText("John")).toBeInTheDocument();
   });

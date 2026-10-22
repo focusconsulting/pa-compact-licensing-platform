@@ -1,6 +1,6 @@
 import { Label } from "@trussworks/react-uswds";
 
-import "/src/styles/form.scss";
+import "src/styles/form.scss";
 import { useFormContext } from "react-hook-form";
 
 export interface DisplayFieldProps {
@@ -45,17 +45,20 @@ function DisplayField({
   let displayValue = value;
   if (asCurrentDateInput) {
     const formVal: string | null = form?.getValues(id) as string | null;
-    [value, displayValue] = formVal ? getFormValues(formVal) : getFreshValues();
-    if (!formVal) form?.setValue(id, value);
+    const [storedValue, shownValue] = formVal
+      ? getFormValues(formVal)
+      : getFreshValues();
+    displayValue = shownValue;
+    if (!formVal) form?.setValue(id, storedValue);
   }
 
   return (
     <>
-      <Label htmlFor="{id}" className={labelClassName ?? "card-entry-heading"}>
+      <Label htmlFor={id} className={labelClassName ?? "card-entry-heading"}>
         {label}
       </Label>
       {hint && (
-        <span className="usa-hint" id={id + "Hint"}>
+        <span className="usa-hint" id={`${id}Hint`}>
           {hint}
         </span>
       )}

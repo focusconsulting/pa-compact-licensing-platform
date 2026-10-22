@@ -163,8 +163,15 @@ just build             # Build production Docker image
 From `engineering/client/`:
 
 ```bash
+pnpm check             # Everything CI checks: lint, typecheck, tests at 100% coverage
 pnpm test              # Run tests (vitest)
-pnpm lint              # Lint
+pnpm lint              # ESLint (Airbnb), Stylelint, Prettier; zero warnings
+pnpm format            # Fix formatting and auto-fixable lint
 pnpm storybook         # Run Storybook
 pnpm build             # Production build
 ```
+
+Code style follows the GSA 18F front-end guide (SOW §5.2): ESLint with the
+Airbnb style guide, Stylelint's standard SCSS rules with BEM class names, and
+Prettier. The deliberate deviations are explained in
+[`.eslintrc.cjs`](engineering/client/.eslintrc.cjs).

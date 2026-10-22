@@ -1,7 +1,7 @@
 import { FileInput, FileInputRef, Label } from "@trussworks/react-uswds";
 import { useTranslation } from "react-i18next";
 
-import "/src/styles/form.scss";
+import "src/styles/form.scss";
 import { useFormContext } from "react-hook-form";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 
@@ -38,7 +38,7 @@ export function FilePickerField({
       const [key, index, field] = id.split(".");
       return form?.formState?.defaultValues?.[key]?.[index]?.[field] as string;
     }
-    const isFieldArray = id.split(".").length == 3;
+    const isFieldArray = id.split(".").length === 3;
     const data = isFieldArray
       ? getFromFieldArray()
       : (form?.formState?.defaultValues?.[id] as string);
@@ -60,7 +60,7 @@ export function FilePickerField({
         {label}
       </Label>
       {hint && (
-        <span className="usa-hint" id={id + "Hint"}>
+        <span className="usa-hint" id={`${id}Hint`}>
           {hint}
         </span>
       )}

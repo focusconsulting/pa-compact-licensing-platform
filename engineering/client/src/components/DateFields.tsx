@@ -1,11 +1,10 @@
 import { DateInput, DateInputGroup, FormGroup } from "@trussworks/react-uswds";
 import { useTranslation } from "react-i18next";
-
-import SelectField from "./SelectField.jsx";
-
-import "/src/styles/form.scss";
 import { useFormContext } from "react-hook-form";
 import { useCallback, useEffect, useState, ChangeEvent } from "react";
+
+import { SelectField } from "./SelectField";
+import "src/styles/form.scss";
 
 export interface DateFieldsProps {
   id: string;
@@ -32,7 +31,7 @@ export function DateFields({
   const [dayState, setDayState] = useState(dayVal);
   const [yearState, setYearState] = useState(yearVal);
 
-  interface renderValueProps {
+  interface RenderValueProps {
     month?: string | null;
     day?: string | null;
     year?: string | null;
@@ -43,11 +42,8 @@ export function DateFields({
       month = null,
       day = null,
       year = null,
-    }: renderValueProps): string | null => {
-      return month && day && year
-        ? `${year}-${month}-${day.padStart(2, "0")}`
-        : null;
-    },
+    }: RenderValueProps): string | null =>
+      month && day && year ? `${year}-${month}-${day.padStart(2, "0")}` : null,
     [],
   );
 
@@ -84,10 +80,10 @@ export function DateFields({
   }, [form, id, renderValue, monthState, dayState, yearState]);
 
   return (
-    <DateInputGroup id={id + "Date"}>
+    <DateInputGroup id={`${id}Date`}>
       <FormGroup className="usa-form-group--month usa-form-group--select">
         <SelectField
-          id={id + "Month"}
+          id={`${id}Month`}
           label={[name, t("month")].join(" ")}
           options={options}
           required={!optionalMonth}
@@ -99,7 +95,7 @@ export function DateFields({
         />
       </FormGroup>
       <DateInput
-        id={id + "Day"}
+        id={`${id}Day`}
         label={[name, t("day")].join(" ")}
         unit="day"
         maxLength={2}
@@ -113,7 +109,7 @@ export function DateFields({
         defaultValue={dayState}
       />
       <DateInput
-        id={id + "Year"}
+        id={`${id}Year`}
         label={[name, t("year")].join(" ")}
         unit="year"
         maxLength={4}

@@ -33,9 +33,7 @@ describe("FormStep component", () => {
         <p>Content</p>
       </FormStep>,
     );
-    expect(
-      screen.getByText(/Required fields are marked/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Required fields are marked/)).toBeInTheDocument();
   });
 
   it("hides required marker when noRequiredMarker is true", () => {
@@ -66,9 +64,7 @@ describe("FormStep component", () => {
         <p>Content</p>
       </FormStep>,
     );
-    expect(
-      screen.getByRole("button", { name: "Finish" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Finish" })).toBeInTheDocument();
   });
 
   it("renders back button when onBack is provided", () => {
@@ -77,9 +73,7 @@ describe("FormStep component", () => {
         <p>Content</p>
       </FormStep>,
     );
-    expect(
-      screen.getByRole("button", { name: /Back/ }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Back/ })).toBeInTheDocument();
   });
 
   it("does not render back button when onBack is not provided", () => {
@@ -101,9 +95,7 @@ describe("FormStep component", () => {
         <p>Content</p>
       </FormStep>,
     );
-    await user.click(
-      screen.getByRole("button", { name: /Save and Continue/ }),
-    );
+    await user.click(screen.getByRole("button", { name: /Save and Continue/ }));
     expect(onSubmit).toHaveBeenCalled();
   });
 
@@ -120,6 +112,9 @@ describe("FormStep component", () => {
   });
 
   it("provides the form to its children when given one", () => {
+    function Reader() {
+      return <p>{useFormContext().getValues("name") as string}</p>;
+    }
     function WithForm() {
       const form = useForm({ defaultValues: { name: "Ada" } });
       return (
@@ -127,9 +122,6 @@ describe("FormStep component", () => {
           <Reader />
         </FormStep>
       );
-    }
-    function Reader() {
-      return <p>{useFormContext().getValues("name") as string}</p>;
     }
 
     render(<WithForm />);

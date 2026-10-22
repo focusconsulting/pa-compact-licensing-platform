@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { useTranslation } from "react-i18next";
-import I18nProvider from "./I18nProvider";
 import i18n from "src/i18n/config";
+import I18nProvider from "./I18nProvider";
 
 function Probe() {
   const { i18n: active } = useTranslation();

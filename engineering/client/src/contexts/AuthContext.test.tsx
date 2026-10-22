@@ -2,10 +2,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import type { CognitoUserSession } from "amazon-cognito-identity-js";
 
-vi.mock("src/lib/auth");
-
 import * as authLib from "src/lib/auth";
 import { AuthProvider, useAuth } from "./AuthContext";
+
+vi.mock("src/lib/auth");
 
 function makeSession(token: string, email: string): CognitoUserSession {
   return {
@@ -52,7 +52,9 @@ describe("AuthProvider", () => {
   });
 
   it("sets null state when getCurrentSession throws", async () => {
-    vi.mocked(authLib.getCurrentSession).mockRejectedValue(new Error("Network error"));
+    vi.mocked(authLib.getCurrentSession).mockRejectedValue(
+      new Error("Network error"),
+    );
 
     const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
 

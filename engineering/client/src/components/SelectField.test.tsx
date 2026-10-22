@@ -21,16 +21,16 @@ describe("SelectField component", () => {
 
   it("is optional by default with enabled placeholder", () => {
     renderWithForm(<SelectField id="some-id" label="some-name" />);
-    expect(screen.getByRole("combobox", { name: /some-name/ })).not.toBeRequired();
+    expect(
+      screen.getByRole("combobox", { name: /some-name/ }),
+    ).not.toBeRequired();
     const placeholder = screen.getByText("- Select -");
     expect(placeholder).toBeEnabled();
     expect(placeholder).toBeVisible();
   });
 
   it("renders required correctly with disabled placeholder", () => {
-    renderWithForm(
-      <SelectField id="req" label="required" required />,
-    );
+    renderWithForm(<SelectField id="req" label="required" required />);
     expect(screen.getByRole("combobox", { name: /required/ })).toBeRequired();
     const placeholder = screen.getByText("- Select -");
     expect(placeholder).toBeDisabled();
@@ -40,10 +40,10 @@ describe("SelectField component", () => {
     renderWithForm(
       <SelectField id="some-id" label="some-name" options={options} />,
     );
-    for (const [value, displayValue] of options) {
+    options.forEach(([value, displayValue]) => {
       const option = screen.getByRole("option", { name: displayValue });
       expect(option).toHaveValue(value);
-    }
+    });
   });
 
   it("renders and submits form default value", async () => {
@@ -53,7 +53,9 @@ describe("SelectField component", () => {
       <SelectField id="some-id" label="some-name" options={options} />,
       { defaultValues: { "some-id": "bar" }, onSubmit: handler },
     );
-    expect(screen.getByRole("combobox", { name: /some-name/ })).toHaveValue("bar");
+    expect(screen.getByRole("combobox", { name: /some-name/ })).toHaveValue(
+      "bar",
+    );
     await user.click(screen.getByRole("button", { name: "Submit" }));
     expect(handler).toHaveBeenCalledWith(
       expect.objectContaining({ "some-id": "bar" }),
@@ -67,7 +69,10 @@ describe("SelectField component", () => {
       <SelectField id="some-id" label="some-name" options={options} />,
       { defaultValues: { "some-id": "bar" }, onSubmit: handler },
     );
-    await user.selectOptions(screen.getByRole("combobox", { name: /some-name/ }), "foo");
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: /some-name/ }),
+      "foo",
+    );
     await user.click(screen.getByRole("button", { name: "Submit" }));
     expect(handler).toHaveBeenCalledWith(
       expect.objectContaining({ "some-id": "foo" }),
@@ -85,7 +90,9 @@ describe("SelectField component", () => {
 
   it("uses a caller's ref instead of registering with the form", () => {
     const ref = createRef<HTMLSelectElement>();
-    renderWithForm(<SelectField id="pick" label="Pick" options={options} inputRef={ref} />);
+    renderWithForm(
+      <SelectField id="pick" label="Pick" options={options} inputRef={ref} />,
+    );
 
     expect(ref.current).toBe(screen.getByRole("combobox", { name: "Pick" }));
   });

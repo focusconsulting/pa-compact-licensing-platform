@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { CognitoUserSession } from "amazon-cognito-identity-js";
 
-vi.mock("src/lib/auth");
-
 import * as authLib from "src/lib/auth";
 import { authFetch } from "./api";
+
+vi.mock("src/lib/auth");
 
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);

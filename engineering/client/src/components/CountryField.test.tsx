@@ -7,7 +7,9 @@ import { renderWithForm } from "../tests/util";
 describe("CountryField component", () => {
   it("renders a select element", () => {
     renderWithForm(<CountryField id="country" label="Country" />);
-    expect(screen.getByRole("combobox", { name: /Country/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole("combobox", { name: /Country/ }),
+    ).toBeInTheDocument();
   });
 
   it("renders country options from i18n", () => {
@@ -19,7 +21,9 @@ describe("CountryField component", () => {
 
   it("is not required by default", () => {
     renderWithForm(<CountryField id="country" label="Country" />);
-    expect(screen.getByRole("combobox", { name: /Country/ })).not.toBeRequired();
+    expect(
+      screen.getByRole("combobox", { name: /Country/ }),
+    ).not.toBeRequired();
   });
 
   it("can be marked as required", () => {
@@ -29,7 +33,9 @@ describe("CountryField component", () => {
 
   it("renders with birthCountry flag without throwing", () => {
     expect(() =>
-      renderWithForm(<CountryField id="country" label="Country" birthCountry />),
+      renderWithForm(
+        <CountryField id="country" label="Country" birthCountry />,
+      ),
     ).not.toThrow();
   });
 });

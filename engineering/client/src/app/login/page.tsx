@@ -3,13 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CognitoUser } from "amazon-cognito-identity-js";
-import {
-  Alert,
-  Button,
-  Form,
-  Label,
-  TextInput,
-} from "@trussworks/react-uswds";
+import { Alert, Button, Form, Label, TextInput } from "@trussworks/react-uswds";
 import { useAuth } from "src/contexts/AuthContext";
 
 export default function LoginPage() {
@@ -28,7 +22,7 @@ export default function LoginPage() {
     userAttributes: Record<string, string>;
   } | null>(null);
 
-  async function handleSignIn(e: React.FormEvent) {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
@@ -47,7 +41,7 @@ export default function LoginPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }
+  };
 
   async function handleNewPassword(
     e: React.FormEvent,

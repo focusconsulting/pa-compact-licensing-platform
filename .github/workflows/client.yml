@@ -49,7 +49,7 @@ jobs:
         run: pnpm lint
 
       - name: Type check
-        run: pnpm exec tsc --noEmit
+        run: pnpm typecheck
 
   test:
     runs-on: ubuntu-latest

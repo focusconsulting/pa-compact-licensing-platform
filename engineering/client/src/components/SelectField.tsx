@@ -1,8 +1,8 @@
 import { Label, Select } from "@trussworks/react-uswds";
 
-import "/src/styles/form.scss";
+import "src/styles/form.scss";
 import { useFormContext } from "react-hook-form";
-import { default as React, FormEventHandler } from "react";
+import React, { FormEventHandler } from "react";
 
 export interface SelectFieldProps {
   id?: string;
@@ -27,22 +27,18 @@ export function SelectField({
   required = false,
   showValuesInLabels = false,
 }: SelectFieldProps) {
-  const valueFilter = (val: string) => {
-    return val == "" ? null : val;
-  };
+  const valueFilter = (val: string) => (val === "" ? null : val);
   const register = useFormContext()?.register;
   const selectReg =
     !onChange && !inputRef && id && register
       ? register(id, { required, setValueAs: valueFilter })
       : null;
 
-  const optionElements = options?.map(([key, value]) => {
-    return (
-      <option value={key} key={key}>
-        {showValuesInLabels ? [key, value].join(" - ") : value}
-      </option>
-    );
-  });
+  const optionElements = options?.map(([key, value]) => (
+    <option value={key} key={key}>
+      {showValuesInLabels ? [key, value].join(" - ") : value}
+    </option>
+  ));
 
   return (
     <>
@@ -56,11 +52,14 @@ export function SelectField({
         defaultValue={defaultValue ?? ""}
         name={selectReg?.name ?? id ?? ""}
         required={required}
-        inputRef={(inputRef ?? selectReg?.ref) as React.RefObject<HTMLSelectElement> | undefined}
+        inputRef={
+          (inputRef ?? selectReg?.ref) as
+            React.RefObject<HTMLSelectElement> | undefined
+        }
         onBlur={selectReg?.onBlur}
         onChange={onChange ?? selectReg?.onChange}
       >
-        {/*TODO: This should be selected by default. Selecting this option shouldn't count as a value*/}
+        {/* TODO: This should be selected by default. Selecting this option shouldn't count as a value */}
         <option hidden={required} disabled={required} key={null} value="">
           {placeholder}
         </option>
