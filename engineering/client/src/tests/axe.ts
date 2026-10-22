@@ -3,8 +3,8 @@ import { expect } from "vitest";
 
 /**
  * Fails the test if axe finds WCAG 2 A/AA violations in `container`.
- * jsdom has no layout or computed colours, so colour contrast is checked by
- * pa11y-ci against the built site instead (`pnpm a11y`).
+ * jsdom has no layout or computed colours, so colour contrast is checked in
+ * a real browser by the end-to-end tests instead (`engineering/e2e`).
  */
 export async function expectNoAxeViolations(container: Element): Promise<void> {
   const results = await axe.run(container, {

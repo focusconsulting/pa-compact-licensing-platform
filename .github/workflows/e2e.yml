@@ -53,8 +53,6 @@ jobs:
 
       - name: Build and serve the client
         working-directory: engineering/client
-        env:
-          PUPPETEER_SKIP_DOWNLOAD: "true" # only the a11y job needs pa11y's Chrome
         run: |
           cp .env.example .env.local
           pnpm install --frozen-lockfile

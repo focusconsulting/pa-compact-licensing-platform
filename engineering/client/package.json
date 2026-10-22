@@ -16,8 +16,7 @@
     "build-storybook": "storybook build",
     "format": "prettier --write . && eslint \"src/**/*.{ts,tsx}\" --fix && stylelint \"src/**/*.scss\" --fix",
     "typecheck": "tsc --noEmit",
-    "check": "pnpm lint && pnpm typecheck && pnpm test:coverage",
-    "a11y": "scripts/a11y.sh"
+    "check": "pnpm lint && pnpm typecheck && pnpm test:coverage"
   },
   "dependencies": {
     "@trussworks/react-uswds": "^11.0.1",
@@ -63,7 +62,6 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-storybook": "^9.0.7",
     "jsdom": "^29.0.2",
-    "pa11y-ci": "^4.1.1",
     "postcss": "^8.5.8",
     "prettier": "^3.9.9",
     "sass": "^1.99.0",
@@ -77,10 +75,5 @@
   "engines": {
     "node": ">=24"
   },
-  "packageManager": "pnpm@10.32.1",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "puppeteer"
-    ]
-  }
+  "packageManager": "pnpm@10.32.1"
 }
