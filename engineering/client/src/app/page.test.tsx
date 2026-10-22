@@ -99,4 +99,23 @@ describe("Home (Dashboard) page", () => {
 
     await waitFor(() => expect(screen.getByText("—")).toBeInTheDocument());
   });
+
+  it("shows a generic error when the request fails with a non-Error value", async () => {
+    vi.mocked(authFetch).mockRejectedValue("offline");
+
+    render(<Home />);
+
+    await waitFor(() => expect(screen.getByText("Failed to load user")).toBeInTheDocument());
+  });
+
+  it("shows an inactive user's status", async () => {
+    vi.mocked(authFetch).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ ...mockUser, is_active: false }),
+    } as Response);
+
+    render(<Home />);
+
+    await waitFor(() => expect(screen.getByText("Inactive")).toBeInTheDocument());
+  });
 });

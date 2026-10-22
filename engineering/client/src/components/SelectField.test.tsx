@@ -1,4 +1,5 @@
-import { screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
+import { createRef } from "react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
 
@@ -71,5 +72,21 @@ describe("SelectField component", () => {
     expect(handler).toHaveBeenCalledWith(
       expect.objectContaining({ "some-id": "foo" }),
     );
+  });
+
+  it("renders without an id, a form, or options", () => {
+    render(<SelectField label="Unbound" />);
+
+    const field = screen.getByRole("combobox");
+    expect(field).toHaveAttribute("name", "");
+    expect(field.querySelectorAll("option")).toHaveLength(1);
+    expect(field).not.toHaveTextContent("0");
+  });
+
+  it("uses a caller's ref instead of registering with the form", () => {
+    const ref = createRef<HTMLSelectElement>();
+    renderWithForm(<SelectField id="pick" label="Pick" options={options} inputRef={ref} />);
+
+    expect(ref.current).toBe(screen.getByRole("combobox", { name: "Pick" }));
   });
 });

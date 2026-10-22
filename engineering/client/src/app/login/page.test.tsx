@@ -142,4 +142,33 @@ describe("LoginPage", () => {
       expect(screen.getByText(/Password policy not met/i)).toBeInTheDocument(),
     );
   });
+
+  it("shows a generic error when sign-in fails with a non-Error value", async () => {
+    const user = userEvent.setup();
+    mockSignIn.mockRejectedValue("network down");
+
+    render(<LoginPage />);
+    await user.type(screen.getByRole("textbox", { name: /Email address/i }), "a@example.com");
+    await user.type(document.getElementById("password")!, "pass");
+    await user.click(screen.getByRole("button", { name: /Sign in/i }));
+
+    await waitFor(() => expect(screen.getByText("Sign in failed")).toBeInTheDocument());
+  });
+
+  it("shows a generic error when the password change fails with a non-Error value", async () => {
+    const user = userEvent.setup();
+    mockSignIn.mockResolvedValue({ type: "newPasswordRequired", user: {}, userAttributes: {} });
+    mockCompleteNewPassword.mockRejectedValue("network down");
+
+    render(<LoginPage />);
+    await user.type(screen.getByRole("textbox", { name: /Email address/i }), "a@example.com");
+    await user.type(document.getElementById("password")!, "pass");
+    await user.click(screen.getByRole("button", { name: /Sign in/i }));
+    await waitFor(() => screen.getByLabelText(/New password/));
+    await user.type(screen.getByLabelText(/New password/), "NewPass123!");
+    await user.type(screen.getByLabelText(/Confirm new password/), "NewPass123!");
+    await user.click(screen.getByRole("button", { name: /Set password/i }));
+
+    await waitFor(() => expect(screen.getByText("Password change failed")).toBeInTheDocument());
+  });
 });

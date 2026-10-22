@@ -38,6 +38,15 @@ asyncio_mode = "auto"
 
 [tool.coverage.run]
 concurrency = ["greenlet", "thread"]
+branch = true
+source = ["licensing_api"]
+
+[tool.coverage.report]
+# Constitution Principle III: 100% line and branch coverage.
+fail_under = 100
+show_missing = true
+skip_covered = true
+exclude_also = ["if __name__ == .__main__.:"]
 
 [tool.ruff]
 line-length = 100

@@ -57,4 +57,13 @@ describe("AddressFields component", () => {
 
     expect(line1Input).toHaveValue("123 Main St");
   });
+
+  it("reflects typed value in address line 2 input", async () => {
+    const user = userEvent.setup();
+    renderWithForm(<AddressFields id="addr" label="Address" hint="" />);
+
+    await user.type(document.getElementById("addrLine2")!, "Apt 2");
+
+    expect(document.getElementById("addrLine2")).toHaveValue("Apt 2");
+  });
 });
