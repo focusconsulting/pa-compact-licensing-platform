@@ -8,8 +8,11 @@ updates:
       day: monday
     open-pull-requests-limit: 10
     groups:
+      # Majors stay out of the group, so one breaking upgrade can't hold back
+      # the safe ones; each opens its own PR.
       npm-all:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
     ignore:
       # TypeScript 7 ships no compiler API, which Next 14, typescript-eslint
       # and Storybook all load.
