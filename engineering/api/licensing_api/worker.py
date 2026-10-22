@@ -20,6 +20,9 @@ logger = logging.getLogger(__name__)
 MAX_ATTEMPTS = 5
 # Doubles after each failure: 30 s, 1 min, 2 min, 4 min.
 FIRST_RETRY_DELAY = timedelta(seconds=30)
+# Postgres cancels a handler's query that runs longer, which fails the delivery like any error.
+# Not asyncio.timeout: cancelling mid-query breaks the connection, so the failure could not be recorded.
+HANDLER_STATEMENT_TIMEOUT = timedelta(seconds=60)
 _MAX_ERROR_LENGTH = 2000
 _EVENT_TYPES = frozenset(EventType)
 
@@ -127,6 +130,8 @@ async def _deliver_one(
             return True
 
         ctx = await system_context(session, event.request_id)
+        timeout_ms = str(int(HANDLER_STATEMENT_TIMEOUT.total_seconds() * 1000))
+        await session.execute(select(func.set_config('statement_timeout', timeout_ms, True)))
         try:
             async with session.begin_nested():
                 await declared.run(session, ctx, event)

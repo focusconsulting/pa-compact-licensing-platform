@@ -4,12 +4,14 @@ import asyncio
 import logging
 import time
 from collections import Counter
+from datetime import timedelta
 from uuid import UUID
 
 from sqlalchemy import insert, text, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlmodel import col, select
 
+from licensing_api import worker
 from licensing_api.context import ChangeContext, system_context
 from licensing_api.events import HandlerRegistry, handler
 from licensing_api.repo.domain_event import DomainEvent, DomainEventDelivery, EventType, emit
@@ -186,6 +188,37 @@ async def test_a_failing_handler_writes_nothing(committed_sessions):
         assert (await session.scalars(select(Notification))).all() == []
     [delivery] = await _deliveries(committed_sessions)
     assert delivery.attempts == 1
+
+
+async def test_a_handler_that_runs_too_long_fails_and_its_writes_roll_back(
+    committed_sessions, monkeypatch
+):
+    async def queue_then_hang(session: AsyncSession, ctx: ChangeContext, event: DomainEvent):
+        await notify(
+            session,
+            ctx,
+            template='welcome',
+            recipient_email='pa@example.com',
+            context={},
+            idempotency_key=f'{event.event_id}:tests.queue_then_hang',
+        )
+        await session.execute(text('SELECT pg_sleep(5)'))
+
+    monkeypatch.setattr(worker, 'HANDLER_STATEMENT_TIMEOUT', timedelta(milliseconds=200))
+    registry = HandlerRegistry(
+        [handler('tests.queue_then_hang', EventType.PRIVILEGE_ISSUED)(queue_then_hang)]
+    )
+    await _emit(committed_sessions, EventType.PRIVILEGE_ISSUED)
+
+    started = time.monotonic()
+    assert await dispatch_events(committed_sessions, registry) == 1
+    assert time.monotonic() - started < 2
+
+    [delivery] = await _deliveries(committed_sessions)
+    assert (delivery.attempts, delivery.handled_at) == (1, None)
+    assert 'canceling statement due to statement timeout' in (delivery.last_error or '')
+    async with committed_sessions() as session:
+        assert (await session.scalars(select(Notification))).all() == []
 
 
 async def test_a_delivery_for_a_removed_handler_is_dead_lettered_at_once(committed_sessions):
