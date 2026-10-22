@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 
 import AddressFields from "./AddressFields";
 import { renderWithForm } from "../tests/util";
+import { expectNoAxeViolations } from "../tests/axe";
 
 describe("AddressFields component", () => {
   it("renders fieldset with the given label as legend", () => {
@@ -87,5 +88,18 @@ describe("AddressFields component", () => {
     await user.type(document.getElementById("addrLine2")!, "Apt 2");
 
     expect(document.getElementById("addrLine2")).toHaveValue("Apt 2");
+  });
+
+  // axe walks all ~200 country options, which can outlast Vitest's
+  // 5-second default on a CI runner.
+  it("has no axe violations", { timeout: 30_000 }, async () => {
+    const { container } = renderWithForm(
+      <AddressFields
+        id="addr"
+        label="Mailing address"
+        hint="Where we send letters"
+      />,
+    );
+    await expectNoAxeViolations(container);
   });
 });

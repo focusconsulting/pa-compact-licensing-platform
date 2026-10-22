@@ -5,6 +5,7 @@ import { describe, it, expect, vi } from "vitest";
 import { useForm, useFormContext } from "react-hook-form";
 
 import FormStep from "./FormStep";
+import { expectNoAxeViolations } from "../tests/axe";
 
 describe("FormStep component", () => {
   it("renders children", () => {
@@ -127,5 +128,14 @@ describe("FormStep component", () => {
     render(<WithForm />);
 
     expect(screen.getByText("Ada")).toBeInTheDocument();
+  });
+
+  it("has no axe violations", async () => {
+    const { container } = render(
+      <FormStep title="Your details" onBack={vi.fn()}>
+        <p>Step content</p>
+      </FormStep>,
+    );
+    await expectNoAxeViolations(container);
   });
 });

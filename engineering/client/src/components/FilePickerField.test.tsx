@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 
 import { FilePickerField } from "./FilePickerField";
 import { renderWithForm } from "../tests/util";
+import { expectNoAxeViolations } from "../tests/axe";
 
 describe("FilePickerField component", () => {
   it("renders the label", () => {
@@ -94,5 +95,12 @@ describe("FilePickerField component", () => {
 
     await user.click(screen.getByRole("button", { name: "Submit" }));
     expect(onSubmit.mock.calls[0][0].proofs).toEqual([{ file: "first.pdf" }]);
+  });
+
+  it("has no axe violations", async () => {
+    const { container } = renderWithForm(
+      <FilePickerField id="doc" label="Upload a document" hint="PDF only" />,
+    );
+    await expectNoAxeViolations(container);
   });
 });
