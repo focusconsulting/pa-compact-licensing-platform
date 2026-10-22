@@ -2,7 +2,7 @@
 
 The fourteen engineering tickets in [`mvp-jira-tickets.md`](mvp-jira-tickets.md), one short card each: what it is, who it is for, which flows it implements, and how we know it is done. That file holds the full scope and the product tickets, and it governs where the two differ.
 
-Every ticket also meets the shared **definition of done**: 100% test coverage, no lint errors or warnings, pa11y and axe clean on new screens, OpenAPI and the TypeScript client regenerated on any API change, forward-only migrations, history and audit rows on every change, a domain event for every state change, runs locally with no AWS credentials, and docs updated in the same PR.
+Every ticket also meets the shared **definition of done**: 100% test coverage, no lint errors or warnings, axe clean on new screens, in component tests and e2e, OpenAPI and the TypeScript client regenerated on any API change, forward-only migrations, history and audit rows on every change, a domain event for every state change, runs locally with no AWS credentials, and docs updated in the same PR.
 
 **⚠ Under review** marks an acceptance criterion that conflicts with the adopted compact rules, the built data model, or the engineering constitution; the note says how, and the backlog owner decides the fix.
 
@@ -254,7 +254,7 @@ State side.
 - Schema tests prove no private or non-public field can appear in a public response.
 - A privilege deactivated by a non-public adverse action shows as inactive, with no reason.
 - The rate limit works (429 when exceeded).
-- pa11y reports no issues.
+- The axe scan reports no issues.
 
 ---
 

@@ -148,7 +148,7 @@ Every mock runs as a container outside the API; only endpoint and credential set
 1. **Wireframe (product/design, before the ticket starts):** lo-fi black-and-white flow for the whole ticket — screens, fields, states, primary action per screen. Attached to the ticket; reviewed with the PO. Tools: Claude Design in lo-fi mode, or Excalidraw. Reference the CompactConnect screenshot/component named in the ticket.
 2. **Hi-fi (engineer):** run Claude Design with the project system prompt (X-01) + the wireframe → comp using the USWDS token set and only components in the library.
 3. **Implement:** trussworks components + `client/src/components` primitives; Storybook story per screen state; MSW handlers from the API contract.
-4. **Check:** pa11y + axe in CI; PO reviews in DEV; usability round feeds a follow-up ticket if needed.
+4. **Check:** axe in CI (component tests and e2e); PO reviews in DEV; usability round feeds a follow-up ticket if needed.
 
 X-01 must land before any UI ticket: it produces the token overrides, the component library in Storybook, and the Claude Design system prompt.
 
@@ -227,7 +227,7 @@ Capacity: ticket sizes total **63.75 nominal engineer-days** (must 56.25, rule 1
 
 ## 4. Tickets
 
-Common acceptance criteria on every ticket (not repeated): 100% coverage enforced (engineering constitution; SOW §5.2 floor is 90%); 0 lint errors/warnings against the GSA 18F Front-End Guide (SOW §5.2); pa11y + axe clean on new screens; OpenAPI updated + TS client regenerated on API change; migrations forward-only; a history row on every mutation and an audit row on every staff read of private data or security event; domain event emitted for every state change and listed in `docs/events.md` (FLOW-07); runs against the local stack with no AWS; docstrings/JSDoc; docs updated in the same PR (SOW §5.2: documentation "complete and current at each sprint").
+Common acceptance criteria on every ticket (not repeated): 100% coverage enforced (engineering constitution; SOW §5.2 floor is 90%); 0 lint errors/warnings against the GSA 18F Front-End Guide (SOW §5.2); axe clean on new screens, in component tests and e2e; OpenAPI updated + TS client regenerated on API change; migrations forward-only; a history row on every mutation and an audit row on every staff read of private data or security event; domain event emitted for every state change and listed in `docs/events.md` (FLOW-07); runs against the local stack with no AWS; docstrings/JSDoc; docs updated in the same PR (SOW §5.2: documentation "complete and current at each sprint").
 
 Format: size · tier · lane · depends → blocks.
 
@@ -282,7 +282,7 @@ Design: wireframe = nav/IA only. Refs: CompactConnect `webroot/src/components/Pa
 #### F-07 · Quality gates
 
 **1.5d · must · B · F-01 → H-01**
-Codecov enforced 100% for `api`/`client` with documented exclusions (migrations, generated client, IaC); ESLint/Prettier/Stylelint configured to the GSA 18F Front-End Guide (SOW §5.2 "Properly Styled Code") with 0 warnings; pa11y-ci over Storybook + Playwright page list; axe in Vitest; Playwright e2e skeleton against the F-14 stack in CI; pre-commit; `just check` / `pnpm check`.
+Codecov enforced 100% for `api`/`client` with documented exclusions (migrations, generated client, IaC); ESLint/Prettier/Stylelint configured to the GSA 18F Front-End Guide (SOW §5.2 "Properly Styled Code") with 0 warnings; axe in Vitest; Playwright e2e skeleton against the F-14 stack in CI, with axe on every page it visits; pre-commit; `just check` / `pnpm check`.
 AC: coverage drop fails PR; a lint warning fails PR; contrast violation fails CI; e2e smoke <5 min.
 
 #### F-08 · Security scanning
@@ -493,7 +493,7 @@ Refs: CompactConnect `transaction_reporting.py` columns.
 
 **1.5d · must · B · P-03 → —**
 SOW §2.1 (v2: "verify active and inactive PA compact privileges"; it said active only). Default fields per Q-12: name, SQL state, privilege states + number + status + dates; nothing else (R5 §5.5(b)). Inactive privileges (expired, deactivated, encumbered) are returned with the FLOW-06 status vocabulary and never the `deactivation_reason` or the action behind it (FLOW-05). `/verify` search (last+first name, or privilege number exact); results; detail; unauthenticated `/api/v1/public/*` with strict response schemas; WAF rate limit + 429; no enumeration (both names, or an exact number).
-AC: schema tests prove no private field can appear; a privilege deactivated by a non-public adverse action shows as inactive with no reason; rate limit works; pa11y clean.
+AC: schema tests prove no private field can appear; a privilege deactivated by a non-public adverse action shows as inactive with no reason; rate limit works; axe clean.
 Design: wireframe = search + result + detail. Ref: CompactConnect `PublicLicensingList/Detail`.
 
 ---
@@ -514,7 +514,7 @@ Open: Q-24 (contract, API shape, cost, which fields NCCPA returns).
 #### H-01 · Accessibility audit and remediation (WCAG 2.1 AA)
 
 **2d · must · B · F-07, all UI**
-Manual audit per screen (keyboard, NVDA + VoiceOver, 200% zoom, reduced motion, contrast, focus order, error association); fixes to zero; accessibility statement; `docs/accessibility.md`; pa11y-ci over every authenticated route; the payment lightbox exception (Q-02b) documented.
+Manual audit per screen (keyboard, NVDA + VoiceOver, 200% zoom, reduced motion, contrast, focus order, error association); fixes to zero; accessibility statement; `docs/accessibility.md`; an e2e axe scan on every authenticated route; the payment lightbox exception (Q-02b) documented.
 AC: 0 automated, 0 manual findings; test plan + results delivered.
 
 #### H-02 · Security validation (ZAP full + ASVS 5.0)

@@ -11,7 +11,7 @@ Two engineering tickets are in flight at most times, one per engineer, each owne
 
 Sprints are two weeks, numbered 1–8. Phase 1 = Sprints 1–2, Phase 2 = Sprints 3–6, Phase 3 = Sprints 7–8.
 
-**Definition of done, every engineering ticket:** 100% test coverage enforced (the contract floor is 90%) · 0 lint errors or warnings · pa11y and axe clean on new screens · OpenAPI regenerated from code and the TypeScript client rebuilt on any API change · migrations forward-only · history and audit rows on every mutation · a domain event for every state change, listed in the event catalogue · runs against the local stack with no AWS credentials · docs updated in the same PR.
+**Definition of done, every engineering ticket:** 100% test coverage enforced (the contract floor is 90%) · 0 lint errors or warnings · axe clean on new screens, in component tests and e2e · OpenAPI regenerated from code and the TypeScript client rebuilt on any API change · migrations forward-only · history and audit rows on every mutation · a domain event for every state change, listed in the event catalogue · runs against the local stack with no AWS credentials · docs updated in the same PR.
 
 **Acceptance (SOW v2, §2.3, §4.2, §5.2, §8.5.2):** the "done when" lines of a ticket are its acceptance criteria and are confirmed with the Commission's Product Manager by the product ticket before the engineering ticket starts. Each sprint's software is delivered to the Commission's Product Manager and Technical Lead, who inspect it against the QASP within 5 business days. Anything they find non-compliant is corrected in the next sprint at no additional cost, so a red CI gate is never waived.
 
@@ -72,7 +72,7 @@ The SOW v2 pass added about 8 engineer-days to Phase 2 (epics 13 and 14, renewal
 
 - Fix what's wrong today: `AGENTS.md` describes a Flask stack and an `api/`, `client/`, `iac/` layout that don't exist; ECS passes `DB_USERNAME` while the app reads `DB_USER`; `CORS_ORIGINS` unset; client `CurrentUser.id` vs API `user_id`; i18n never initialised; Dependabot paths stale; plaintext DB password in the dev tfvars; jumpbox secret read unconditionally; `ALLOW_USER_PASSWORD_AUTH` on the Cognito client; ElastiCache provisioned but unused (remove it). Replace the MIT/Focus `LICENSE` once the product ticket decides.
 - Local stack: `docker compose up` gives Postgres, maildev, RustFS, cognito-local, a mock malware scanner, mock payment and credentialing providers, and the Worker; `just up`, `just seed`, `just job <name>`; endpoint settings point the API at those containers through the same code path as production (constitution Principle IV); README "run the whole system in 5 minutes".
-- Quality gates: Codecov enforced at 100% for API and client (migrations, generated client, IaC excluded); ESLint/Prettier/Stylelint to the GSA 18F Front-End Guide at 0 warnings; pa11y-ci over Storybook and a Playwright page list; axe in Vitest; Playwright e2e skeleton against the local stack in CI; `just check` / `pnpm check`.
+- Quality gates: Codecov enforced at 100% for API and client (migrations, generated client, IaC excluded); ESLint/Prettier/Stylelint to the GSA 18F Front-End Guide at 0 warnings; axe in Vitest; Playwright e2e skeleton against the local stack in CI, with axe on every page it visits; `just check` / `pnpm check`.
 - Security scanning: CodeQL (Python, TypeScript), `pip-audit`, `pnpm audit --prod`, Trivy on the image, Checkov on Terraform, gitleaks, secret scanning and push protection, CycloneDX SBOM per build feeding the licence inventory, nightly ZAP baseline against DEV with an authenticated context, SARIF to GitHub Security, `SECURITY.md`, false-positive register.
 - Third-party materials register (SOW v2, §7.5): generated from the SBOM, listing every open-source component and its licence. It is what the Commission gives written consent to; a PR that adds a dependency adds it to the register.
 
@@ -349,7 +349,7 @@ Everything that changes a license or privilege after issuance (FLOW-04, FLOW-05)
 
 **Done when**
 
-- Schema tests prove no private or non-public field can appear; a privilege deactivated by a non-public adverse action shows as inactive with no reason; the rate limit works; pa11y clean.
+- Schema tests prove no private or non-public field can appear; a privilege deactivated by a non-public adverse action shows as inactive with no reason; the rate limit works; axe clean.
 
 ---
 
@@ -365,7 +365,7 @@ Everything that changes a license or privilege after issuance (FLOW-04, FLOW-05)
 
 **Scope**
 
-- Accessibility audit (Sprints 6–7): manual audit per screen (keyboard, NVDA and VoiceOver, 200% zoom, reduced motion, contrast, focus order, error association); fixes to zero; accessibility statement; pa11y-ci over every authenticated route; the payment lightbox exception documented.
+- Accessibility audit (Sprints 6–7): manual audit per screen (keyboard, NVDA and VoiceOver, 200% zoom, reduced motion, contrast, focus order, error association); fixes to zero; accessibility statement; an e2e axe scan on every authenticated route; the payment lightbox exception documented.
 - Security validation (Sprint 7): full ZAP active scan with authenticated contexts for every persona against `test`; ASVS 5.0 level 2 walk with evidence (SOW v2); fix medium and high; false-positive register; SBOM licence review and the third-party materials register reconciled with the Commission's written consent; secrets rotation drill; Cognito review.
 - Documentation and transition (Sprints 7–8): C4 context and container diagrams; `docs/` index covering data model, API (Redoc), events, notifications, permission matrix, runbooks (deploy, rotate secrets, restore DB, add a state, provision staff and state admins via CLI, reset a user's authenticator); generated dependency licence inventory; transition checklist (repo, AWS account, logging and monitoring, Authorize.net, SES, and NCCPA credentials; anything Focus provisioned as an interim measure); the technical integration pathway for a state (ingestion specification, API reference, credential issue) as the engineering chapter of the playbook; one state-staff guide and one Commission guide; docstring/JSDoc coverage gate.
 - Live operations test (Sprint 8; SOW v2, §2.3 — live pilot operations are out of scope, so this replaces go-live): the end-to-end script (register → participation → SQL verdict → privilege request → payment → issuance → public verification → status change) run in `prod` by the Commission's testers on Commission-controlled test data; payment in the processor's sandbox unless the Commission asks for a live transaction; SES production access; restore drill with timings; RTO/RPO stated; alarms; WAF tuned; seed states, fees, and attestations; test staff provisioned; PA self-signup on only for the test window; each runbook walked by someone other than its author; smoke suite in prod; the test record signed by the Commission's Product Manager; a launch runbook listing what a real pilot launch still needs (live processor credentials, real staff, self-signup on, on-call, test data purged).

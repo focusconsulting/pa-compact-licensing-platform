@@ -30,7 +30,7 @@ Companion to `product/backlog/mvp-ticket-breakdown.md`, `product/context/flows/`
 | **CSG** | Council of State Governments | Runs the National Center for Interstate Compacts; produced the model legislation and webinar in the corpus |
 | **RFP / RFI** | Request for Proposals / Request for Information | The Commission's Oct 2025 RFP and Jan 2025 RFI; the RFP's five "priority user stories" anchor MVP scope |
 | **SOW** | Statement of Work | Focus's contract document; the scope boundary for the MVP backlog |
-| **QASP** | Quality Assurance Surveillance Plan | The RFP/SOW table of deliverable standards: 90% coverage, 0 lint, WCAG 2.1 AA with pa11y, OWASP ASVS, single-command deploy |
+| **QASP** | Quality Assurance Surveillance Plan | The RFP/SOW table of deliverable standards: 90% coverage, 0 lint, WCAG 2.1 AA with pa11y or an equivalent scanner, OWASP ASVS, single-command deploy |
 | **PoP** | Period of Performance | 16 weeks / 8 sprints under the SOW |
 | **MVP** | Minimum Viable Product | "A system that enables the Commission to issue compact privileges" (RFP Q&A #15.1) |
 | **UAT** | User Acceptance Testing | Commission/state sign-off testing in Phase 3 |
@@ -91,7 +91,7 @@ New citations, in code, ADRs, plans, and docs, use the first two keys. The draft
 | **MoR** | Merchant of Record | The entity whose merchant account takes the payment — the Commission, per SOW §7.4 |
 | **HMAC** | Hash-based Message Authentication Code | How Authorize.net signs webhooks (SHA-512) |
 | **WCAG 2.1 AA** | Web Content Accessibility Guidelines, level AA | The accessibility bar; 0 automated and 0 manual errors |
-| **pa11y / axe** | Accessibility scanners | pa11y is the QASP's named tool; axe runs in component tests |
+| **pa11y / axe** | Accessibility scanners | pa11y is the QASP's named tool ("or equivalent"); we use axe, in component tests and on every page the Playwright e2e tests visit |
 | **USWDS** | U.S. Web Design System | The design system; used via `@trussworks/react-uswds` with token overrides |
 | **i18n** | Internationalisation | react-i18next; English only at pilot |
 | **e2e** | End-to-end tests | Playwright against the local stack |
