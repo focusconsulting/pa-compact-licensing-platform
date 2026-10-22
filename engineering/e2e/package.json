@@ -13,8 +13,8 @@
   "packageManager": "pnpm@10.32.1",
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
-    "@playwright/test": "^1.63.0",
-    "@types/node": "^24.19.1",
-    "typescript": "^5.9.3"
+    "@playwright/test": "^1.64.0",
+    "@types/node": "^26.6.4",
+    "typescript": "^7.0.2"
   }
 }
