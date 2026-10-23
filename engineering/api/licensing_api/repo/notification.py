@@ -19,6 +19,8 @@ if TYPE_CHECKING:
 
 
 class NotificationStatus(StrEnum):
+    """Where a notification is in delivery (``status``); ``sent_at`` is set exactly when it is ``sent``."""
+
     PENDING = 'pending'
     SENT = 'sent'
     FAILED = 'failed'

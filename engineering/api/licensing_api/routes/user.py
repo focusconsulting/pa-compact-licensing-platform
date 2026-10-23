@@ -11,6 +11,8 @@ router = APIRouter()
 
 
 class CurrentUser(BaseModel):
+    """The signed-in user's profile. ``user_id`` is their public ID, never the internal ``users.id``."""
+
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     user_id: UUID = Field(validation_alias='public_id')  # only ID we should expose externally
@@ -28,4 +30,5 @@ class CurrentUser(BaseModel):
     description='Returns information about the current user',
 )
 async def get_me(caller: Annotated[User, require()]) -> CurrentUser:
+    """Return the signed-in caller's profile."""
     return CurrentUser.model_validate(caller)

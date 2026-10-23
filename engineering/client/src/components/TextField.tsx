@@ -23,6 +23,10 @@ export interface TextFieldProps {
 }
 
 // TODO: forward
+/**
+ * A labelled USWDS text input with an optional hint. Registers with the
+ * surrounding form unless given its own `onChange` or `inputRef`.
+ */
 export function TextField({
   id,
   label,

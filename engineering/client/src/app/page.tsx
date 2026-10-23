@@ -78,6 +78,7 @@ function Dashboard() {
   );
 }
 
+/** Home page: the signed-in user's dashboard; signed-out visitors are sent to sign in. */
 export default function Home() {
   return (
     <ProtectedRoute>

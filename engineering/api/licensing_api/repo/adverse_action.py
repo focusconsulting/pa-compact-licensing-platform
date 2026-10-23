@@ -10,6 +10,8 @@ from licensing_api.repo.base import AuditColumns, TimestampTZ, utc_now
 
 
 class AdverseActionTarget(StrEnum):
+    """What an adverse action is against (``against``): a qualifying license or a privilege."""
+
     QUALIFYING_LICENSE = 'qualifying_license'
     PRIVILEGE = 'privilege'
 

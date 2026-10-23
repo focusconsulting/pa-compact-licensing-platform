@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "src/contexts/AuthContext";
 
+/** Renders its children only for a signed-in user; anyone else is sent to the sign-in page. */
 export default function ProtectedRoute({
   children,
 }: {

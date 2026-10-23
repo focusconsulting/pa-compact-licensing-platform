@@ -20,6 +20,8 @@ _bearer = HTTPBearer()
 
 
 class AuthClaims(BaseModel):
+    """The claims of a validated Cognito ID token that the API uses: the user's ``sub`` and email."""
+
     model_config = ConfigDict(from_attributes=True)
 
     sub: UUID

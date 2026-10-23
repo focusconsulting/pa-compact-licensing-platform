@@ -9,6 +9,8 @@ from licensing_api.repo.base import AuditColumns
 
 
 class DocumentOwnerType(StrEnum):
+    """The kind of record a document belongs to (``owner_type``)."""
+
     PRACTITIONER = 'practitioner'
     PARTICIPATION_APPLICATION = 'participation_application'
     PRIVILEGE_REQUEST = 'privilege_request'
@@ -20,6 +22,8 @@ class DocumentOwnerType(StrEnum):
 
 
 class ScanStatus(StrEnum):
+    """A document's malware-scan result (``scan_status``); an upload starts ``pending``."""
+
     PENDING = 'pending'
     CLEAN = 'clean'
     INFECTED = 'infected'

@@ -49,12 +49,14 @@ class User(SQLModel, table=True):
 
 
 async def get_user_by_public_id(session: AsyncSession, public_id: UUID) -> User | None:
+    """The user whose ``public_id`` (their Cognito ``sub``) is ``public_id``, or None."""
     statement = select(User).filter_by(public_id=public_id)
     result = await session.execute(statement)
     return result.scalar_one_or_none()
 
 
 async def get_user_by_email(session: AsyncSession, email: str) -> User | None:
+    """The user with exactly this ``email``, or None."""
     statement = select(User).filter_by(email=email)
     result = await session.execute(statement)
     return result.scalar_one_or_none()

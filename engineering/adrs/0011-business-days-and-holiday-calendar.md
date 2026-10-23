@@ -8,7 +8,7 @@ date: 2026-10-21
 
 ## Status
 
-Proposed. Succeeds point 5 of [ADR-0006](0006-reference-time-zone-and-dates.md). The Commission confirms the calendar through a new open question.
+Proposed. Succeeds point 5 of [ADR-0006](0006-reference-time-zone-and-dates.md). The Commission confirms the calendar through [Q-30](../../product/backlog/mvp-ticket-breakdown.md#settle-during-phase-1); the rules and the SOW name no holiday calendar.
 
 ## Date
 

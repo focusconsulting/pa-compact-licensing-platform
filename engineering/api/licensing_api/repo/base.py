@@ -23,6 +23,7 @@ class TimestampTZ(DateTime):
 
 
 def utc_now() -> datetime:
+    """The current time as a timezone-aware UTC datetime; the default for timestamp columns."""
     return datetime.now(timezone.utc)
 
 

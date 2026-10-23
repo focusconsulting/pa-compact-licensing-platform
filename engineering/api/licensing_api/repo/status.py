@@ -48,6 +48,8 @@ AS_OF: ColumnElement[date] = literal_column('as_of', Date)
 
 
 class LicenseComputedStatus(StrEnum):
+    """The statuses ``QualifyingLicenseStatus`` reports: the state's reported statuses, plus ``encumbered``."""
+
     ACTIVE = 'active'
     EXPIRED = 'expired'
     LAPSED = 'lapsed'

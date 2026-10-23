@@ -50,6 +50,8 @@ class HistoryRecord(SQLModel):
 
 
 class PractitionerHistory(HistoryRecord, table=True):
+    """Every change to a practitioner."""
+
     # SQLModel defines __tablename__ as a declared_attr method; assigning a string is its documented way to name a table.
     __tablename__ = 'practitioners_history'  # type: ignore[assignment]
 
@@ -57,6 +59,8 @@ class PractitionerHistory(HistoryRecord, table=True):
 
 
 class QualifyingLicenseHistory(HistoryRecord, table=True):
+    """Every change to a qualifying license."""
+
     # SQLModel defines __tablename__ as a declared_attr method; assigning a string is its documented way to name a table.
     __tablename__ = 'qualifying_licenses_history'  # type: ignore[assignment]
 
@@ -64,6 +68,8 @@ class QualifyingLicenseHistory(HistoryRecord, table=True):
 
 
 class ParticipationApplicationHistory(HistoryRecord, table=True):
+    """Every change to a participation application."""
+
     # SQLModel defines __tablename__ as a declared_attr method; assigning a string is its documented way to name a table.
     __tablename__ = 'participation_applications_history'  # type: ignore[assignment]
 
@@ -71,6 +77,8 @@ class ParticipationApplicationHistory(HistoryRecord, table=True):
 
 
 class PrivilegeRequestHistory(HistoryRecord, table=True):
+    """Every change to a privilege request."""
+
     # SQLModel defines __tablename__ as a declared_attr method; assigning a string is its documented way to name a table.
     __tablename__ = 'privilege_requests_history'  # type: ignore[assignment]
 
@@ -78,6 +86,8 @@ class PrivilegeRequestHistory(HistoryRecord, table=True):
 
 
 class PrivilegeHistory(HistoryRecord, table=True):
+    """Every change to a privilege."""
+
     # SQLModel defines __tablename__ as a declared_attr method; assigning a string is its documented way to name a table.
     __tablename__ = 'privileges_history'  # type: ignore[assignment]
 
@@ -94,6 +104,8 @@ class AdverseActionHistory(HistoryRecord, table=True):
 
 
 class SiiReportHistory(HistoryRecord, table=True):
+    """Every change to a significant investigative information (SII) report."""
+
     # SQLModel defines __tablename__ as a declared_attr method; assigning a string is its documented way to name a table.
     __tablename__ = 'sii_reports_history'  # type: ignore[assignment]
 
@@ -110,6 +122,8 @@ class StateHistory(HistoryRecord, table=True):
 
 
 class FeeHistory(HistoryRecord, table=True):
+    """Every change to a fee schedule row."""
+
     # SQLModel defines __tablename__ as a declared_attr method; assigning a string is its documented way to name a table.
     __tablename__ = 'fees_history'  # type: ignore[assignment]
 

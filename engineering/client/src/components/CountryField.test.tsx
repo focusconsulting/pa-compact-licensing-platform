@@ -32,12 +32,22 @@ describe("CountryField component", () => {
     expect(screen.getByRole("combobox", { name: /Country/ })).toBeRequired();
   });
 
-  it("renders with birthCountry flag without throwing", () => {
-    expect(() =>
-      renderWithForm(
-        <CountryField id="country" label="Country" birthCountry />,
-      ),
-    ).not.toThrow();
+  it("offers former countries of birth only with the birthCountry flag", () => {
+    const { unmount } = renderWithForm(
+      <CountryField id="country" label="Country" />,
+    );
+    expect(
+      screen.queryByRole("option", { name: "Yugoslavia" }),
+    ).not.toBeInTheDocument();
+    unmount();
+
+    renderWithForm(<CountryField id="country" label="Country" birthCountry />);
+    expect(
+      screen.getByRole("option", { name: "Yugoslavia" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "Afghanistan" }),
+    ).toBeInTheDocument();
   });
 
   // axe walks all ~200 country options, which can outlast Vitest's

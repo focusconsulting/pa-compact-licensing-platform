@@ -10,6 +10,8 @@ from licensing_api.repo.base import AuditColumns, TimestampTZ
 
 
 class AdministratorStatus(StrEnum):
+    """A privilege's status as set by a state or the Commission (``administrator_status``)."""
+
     ACTIVE = 'active'
     INACTIVE = 'inactive'
 

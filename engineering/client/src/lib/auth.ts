@@ -29,7 +29,12 @@ export type SignInResult =
       userAttributes: Record<string, string>;
     };
 
-// SRP unless NEXT_PUBLIC_COGNITO_AUTH_FLOW names another flow: cognito-local has no SRP (ADR-0010).
+/**
+ * Signs in with Cognito, using SRP unless `NEXT_PUBLIC_COGNITO_AUTH_FLOW` names
+ * another flow (cognito-local has no SRP; ADR-0010). Resolves with the session,
+ * or with a new-password challenge for a user an admin created with a
+ * temporary password.
+ */
 export function signIn(email: string, password: string): Promise<SignInResult> {
   return new Promise((resolve, reject) => {
     const user = new CognitoUser({ Username: email, Pool: getUserPool() });
@@ -61,6 +66,7 @@ export function signIn(email: string, password: string): Promise<SignInResult> {
   });
 }
 
+/** Answers a new-password challenge and resolves with the signed-in session. */
 export function completeNewPassword(
   user: CognitoUser,
   newPassword: string,
@@ -74,10 +80,12 @@ export function completeNewPassword(
   });
 }
 
+/** Signs the current user out on this device, clearing the stored session. */
 export function signOut(): void {
   getUserPool().getCurrentUser()?.signOut();
 }
 
+/** The stored session if it is still valid (refreshing it if needed), otherwise null. */
 export function getCurrentSession(): Promise<CognitoUserSession | null> {
   return new Promise((resolve) => {
     const user = getUserPool().getCurrentUser();

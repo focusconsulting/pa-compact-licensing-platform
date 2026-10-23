@@ -14,6 +14,10 @@ import {
 } from "@trussworks/react-uswds";
 import { useAuth } from "src/contexts/AuthContext";
 
+/**
+ * Sign-in page. Signs in with Cognito (SRP); an admin-created user is asked to
+ * choose a new password before continuing to the dashboard.
+ */
 export default function LoginPage() {
   const { signIn, completeNewPassword } = useAuth();
   const router = useRouter();

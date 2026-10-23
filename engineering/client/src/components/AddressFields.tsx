@@ -16,6 +16,10 @@ export interface AddressFieldsProps {
 
 // TODO: Controller might simplify the line1/line2 logic (see: https://github.com/orgs/react-hook-form/discussions/2363)
 // TODO: add formgroup to all components
+/**
+ * Address lines 1 and 2, city, state, ZIP, and country in one fieldset. The
+ * two address lines are stored in the form as one value joined by a newline.
+ */
 function AddressFields({ id, label, hint, className }: AddressFieldsProps) {
   const { t } = useTranslation(["common", "address"]);
   const form = useFormContext();

@@ -20,6 +20,8 @@ class LicenseStatus(StrEnum):
 
 
 class LicenseSource(StrEnum):
+    """How a qualifying license reached the system (``source``): entered by hand, uploaded, or sent through the API."""
+
     MANUAL = 'manual'
     UPLOAD = 'upload'
     API = 'api'

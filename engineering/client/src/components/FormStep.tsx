@@ -19,6 +19,10 @@ export interface FormStepProps<T extends FieldValues> {
   noSpinner?: true | false;
 }
 
+/**
+ * One step of a multi-step form: a title, the fields, a required-field note, and
+ * Back / Save and Continue buttons, with a spinner while submitting.
+ */
 function FormStep<T extends FieldValues>({
   onSubmit,
   onBack,
