@@ -53,6 +53,7 @@ async def list_audit_entries(
     occurred_from: datetime | None = None,
     occurred_to: datetime | None = None,
 ) -> Paged[AuditEntryOut]:
+    """Page through the audit log; an unknown ``actor_email`` matches nothing."""
     actor_user_id = None
     if actor_email is not None:
         actor = await get_user_by_email(session, actor_email)

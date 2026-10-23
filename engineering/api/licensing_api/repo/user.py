@@ -64,5 +64,6 @@ async def get_user_by_email(session: AsyncSession, email: str) -> User | None:
 
 
 async def emails_by_id(session: AsyncSession, user_ids: Iterable[int]) -> dict[int, str]:
+    """Each listed user's email by ID; IDs with no user are left out."""
     statement = select(col(User.id), col(User.email)).where(col(User.id).in_(set(user_ids)))
     return dict((await session.execute(statement)).tuples().all())
