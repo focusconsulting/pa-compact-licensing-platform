@@ -23,9 +23,13 @@ infra-down:
 migrate env-file=".env":
     uv run --env-file {{ env-file }} python -c 'from licensing_api.migrations import run_migrations; run_migrations()'
 
-# Load local seed data from seed/<name>.sql into the running Postgres (local only; safe to rerun)
-seed name="users":
-    docker compose -p pa-compact exec -T postgres psql -v ON_ERROR_STOP=1 -U licensing -d licensing < seed/{{ name }}.sql
+# Load local seed data from seed/<name>.py, or else seed/<name>.sql, into the running Postgres (local only)
+seed name="users" env-file=".env":
+    if [ -f seed/{{ name }}.py ]; then \
+        uv run --env-file {{ env-file }} python -m seed.{{ name }}; \
+    else \
+        docker compose -p pa-compact exec -T postgres psql -v ON_ERROR_STOP=1 -U licensing -d licensing < seed/{{ name }}.sql; \
+    fi
 
 # Write openapi.json from the code; the client's `pnpm generate` reads it
 openapi:
@@ -62,7 +66,7 @@ lint-ruff:
 
 # Run pyright type checker
 typecheck:
-    uv run pyright licensing_api
+    uv run pyright licensing_api seed
 
 # Format code with ruff
 format:

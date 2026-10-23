@@ -137,6 +137,116 @@
           "Value": "true"
         }
       ]
+    },
+    "kansas.staff@example.com": {
+      "Username": "kansas.staff@example.com",
+      "Password": "Local-Passw0rd!",
+      "UserStatus": "CONFIRMED",
+      "Enabled": true,
+      "UserCreateDate": "2026-01-01T00:00:00.000Z",
+      "UserLastModifiedDate": "2026-01-01T00:00:00.000Z",
+      "Attributes": [
+        {
+          "Name": "sub",
+          "Value": "00000000-0000-4000-8000-000000000007"
+        },
+        {
+          "Name": "email",
+          "Value": "kansas.staff@example.com"
+        },
+        {
+          "Name": "email_verified",
+          "Value": "true"
+        }
+      ]
+    },
+    "kansas.admin@example.com": {
+      "Username": "kansas.admin@example.com",
+      "Password": "Local-Passw0rd!",
+      "UserStatus": "CONFIRMED",
+      "Enabled": true,
+      "UserCreateDate": "2026-01-01T00:00:00.000Z",
+      "UserLastModifiedDate": "2026-01-01T00:00:00.000Z",
+      "Attributes": [
+        {
+          "Name": "sub",
+          "Value": "00000000-0000-4000-8000-000000000008"
+        },
+        {
+          "Name": "email",
+          "Value": "kansas.admin@example.com"
+        },
+        {
+          "Name": "email_verified",
+          "Value": "true"
+        }
+      ]
+    },
+    "oklahoma.staff@example.com": {
+      "Username": "oklahoma.staff@example.com",
+      "Password": "Local-Passw0rd!",
+      "UserStatus": "CONFIRMED",
+      "Enabled": true,
+      "UserCreateDate": "2026-01-01T00:00:00.000Z",
+      "UserLastModifiedDate": "2026-01-01T00:00:00.000Z",
+      "Attributes": [
+        {
+          "Name": "sub",
+          "Value": "00000000-0000-4000-8000-000000000009"
+        },
+        {
+          "Name": "email",
+          "Value": "oklahoma.staff@example.com"
+        },
+        {
+          "Name": "email_verified",
+          "Value": "true"
+        }
+      ]
+    },
+    "avery.active@example.com": {
+      "Username": "avery.active@example.com",
+      "Password": "Local-Passw0rd!",
+      "UserStatus": "CONFIRMED",
+      "Enabled": true,
+      "UserCreateDate": "2026-01-01T00:00:00.000Z",
+      "UserLastModifiedDate": "2026-01-01T00:00:00.000Z",
+      "Attributes": [
+        {
+          "Name": "sub",
+          "Value": "00000000-0000-4000-8000-000000000010"
+        },
+        {
+          "Name": "email",
+          "Value": "avery.active@example.com"
+        },
+        {
+          "Name": "email_verified",
+          "Value": "true"
+        }
+      ]
+    },
+    "lex.license-action@example.com": {
+      "Username": "lex.license-action@example.com",
+      "Password": "Local-Passw0rd!",
+      "UserStatus": "CONFIRMED",
+      "Enabled": true,
+      "UserCreateDate": "2026-01-01T00:00:00.000Z",
+      "UserLastModifiedDate": "2026-01-01T00:00:00.000Z",
+      "Attributes": [
+        {
+          "Name": "sub",
+          "Value": "00000000-0000-4000-8000-000000000011"
+        },
+        {
+          "Name": "email",
+          "Value": "lex.license-action@example.com"
+        },
+        {
+          "Name": "email_verified",
+          "Value": "true"
+        }
+      ]
     }
   }
 }
