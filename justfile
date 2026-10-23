@@ -33,6 +33,11 @@ down:
 seed name="users":
     cd engineering/api && just seed {{ name }}
 
+# Regenerate the API document, then the client's types and mocks from it
+generate:
+    cd engineering/api && just openapi
+    cd engineering/client && pnpm generate
+
 # Run the end-to-end tests against the running system (start it with `just up` first)
 e2e:
     cd engineering/e2e && pnpm install && pnpm exec playwright install chromium && pnpm test
