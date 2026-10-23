@@ -121,6 +121,7 @@ just install           # Install Python dependencies
 just infra             # Start the local services (resets their data)
 just migrate           # Apply migrations
 just seed              # Load the local users
+just seed demo         # Add demo practitioners in every status (engineering/docs/demo.md)
 just dev               # Run API with hot reload (localhost:8000/docs)
 ```
 
