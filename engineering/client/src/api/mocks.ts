@@ -38,13 +38,15 @@ export const handlers = [
   http.get("*/api/me", () =>
     HttpResponse.json(
       {
-        email: "pat.morgan@example.com",
-        family_name: "Morgan",
-        given_name: "Pat",
-        is_active: true,
-        role: "state_staff",
-        state_code: "KS",
-        user_id: "6f1c2b0e-8d4a-4c3e-9b7a-2f5d1e0c9a84",
+        data: {
+          email: "pat.morgan@example.com",
+          family_name: "Morgan",
+          given_name: "Pat",
+          is_active: true,
+          role: "state_staff",
+          state_code: "KS",
+          user_id: "6f1c2b0e-8d4a-4c3e-9b7a-2f5d1e0c9a84",
+        },
       },
       { status: 200 },
     ),

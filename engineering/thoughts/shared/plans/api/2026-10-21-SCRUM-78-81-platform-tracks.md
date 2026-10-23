@@ -186,14 +186,15 @@ Branches follow `feature/SCRUM-<n>-<slug>`; each PR targets the branch below it.
 
 ### Changes Required
 
-- **`client/src/lib/api.ts`**: `api`, an `openapi-fetch` client on `paths` with `baseUrl` from `NEXT_PUBLIC_API_BASE_URL`; its `onRequest` middleware adds the ID token from `getCurrentSession()` and throws `Not authenticated` without one, as `authFetch` does. `authFetch` stays for non-JSON calls.
+- **`client/src/lib/api.ts`**: `api`, an `openapi-fetch` client on `paths` with `baseUrl` from `NEXT_PUBLIC_API_BASE_URL`, looking up `fetch` per call so MSW's patch applies; its `onRequest` middleware adds the ID token from `getCurrentSession()` and throws `Not authenticated` without one, as `authFetch` does. `authFetch` stays for non-JSON calls.
 - **`routes/user.py`**: `get_me` returns `Data[CurrentUser]`; regenerate. The envelope test's `/me` exception is removed.
 - **`client/src/app/page.tsx`**: drops the hand-written `CurrentUser` (:9-17) for `components['schemas']['CurrentUser']` and reads `data.data` from `api.GET('/api/me')`.
 - **Client tests**: `src/tests/setup.ts` starts an MSW `setupServer` with the generated handlers and `onUnhandledRequest: 'error'`. `page.test.tsx` uses the generated `/api/me` handler, with `server.use` for the error case, in place of mocking `authFetch`; `api.test.ts` covers the middleware.
 - **Storybook**:
-  - `msw-storybook-addon` (dev). `msw init` writes the worker to `.storybook/public/`, served through `staticDirs` in `main.ts`, so it never ships in the client build.
+  - `msw-storybook-addon` (dev). `msw init` writes the worker to `.storybook/public/`, served through `staticDirs` in `main.ts` with the app's `public/`, so it never ships in the client build.
+  - `webpack` pinned below 5.101 (dev): later versions' `DefinePlugin` taps a parser hook Next 14's bundled webpack lacks, which broke `build-storybook` on `main`. CI builds Storybook.
   - `preview.ts`: `initialize()`, `loaders: [mswLoader]`, and the generated handlers in `parameters.msw.handlers`.
-  - `main.ts`: `webpackFinal` adds a `NormalModuleReplacementPlugin` that swaps `src/lib/auth` for `.storybook/mocks/auth.ts`, whose `getCurrentSession()` returns a fixed session. `AuthProvider` and the client middleware both import it, so no production code changes.
+  - `main.ts`: a small plugin swaps the resolved `src/lib/auth.ts` for `.storybook/mocks/auth.ts`, whose `getCurrentSession()` returns a fixed session; an alias never applies, because the tsconfig paths resolver handles `src/...` first. `AuthProvider`, which `preview.tsx` wraps every story in, and the client middleware both import it, so no production code changes.
   - `home.stories.tsx`: the dashboard with the generated handlers, and a story where `/api/me` answers `403`.
 - **Deploy order**: the API and client deploy to DEV separately on merge, so the dashboard shows an error between the two deploys. Acceptable in DEV; the PR says so.
 
