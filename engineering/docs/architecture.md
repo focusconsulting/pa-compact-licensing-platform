@@ -85,17 +85,12 @@ C4Container
 ```
 
 ```mermaid
-architecture-beta
-    group api(cloud)[API]
-
-    service db(database)[Database] in api
-    service disk1(disk)[Storage] in api
-    service disk2(disk)[Storage] in api
-    service server(server)[Server] in api
-
-    db:L -- R:server
-    disk1:T -- B:server
-    disk2:T -- B:db
+usecase-beta
+note for Login "`Requires an **active session**`"
+note for User "Starts the workflow"
+actor User
+Login("Sign in")
+User --> Login
 ```
 
 ## Locally
