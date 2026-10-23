@@ -2,12 +2,16 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
+import type { CognitoUserSession } from "amazon-cognito-identity-js";
+import { http, HttpResponse } from "msw";
+
 import { useAuth } from "src/contexts/AuthContext";
-import { authFetch } from "src/lib/api";
+import { getCurrentSession } from "src/lib/auth";
 import { expectNoAxeViolations } from "src/tests/axe";
+import { server } from "src/tests/server";
 import Home from "./page";
 
-vi.mock("src/lib/api");
+vi.mock("src/lib/auth");
 vi.mock("src/contexts/AuthContext");
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
@@ -23,6 +27,9 @@ beforeEach(() => {
     signIn: vi.fn(),
     completeNewPassword: vi.fn(),
   });
+  vi.mocked(getCurrentSession).mockResolvedValue({
+    getIdToken: () => ({ getJwtToken: () => "valid-token" }),
+  } as CognitoUserSession);
 });
 
 const mockUser = {
@@ -35,12 +42,25 @@ const mockUser = {
   is_active: true,
 };
 
+function answerMe(overrides: Record<string, unknown>) {
+  server.use(
+    http.get("*/api/me", () =>
+      HttpResponse.json({ data: { ...mockUser, ...overrides } }),
+    ),
+  );
+}
+
+function failMe(status: number) {
+  server.use(
+    http.get("*/api/me", () =>
+      HttpResponse.json({ code: "FORBIDDEN", details: [] }, { status }),
+    ),
+  );
+}
+
 describe("Home (Dashboard) page", () => {
   it("displays user data after successful fetch", async () => {
-    vi.mocked(authFetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockUser),
-    } as Response);
+    answerMe({});
 
     render(<Home />);
 
@@ -54,18 +74,15 @@ describe("Home (Dashboard) page", () => {
   });
 
   it("displays error message when fetch returns non-ok response", async () => {
-    vi.mocked(authFetch).mockResolvedValue({
-      ok: false,
-      status: 403,
-    } as Response);
+    failMe(403);
 
     render(<Home />);
 
     await waitFor(() => expect(screen.getByText("403")).toBeInTheDocument());
   });
 
-  it("displays error message when authFetch throws", async () => {
-    vi.mocked(authFetch).mockRejectedValue(new Error("Not authenticated"));
+  it("displays error message when the session has expired", async () => {
+    vi.mocked(getCurrentSession).mockResolvedValue(null);
 
     render(<Home />);
 
@@ -76,11 +93,7 @@ describe("Home (Dashboard) page", () => {
 
   it("calls signOut when sign-out button is clicked", async () => {
     const user = userEvent.setup();
-    vi.mocked(authFetch).mockResolvedValue({
-      ok: true,
-      json: () =>
-        Promise.resolve({ ...mockUser, given_name: null, family_name: null }),
-    } as Response);
+    answerMe({ given_name: null, family_name: null });
 
     render(<Home />);
 
@@ -91,16 +104,7 @@ describe("Home (Dashboard) page", () => {
   });
 
   it("shows dash for name when given_name and family_name are null", async () => {
-    vi.mocked(authFetch).mockResolvedValue({
-      ok: true,
-      json: () =>
-        Promise.resolve({
-          ...mockUser,
-          given_name: null,
-          family_name: null,
-          state_code: null,
-        }),
-    } as Response);
+    answerMe({ given_name: null, family_name: null, state_code: null });
 
     render(<Home />);
 
@@ -108,7 +112,7 @@ describe("Home (Dashboard) page", () => {
   });
 
   it("shows a generic error when the request fails with a non-Error value", async () => {
-    vi.mocked(authFetch).mockRejectedValue("offline");
+    vi.mocked(getCurrentSession).mockRejectedValue("offline");
 
     render(<Home />);
 
@@ -118,10 +122,7 @@ describe("Home (Dashboard) page", () => {
   });
 
   it("shows an inactive user's status", async () => {
-    vi.mocked(authFetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ ...mockUser, is_active: false }),
-    } as Response);
+    answerMe({ is_active: false });
 
     render(<Home />);
 
@@ -131,10 +132,7 @@ describe("Home (Dashboard) page", () => {
   });
 
   it("has no axe violations once the user loads", async () => {
-    vi.mocked(authFetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockUser),
-    } as Response);
+    answerMe({});
 
     const { container } = render(<Home />);
     await screen.findByText("user@example.com");
@@ -143,10 +141,7 @@ describe("Home (Dashboard) page", () => {
   });
 
   it("has no axe violations when the user fails to load", async () => {
-    vi.mocked(authFetch).mockResolvedValue({
-      ok: false,
-      status: 403,
-    } as Response);
+    failMe(403);
 
     const { container } = render(<Home />);
     await screen.findByText("403");

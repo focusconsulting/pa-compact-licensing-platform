@@ -3,18 +3,11 @@
 import { useEffect, useState } from "react";
 import ProtectedRoute from "src/components/ProtectedRoute";
 import { useAuth } from "src/contexts/AuthContext";
-import { authFetch } from "src/lib/api";
+import type { components } from "src/api/schema";
+import { api } from "src/lib/api";
 import { Button } from "@trussworks/react-uswds";
 
-interface CurrentUser {
-  user_id: string; // the user's public UUID
-  email: string;
-  given_name: string | null;
-  family_name: string | null;
-  role: string;
-  state_code: string | null;
-  is_active: boolean;
-}
+type CurrentUser = components["schemas"]["CurrentUser"];
 
 function Dashboard() {
   const { signOut } = useAuth();
@@ -22,12 +15,12 @@ function Dashboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    authFetch("/api/me")
-      .then((r) => {
-        if (!r.ok) throw new Error(`${r.status}`);
-        return r.json() as Promise<CurrentUser>;
+    api
+      .GET("/api/me")
+      .then(({ data, response }) => {
+        if (!data) throw new Error(`${response.status}`);
+        setUser(data.data);
       })
-      .then(setUser)
       .catch((e: unknown) =>
         setError(e instanceof Error ? e.message : "Failed to load user"),
       );

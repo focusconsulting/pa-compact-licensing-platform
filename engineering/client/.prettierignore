@@ -6,3 +6,4 @@ storybook-static
 pnpm-lock.yaml
 CLAUDE.md
 .claude
+.storybook/public
