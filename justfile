@@ -29,7 +29,7 @@ services:
 down:
     {{ compose }} down
 
-# Load local seed data from engineering/api/seed/<name>.sql (safe to rerun)
+# Load local seed data from engineering/api/seed/: `users` (safe to rerun), or `demo` (docs/demo.md)
 seed name="users":
     cd engineering/api && just seed {{ name }}
 

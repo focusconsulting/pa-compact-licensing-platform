@@ -35,6 +35,8 @@ just infra
 ```
 
 Then load local users with `just seed` (from [`seed/users.sql`](./seed/users.sql); safe to rerun).
+`just seed demo` adds a practitioner for every application, privilege, and license status
+([`seed/demo.py`](./seed/demo.py)); [`docs/demo.md`](../docs/demo.md) lists who to sign in as.
 Migrations hold schema only; seed data lives in `seed/` and never reaches the production image.
 
 ### 3. Run the API with hot reload
