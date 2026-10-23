@@ -4,10 +4,10 @@ from collections.abc import Mapping
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import Column, insert
+from sqlalchemy import Column, Select, insert
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, col, select
 
 from licensing_api.repo.base import DOTTED_NAME, TimestampTZ, entity_ref, utc_now
 
@@ -78,3 +78,32 @@ async def write(
         .returning(AuditLogEntry)
     )
     return (await session.scalars(statement)).one()
+
+
+def audit_entries(
+    *,
+    action: str | None = None,
+    entity_type: str | None = None,
+    entity_id: int | None = None,
+    entity_key: str | None = None,
+    actor_user_id: int | None = None,
+    occurred_from: datetime | None = None,
+    occurred_to: datetime | None = None,
+) -> Select[tuple[AuditLogEntry]]:
+    """Entries matching every filter given. ``occurred_to`` is exclusive."""
+    statement = select(AuditLogEntry)
+    filters = {
+        col(AuditLogEntry.action): action,
+        col(AuditLogEntry.entity_type): entity_type,
+        col(AuditLogEntry.entity_id): entity_id,
+        col(AuditLogEntry.entity_key): entity_key,
+        col(AuditLogEntry.actor_user_id): actor_user_id,
+    }
+    for column, value in filters.items():
+        if value is not None:
+            statement = statement.where(column == value)
+    if occurred_from is not None:
+        statement = statement.where(col(AuditLogEntry.occurred_at) >= occurred_from)
+    if occurred_to is not None:
+        statement = statement.where(col(AuditLogEntry.occurred_at) < occurred_to)
+    return statement

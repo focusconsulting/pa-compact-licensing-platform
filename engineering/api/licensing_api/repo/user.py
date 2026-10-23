@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import Column, ForeignKey, String, select, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, col
 
 from licensing_api.repo.base import TimestampTZ, utc_now
 
@@ -60,3 +61,9 @@ async def get_user_by_email(session: AsyncSession, email: str) -> User | None:
     statement = select(User).filter_by(email=email)
     result = await session.execute(statement)
     return result.scalar_one_or_none()
+
+
+async def emails_by_id(session: AsyncSession, user_ids: Iterable[int]) -> dict[int, str]:
+    """Each listed user's email by ID; IDs with no user are left out."""
+    statement = select(col(User.id), col(User.email)).where(col(User.id).in_(set(user_ids)))
+    return dict((await session.execute(statement)).tuples().all())

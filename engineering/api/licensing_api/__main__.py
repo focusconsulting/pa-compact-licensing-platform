@@ -27,7 +27,7 @@ from licensing_api.request_logger import (
     RequestLoggingMiddleware,
     UnhandledExceptionMiddleware,
 )
-from licensing_api.routes import health, user
+from licensing_api.routes import audit, health, user
 
 _SENSITIVE_PATTERN = re.compile(r'password|token|secret|cognito|ssn', re.IGNORECASE)
 _MASK = '****'
@@ -191,6 +191,7 @@ api_router = APIRouter(prefix='/api')
 # infrastructure/iac/components/app/terraform/ecs.tf
 api_router.include_router(health.router)
 api_router.include_router(user.router)
+api_router.include_router(audit.router)
 app.include_router(api_router)
 
 # Only deployed tasks export telemetry (to the ADOT sidecar); tests and local runs leave it off.
