@@ -10,31 +10,38 @@ what they show.
 Who uses the PA Compact Data System, and which outside systems it depends on.
 
 ```mermaid
-C4Context
-  title PA Compact Data System: system context
+---
+title: "PA Compact Data System: system context"
+---
+flowchart TD
+  pa@{shape: person, label: "Physician's Assistant"}
+  state@{shape: person, label: "State staff"}
+  commission@{shape: person, label: "Commission staff"}
+  public@{shape: person, label: "Public and employers"}
 
-  Person(pa, "Physician assistant", "Applies for compact privileges, pays fees, and manages their profile")
-  Person(state, "State staff and administrators", "Verify eligibility as the qualifying-license state, issue or deny privileges as a remote state, report adverse actions, configure their state")
-  Person(commission, "Commission staff", "Configure the compact, override privileges, read reports and the audit log")
-  Person(public, "Public and employers", "Look up whether a PA holds a privilege to practise")
+  cds["PA Compact Data System"]
 
-  System(cds, "PA Compact Data System", "Privilege applications, eligibility, issuance, adverse actions, and the record of every change")
+  cognito["Amazon Cognito"]
+  ses["Amazon SES"]
+  payments["Payment Provider"]
+  nccpa["NCCPA"]
+  boards@{shape: terminal, label: "State licensing systems"}
 
-  System_Ext(cognito, "Amazon Cognito", "Sign-in for PAs, state staff, and Commission staff")
-  System_Ext(ses, "Amazon SES", "Sends notification email (planned: 4gi.5)")
-  System_Ext(authnet, "Authorize.net", "Takes card payments for privilege fees (planned)")
-  System_Ext(nccpa, "NCCPA", "Reports each PA's national certification (planned, awaiting the NCCPA contract)")
-  System_Ext(boards, "State licensing systems", "Send licensee data by file upload or API (planned: L-02)")
+  pa paToCds@-- "Apply for privileges<br/>Pay fees<br/>Manage profile" --> cds
+  state stateToCds@-- "Verify eligibility<br/>Issue or deny privileges<br/>Report adverse actions<br/>Configure state" --> cds
+  commission commissionToCds@-- "Read reports and audits<br/>Override privileges<br/>Configure the compact" --> cds
+  public publicToCds@-- "Verify PA privileges" --> cds
+  boards boardsToCds@-- "Send licensee data" --> cds
+  cds -- "Authenticate PAs, State staff, and Commission staff" --> cognito
+  cds cdsToSes@-- "Send notification emails" --> ses
+  cds cdsToPayments@-- "Collect payments" --> payments
+  cds cdsToNccpa@-- "Query PA national certifications" --> nccpa
 
-  Rel(pa, cds, "Applies and pays", "HTTPS")
-  Rel(state, cds, "Verifies, decides, reports", "HTTPS")
-  Rel(commission, cds, "Configures and oversees", "HTTPS")
-  Rel(public, cds, "Looks up privileges", "HTTPS")
-  Rel(cds, cognito, "Signs users in, verifies their tokens")
-  Rel(cds, ses, "Sends email", "SMTP")
-  Rel(cds, authnet, "Charges fees, receives payment webhooks", "HTTPS")
-  Rel(cds, nccpa, "Looks up certification", "HTTPS")
-  Rel(boards, cds, "Sends licensee data", "HTTPS")
+  classDef person fill:#08427b,stroke:#073b6f,color:#fff
+  classDef system fill:#1168bd,stroke:#0b4884,color:#fff
+  classDef machine_user fill:#0A559F,stroke:#073b6f,color:#fff
+  class pa,state,commission,public,boards person
+  class cds system
 ```
 
 ## Containers
@@ -59,7 +66,7 @@ C4Container
 
   System_Ext(cognito, "Amazon Cognito", "User pool")
   System_Ext(ses, "Amazon SES", "Email")
-  System_Ext(authnet, "Authorize.net", "Payments")
+  System_Ext(payments, "Payment Provider", "Payments")
   System_Ext(nccpa, "NCCPA", "Certification")
   System_Ext(observability, "CloudWatch and X-Ray", "Logs, metrics, traces, alarms to Slack")
 
@@ -72,7 +79,7 @@ C4Container
   Rel(api, files, "Issues short-lived upload and download links", "HTTPS")
   Rel(worker, db, "Claims and handles events", "SQL over TLS")
   Rel(worker, ses, "Sends email", "SMTP")
-  Rel(api, authnet, "Charges fees", "HTTPS")
+  Rel(api, payments, "Charges fees", "HTTPS")
   Rel(api, nccpa, "Looks up certification", "HTTPS")
   Rel(api, observability, "Logs and traces", "OTLP via the ADOT sidecar")
 ```
@@ -90,4 +97,4 @@ and [`engineering/api/.env.example`](../api/.env.example).
 | Cognito | cognito-local ([`engineering/mocks/cognito`](../mocks/cognito/README.md)), signed in to with password auth instead of SRP ([ADR-0010](../adrs/0010-local-sign-in-uses-password-auth.md)) |
 | SES | maildev |
 | S3 | RustFS |
-| Authorize.net, NCCPA | Mock servers, built with the tickets that write their clients |
+| Payment Provider, NCCPA | Mock servers, built with the tickets that write their clients |
