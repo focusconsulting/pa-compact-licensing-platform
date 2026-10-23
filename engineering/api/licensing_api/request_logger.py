@@ -7,6 +7,8 @@ from starlette.datastructures import MutableHeaders
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from licensing_api.errors import ErrorCode, ErrorResponse
+
 logger = logging.getLogger(__name__)
 
 REQUEST_ID_HEADER = 'X-Request-ID'
@@ -61,7 +63,8 @@ class UnhandledExceptionMiddleware:
             await self.app(scope, receive, send)
         except Exception:
             logger.exception('Unhandled exception', extra={'path': scope['path']})
-            response = JSONResponse(status_code=500, content={'detail': 'Internal server error'})
+            body = ErrorResponse(code=ErrorCode.InternalError, details=['Internal server error'])
+            response = JSONResponse(status_code=500, content=body.model_dump())
             await response(scope, receive, send)
 
 

@@ -15,6 +15,7 @@ class ErrorCode(StrEnum):
     Forbidden = 'FORBIDDEN'
     ValidationError = 'VALIDATION_ERROR'
     HttpError = 'HTTP_ERROR'
+    InternalError = 'INTERNAL_ERROR'
 
 
 class ErrorResponse(BaseModel):
