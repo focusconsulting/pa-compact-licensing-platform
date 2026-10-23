@@ -19,7 +19,25 @@ router = APIRouter(prefix='/audit')
 class AuditEntryOut(BaseModel):
     """One staff read of private data or security event. ``before`` and ``after`` never hold an SSN."""
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            'examples': [
+                {
+                    'occurred_at': '2026-10-21T14:05:00Z',
+                    'action': 'ssn.revealed',
+                    'entity_type': 'practitioner',
+                    'entity_id': 42,
+                    'entity_key': None,
+                    'actor_email': 'pat.morgan@example.com',
+                    'reason': 'Verifying identity for an application',
+                    'request_id': '9b2e4f7a1c3d4e5f8a6b7c8d9e0f1a2b',
+                    'before': None,
+                    'after': None,
+                }
+            ]
+        },
+    )
 
     occurred_at: datetime
     action: str

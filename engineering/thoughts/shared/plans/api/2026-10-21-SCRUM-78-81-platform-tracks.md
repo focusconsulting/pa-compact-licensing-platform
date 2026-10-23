@@ -157,12 +157,13 @@ Branches follow `feature/SCRUM-<n>-<slug>`; each PR targets the branch below it.
 ### Changes Required
 
 - **`engineering/api/scripts/export_openapi.py`** (new) and `just openapi`: imports `app` and writes `engineering/api/openapi.json` as `json.dumps(app.openapi(), indent=2, sort_keys=True)` plus a newline. Importing the app needs no database: every setting has a default (`config.py:6-25`) and the engine is created in `lifespan`.
-- **Response examples**: every response model (`CurrentUser`, `AuditEntryOut`, `LiveResp`, `ReadyResp`, `ErrorResponse`) sets `json_schema_extra={'examples': [...]}`. `Data[T]`, `Paged[T]`, and `Page` carry none; the mock generator builds them.
-- **`tests/test_openapi.py`**: every component schema except the `Data`, `Paged`, and `Page` wrappers has an example; the committed `openapi.json` equals a fresh export, so drift fails `just test` locally and in `api.yml`'s existing test job.
+- **Response examples**: every model a route returns (`CurrentUser`, `AuditEntryOut`, `LiveResp`, `ReadyResp`) sets `json_schema_extra={'examples': [...]}`. `Data[T]`, `Paged[T]`, and `Page` carry none; the mock generator builds them.
+- **`routes/__init__.py`**: the `api` router documents `422` as `ErrorResponse`, the body the API sends, replacing FastAPI's `HTTPValidationError`.
+- **`tests/test_openapi.py`**: every model a success response returns, looking inside `Data` and `Paged`, has an example; every `422` is `ErrorResponse`; the committed `openapi.json` equals a fresh export, so drift fails `just test` locally and in `api.yml`'s existing test job.
 - **`engineering/client`**:
-  - `openapi-fetch` (dependency); `openapi-typescript` and `msw` (dev). Versions older than `.npmrc`'s 14-day `minimum-release-age`.
+  - `openapi-typescript` and `msw` 2 (dev); `openapi-fetch` comes with its first caller in phase 6. `msw-storybook-addon` 2, the last for Storybook 8, needs `msw` 2.
   - `pnpm generate`: `openapi-typescript ../api/openapi.json -o src/api/schema.d.ts`, then `node scripts/generate-mocks.mjs`.
-  - `scripts/generate-mocks.mjs` writes `src/api/mocks.ts`: one MSW handler per operation, answering its success status with a body built from examples. A `$ref` takes the component's first example; `Data_X_` becomes `{data: X}`; `Paged_X_` becomes `{data: [X], page: {number: 1, size: 25, total: 1}}`; `{state_code}` becomes `:state_code`.
+  - `scripts/generate-mocks.mjs` writes `src/api/mocks.ts`: one MSW handler per operation, answering its success status with a body built from examples. A `$ref` takes the component's first example, with a nullable field FastAPI dropped from it as `null`; an object without an example is built from its properties, so `Data_X_` becomes `{data: X}` and `Paged_X_` becomes `{data: [X], page: {...}}`; `{state_code}` becomes `:state_code`.
   - Generated files open with a header naming `pnpm generate` and are excluded from eslint and coverage.
 - **Root `justfile`**: `just generate` runs `just openapi`, then `pnpm generate`.
 - **`client.yml`**: the PR path filter adds `engineering/api/openapi.json`; the lint job runs `pnpm generate` and fails on `git diff --exit-code src/api`. It needs no Python, since it reads the committed document.

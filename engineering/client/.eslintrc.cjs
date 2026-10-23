@@ -3,6 +3,8 @@
 // below with their reasons; CI runs with --max-warnings 0.
 module.exports = {
   root: true,
+  // Written by `pnpm generate`; CI fails when they differ from the API.
+  ignorePatterns: ["src/api/schema.d.ts", "src/api/mocks.ts"],
   parserOptions: {
     project: "./tsconfig.json",
   },
