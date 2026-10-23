@@ -45,6 +45,46 @@ def test_event_types_match_the_flow_07_catalogue():
     assert {event.value for event in EventType} == _pilot_event_names()
 
 
+# Append-only: every event type a release has emitted. Stored events keep their type forever.
+_SHIPPED_EVENT_TYPES = frozenset(
+    {
+        'practitioner.registered',
+        'practitioner.profile_changed',
+        'practitioner.email_change_requested',
+        'application.submitted',
+        'application.info_requested',
+        'application.resubmitted',
+        'application.eligible',
+        'application.denied',
+        'application.withdrawn',
+        'application.eligibility_withdrawn',
+        'privilege.requested',
+        'payment.declined',
+        'privilege.issued',
+        'privilege.denied',
+        'privilege.deactivated',
+        'privilege.expiring',
+        'privilege.expired',
+        'qualifying_license.status_changed',
+        'adverse_action.reported',
+        'adverse_action.lifted',
+        'sii.flagged',
+        'sii.closed',
+    }
+)
+# Types removed from EventType through the two-release process in the platform contract.
+_RETIRED_EVENT_TYPES: frozenset[str] = frozenset()
+
+
+def test_an_event_type_leaves_only_through_the_two_release_process():
+    current = {event.value for event in EventType}
+    assert not current - _SHIPPED_EVENT_TYPES, 'Add new event types to _SHIPPED_EVENT_TYPES'
+    assert _SHIPPED_EVENT_TYPES - current == _RETIRED_EVENT_TYPES, (
+        'An event type left EventType. Follow "Renaming or removing an event type" in '
+        'engineering/docs/platform-contract.md, then add it to _RETIRED_EVENT_TYPES'
+    )
+
+
 async def test_emit_refuses_without_an_open_transaction(db_session):
     with pytest.raises(OutsideTransactionError):
         await emit(

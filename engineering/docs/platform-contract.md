@@ -47,7 +47,50 @@ Request IDs come from `RequestIdMiddleware`: the caller's `X-Request-ID` when it
 | `HandlerRegistry(handlers)` | `events.py` | Built by the Worker from a constant tuple; rejects duplicate names |
 | `notify(session, ctx, *, template, recipient_email, recipient_user_id=None, context, idempotency_key) -> Notification` | `repo/notification.py` | Queues one email as a `pending` row; the Worker sends it. A repeated key queues nothing and returns the first row. Called from handlers, not routes. Copies the address at call time |
 
-A handler is `async def run(session, ctx, event) -> None`. It is called with the system context and the event's request ID, and must be safe to run twice for the same event. A handler that emails uses `<event_id>:<handler name>` as the idempotency key, so a retry sends once.
+A handler is `async def run(session, ctx, event) -> None`. The Worker's `dispatch_events` calls it with the system context and the event's request ID, inside a savepoint of a transaction it commits ([ADR-0012](../adrs/0012-outbox-dispatcher.md)): a handler never commits, and when it raises, its writes are rolled back and the delivery is retried, then dead-lettered after five attempts. A query that runs longer than 60 seconds is cancelled and counts as a failure. It must be safe to run twice for the same event, and it must cope with events out of order ([below](#handlers-and-event-order)). A handler that emails uses `<event_id>:<handler name>` as the idempotency key, so a retry sends once.
+
+#### Handlers and event order
+
+Nothing makes events reach a handler in the order they were recorded, even for one aggregate. A failed delivery waits at least 30 seconds while later events are delivered, and two Workers deliver at the same time, so a handler can receive `adverse_action.lifted` before `adverse_action.reported`, or run while another handler changes the same row.
+
+A handler that only reports what happened, such as emailing the PA that a privilege was deactivated, is unaffected: the event is the fact it reports. A handler that decides something from state is not, and is written so the order does not matter:
+
+- **Read current state, not the payload.** The payload is what was true when the event was recorded; the row is what is true now.
+- **Lock what the decision reads.** Load the rows with `with_for_update()`, so a handler acting on the same row waits instead of deciding from the same snapshot.
+- **Act only while the reason holds.** When the state that justified the action has gone (the privilege is no longer active, the adverse action was lifted), return without writing. That is a successful delivery, not an error.
+- **Test both orders.** Deliver the events in the order they were recorded and in reverse, and assert the same end state.
+
+A handler that needs strict order for one aggregate cannot be built on this dispatcher; it needs a new ADR.
+
+#### Renaming or removing an event type
+
+Stored events keep their type forever, and the dispatcher does not run a handler for an event whose type is no longer in `EventType`: it logs `outcome=dead_lettered` and moves on. So a rename or removal takes two releases:
+
+1. Add the new type, emit it instead of the old one, and subscribe handlers to both. The old type stays in `EventType`.
+2. Once every event of the old type is delivered, remove it from `EventType` and FLOW-07, and add it to `_RETIRED_EVENT_TYPES` in `tests/test_events.py`. Ship a migration that stops the release while any are still in flight:
+
+```sql
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM domain_events e
+        WHERE e.type = '<old type>'
+          AND (
+              e.dispatched_at IS NULL
+              OR EXISTS (
+                  SELECT 1 FROM domain_event_deliveries d
+                  WHERE d.event_id = e.event_id AND d.handled_at IS NULL
+              )
+          )
+    ) THEN
+        RAISE EXCEPTION '<old type> events are still being delivered';
+    END IF;
+END
+$$;
+```
+
+A dead-lettered delivery counts as in flight: replay or delete it first.
 
 ## Declaring a route
 
