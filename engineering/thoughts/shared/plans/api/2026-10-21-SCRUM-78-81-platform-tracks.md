@@ -16,7 +16,7 @@ Build the four remaining epic 2 tracks on the [platform contract](../../../../do
 
 ## Constitution Check
 
-- **I.** New dependencies each get an ADR with pros and cons per option and a row in the API README table: `boto3`, `jinja2`, `aiosmtplib`, `openapi-typescript`, `openapi-fetch`, `msw`, `msw-storybook-addon`. Raw SQL appears only for `FOR UPDATE SKIP LOCKED` claims, with a comment.
+- **I.** New dependencies each get an ADR with pros and cons per option and a row in the API or client README table: `boto3`, `jinja2`, `aiosmtplib`, `openapi-typescript`, `openapi-fetch`, `msw`, `msw-storybook-addon`. Raw SQL appears only for `FOR UPDATE SKIP LOCKED` claims, with a comment.
 - **II.** Document downloads are scoped in the query: out-of-scope documents are `404`. Persona namespaces are checked by a test, and permissions stay the only check.
 - **III.** Every module at 100% line and branch coverage against real Postgres, RustFS, and maildev. The dispatcher, sender, and scan job are tested by calling them, never by a background loop.
 - **IV.** The Worker, cron, and malware scanner run as Docker Compose services on the same code path as AWS. The malware scanner is local tooling under `engineering/mocks/`. The demo seed lives in `engineering/api/seed/`, which `.dockerignore` already excludes.
@@ -65,6 +65,7 @@ Build the four remaining epic 2 tracks on the [platform contract](../../../../do
 - Feature routes beyond `/commission/audit` and the document routes; each epic owns its own.
 - Wiring `FilePickerField` into a feature page: none exists yet. It is wired to the upload API and shown in Storybook.
 - The holiday calendar's sign-off. ADR-0011 proposes federal holidays for the Commission to confirm.
+- Correcting FLOW-06. It names `abandoned` where the code has `withdrawn`, omits `superseded`, and lists five of the seven deactivation reasons. The demo seed test covers the code's enums; a product ticket fixes the flow.
 
 ## Implementation Approach
 
@@ -125,39 +126,120 @@ Branches follow `feature/SCRUM-<n>-<slug>`; each PR targets the branch below it.
 
 ### Changes Required
 
-- **`licensing_api/routes/__init__.py`**: the persona routers (`/me`, `/public`, `/states/{state_code}`, `/commission`, `/admin`), mounted under `/api`; each resource module attaches to one.
+- **`licensing_api/routes/__init__.py`** (new): `NAMESPACES` maps each persona prefix (`/me`, `/public`, `/states/{state_code}`, `/commission`, `/admin`) to the resource routers under it; `api` mounts them under `/api`, tagged with the prefix's first segment. `/health` stays outside the namespaces. A resource router carries only its resource prefix (`user.router` none, `audit.router` `/audit`), so `/api/me` and `/api/commission/audit` keep their URLs. `__main__.py` mounts `api`.
 - **`licensing_api/permissions.py`**: `Permission.SYSTEM_ADMIN`, held only by the `admin` role, for `/admin`.
-- **`tests/test_route_access.py`**: every `/api` route outside `/health` sits in a namespace; `/public` routes are `public()`, all others signed in; `/states/{state_code}` routes declare `state_param='state_code'`; `/commission` routes need `COMPACT_ADMIN` or `READ_PRIVATE`; `/admin` routes need `SYSTEM_ADMIN`.
-- **`tests/test_responses.py`**: every `/api` route outside `/health` returns `Data`, `Paged`, or no body; `/me` is listed as the one exception until phase 6.
-- Docs: `roles-and-permissions.md` (namespaces, `SYSTEM_ADMIN`), `platform-contract.md`.
+- **`licensing_api/errors.py`, `request_logger.py`**: `ErrorCode.INTERNAL_ERROR`; the unhandled-exception middleware (`request_logger.py:62`) returns `ErrorResponse` instead of `{"detail": ...}`, so every error has one shape.
+- **`tests/test_route_access.py`**: a `_violations(app)` helper applies each namespace's rule using `NAMESPACES` and `route_access(route)`; it runs against the real app and against a throwaway app with one bad route per rule (as `test_permissions.py:101` does), so each rule is shown to fail while its namespace is still empty.
+  - Every `/api` route outside `/api/health` starts with a namespace prefix.
+  - `/public` routes are `public()`; routes in every other namespace are signed in.
+  - `/states/{state_code}` routes declare `state_param='state_code'`.
+  - `/commission` routes need `COMPACT_ADMIN`. `READ_PRIVATE` is not enough: with no state in the path it is checked against the caller's own state (`permissions.py:98-116`), so a state staff member's own-state grant would pass.
+  - `/admin` routes need `SYSTEM_ADMIN`.
+- **`tests/test_responses.py`**: every `/api` route outside `/api/health` has `route.response_model` of `None` or a subclass of `Data` or `Paged`; `/api/me` is the one listed exception until phase 6. A throwaway route returning a bare model fails the check. An unhandled exception returns `{"code", "details"}`.
+- Docs:
+  - `roles-and-permissions.md`: `system_admin` in the `admin` row of Roles (:26) and in Permissions (:32-40), which `test_permissions.py` requires to match the code; a Namespaces section listing each prefix's rule.
+  - `platform-contract.md`: `system_admin` in the `Permission` row (:75); the namespaces under "Declaring a route" (:54).
+  - ADR-0009 (proposed): `admin` holds `system_admin` (:29).
+
+### Success Criteria
+
+#### Automated Verification
+
+- [ ] `just lint` and `just test-coverage` pass, with 100% on `routes/__init__.py`, `permissions.py`, and `request_logger.py`.
+- [ ] Each namespace rule fails its throwaway bad route in `test_route_access.py`.
+
+#### Manual Verification
+
+- [ ] With `just dev`, `GET /api/me` and `GET /api/commission/audit` answer as before.
 
 ## Phase 5: OpenAPI and the generated client (SCRUM-79)
 
 ### Changes Required
 
-- **`engineering/api/scripts/export_openapi.py`** and `just openapi`: writes `engineering/api/openapi.json` from `app.openapi()`, sorted, stable.
-- **`engineering/client`**: `openapi-typescript` writes `src/api/schema.d.ts`; `scripts/generate-mocks.mjs` writes `src/api/mocks.ts`, MSW handlers that answer each operation with the example in its response schema.
-- **`tests/test_openapi.py`**: every response schema carries an example, so every mock has a body.
-- **Root `justfile`**: `just generate` runs both. CI (`api.yml`) runs `just openapi` and fails on `git diff`; `client.yml` regenerates and fails on drift.
+- **`engineering/api/scripts/export_openapi.py`** (new) and `just openapi`: imports `app` and writes `engineering/api/openapi.json` as `json.dumps(app.openapi(), indent=2, sort_keys=True)` plus a newline. Importing the app needs no database: every setting has a default (`config.py:6-25`) and the engine is created in `lifespan`.
+- **Response examples**: every response model (`CurrentUser`, `AuditEntryOut`, `LiveResp`, `ReadyResp`, `ErrorResponse`) sets `json_schema_extra={'examples': [...]}`. `Data[T]`, `Paged[T]`, and `Page` carry none; the mock generator builds them.
+- **`tests/test_openapi.py`**: every component schema except the `Data`, `Paged`, and `Page` wrappers has an example; the committed `openapi.json` equals a fresh export, so drift fails `just test` locally and in `api.yml`'s existing test job.
+- **`engineering/client`**:
+  - `openapi-fetch` (dependency); `openapi-typescript` and `msw` (dev). Versions older than `.npmrc`'s 14-day `minimum-release-age`.
+  - `pnpm generate`: `openapi-typescript ../api/openapi.json -o src/api/schema.d.ts`, then `node scripts/generate-mocks.mjs`.
+  - `scripts/generate-mocks.mjs` writes `src/api/mocks.ts`: one MSW handler per operation, answering its success status with a body built from examples. A `$ref` takes the component's first example; `Data_X_` becomes `{data: X}`; `Paged_X_` becomes `{data: [X], page: {number: 1, size: 25, total: 1}}`; `{state_code}` becomes `:state_code`.
+  - Generated files open with a header naming `pnpm generate` and are excluded from eslint and coverage.
+- **Root `justfile`**: `just generate` runs `just openapi`, then `pnpm generate`.
+- **`client.yml`**: the PR path filter adds `engineering/api/openapi.json`; the lint job runs `pnpm generate` and fails on `git diff --exit-code src/api`. It needs no Python, since it reads the committed document.
 - **ADR-0013** (new): `openapi-typescript` + `openapi-fetch` + example-driven MSW handlers, against orval, hey-api, and `msw-auto-mock`; pros and cons.
+- **`engineering/client/README.md`**: a dependency table in the API README's format (Package, Purpose, Docs), with the three new packages and `msw-storybook-addon` from phase 6.
+
+### Success Criteria
+
+#### Automated Verification
+
+- [ ] `just lint`, `just test-coverage`; `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm test:coverage`.
+- [ ] `just generate` run twice leaves `git status` clean.
+- [ ] Adding a field to `CurrentUser` without regenerating fails `test_openapi.py`.
+
+#### Manual Verification
+
+- [ ] `src/api/mocks.ts` answers `/api/me` and `/api/commission/audit` with the examples.
 
 ## Phase 6: The app on the generated client (SCRUM-79)
 
 ### Changes Required
 
-- **`client/src/lib/api.ts`**: an `openapi-fetch` client whose middleware adds the Cognito token; `authFetch` stays for non-JSON calls.
-- **`routes/user.py`** returns `Data[CurrentUser]`; `client/src/app/page.tsx` reads `data` through the client; the envelope test's `/me` exception is removed.
-- **Storybook**: `msw-storybook-addon` in `.storybook/preview.ts`; the dashboard story renders against the generated handlers with a stubbed session.
+- **`client/src/lib/api.ts`**: `api`, an `openapi-fetch` client on `paths` with `baseUrl` from `NEXT_PUBLIC_API_BASE_URL`; its `onRequest` middleware adds the ID token from `getCurrentSession()` and throws `Not authenticated` without one, as `authFetch` does. `authFetch` stays for non-JSON calls.
+- **`routes/user.py`**: `get_me` returns `Data[CurrentUser]`; regenerate. The envelope test's `/me` exception is removed.
+- **`client/src/app/page.tsx`**: drops the hand-written `CurrentUser` (:9-17) for `components['schemas']['CurrentUser']` and reads `data.data` from `api.GET('/api/me')`.
+- **Client tests**: `src/tests/setup.ts` starts an MSW `setupServer` with the generated handlers and `onUnhandledRequest: 'error'`. `page.test.tsx` uses the generated `/api/me` handler, with `server.use` for the error case, in place of mocking `authFetch`; `api.test.ts` covers the middleware.
+- **Storybook**:
+  - `msw-storybook-addon` (dev). `msw init` writes the worker to `.storybook/public/`, served through `staticDirs` in `main.ts`, so it never ships in the client build.
+  - `preview.ts`: `initialize()`, `loaders: [mswLoader]`, and the generated handlers in `parameters.msw.handlers`.
+  - `main.ts`: `webpackFinal` adds a `NormalModuleReplacementPlugin` that swaps `src/lib/auth` for `.storybook/mocks/auth.ts`, whose `getCurrentSession()` returns a fixed session. `AuthProvider` and the client middleware both import it, so no production code changes.
+  - `home.stories.tsx`: the dashboard with the generated handlers, and a story where `/api/me` answers `403`.
+- **Deploy order**: the API and client deploy to DEV separately on merge, so the dashboard shows an error between the two deploys. Acceptable in DEV; the PR says so.
+
+### Success Criteria
+
+#### Automated Verification
+
+- [ ] `just lint`, `just test-coverage`; `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm test:coverage`.
+- [ ] `pnpm build-storybook` succeeds.
+
+#### Manual Verification
+
+- [ ] `pnpm storybook` with no API running renders the dashboard with the example user, and the error story shows the error.
+- [ ] `just up`: the dashboard shows the signed-in user.
 
 ## Phase 7: The demo seed (SCRUM-79)
 
 ### Changes Required
 
-- **`engineering/api/seed/demo.py`**: `async def seed(session) -> list[Expected]`, deterministic, dates relative to `compact_today()`. Members KS, OK, MO, CO live; fees; one practitioner per application status and per computed privilege status; adverse actions in force, ended within two years, ended earlier, and on a privilege; SII; history rows through `history.write`. Writes no events, so no email goes out.
-- **`just seed`**: runs `seed/<name>.py` when it exists, else `seed/<name>.sql`.
-- **`engineering/mocks/cognito/db/local_licensing.json`**: demo PA and state staff logins.
-- **`tests/test_demo_seed.py`**: on an empty schema, each `Expected` matches `v_privilege_status`, `v_qualifying_license_status`, `v_compact_eligibility`, and every status in FLOW-06 is covered.
-- **`docs/demo.md`**: the sprint-review script.
+- **`engineering/api/seed/demo.py`**: `async def seed(session) -> list[Expected]`, deterministic, dates relative to `days.compact_today(session)`. It flushes and leaves the commit to its caller; run as a script, it opens a session from `settings`, seeds, commits, and prints a summary.
+  - Refuses to run when any practitioner exists. A migrated database already holds the system user, the 56 states, and the reference rows; "empty" means no domain data.
+  - Writes as `system_context(session)`. The repo has no create functions and `tests/factories.py` writes no history, so a local helper adds each row and calls `history.write(..., before=None)`. It never calls `emit`, so no email goes out.
+  - States: KS, OK, MO, CO set `is_member`, `member_effective_on`, `is_live`, with history. Fees: the Commission participation fee and each live state's privilege fee.
+  - Users: one `licensee` per practitioner; KS `state_staff` with `{"KS": ["read_private", "write"]}`, KS `state_admin`, OK `state_staff`.
+  - Coverage, from the code's enums rather than FLOW-06 (see What We're NOT Doing):
+    - one application per `ApplicationStatus` (8), with the fields each status's check constraint requires; the `superseded` practitioner also holds the `eligible` change-of-SQL application;
+    - one privilege request per `PrivilegeRequestStatus` (5);
+    - one privilege per `PrivilegeComputedStatus` (4), the encumbered one through an adverse action on the privilege;
+    - one qualifying license per `LicenseComputedStatus` (6);
+    - eligibility: not barred, barred open-ended, barred until a date (action ended within two years), bar ended (ended earlier);
+    - an open and a closed SII report.
+  - An in-force license adverse action leaves that practitioner's privileges `inactive` with `qualifying_license_adverse_action`, set directly, because `deactivate_privileges` emits events.
+  - If the module passes 600 lines, the scenarios split into `seed/demo_*.py` modules.
+- **`just seed`** (`engineering/api/justfile:26-28`): runs `uv run --env-file .env python seed/<name>.py` when it exists, else pipes `seed/<name>.sql` into `psql` as today. `just up` keeps seeding `users`.
+- **`engineering/mocks/cognito/db/local_licensing.json`**: entries for the demo staff and two PAs, password `Local-Passw0rd!`.
+- **`tests/test_demo_seed.py`**: runs `seed` in `db_session` (rolled back). Each `Expected` matches its row in `v_privilege_status`, `v_qualifying_license_status`, `v_compact_eligibility`, or the stored application and request status; each enum above and the four eligibility cases are covered in full; a second run raises.
+- **`docs/demo.md`**: which login shows which scenario, and the sprint-review script.
+
+### Success Criteria
+
+#### Automated Verification
+
+- [ ] `just lint`, `just test-coverage`; `test_demo_seed.py` passes.
+
+#### Manual Verification
+
+- [ ] `just infra`, `just migrate`, `just seed demo`; signing in as KS staff and as a demo PA shows the statuses `docs/demo.md` lists.
 
 ## Phase 8: The Worker and jobs (SCRUM-80)
 
