@@ -200,6 +200,18 @@
         "title": "CurrentUser",
         "type": "object"
       },
+      "Data_CurrentUser_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CurrentUser"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Data[CurrentUser]",
+        "type": "object"
+      },
       "ErrorCode": {
         "description": "The machine-readable ``code`` in every error response.",
         "enum": [
@@ -601,7 +613,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CurrentUser"
+                  "$ref": "#/components/schemas/Data_CurrentUser_"
                 }
               }
             },

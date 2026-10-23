@@ -23,7 +23,7 @@ def test_me_returns_active_user(client, auth_header, route_db_session):
     response = client.get('/api/me', headers=auth_header(email))
 
     assert response.status_code == 200
-    user = CurrentUser.model_validate(response.json())
+    user = CurrentUser.model_validate(response.json()['data'])
     assert user.email == email
     assert user.given_name == 'Gustavo'
     assert user.family_name == 'Torrico'
@@ -47,7 +47,7 @@ def test_me_backfills_public_id_on_first_login(client, auth_header, route_db_ses
     response = client.get('/api/me', headers=auth_header(email))
 
     assert response.status_code == 200
-    assert response.json()['user_id'] is not None
+    assert response.json()['data']['user_id'] is not None
 
 
 def test_route_writes_are_rolled_back(client, auth_header, route_db_session):

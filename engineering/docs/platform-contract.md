@@ -132,7 +132,7 @@ async def list_applications(
 | `page_query(*sortable, default_sort)` | Reads `?page=` (from 1), `?page_size=` (1–100, default 25), `?sort=field,-field`; an unlisted sort field is `422 VALIDATION_ERROR` |
 | `paginate(session, statement, query, columns, tiebreaker) -> (rows, total)` | `columns` maps sort names to columns; `tiebreaker` is a unique column sorted last |
 
-`/me` still returns its body unwrapped: the deployed client reads that shape, and `.4` moves it to `Data` with the regenerated client.
+Every `/api` route outside `/api/health` returns `Data`, `Paged`, or no body; `tests/test_responses.py` fails one that does not. Every model a route returns carries an example (`json_schema_extra`), which the client's generated mocks answer with ([ADR-0013](../adrs/0013-generated-api-client-and-mocks.md)).
 
 ## Counting days
 
