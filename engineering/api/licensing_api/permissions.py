@@ -33,6 +33,8 @@ class Role(StrEnum):
 
 
 class Permission(StrEnum):
+    """What a caller may do: granted by role in every state (``ROLE_PERMISSIONS``), or per state in ``users.permissions``."""
+
     # Granted by role, in every state.
     # Act on the caller's own practitioner record; the route's query limits it to theirs.
     MANAGE_OWN_RECORD = 'manage_own_record'

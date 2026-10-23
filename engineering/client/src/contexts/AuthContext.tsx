@@ -44,6 +44,7 @@ function sessionToState(
   };
 }
 
+/** Holds the signed-in user's session, restoring it on load, and exposes sign-in and sign-out. */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>({
     isLoading: true,
@@ -105,6 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+/** The current auth state and actions; must be used inside `AuthProvider`. */
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");

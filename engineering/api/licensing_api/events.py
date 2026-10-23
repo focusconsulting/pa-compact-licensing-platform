@@ -54,4 +54,5 @@ class HandlerRegistry:
         self._handlers = tuple(by_name.values())
 
     def for_event(self, event_type: EventType) -> tuple[Handler, ...]:
+        """The handlers that consume ``event_type``, in the order they were registered."""
         return tuple(h for h in self._handlers if event_type in h.event_types)

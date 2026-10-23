@@ -20,6 +20,8 @@ class Data[T](BaseModel):
 
 
 class Page(BaseModel):
+    """Where a page sits in a list: its 1-based ``number``, its ``size``, and the ``total`` count across all pages."""
+
     number: int
     size: int
     total: int
@@ -34,6 +36,8 @@ class Paged[T](BaseModel):
 
 @dataclass(frozen=True)
 class SortKey:
+    """One field in a ``sort`` parameter, and whether it sorts descending."""
+
     field: str
     descending: bool
 
@@ -48,9 +52,11 @@ class PageQuery:
 
     @property
     def offset(self) -> int:
+        """The number of rows to skip to reach this page."""
         return (self.page - 1) * self.page_size
 
     def page_of(self, total: int) -> Page:
+        """The ``Page`` metadata for this request, given the ``total`` count."""
         return Page(number=self.page, size=self.page_size, total=total)
 
 

@@ -5,6 +5,7 @@ export interface CardProps {
   className?: string;
 }
 
+/** A white, rounded, shadowed panel around its children. */
 function Card({ children, className }: CardProps) {
   return (
     <div

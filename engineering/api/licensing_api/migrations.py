@@ -11,6 +11,7 @@ _MIGRATIONS_DIR = Path(__file__).parent.parent / 'db-migrations'
 
 
 def run_migrations() -> None:
+    """Apply pending yoyo migrations, then run the post-apply hooks, holding yoyo's lock so one task migrates at a time."""
     logger.info('Running database migrations (environment=%s)', settings.environment)
     backend = yoyo.get_backend(settings.sync_db_url)
     all_migrations = yoyo.read_migrations(str(_MIGRATIONS_DIR))

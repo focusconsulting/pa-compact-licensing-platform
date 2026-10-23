@@ -14,6 +14,7 @@ module.exports = {
     "plugin:storybook/recommended",
     "prettier",
   ],
+  plugins: ["jsdoc"],
   rules: {
     // TypeScript optional props make undefined explicit, and React 19 drops
     // defaultProps for function components.
@@ -26,6 +27,19 @@ module.exports = {
     "react/jsx-props-no-spreading": [
       "error",
       { exceptions: ["FormProvider", "TextInput"] },
+    ],
+    // Every exported function and component says what it does (2xz.4).
+    "jsdoc/require-jsdoc": [
+      "error",
+      {
+        publicOnly: true,
+        require: {
+          FunctionDeclaration: true,
+          ArrowFunctionExpression: true,
+          FunctionExpression: true,
+          ClassDeclaration: true,
+        },
+      },
     ],
     // `void promise;` marks a promise deliberately left floating.
     "no-void": ["error", { allowAsStatement: true }],
@@ -47,4 +61,10 @@ module.exports = {
       },
     ],
   },
+  overrides: [
+    {
+      files: ["**/*.test.{ts,tsx}", "src/tests/**", "**/*.stories.{ts,tsx}"],
+      rules: { "jsdoc/require-jsdoc": "off" },
+    },
+  ],
 };

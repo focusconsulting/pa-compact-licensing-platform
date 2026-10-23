@@ -15,14 +15,19 @@ router = APIRouter(prefix='/health', tags=['health'], dependencies=[public()])
 
 
 class LiveResp(BaseModel):
+    """The liveness response: ``status`` is always ``ok``."""
+
     status: str
 
 
 class ReadyResp(BaseModel):
+    """The readiness response: whether the database answered."""
+
     db: bool
 
 
 async def check_postgres(engine: AsyncEngine) -> bool:
+    """Whether the database answers ``SELECT 1``; logs the error and returns False if it does not."""
     try:
         async with engine.connect() as conn:
             await conn.execute(text('SELECT 1'))
@@ -38,6 +43,7 @@ async def check_postgres(engine: AsyncEngine) -> bool:
     description='Check whether the application is ready to receive requests',
 )
 async def live() -> LiveResp:
+    """Return ``ok`` whenever the application is serving requests."""
     return LiveResp(status='ok')
 
 
@@ -49,4 +55,5 @@ async def live() -> LiveResp:
 async def ready(
     engine: Annotated[AsyncEngine, Depends(get_db_engine)],
 ) -> ReadyResp:
+    """Return whether the database answers a query."""
     return ReadyResp(db=await check_postgres(engine))

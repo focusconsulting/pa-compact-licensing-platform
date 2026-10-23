@@ -16,6 +16,10 @@ export interface SelectFieldProps {
   showValuesInLabels?: boolean;
 }
 
+/**
+ * A labelled USWDS select of `[value, label]` options. Registers with the
+ * surrounding form unless given its own `onChange` or `inputRef`.
+ */
 export function SelectField({
   id,
   label,

@@ -33,6 +33,10 @@ function getFormValues(formVal: string) {
   return [value, displayValue];
 }
 
+/**
+ * A read-only labelled value. With `asCurrentDateInput`, shows the form's date
+ * (MM/DD/YYYY), defaulting the form value to today.
+ */
 function DisplayField({
   id,
   label,

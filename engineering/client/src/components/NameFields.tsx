@@ -11,6 +11,7 @@ export interface NameFieldsProps {
   label: string;
 }
 
+/** First, middle (optional), and last name inputs in one fieldset. */
 function NameFields({ id, className, label }: NameFieldsProps) {
   const { t } = useTranslation(["common", "basic"]);
 

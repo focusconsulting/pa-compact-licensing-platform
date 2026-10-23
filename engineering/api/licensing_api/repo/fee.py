@@ -10,6 +10,8 @@ from licensing_api.repo.base import AuditColumns
 
 
 class FeeType(StrEnum):
+    """What a fee is charged for (``fee_type``)."""
+
     # The SQL and Commission fees to apply for participation (Rule 3 §3.4(a)(7)).
     PARTICIPATION = 'participation'
     # The remote state and Commission fees per privilege (Rule 3 §3.4(c)(4)).

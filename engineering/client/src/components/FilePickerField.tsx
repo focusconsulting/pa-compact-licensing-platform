@@ -14,6 +14,10 @@ export interface FilePickerFieldProps {
   disabled?: boolean;
 }
 
+/**
+ * A USWDS file input that stores the chosen file's name in the form, and shows
+ * a previously chosen file from the form's default values.
+ */
 export function FilePickerField({
   id,
   label,
