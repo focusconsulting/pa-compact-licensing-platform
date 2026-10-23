@@ -13,7 +13,7 @@ from licensing_api.repo.pagination import paginate
 from licensing_api.repo.user import User, emails_by_id, get_user_by_email
 from licensing_api.responses import Paged, PageQuery, page_query
 
-router = APIRouter(prefix='/commission/audit', tags=['commission'])
+router = APIRouter(prefix='/audit')
 
 
 class AuditEntryOut(BaseModel):
