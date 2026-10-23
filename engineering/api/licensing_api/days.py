@@ -26,6 +26,7 @@ async def compact_today(session: AsyncSession) -> date:
 
 
 async def reference_time_zone(session: AsyncSession) -> ZoneInfo:
+    """The reference time zone from compact settings, in which every day is decided (ADR-0006)."""
     statement = select(col(CompactSettings.time_zone)).where(
         col(CompactSettings.id) == COMPACT_SETTINGS_ID
     )
@@ -40,6 +41,7 @@ def compact_date_at(instant: datetime, time_zone: ZoneInfo) -> date:
 
 
 def add_days(day: date, days: int) -> date:
+    """The calendar day ``days`` days after ``day`` (before it when negative)."""
     return day + timedelta(days=days)
 
 
@@ -49,6 +51,7 @@ def days_between(start: date, end: date) -> int:
 
 
 def is_business_day(day: date) -> bool:
+    """Whether ``day`` is a weekday that is not an observed federal holiday (ADR-0011)."""
     return day.weekday() < _SATURDAY and day not in federal_holidays(day.year)
 
 
