@@ -1,13 +1,16 @@
-"""Response shapes, page_query(), and paginate() (backlog D3)."""
+"""Response shapes, page_query(), and paginate() (backlog D3). Every /api route answers with Data, Paged, or no body."""
 
 from typing import Annotated
 
 import pytest
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
+from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
+from pydantic import BaseModel
 from sqlmodel import col, select
 
+from licensing_api.__main__ import app
 from licensing_api.errors import AppError, ErrorCode, app_error_handler, validation_error_handler
 from licensing_api.repo.pagination import paginate
 from licensing_api.repo.state import State
@@ -121,3 +124,55 @@ async def test_paginate_sorts_descending_and_breaks_ties(db_session):
 
 def test_a_page_reports_its_position():
     assert PageQuery(page=1, page_size=25, sort=()).page_of(0) == Page(number=1, size=25, total=0)
+
+
+# Routes still answering with a bare body. /api/me moves to Data with the generated client (SCRUM-79).
+_UNWRAPPED = {'/api/me'}
+
+
+def _bare_bodies(routes: list) -> list[str]:
+    """The /api routes outside /api/health whose body is neither Data, Paged, nor empty."""
+    return [
+        route.path
+        for route in routes
+        if isinstance(route, APIRoute)
+        and route.path.startswith('/api')
+        and not route.path.startswith('/api/health')
+        and route.path not in _UNWRAPPED
+        and not (route.response_model is None or issubclass(route.response_model, (Data, Paged)))
+    ]
+
+
+def test_every_api_route_answers_with_data_paged_or_no_body():
+    assert _bare_bodies(app.routes) == []
+
+
+class _Thing(BaseModel):
+    name: str
+
+
+_shapes = FastAPI()
+
+
+@_shapes.get('/api/data', name='Data', description='One thing')
+async def one() -> Data[_Thing]:
+    return Data(data=_Thing(name='a'))
+
+
+@_shapes.get('/api/paged', name='Paged', description='A page of things')
+async def many() -> Paged[_Thing]:
+    return Paged(data=[], page=Page(number=1, size=25, total=0))
+
+
+@_shapes.delete('/api/empty', name='Empty', description='No body', status_code=204)
+async def empty() -> None:
+    return None
+
+
+@_shapes.get('/api/bare', name='Bare', description='A bare thing')
+async def bare() -> _Thing:
+    return _Thing(name='a')
+
+
+def test_only_a_bare_body_breaks_the_envelope():
+    assert _bare_bodies(_shapes.routes) == ['/api/bare']

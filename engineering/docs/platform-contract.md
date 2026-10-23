@@ -96,10 +96,11 @@ A dead-lettered delivery counts as in flight: replay or delete it first.
 
 ## Declaring a route
 
-`licensing_api/permissions.py`. Every `/api` route declares who may call it; `tests/test_route_access.py` fails on one that does not. What each role and permission means is in [Roles and Permissions](roles-and-permissions.md).
+`licensing_api/permissions.py`. Every `/api` route declares who may call it, and sits under a persona namespace (`/me`, `/public`, `/states/{state_code}`, `/commission`, `/admin`) whose rule its declaration meets; `tests/test_route_access.py` fails on one that does not. A resource router carries only its own prefix and is listed under its namespace in `licensing_api/routes/__init__.py`. What each role, permission, and namespace means is in [Roles and Permissions](roles-and-permissions.md).
 
 ```python
-@router.get('/states/{state_code}/applications', name=..., description=...)
+# applications.router, listed under '/states/{state_code}': GET /api/states/{state_code}/applications
+@router.get('/applications', name=..., description=...)
 async def list_applications(
     state_code: str,
     caller: Annotated[User, require(Permission.READ_PRIVATE, state_param='state_code')],
@@ -115,7 +116,7 @@ async def list_applications(
 |---|---|
 | `require(permission=None, *, state_param=None)` | Yields the caller's `User` (from `current_user`). The caller passes when they hold `permission` through their role or as a grant in the route's state: the `state_param` path state, or their own. With no `permission`, any active user passes. Unknown user `403 USER_NOT_FOUND`, inactive `403 USER_INACTIVE`, missing permission `403 FORBIDDEN` |
 | `public()` | For a route anyone may call, signed in or not; use in `dependencies=[...]` |
-| `Permission` | What a route asks for. `manage_own_record`, `read_general`, `compact_admin` come from a role; `read_private`, `read_ssn`, `write`, `admin` are granted per state in `users.permissions` (the Commission roles also hold `read_private` everywhere) |
+| `Permission` | What a route asks for. `manage_own_record`, `read_general`, `compact_admin`, `system_admin` come from a role; `read_private`, `read_ssn`, `write`, `admin` are granted per state in `users.permissions` (the Commission roles also hold `read_private` everywhere) |
 | `ROLE_PERMISSIONS` | Each role's permissions. A role is never checked directly: change what a role may do here, not in routes |
 
 `require` decides who may call a route, not which rows they see: a record outside the caller's scope is filtered by the route's query and returns `404` (constitution Principle II).

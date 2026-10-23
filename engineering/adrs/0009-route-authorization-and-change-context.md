@@ -26,7 +26,7 @@ Checking permissions per request means every authenticated request loads the cal
 ## Decision
 
 1. **Routes name permissions, never roles.** `require(permission=None, *, state_param=None)` is the dependency every authenticated route declares, and yields the caller's `User`. A role is a named set of permissions, fixed in code (`ROLE_PERMISSIONS`); staff also hold per-state grants in `users.permissions[<state>]` (D5). A caller passes when they hold `permission` through their role or in the route's state: the path parameter named by `state_param`, or their own `state_code` when there is none.
-   - Role permissions: `licensee` has `manage_own_record`; `state_staff` and `state_admin` have `read_general`; `compact_admin` and `admin` have `read_general`, `read_private`, and `compact_admin`.
+   - Role permissions: `licensee` has `manage_own_record`; `state_staff` and `state_admin` have `read_general`; `compact_admin` has `read_general`, `read_private`, and `compact_admin`; `admin` has those and `system_admin`, for the `/admin` routes.
    - Per-state grants: `read_private`, `read_ssn`, `write`, `admin`.
    - Unknown user `403 USER_NOT_FOUND`; inactive `403 USER_INACTIVE`; missing permission `403 FORBIDDEN`. `require()` with no permission admits any active user.
    - Commission users reach state data only through the permissions their role grants: `read_private` lets them read any state's records; nothing in their role lets them write a state's records (constitution Principle VII).

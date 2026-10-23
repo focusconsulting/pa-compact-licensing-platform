@@ -25,7 +25,7 @@ class CurrentUser(BaseModel):
 
 
 @router.get(
-    path='/me',
+    path='',
     name='Get current user',
     description='Returns information about the current user',
 )

@@ -42,6 +42,8 @@ class Permission(StrEnum):
     READ_GENERAL = 'read_general'
     # Configure the compact: fees, which states are live, report lists, privilege overrides.
     COMPACT_ADMIN = 'compact_admin'
+    # Operate the system: the /admin routes. Only the admin role holds it.
+    SYSTEM_ADMIN = 'system_admin'
     # Granted per state in users.permissions (D5); READ_PRIVATE also comes with the Commission roles.
     # See private fields: date of birth, address, and the SSN's last four digits.
     READ_PRIVATE = 'read_private'
@@ -63,7 +65,12 @@ ROLE_PERMISSIONS: Mapping[Role, frozenset[Permission]] = {
         {Permission.READ_GENERAL, Permission.READ_PRIVATE, Permission.COMPACT_ADMIN}
     ),
     Role.ADMIN: frozenset(
-        {Permission.READ_GENERAL, Permission.READ_PRIVATE, Permission.COMPACT_ADMIN}
+        {
+            Permission.READ_GENERAL,
+            Permission.READ_PRIVATE,
+            Permission.COMPACT_ADMIN,
+            Permission.SYSTEM_ADMIN,
+        }
     ),
 }
 
