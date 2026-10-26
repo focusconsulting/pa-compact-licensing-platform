@@ -17,7 +17,7 @@ async def test_unhandled_exception_is_logged_and_becomes_a_500(caplog):
             response = await client.get('/anything')
 
     assert response.status_code == 500
-    assert response.json() == {'detail': 'Internal server error'}
+    assert response.json() == {'code': 'INTERNAL_ERROR', 'details': ['Internal server error']}
     assert any(r.message == 'Unhandled exception' and r.exc_info for r in caplog.records)
 
 
