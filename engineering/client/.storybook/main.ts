@@ -1,23 +1,20 @@
 import type { StorybookConfig } from "@storybook/nextjs";
-import path from "path";
+import { fileURLToPath } from "node:url";
 
 const config: StorybookConfig = {
   stories: ["../src/**/*.mdx", "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
   addons: [
     "@storybook/addon-onboarding",
     "@storybook/addon-links",
-    "@storybook/addon-essentials",
     "@chromatic-com/storybook",
-    "@storybook/addon-interactions",
   ],
   framework: {
     name: "@storybook/nextjs",
     options: {
-      nextConfigPath: path.resolve(__dirname, "../next.config.js"),
+      nextConfigPath: fileURLToPath(
+        new URL("../next.config.js", import.meta.url),
+      ),
     },
-  },
-  docs: {
-    autodocs: "tag",
   },
 };
 export default config;
