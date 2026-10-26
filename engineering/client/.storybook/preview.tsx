@@ -4,7 +4,7 @@ import "../src/styles/styles.scss";
  * @file Setup the toolbar, styling, and global context for each Storybook story.
  * @see https://storybook.js.org/docs/configure#configure-story-rendering
  */
-import { Preview } from "@storybook/react";
+import { Preview } from "@storybook/nextjs";
 import { initialize, mswLoader } from "msw-storybook-addon";
 
 import { handlers } from "../src/api/mocks";

@@ -1,8 +1,8 @@
 import type { StorybookConfig } from "@storybook/nextjs";
-import path from "path";
+import { fileURLToPath } from "node:url";
 
-const AUTH = path.resolve(__dirname, "../src/lib/auth.ts");
-const SIGNED_IN = path.resolve(__dirname, "mocks/auth.ts");
+const AUTH = fileURLToPath(new URL("../src/lib/auth.ts", import.meta.url));
+const SIGNED_IN = fileURLToPath(new URL("mocks/auth.ts", import.meta.url));
 
 type Tap<T> = { tap: (name: string, callback: (arg: T) => void) => void };
 type Compiler = {
@@ -37,18 +37,15 @@ const config: StorybookConfig = {
   addons: [
     "@storybook/addon-onboarding",
     "@storybook/addon-links",
-    "@storybook/addon-essentials",
     "@chromatic-com/storybook",
-    "@storybook/addon-interactions",
   ],
   framework: {
     name: "@storybook/nextjs",
     options: {
-      nextConfigPath: path.resolve(__dirname, "../next.config.js"),
+      nextConfigPath: fileURLToPath(
+        new URL("../next.config.js", import.meta.url),
+      ),
     },
-  },
-  docs: {
-    autodocs: "tag",
   },
   // The app's assets (USWDS fonts), and MSW's service worker, kept out of the
   // app's public/ so it never ships.
