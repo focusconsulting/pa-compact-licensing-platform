@@ -71,7 +71,7 @@
     "serve": "^14.2.6",
     "storybook": "^8.6.18",
     "stylelint": "^16.26.1",
-    "stylelint-config-standard-scss": "^15.0.1",
+    "stylelint-config-standard-scss": "^16.0.0",
     "typescript": "^5",
     "vitest": "^3.2.1"
   },
