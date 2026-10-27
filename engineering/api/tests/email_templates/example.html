@@ -1,0 +1,4 @@
+{% extends 'base.html' %}
+{% block body %}<p>Hello {{ practitioner_name }},</p>
+<p>We received your application. <a href="{{ client_base_url }}/applications/{{ application_id }}">Track your application</a>.</p>
+{% endblock %}

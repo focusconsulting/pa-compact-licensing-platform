@@ -161,6 +161,7 @@ just --list
 | [opentelemetry-exporter-otlp-proto-grpc](https://opentelemetry-python.readthedocs.io/) | Export traces/metrics to ADOT sidecar via gRPC | <https://opentelemetry-python.readthedocs.io/> |
 | [python-jose[cryptography]](https://python-jose.readthedocs.io/en/latest/)        | JWT validation (Cognito ID tokens) | <https://python-jose.readthedocs.io/en/latest/>             |
 | [httpx](https://www.python-httpx.org/)                                            | HTTP client (JWKS fetching)     | <https://www.python-httpx.org/>                                |
+| [Jinja](https://jinja.palletsprojects.com/en/stable/)                             | Email templates ([ADR-0014](../adrs/0014-email-templates-and-smtp.md)) | <https://jinja.palletsprojects.com/en/stable/> |
 | [uv](https://docs.astral.sh/uv/)                                                  | Dependency management           | <https://docs.astral.sh/uv/>                                   |
 | [pytest](https://docs.pytest.org/en/9.0.x/)                                       | Test framework                  | <https://docs.pytest.org/en/9.0.x/>                            |
 | [pytest-asyncio](https://pytest-asyncio.readthedocs.io/en/stable/)                | Async test support              | <https://pytest-asyncio.readthedocs.io/en/stable/>             |

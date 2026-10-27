@@ -1,4 +1,4 @@
-"""The Worker: delivers outbox events to their handlers (D2, D8, ADR-0012).
+"""The Worker: delivers outbox events to their handlers and sends queued email (D2, D7, D8, ADR-0012).
 
 ``python -m licensing_api.worker`` runs it until SIGTERM or SIGINT; ``just worker`` runs it locally.
 """
@@ -16,11 +16,12 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlmodel import col, select
 
-from licensing_api.config import settings
+from licensing_api.config import Settings, settings
 from licensing_api.context import system_context
 from licensing_api.events import HandlerRegistry
 from licensing_api.handlers import HANDLERS
 from licensing_api.logging_config import configure_logging
+from licensing_api.notifications.sender import send_pending
 from licensing_api.repo.domain_event import DomainEvent, DomainEventDelivery, EventType
 
 logger = logging.getLogger(__name__)
@@ -48,7 +49,10 @@ async def main() -> None:
     engine = create_async_engine(settings.db_url, pool_pre_ping=True)
     try:
         await run_worker(
-            async_sessionmaker(engine, expire_on_commit=False), HandlerRegistry(HANDLERS), stop
+            async_sessionmaker(engine, expire_on_commit=False),
+            HandlerRegistry(HANDLERS),
+            settings,
+            stop,
         )
     finally:
         await engine.dispose()
@@ -59,18 +63,22 @@ async def main() -> None:
 async def run_worker(
     session_factory: async_sessionmaker[AsyncSession],
     registry: HandlerRegistry,
+    settings: Settings,
     stop: asyncio.Event,
     *,
     idle_poll_interval: timedelta = IDLE_POLL_INTERVAL,
 ) -> None:
-    """Deliver events until ``stop`` is set, waiting ``idle_poll_interval`` whenever none are due.
+    """Deliver events and send email until ``stop`` is set, waiting ``idle_poll_interval`` whenever neither is due.
 
     ``stop`` is checked between batches, so a delivery in progress always finishes and
     commits; ECS waits 30 seconds after SIGTERM before it kills the task.
     """
     logger.info('Worker started')
     while not stop.is_set():
-        if await dispatch_events(session_factory, registry) == 0:
+        attempted = await dispatch_events(session_factory, registry)
+        # After dispatch, so email a handler has just queued goes out in the same pass.
+        sent = await send_pending(session_factory, settings)
+        if attempted == 0 and sent == 0:
             with suppress(TimeoutError):
                 await asyncio.wait_for(stop.wait(), idle_poll_interval.total_seconds())
     logger.info('Worker stopped')

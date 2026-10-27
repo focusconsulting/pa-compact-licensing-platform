@@ -1,0 +1,6 @@
+{% extends 'base.txt' %}
+{% block subject %}Your application to {{ state_name }} was received{% endblock %}
+{% block body %}Hello {{ practitioner_name }},
+
+We received your application. Track it at {{ client_base_url }}/applications/{{ application_id }}.
+{% endblock %}

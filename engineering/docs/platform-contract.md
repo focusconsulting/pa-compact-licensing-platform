@@ -172,6 +172,8 @@ async def send_pending(
     Returns the number sent."""
 ```
 
+Implemented: the Worker process runs `dispatch_events` then `send_pending` until SIGTERM (`just worker`), and `python -m licensing_api.jobs run <name>` runs a scheduled job (`just job <name>`). Templates are Jinja files rendered with a test-system banner outside PROD, sent over SMTP with the standard library ([ADR-0014](../adrs/0014-email-templates-and-smtp.md)).
+
 ### `.6` documents
 
 Builds on `require` (download permission, with record scoping in the query), `ChangeContext`, `history.write` (documents are part of the retained record), and `audit_log.write` (a staff download of a private document is a read that is audited).
