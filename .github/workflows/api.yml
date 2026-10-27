@@ -147,3 +147,42 @@ jobs:
           service: ${{ vars.ECS_SERVICE }}
           cluster: ${{ vars.ECS_CLUSTER }}
           wait-for-service-stability: true
+
+      # The Worker and jobs run the same image (backlog D8). The API deploys first: its
+      # startup applies the migrations the new Worker and jobs code expects.
+      - name: Download Worker and jobs task definitions
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ vars.ECS_WORKER_TASK_DEFINITION }} \
+            --query taskDefinition > worker-task-definition.json
+          aws ecs describe-task-definition --task-definition ${{ vars.ECS_JOBS_TASK_DEFINITION }} \
+            --query taskDefinition > jobs-task-definition.json
+
+      - name: Render new Worker task definition
+        id: worker-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: worker-task-definition.json
+          container-name: licensing-worker
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy the Worker
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.worker-task-def.outputs.task-definition }}
+          service: ${{ vars.ECS_WORKER_SERVICE }}
+          cluster: ${{ vars.ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+      - name: Render new jobs task definition
+        id: jobs-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: jobs-task-definition.json
+          container-name: licensing-jobs
+          image: ${{ steps.build-image.outputs.image }}
+
+      # No service: registering the revision is enough, since each schedule runs the latest one.
+      - name: Register the jobs task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.jobs-task-def.outputs.task-definition }}
