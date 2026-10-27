@@ -90,8 +90,8 @@ async def db_session(client) -> AsyncGenerator[AsyncSession]:
     await engine.dispose()
 
 
-# Tables the Worker's code writes in its own transactions, in the order their rows are deleted.
-_WORKER_TABLES = ('notifications', 'domain_event_deliveries', 'domain_events')
+# Tables the Worker's and jobs' code writes in their own transactions, in the order their rows are deleted.
+_WORKER_TABLES = ('job_runs', 'notifications', 'domain_event_deliveries', 'domain_events')
 
 
 @pytest.fixture

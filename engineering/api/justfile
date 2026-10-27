@@ -39,6 +39,14 @@ openapi:
 dev env-file=".env":
     uv run uvicorn licensing_api.__main__:app --reload --env-file {{ env-file }}
 
+# Run the Worker, restarting it when the code changes. Override env file with: just worker env-file=.env.dev
+worker env-file=".env":
+    uv run --env-file {{ env-file }} watchfiles --filter python 'python -m licensing_api.worker' licensing_api
+
+# Run one scheduled job once, as EventBridge does in AWS (`just job heartbeat`)
+job name env-file=".env":
+    uv run --env-file {{ env-file }} python -m licensing_api.jobs run {{ name }}
+
 # Run tests (pass additional args with: just test -k test_name)
 test env-file=".env" *args:
     uv run --env-file {{ env-file }} pytest {{ args }}

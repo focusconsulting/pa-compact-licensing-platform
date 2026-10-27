@@ -8,10 +8,10 @@ compose := "docker compose -p pa-compact -f engineering/api/docker-compose.yaml"
 default:
     @just --list
 
-# Start everything: local services, migrations, seed data, then the API and client (Ctrl-C stops both)
+# Start everything: local services, migrations, seed data, then the API, Worker, and client (Ctrl-C stops them)
 up: install services
     cd engineering/api && just migrate && just seed
-    trap 'kill 0' EXIT; (cd engineering/api && just dev) & (cd engineering/client && pnpm dev) & wait
+    trap 'kill 0' EXIT; (cd engineering/api && just dev) & (cd engineering/api && just worker) & (cd engineering/client && pnpm dev) & wait
 
 # Install API and client dependencies, and create local settings files from the examples if missing
 install:
