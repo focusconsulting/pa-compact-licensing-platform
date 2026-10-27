@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Annotated, Any
 
@@ -13,6 +14,15 @@ from licensing_api.errors import AppError, ErrorCode
 MAX_PAGE_SIZE = 100
 
 
+def example(**fields: Any) -> Callable[[dict[str, Any], type[BaseModel]], None]:
+    """A ``json_schema_extra`` whose example is the model built from ``fields``, so one that drifts from the model fails."""
+
+    def add(schema: dict[str, Any], model: type[BaseModel]) -> None:
+        schema['examples'] = [model(**fields).model_dump(mode='json')]
+
+    return add
+
+
 class Data[T](BaseModel):
     """``{"data": ...}``: one resource. Errors use ``ErrorResponse``, never this."""
 
@@ -22,9 +32,7 @@ class Data[T](BaseModel):
 class Page(BaseModel):
     """Where a page sits in a list: its 1-based ``number``, its ``size``, and the ``total`` count across all pages."""
 
-    model_config = ConfigDict(
-        json_schema_extra={'examples': [{'number': 1, 'size': 25, 'total': 1}]}
-    )
+    model_config = ConfigDict(json_schema_extra=example(number=1, size=25, total=1))
 
     number: int
     size: int
