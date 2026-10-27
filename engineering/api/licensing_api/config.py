@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     email_from_address: str = 'no-reply@licensing.localhost'
     # Where links in emails point: the client's origin.
     client_base_url: str = 'http://localhost:3000'
+    # The Commission mailbox for operational notifications; empty sends none. Which mailbox is Q-14.
+    commission_ops_email: str = ''
 
     @property
     def db_url(self) -> str:

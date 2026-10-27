@@ -1,0 +1,12 @@
+This email comes from the PA Compact LOCAL_DEV test system. It is not about a real practitioner, application, or privilege.
+
+Hello Avery,
+
+Kansas verified your qualifying license. You are now eligible to apply for privileges to practice in other compact states.
+
+Sign in to see the details: http://localhost:3000
+
+--
+PA Compact Commission Data System
+http://localhost:3000
+This mailbox is not monitored. Please do not reply.

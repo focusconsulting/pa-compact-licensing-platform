@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block body %}<p>Hello{% if first_name %} {{ first_name }}{% endif %},</p>
+{% block message %}{% endblock %}
+<p><a href="{{ client_base_url }}" style="color: #005ea2;">Sign in</a> to see the details.</p>
+{% endblock %}
