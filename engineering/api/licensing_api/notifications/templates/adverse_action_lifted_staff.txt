@@ -1,0 +1,3 @@
+{% extends 'staff.txt' %}
+{% block subject %}Adverse action lifted by {{ reporting_state_name }}{% endblock %}
+{% block message %}{{ reporting_state_name }} lifted an adverse action against a PA's {% if against_license %}qualifying license{% else %}privilege{% endif %}.{% endblock %}

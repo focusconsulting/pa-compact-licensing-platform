@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -31,12 +32,20 @@ class RenderedEmail:
 
 def template_environment(directories: Sequence[Path] = (TEMPLATES_DIR,)) -> Environment:
     """Load templates from ``directories``, first match wins. HTML is autoescaped; a missing value raises rather than rendering blank."""
-    return Environment(
+    environment = Environment(
         loader=FileSystemLoader(directories),
         autoescape=select_autoescape(['html']),
         undefined=StrictUndefined,
         keep_trailing_newline=True,
     )
+    environment.filters['long_date'] = long_date
+    return environment
+
+
+def long_date(iso_date: str) -> str:
+    """``2027-12-31`` as ``December 31, 2027``. Context values are JSON, so dates arrive as ISO strings."""
+    day = date.fromisoformat(iso_date)
+    return f'{day:%B} {day.day}, {day.year}'
 
 
 def template_names(directory: Path = TEMPLATES_DIR) -> list[str]:

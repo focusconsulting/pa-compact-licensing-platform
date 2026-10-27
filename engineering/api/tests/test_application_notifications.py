@@ -8,53 +8,33 @@ from sqlmodel import col, select
 
 from licensing_api.config import settings
 from licensing_api.context import system_context
-from licensing_api.events import Handler, HandlerRegistry
+from licensing_api.events import HandlerRegistry
 from licensing_api.handlers import HANDLERS
 from licensing_api.notifications import applications
 from licensing_api.repo.domain_event import DomainEvent, EventType, emit
 from licensing_api.repo.notification import Notification
 from licensing_api.repo.participation_application import ApplicationStatus, ParticipationApplication
 from licensing_api.repo.privilege import AdministratorStatus, DeactivationReason
-from licensing_api.repo.state_contact import ContactPurpose
 from tests.factories import (
     make_application,
     make_eligible_application,
     make_practitioner,
     make_privilege,
-    make_state_contact,
     make_submitted_request,
     make_user,
 )
-
-_OPS = 'commission-ops@demo.example'
+from tests.notification_helpers import OPS, add_contacts, run_handler
 
 
 @pytest.fixture(autouse=True)
 def _commission_ops(monkeypatch):
-    monkeypatch.setattr(settings, 'commission_ops_email', _OPS)
+    monkeypatch.setattr(settings, 'commission_ops_email', OPS)
 
 
 @pytest.fixture
 async def contacts(db_session):
-    """KS and OK contacts for each purpose, plus one in MO the tests must never reach."""
-    for state in ('KS', 'OK', 'MO'):
-        for purpose in ContactPurpose:
-            await make_state_contact(
-                db_session, state, purpose, f'{state.lower()}-{purpose}@demo.example'
-            )
-
-
-async def _run(
-    session: AsyncSession, declared: Handler, event_type: EventType, aggregate: object
-) -> list[tuple[str, str, dict]]:
-    """Emit the event, run the handler as the Worker would, and return what it queued."""
-    ctx = await system_context(session)
-    event = await emit(session, ctx, event_type, aggregate)  # type: ignore[arg-type]  # any table model
-    await declared.run(session, ctx, event)
-    statement = select(Notification).order_by(col(Notification.id))
-    return [
-        (n.template, n.recipient_email, n.context) for n in (await session.scalars(statement)).all()
-    ]
+    """KS and OK contacts for each purpose, plus MO's, which the tests must never reach."""
+    await add_contacts(db_session, 'KS', 'OK', 'MO')
 
 
 _AT = datetime(2026, 7, 1, tzinfo=timezone.utc)
@@ -74,7 +54,7 @@ def test_every_handler_is_registered_once():
 async def test_a_new_pa_is_welcomed_at_their_correspondence_email(db_session):
     pa = await make_practitioner(db_session, correspondence_email='pat@demo.example')
 
-    queued = await _run(
+    queued = await run_handler(
         db_session, applications.send_welcome, EventType.PRACTITIONER_REGISTERED, pa
     )
 
@@ -85,7 +65,7 @@ async def test_a_pa_with_no_correspondence_email_is_written_to_at_their_sign_in_
     user = await make_user(db_session, role='licensee', email='signin@demo.example')
     pa = await make_practitioner(db_session, user_id=user.id, legal_first_name=None)
 
-    queued = await _run(
+    queued = await run_handler(
         db_session, applications.send_welcome, EventType.PRACTITIONER_REGISTERED, pa
     )
 
@@ -107,7 +87,7 @@ async def test_a_submitted_application_emails_the_pa_and_the_qualifying_states_c
 ):
     application = await _application(db_session, status=ApplicationStatus.SUBMITTED)
 
-    queued = await _run(
+    queued = await run_handler(
         db_session,
         applications.send_application_submitted,
         EventType.APPLICATION_SUBMITTED,
@@ -131,7 +111,7 @@ async def test_an_information_request_sends_a_link_and_never_the_note(db_session
         request_note='Upload your NCCPA certificate; the one on file has expired.',
     )
 
-    queued = await _run(
+    queued = await run_handler(
         db_session,
         applications.send_application_info_requested,
         EventType.APPLICATION_INFO_REQUESTED,
@@ -150,7 +130,7 @@ async def test_an_information_request_sends_a_link_and_never_the_note(db_session
 async def test_a_resubmission_emails_only_the_qualifying_states_contacts(db_session, contacts):
     application = await _application(db_session, status=ApplicationStatus.SUBMITTED)
 
-    queued = await _run(
+    queued = await run_handler(
         db_session,
         applications.send_application_resubmitted,
         EventType.APPLICATION_RESUBMITTED,
@@ -167,7 +147,7 @@ async def test_an_eligible_decision_emails_the_pa_and_the_commission(db_session,
         db_session, await make_practitioner(db_session, correspondence_email='pat@demo.example')
     )
 
-    queued = await _run(
+    queued = await run_handler(
         db_session,
         applications.send_application_decided,
         EventType.APPLICATION_ELIGIBLE,
@@ -176,7 +156,7 @@ async def test_an_eligible_decision_emails_the_pa_and_the_commission(db_session,
 
     assert queued == [
         ('application_eligible', 'pat@demo.example', {'first_name': 'Pat', 'state_name': 'Kansas'}),
-        ('application_decided_commission', _OPS, {'state_name': 'Kansas', 'eligible': True}),
+        ('application_decided_commission', OPS, {'state_name': 'Kansas', 'eligible': True}),
     ]
 
 
@@ -192,7 +172,7 @@ async def test_a_denial_names_its_reason_and_no_commission_email_goes_while_unse
         decided_by=(await system_context(db_session)).user_id,
     )
 
-    queued = await _run(
+    queued = await run_handler(
         db_session, applications.send_application_decided, EventType.APPLICATION_DENIED, application
     )
 
@@ -214,7 +194,7 @@ async def test_a_withdrawn_application_emails_the_pa_and_the_qualifying_state(db
         db_session, status=ApplicationStatus.WITHDRAWN, withdrawn_at=_AT
     )
 
-    queued = await _run(
+    queued = await run_handler(
         db_session,
         applications.send_application_withdrawn,
         EventType.APPLICATION_WITHDRAWN,
@@ -252,7 +232,7 @@ async def test_withdrawn_eligibility_emails_each_remote_state_where_the_pa_held_
     application.eligibility_withdrawn_at = _AT
     application.eligibility_withdrawal_reason = 'Qualifying license revoked'
 
-    queued = await _run(
+    queued = await run_handler(
         db_session,
         applications.send_eligibility_withdrawn,
         EventType.APPLICATION_ELIGIBILITY_WITHDRAWN,
