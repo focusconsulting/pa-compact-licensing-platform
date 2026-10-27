@@ -1,0 +1,3 @@
+{% extends 'staff.txt' %}
+{% block subject %}{% if is_emergency %}Emergency adverse action{% else %}Adverse action{% endif %} reported by {{ reporting_state_name }}{% endblock %}
+{% block message %}{{ reporting_state_name }} reported {% if is_emergency %}an emergency{% else %}an{% endif %} adverse action against a PA's {% if against_license %}qualifying license{% else %}privilege{% endif %}.{% endblock %}

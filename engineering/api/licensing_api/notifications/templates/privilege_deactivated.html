@@ -1,0 +1,2 @@
+{% extends 'pa.html' %}
+{% block message %}<p>Your privilege to practice in {{ remote_state_name }}, number {{ privilege_number }}, is no longer active.{% if note %} The note given: {{ note }}{% endif %}</p>{% endblock %}

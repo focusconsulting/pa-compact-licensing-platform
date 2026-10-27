@@ -7,6 +7,7 @@ from jinja2 import TemplateNotFound, UndefinedError
 
 from licensing_api.notifications.render import (
     TEMPLATES_DIR,
+    long_date,
     render,
     template_environment,
     template_names,
@@ -18,6 +19,9 @@ TEST_TEMPLATES_DIR = Path(__file__).parent / 'email_templates'
 
 # A context for every template in licensing_api/notifications/templates, as its handler builds it.
 _PA = {'first_name': 'Avery', 'state_name': 'Kansas'}
+_RS = {'first_name': 'Avery', 'remote_state_name': 'Oklahoma'}
+_PRIVILEGE = {'privilege_number': 'PA-OK-000042', 'expires_on': '2027-12-31'}
+_ACTION = {'reporting_state_name': 'Oklahoma', 'against_license': False, 'is_emergency': False}
 SAMPLE_CONTEXTS: dict[str, dict[str, object]] = {
     'welcome': {'first_name': 'Avery'},
     'application_submitted': _PA,
@@ -34,6 +38,29 @@ SAMPLE_CONTEXTS: dict[str, dict[str, object]] = {
         'state_name': 'Kansas',
         'remote_state_name': 'Oklahoma',
     },
+    'privilege_requested': _RS,
+    'privilege_requested_state': {'remote_state_name': 'Oklahoma'},
+    'payment_declined': _RS,
+    'privilege_issued': _RS | _PRIVILEGE,
+    'privilege_issued_staff': {'remote_state_name': 'Oklahoma'},
+    'privilege_denied': _RS | {'denial_reason': 'Does not hold current NCCPA certification'},
+    'privilege_denied_staff': {'remote_state_name': 'Oklahoma'},
+    'privilege_deactivated': _RS
+    | {'privilege_number': 'PA-OK-000042', 'note': 'Supervision agreement lapsed.'},
+    'privilege_deactivated_state': {
+        'remote_state_name': 'Oklahoma',
+        'privilege_number': 'PA-OK-000042',
+    },
+    'privilege_expiring': _RS | _PRIVILEGE,
+    'privilege_expired': _RS | _PRIVILEGE,
+    'license_status_changed': _PA | {'status': 'inactive'},
+    'license_status_changed_state': {'state_name': 'Kansas', 'status': 'inactive'},
+    'adverse_action_reported': _ACTION | {'first_name': 'Avery'},
+    'adverse_action_reported_staff': _ACTION | {'is_emergency': True},
+    'adverse_action_lifted': _ACTION | {'first_name': 'Avery'},
+    'adverse_action_lifted_staff': _ACTION,
+    'sii_flagged_state': {'reporting_state_name': 'Kansas'},
+    'sii_closed_state': {'reporting_state_name': 'Kansas'},
 }
 
 _EXAMPLE_CONTEXT = {
@@ -111,3 +138,7 @@ def test_a_missing_value_raises_rather_than_rendering_blank():
 def test_an_unknown_template_raises():
     with pytest.raises(TemplateNotFound):
         render(_environment(), 'no_such_template', {}, TEST_SETTINGS)
+
+
+def test_dates_read_as_words():
+    assert long_date('2027-12-01') == 'December 1, 2027'

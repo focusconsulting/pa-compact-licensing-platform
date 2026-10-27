@@ -1,0 +1,3 @@
+{% extends 'staff.txt' %}
+{% block subject %}Privilege issued in {{ remote_state_name }}{% endblock %}
+{% block message %}{{ remote_state_name }} issued a privilege to practice to a PA.{% endblock %}

@@ -1,0 +1,12 @@
+This email comes from the PA Compact LOCAL_DEV test system. It is not about a real practitioner, application, or privilege.
+
+Hello Avery,
+
+Kansas reported that your qualifying license is now inactive. If that ends your eligibility, your privileges to practice in other compact states may no longer be active.
+
+Sign in to see the details: http://localhost:3000
+
+--
+PA Compact Commission Data System
+http://localhost:3000
+This mailbox is not monitored. Please do not reply.
