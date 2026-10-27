@@ -43,7 +43,7 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy" {
 # Allow the execution role to read DB credentials from Secrets Manager and ADOT config from SSM
 resource "aws_iam_policy" "ecs_secrets_policy" {
   name        = "${var.environment_name}-ecs-secrets-policy"
-  description = "Allow ECS Task to read DB secrets and ADOT config"
+  description = "Allow ECS tasks to read DB, Cognito, and SES SMTP secrets and ADOT config"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -53,6 +53,7 @@ resource "aws_iam_policy" "ecs_secrets_policy" {
         Resource = [
           aws_secretsmanager_secret.db_credentials.arn,
           aws_secretsmanager_secret.cognito_config.arn,
+          aws_secretsmanager_secret.ses_smtp.arn,
         ]
       },
       {

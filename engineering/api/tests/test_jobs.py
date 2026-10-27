@@ -1,6 +1,8 @@
 """Scheduled jobs: each run is recorded and logged with its outcome, which alarms watch (D8)."""
 
 import logging
+import re
+from pathlib import Path
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -73,3 +75,17 @@ async def test_the_command_rejects_an_unknown_job(capsys):
 
     assert exit_info.value.code == 2
     assert "invalid choice: 'no_such_job'" in capsys.readouterr().err
+
+
+_SCHEDULER_TF = (
+    Path(__file__).parents[2] / 'infrastructure/iac/components/app/terraform/scheduler.tf'
+)
+
+
+def test_every_job_has_a_schedule_in_terraform():
+    schedules = re.search(r'job_schedules = \{(.*?)\n  \}', _SCHEDULER_TF.read_text(), re.DOTALL)
+    assert schedules is not None, 'scheduler.tf no longer defines local.job_schedules'
+
+    scheduled = set(re.findall(r'^\s*(\w+)\s*=', schedules.group(1), re.MULTILINE))
+
+    assert scheduled == {job.name for job in jobs.JOBS}

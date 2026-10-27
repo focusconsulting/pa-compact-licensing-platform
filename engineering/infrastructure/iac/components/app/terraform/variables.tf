@@ -78,3 +78,9 @@ variable "jumpbox_enabled" {
   description = "Allow ingress from the jumpbox whose security group ID is in the <environment>-jumpbox-sgid-tfvar secret. Only DEV has a jumpbox."
   default     = false
 }
+
+variable "commission_ops_email" {
+  description = "The Commission mailbox for operational notifications (open question Q-14); empty sends none"
+  type        = string
+  default     = ""
+}

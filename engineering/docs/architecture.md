@@ -62,7 +62,8 @@ flowchart LR
     cdn["<b>CDN</b><br/><i>[AWS CloudFront]</i>"]
     client["<b>Client</b><br/><i>[Next.js]</i><br/>Browser application"]
     api["<b>API</b><br/><i>[FastAPI / ECS Fargate]</i><br/>System services"]
-    worker["<b>Worker</b><br/><i>[FastAPI / ECS Fargate]</i><br/>Scheduled jobs, notifications"]
+    worker["<b>Worker</b><br/><i>[Python / ECS Fargate service]</i><br/>Delivers domain events, sends email"]
+    jobs["<b>Scheduled jobs</b><br/><i>[Python / ECS Fargate task]</i><br/>One run per schedule"]
     db@{shape: cyl, label: "<b>Database</b><br/><i>[Aurora PostgreSQL 16]</i><br/>Records, history, domain events, audit log"}
     files@{shape: cyl, label: "<b>Document storage</b><br/><i>[Amazon S3]</i><br/>Uploaded proofs, orders, and verification documents"}
   end
@@ -72,6 +73,7 @@ flowchart LR
   payments["<b>Payment Provider</b><br/>Collect payments"]
   nccpa["<b>NCCPA</b><br/>Certification"]
   observability["<b>CloudWatch</b><br/>Logs, metrics, alarms"]
+  scheduler["<b>EventBridge Scheduler</b><br/>Starts jobs"]
 
   user -- "<b>Accesses</b><br/><i>[HTTPS]</i>" --> cdn
   user -- "<b>Authenticates</b><br/><i>[SRP / HTTPS]</i>" --> cognito
@@ -81,7 +83,11 @@ flowchart LR
   api -- "<b>Reads and writes</b><br/><i>[SQL / TLS]</i>" --> db
   api -- "<b>Reads and writes</b><br/><i>[HTTPS]</i>" --> files
   worker -- "<b>Reads and writes</b><br/><i>[SQL / TLS]</i>" --> db
-  worker -- "<b>Sends email</b><br/><i>[SMTP]</i>" --> ses
+  worker -- "<b>Sends email</b><br/><i>[SMTP / STARTTLS]</i>" --> ses
+  worker -- "<b>Logs</b><br/><i>[awslogs]</i>" --> observability
+  scheduler -- "<b>Runs</b><br/><i>[ECS RunTask]</i>" --> jobs
+  jobs -- "<b>Reads and writes</b><br/><i>[SQL / TLS]</i>" --> db
+  jobs -- "<b>Logs</b><br/><i>[awslogs]</i>" --> observability
   api -- "<b>Charges fees</b><br/><i>[HTTPS]</i>" --> payments
   api -- "<b>Queries certification</b><br/><i>[HTTPS]</i>" --> nccpa
   api -- "<b>Logs</b><br/><i>[OTLP / AWS Distro for OpenTelemetry]</i>" --> observability
@@ -90,8 +96,8 @@ flowchart LR
   classDef container fill:#438dd5,stroke:#3c7fc0,color:#fff
   classDef external fill:#999999,stroke:#8a8a8a,color:#fff
   class user person
-  class cdn,client,api,worker,db,files container
-  class cognito,ses,payments,nccpa,observability external
+  class cdn,client,api,worker,jobs,db,files container
+  class cognito,ses,payments,nccpa,observability,scheduler external
 ```
 
 ## Locally
@@ -106,5 +112,6 @@ and [`engineering/api/.env.example`](../api/.env.example).
 | Aurora PostgreSQL | Postgres in Docker Compose |
 | Cognito | cognito-local ([`engineering/mocks/cognito`](../mocks/cognito/README.md)), signed in to with password auth instead of SRP ([ADR-0010](../adrs/0010-local-sign-in-uses-password-auth.md)) |
 | SES | maildev |
+| EventBridge Scheduler | None: run a job by hand with `just job <name>` |
 | S3 | RustFS |
 | Payment Provider, NCCPA | Mock servers, built with the tickets that write their clients |
