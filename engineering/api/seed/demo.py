@@ -34,6 +34,7 @@ from licensing_api.repo.privilege_request import PrivilegeRequest, PrivilegeRequ
 from licensing_api.repo.qualifying_license import LicenseStatus, QualifyingLicense
 from licensing_api.repo.sii_report import SiiReport
 from licensing_api.repo.state import State
+from licensing_api.repo.state_contact import ContactPurpose, StateContact
 from licensing_api.repo.status import LicenseComputedStatus, PrivilegeComputedStatus
 from licensing_api.repo.user import User
 
@@ -355,6 +356,14 @@ async def _compact(demo: _Demo) -> None:
             created_by=demo.ctx.user_id,
         )
         await demo.add(fee)
+        for purpose in ContactPurpose:
+            contact = StateContact(
+                state_code=code,
+                purpose=purpose,
+                email=f'{code.lower()}-{purpose}@demo.example',
+                created_by=demo.ctx.user_id,
+            )
+            await demo.add(contact)
     commission_fee = Fee(
         fee_type=FeeType.PARTICIPATION,
         amount_cents=5000,

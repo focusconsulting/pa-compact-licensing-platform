@@ -74,6 +74,10 @@ Every US jurisdiction: the 50 states, DC, and five territories. Membership and g
 
 Configuration changes are kept in `states_history`, keyed by `state_code` (states have no numeric id), and events and audit rows about a state use `aggregate_key` / `entity_key`. A state's practice-requirements document is a `documents` row with `owner_type = 'state'` and `owner_key` set to the code.
 
+### `state_contacts`
+
+The mailboxes a state wants notifications sent to (FLOW-07): `state_code`, `purpose`, `email`, unique per state, purpose, and address. `purpose` is `applications` (as state of qualifying license), `privileges` (as remote state), or `discipline` (adverse actions and SII). A state with no contact for a purpose gets no email for it. Changes are kept in `state_contacts_history`. Tier: internal.
+
 ### Lookup tables
 
 Lists that wait on a Commission answer, so an answer is a data change. Each has `code` (PK), `label`, `sort_order`, and `is_active`; inactive values stay so old rows keep their meaning. Tier: public.
