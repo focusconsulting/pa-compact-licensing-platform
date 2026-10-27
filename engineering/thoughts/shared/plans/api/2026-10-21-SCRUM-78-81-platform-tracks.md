@@ -157,7 +157,7 @@ Branches follow `feature/SCRUM-<n>-<slug>`; each PR targets the branch below it.
 ### Changes Required
 
 - **`engineering/api/scripts/export_openapi.py`** (new) and `just openapi`: imports `app` and writes `engineering/api/openapi.json` as `json.dumps(document(), indent=2, sort_keys=True)` plus a newline, where `document()` is `app.openapi()` with each example's missing required fields set to `null` (FastAPI drops `None` from examples). Importing the app needs no database: every setting has a default (`config.py:6-25`) and the engine is created in `lifespan`.
-- **Response examples**: every model a route returns (`CurrentUser`, `AuditEntryOut`, `LiveResp`, `ReadyResp`) sets `json_schema_extra={'examples': [...]}`. So does `Page`. `Data[T]` and `Paged[T]` carry none; Prism builds them from what they hold.
+- **Response examples**: every model a route returns (`CurrentUser`, `AuditEntryOut`, `LiveResp`, `ReadyResp`) sets `json_schema_extra=example(...)` (`responses.py`), which builds the model from the given fields and dumps it, so an example missing a field of its model fails. So does `Page`. `Data[T]` and `Paged[T]` carry none; Prism builds them from what they hold.
 - **`routes/__init__.py`**: the `api` router documents `422` as `ErrorResponse`, the body the API sends, replacing FastAPI's `HTTPValidationError`.
 - **`tests/test_openapi.py`**: every model a success response returns, looking inside `Data` and `Paged`, has an example; an example is `null` only in a nullable field; every `422` is `ErrorResponse`; the committed `openapi.json` equals a fresh export, so drift fails `just test` locally and in `api.yml`'s existing test job.
 - **`engineering/client`**:

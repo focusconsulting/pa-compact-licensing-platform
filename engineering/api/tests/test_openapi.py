@@ -3,7 +3,11 @@
 import json
 from pathlib import Path
 
+import pytest
+from pydantic import BaseModel, ConfigDict, ValidationError
+
 from licensing_api.__main__ import app
+from licensing_api.responses import example
 from scripts.export_openapi import document
 
 _DOCUMENT = Path(__file__).parents[1] / 'openapi.json'
@@ -41,6 +45,16 @@ def test_every_success_body_has_an_example():
     assert {'CurrentUser', 'Page'} <= _success_models()
     missing = sorted(name for name in _success_models() if 'examples' not in _SCHEMAS[name])
     assert missing == []
+
+
+def test_an_example_missing_a_field_of_its_model_fails():
+    class Renamed(BaseModel):
+        model_config = ConfigDict(json_schema_extra=example(email='pat.morgan@example.com'))
+
+        email_address: str
+
+    with pytest.raises(ValidationError):
+        Renamed.model_json_schema()
 
 
 def _nullable(prop: dict) -> bool:

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Query
@@ -11,7 +11,7 @@ from licensing_api.permissions import Permission, require
 from licensing_api.repo.audit_log import AuditLogEntry, audit_entries
 from licensing_api.repo.pagination import paginate
 from licensing_api.repo.user import User, emails_by_id, get_user_by_email
-from licensing_api.responses import Paged, PageQuery, page_query
+from licensing_api.responses import Paged, PageQuery, example, page_query
 
 router = APIRouter(prefix='/audit')
 
@@ -21,22 +21,18 @@ class AuditEntryOut(BaseModel):
 
     model_config = ConfigDict(
         from_attributes=True,
-        json_schema_extra={
-            'examples': [
-                {
-                    'occurred_at': '2026-10-21T14:05:00Z',
-                    'action': 'ssn.revealed',
-                    'entity_type': 'practitioner',
-                    'entity_id': 42,
-                    'entity_key': None,
-                    'actor_email': 'pat.morgan@example.com',
-                    'reason': 'Verifying identity for an application',
-                    'request_id': '9b2e4f7a1c3d4e5f8a6b7c8d9e0f1a2b',
-                    'before': None,
-                    'after': None,
-                }
-            ]
-        },
+        json_schema_extra=example(
+            occurred_at=datetime(2026, 10, 21, 14, 5, tzinfo=UTC),
+            action='ssn.revealed',
+            entity_type='practitioner',
+            entity_id=42,
+            entity_key=None,
+            actor_email='pat.morgan@example.com',
+            reason='Verifying identity for an application',
+            request_id='9b2e4f7a1c3d4e5f8a6b7c8d9e0f1a2b',
+            before=None,
+            after=None,
+        ),
     )
 
     occurred_at: datetime
