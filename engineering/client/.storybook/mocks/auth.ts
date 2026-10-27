@@ -1,7 +1,7 @@
 /**
  * @file Replaces `src/lib/auth` in Storybook (see `main.ts`): every story is
  * signed in, so pages render without Cognito. The API calls go to the
- * generated MSW mocks, which ignore the token.
+ * Prism mock, which accepts any bearer token.
  */
 import type { CognitoUserSession } from "amazon-cognito-identity-js";
 import type * as auth from "src/lib/auth";

@@ -3,12 +3,11 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import type { CognitoUserSession } from "amazon-cognito-identity-js";
-import { http, HttpResponse } from "msw";
 
 import { useAuth } from "src/contexts/AuthContext";
 import { getCurrentSession } from "src/lib/auth";
 import { expectNoAxeViolations } from "src/tests/axe";
-import { server } from "src/tests/server";
+import { answerFetch } from "src/tests/fetch";
 import Home from "./page";
 
 vi.mock("src/lib/auth");
@@ -43,19 +42,11 @@ const mockUser = {
 };
 
 function answerMe(overrides: Record<string, unknown>) {
-  server.use(
-    http.get("*/api/me", () =>
-      HttpResponse.json({ data: { ...mockUser, ...overrides } }),
-    ),
-  );
+  answerFetch({ data: { ...mockUser, ...overrides } });
 }
 
 function failMe(status: number) {
-  server.use(
-    http.get("*/api/me", () =>
-      HttpResponse.json({ code: "FORBIDDEN", details: [] }, { status }),
-    ),
-  );
+  answerFetch({ code: "FORBIDDEN", details: [] }, status);
 }
 
 describe("Home (Dashboard) page", () => {

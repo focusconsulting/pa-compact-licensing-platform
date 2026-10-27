@@ -3,7 +3,7 @@ import createClient, { type Middleware } from "openapi-fetch";
 import type { paths } from "src/api/schema";
 import { getCurrentSession } from "src/lib/auth";
 
-// Unset in Storybook, where requests go to the page's own origin.
+// Unset, requests go to the page's own origin.
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 async function bearerToken(): Promise<string> {
@@ -28,7 +28,7 @@ const authorize: Middleware = {
  */
 export const api = createClient<paths>({
   baseUrl: BASE_URL,
-  // Looked up per call, not captured at load, so MSW's patched fetch answers in tests and Storybook.
+  // Looked up per call, not captured at load, so a test's stubbed fetch answers.
   fetch: (request) => globalThis.fetch(request),
 });
 api.use(authorize);

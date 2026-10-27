@@ -1,9 +1,13 @@
 import "@testing-library/jest-dom/vitest";
-import { afterAll, afterEach, beforeAll } from "vitest";
+import { afterEach, beforeEach, vi, type MockInstance } from "vitest";
 import "../i18n/config";
-import { server } from "./server";
 
-// A request no handler answers fails the test instead of reaching the network.
-beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
+let fetchSpy: MockInstance<typeof fetch>;
+
+// A request no test answers (see `answerFetch`) fails instead of reaching the network.
+beforeEach(() => {
+  fetchSpy = vi
+    .spyOn(globalThis, "fetch")
+    .mockRejectedValue(new Error("fetch is not stubbed"));
+});
+afterEach(() => fetchSpy.mockRestore());
