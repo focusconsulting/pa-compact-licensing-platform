@@ -1,0 +1,12 @@
+This email comes from the PA Compact LOCAL_DEV test system. It is not about a real practitioner, application, or privilege.
+
+Hello Avery,
+
+Your privilege to practice in Oklahoma, number PA-OK-000042, expired on December 31, 2027. You can no longer practice there under it.
+
+Sign in to see the details: http://localhost:3000
+
+--
+PA Compact Commission Data System
+http://localhost:3000
+This mailbox is not monitored. Please do not reply.

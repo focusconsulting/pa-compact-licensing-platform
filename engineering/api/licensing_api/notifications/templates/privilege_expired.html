@@ -1,0 +1,2 @@
+{% extends 'pa.html' %}
+{% block message %}<p>Your privilege to practice in {{ remote_state_name }}, number {{ privilege_number }}, expired on {{ expires_on | long_date }}. You can no longer practice there under it.</p>{% endblock %}

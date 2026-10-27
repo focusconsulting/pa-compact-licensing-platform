@@ -11,16 +11,34 @@ from dataclasses import dataclass
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import col, select
+from sqlmodel import SQLModel, col, select
 
 from licensing_api.config import settings
 from licensing_api.context import ChangeContext
 from licensing_api.repo.domain_event import DomainEvent
 from licensing_api.repo.notification import notify
 from licensing_api.repo.practitioner import Practitioner
+from licensing_api.repo.privilege import Privilege
+from licensing_api.repo.qualifying_license import QualifyingLicense
 from licensing_api.repo.state import State
 from licensing_api.repo.state_contact import ContactPurpose, contact_emails
 from licensing_api.repo.user import User
+
+
+async def aggregate[T: SQLModel](session: AsyncSession, model: type[T], event: DomainEvent) -> T:
+    """The row the event is about, by its numeric ``aggregate_id``."""
+    return (await session.scalars(select(model).where(model.id == event.aggregate_id))).one()  # type: ignore[attr-defined]  # every aggregate with a numeric key has ``id``
+
+
+async def states_holding(session: AsyncSession, practitioner_id: int) -> set[str]:
+    """Every state where the PA holds a qualifying license or a privilege, whatever its status."""
+    licenses = select(col(QualifyingLicense.state_code)).where(
+        col(QualifyingLicense.practitioner_id) == practitioner_id
+    )
+    privileges = select(col(Privilege.remote_state_code)).where(
+        col(Privilege.practitioner_id) == practitioner_id
+    )
+    return set((await session.scalars(licenses.union(privileges))).all())
 
 
 @dataclass(frozen=True)
@@ -53,10 +71,11 @@ async def practitioner(session: AsyncSession, practitioner_id: int) -> Practitio
 
 
 async def state_contacts(
-    session: AsyncSession, state_code: str, purpose: ContactPurpose
+    session: AsyncSession, state_codes: str | set[str], purpose: ContactPurpose
 ) -> list[Recipient]:
-    """The state's contacts for ``purpose``; none until the state names one."""
-    return [Recipient(email) for email in await contact_emails(session, [state_code], purpose)]
+    """The contacts for ``purpose`` of one state or several, each address once; none until a state names one."""
+    codes = [state_codes] if isinstance(state_codes, str) else sorted(state_codes)
+    return [Recipient(email) for email in await contact_emails(session, codes, purpose)]
 
 
 def commission_ops() -> list[Recipient]:

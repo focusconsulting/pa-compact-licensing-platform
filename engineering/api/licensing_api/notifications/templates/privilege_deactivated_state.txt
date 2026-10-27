@@ -1,0 +1,3 @@
+{% extends 'staff.txt' %}
+{% block subject %}Privilege {{ privilege_number }} deactivated{% endblock %}
+{% block message %}Privilege {{ privilege_number }} to practice in {{ remote_state_name }} is no longer active.{% endblock %}
