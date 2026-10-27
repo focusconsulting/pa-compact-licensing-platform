@@ -5,5 +5,6 @@ once it has none.
 """
 
 from licensing_api.events import Handler
+from licensing_api.notifications.applications import APPLICATION_HANDLERS
 
-HANDLERS: tuple[Handler, ...] = ()
+HANDLERS: tuple[Handler, ...] = (*APPLICATION_HANDLERS,)

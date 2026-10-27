@@ -1,0 +1,3 @@
+{% extends 'staff.txt' %}
+{% block subject %}Eligibility decision by {{ state_name }}{% endblock %}
+{% block message %}{{ state_name }} decided an application for compact eligibility: the PA is {% if eligible %}eligible{% else %}not eligible{% endif %}.{% endblock %}
