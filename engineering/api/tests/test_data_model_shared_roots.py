@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 
 from sqlalchemy import func, select, text
 
-from licensing_api.__main__ import _mask_sensitive
+from licensing_api.logging_config import _mask_sensitive
 from licensing_api.repo.audit_log import AuditLogEntry
 from licensing_api.repo.reference import DenialScope, RefAdverseActionType, RefDenialReason
 from licensing_api.repo.state import State
