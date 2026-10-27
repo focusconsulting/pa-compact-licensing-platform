@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import JSONB, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import Field, col, select
 
-from licensing_api.repo.base import AuditColumns, TimestampTZ
+from licensing_api.repo.base import AuditColumns, TimestampTZ, utc_now
 
 if TYPE_CHECKING:
     # Annotations only: licensing_api.context imports the repo package, so a runtime import would be circular.
@@ -50,6 +50,8 @@ class Notification(AuditColumns, table=True):
     attempts: int = 0
     last_error: str | None = None
     sent_at: datetime | None = Field(default=None, sa_type=TimestampTZ)
+    # A failed send is not retried before this time.
+    next_attempt_at: datetime = Field(default_factory=utc_now, sa_type=TimestampTZ)
 
 
 async def notify(

@@ -17,6 +17,7 @@ from licensing_api.events import HandlerRegistry, handler
 from licensing_api.repo.domain_event import DomainEvent, EventType, emit
 from licensing_api.repo.state import State
 from licensing_api.worker import run_worker
+from tests.conftest import TEST_SETTINGS
 
 _EVENTS = 1000
 
@@ -43,8 +44,8 @@ async def test_two_workers_drain_a_thousand_events_in_under_a_minute_handling_ea
     started = time.monotonic()
     await asyncio.wait_for(
         asyncio.gather(
-            run_worker(committed_sessions, registry, stop),
-            run_worker(committed_sessions, registry, stop),
+            run_worker(committed_sessions, registry, TEST_SETTINGS, stop),
+            run_worker(committed_sessions, registry, TEST_SETTINGS, stop),
         ),
         timeout=60,
     )
@@ -74,6 +75,7 @@ async def test_an_idle_worker_waits_then_stops_when_asked(committed_sessions, ca
         await run_worker(
             committed_sessions,
             HandlerRegistry([]),
+            TEST_SETTINGS,
             stop,
             idle_poll_interval=timedelta(milliseconds=50),
         )
@@ -100,3 +102,22 @@ async def test_the_worker_process_stops_on_sigterm_or_sigint(
     assert caplog.records[-1].getMessage() == 'Worker stopped'
     # Removed on exit, so the next signal reaches the default handler again.
     assert not asyncio.get_running_loop().remove_signal_handler(stop_signal)
+
+
+async def test_the_worker_sends_queued_email(committed_sessions, monkeypatch):
+    sent = asyncio.Event()
+
+    async def send(*args: object, **kwargs: object) -> int:
+        if sent.is_set():
+            return 0
+        sent.set()
+        return 1
+
+    monkeypatch.setattr(worker, 'send_pending', send)
+    stop = asyncio.Event()
+    running = asyncio.create_task(
+        run_worker(committed_sessions, HandlerRegistry([]), TEST_SETTINGS, stop)
+    )
+    await asyncio.wait_for(sent.wait(), timeout=5)
+    stop.set()
+    await asyncio.wait_for(running, timeout=5)

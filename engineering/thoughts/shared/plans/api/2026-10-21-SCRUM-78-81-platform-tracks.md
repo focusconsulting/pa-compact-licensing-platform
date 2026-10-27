@@ -259,7 +259,7 @@ Branches follow `feature/SCRUM-<n>-<slug>`; each PR targets the branch below it.
 - **Settings**: `smtp_*`, `email_from_address`, `client_base_url`, `commission_ops_email` (Q-14 placeholder value in `.env.example`).
 - **Migration**: `notifications.next_attempt_at`. (`state_contacts` moves to phase 10a.)
 - **`licensing_api/notifications/`**: `render(template, context, environment)` with Jinja (autoescape, `StrictUndefined`), a base layout with the environment banner outside PROD, HTML and text from one template; `sender.send_pending(...)` per the contract, retrying with backoff and marking `failed` after five attempts.
-- **ADR-0014** (new): `jinja2` and `aiosmtplib`, against the standard library (`string.Template`, `smtplib` in a thread); pros and cons.
+- **ADR-0014** (new): `jinja2` with `smtplib` in a thread, against `aiosmtplib`, `string.Template`, and SES's API; pros and cons. Built: one dependency, not two (`aiosmtplib` added nothing `smtplib` lacks).
 - Tests: snapshot tests for every template (`tests/snapshots/`, updated with `UPDATE_SNAPSHOTS=1`); sending through maildev's API; a repeated key sends once; two senders never send the same row.
 
 ## Phase 10: The FLOW-07 handlers (SCRUM-80)

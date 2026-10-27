@@ -26,6 +26,16 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = ['http://localhost:3000']
 
+    # Email over SMTP: maildev locally, SES's SMTP interface in AWS (STARTTLS on 587).
+    smtp_host: str = 'localhost'
+    smtp_port: int = 1025
+    smtp_starttls: bool = False
+    smtp_username: str = ''
+    smtp_password: str = ''
+    email_from_address: str = 'no-reply@licensing.localhost'
+    # Where links in emails point: the client's origin.
+    client_base_url: str = 'http://localhost:3000'
+
     @property
     def db_url(self) -> str:
         """The asyncpg URL the app's database engine connects with."""
