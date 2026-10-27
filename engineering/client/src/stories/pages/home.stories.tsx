@@ -14,4 +14,5 @@ const meta: Meta<typeof Home> = {
 export default meta;
 type Story = StoryObj<typeof Home>;
 
+/** The signed-in user from the API's example, served by the Prism mock. */
 export const Default: Story = {};

@@ -165,6 +165,10 @@ export interface components {
        */
       user_id: string;
     };
+    /** Data[CurrentUser] */
+    Data_CurrentUser_: {
+      data: components["schemas"]["CurrentUser"];
+    };
     /**
      * ErrorCode
      * @description The machine-readable ``code`` in every error response.
@@ -356,7 +360,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CurrentUser"];
+          "application/json": components["schemas"]["Data_CurrentUser_"];
         };
       };
       /** @description Unprocessable Content */

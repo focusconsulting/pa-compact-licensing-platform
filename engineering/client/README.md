@@ -13,7 +13,10 @@ in the root README.
 
 ## Storybook
 
-Storybook can be started by running `pnpm storybook`
+Storybook can be started by running `pnpm storybook`. Every story is signed in
+(`.storybook/mocks/auth.ts`), and its API calls go to the Prism mock on
+<http://localhost:4010>: start it first with `just mock-api` from the
+repository root, or set `STORYBOOK_API_BASE_URL` to use another API.
 <!--
 Fri Apr 17 08:58:34 EDT 2026
 -->
@@ -31,7 +34,9 @@ Prism answers each route with the examples in the document.
 
 ## Key dependencies
 
-| Package                                                | Purpose                                                                   | Docs                                    |
-| ------------------------------------------------------ | ------------------------------------------------------------------------- | --------------------------------------- |
-| [openapi-typescript](https://openapi-ts.dev/)          | Generates `src/api/schema.d.ts` from the API's OpenAPI document           | <https://openapi-ts.dev/>               |
-| [Prism](https://github.com/stoplightio/prism) (Docker) | `just mock-api`: a mock API from the document, never installed in the app | <https://docs.stoplight.io/docs/prism/> |
+| Package                                                | Purpose                                                                                                             | Docs                                    |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| [openapi-typescript](https://openapi-ts.dev/)          | Generates `src/api/schema.d.ts` from the API's OpenAPI document                                                     | <https://openapi-ts.dev/>               |
+| [openapi-fetch](https://openapi-ts.dev/openapi-fetch/) | The typed API client in `src/lib/api.ts`                                                                            | <https://openapi-ts.dev/openapi-fetch/> |
+| [Prism](https://github.com/stoplightio/prism) (Docker) | `just mock-api`: a mock API from the document, never installed in the app                                           | <https://docs.stoplight.io/docs/prism/> |
+| [webpack](https://webpack.js.org/)                     | Pinned below 5.101 for Storybook: later versions' `DefinePlugin` taps a parser hook Next 14's bundled webpack lacks | <https://webpack.js.org/>               |

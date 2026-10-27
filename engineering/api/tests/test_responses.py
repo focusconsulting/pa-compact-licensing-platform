@@ -126,10 +126,6 @@ def test_a_page_reports_its_position():
     assert PageQuery(page=1, page_size=25, sort=()).page_of(0) == Page(number=1, size=25, total=0)
 
 
-# Routes still answering with a bare body. /api/me moves to Data with the generated client (SCRUM-79).
-_UNWRAPPED = {'/api/me'}
-
-
 def _bare_bodies(routes: list) -> list[str]:
     """The /api routes outside /api/health whose body is neither Data, Paged, nor empty."""
     return [
@@ -138,7 +134,6 @@ def _bare_bodies(routes: list) -> list[str]:
         if isinstance(route, APIRoute)
         and route.path.startswith('/api')
         and not route.path.startswith('/api/health')
-        and route.path not in _UNWRAPPED
         and not (route.response_model is None or issubclass(route.response_model, (Data, Paged)))
     ]
 

@@ -10,6 +10,8 @@ export default defineConfig({
     setupFiles: ["./src/tests/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
     css: false,
+    // The API client builds absolute URLs; tests assert on this host.
+    env: { NEXT_PUBLIC_API_BASE_URL: "http://api.test" },
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],

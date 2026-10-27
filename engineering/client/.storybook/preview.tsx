@@ -6,6 +6,8 @@ import "../src/styles/styles.scss";
  */
 import { Preview } from "@storybook/nextjs";
 
+import { AuthProvider } from "../src/contexts/AuthContext";
+
 const parameters = {
   nextjs: {
     appDirectory: true,
@@ -36,6 +38,13 @@ const parameters = {
 
 const preview: Preview = {
   parameters,
+  decorators: [
+    (Story) => (
+      <AuthProvider>
+        <Story />
+      </AuthProvider>
+    ),
+  ],
 };
 
 export default preview;

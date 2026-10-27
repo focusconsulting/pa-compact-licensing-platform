@@ -78,7 +78,7 @@ Branches follow `feature/SCRUM-<n>-<slug>`; each PR targets the branch below it.
 | 3 | `feature/SCRUM-78-cascade` | `deactivate_privileges`, `GET /commission/audit` |
 | 4 | `feature/SCRUM-79-namespaces` | Persona namespaces, the envelope test, `SYSTEM_ADMIN` |
 | 5 | `feature/SCRUM-79-openapi` | OpenAPI export, drift check, generated types, Prism mock (ADR-0013) |
-| 6 | `feature/SCRUM-79-client` | Generated client in the app, `/me` moves to `Data`, Storybook on MSW |
+| 6 | `feature/SCRUM-79-client` | Generated client in the app, `/me` moves to `Data`, Storybook on Prism |
 | 7 | `feature/SCRUM-79-demo-seed` | `just seed demo` |
 | 8 | `feature/SCRUM-80-worker` | Worker process, jobs, `just job`, Compose services |
 | 9 | `feature/SCRUM-80-email` | `send_pending`, templates, `state_contacts` (ADR-0014) |
@@ -185,15 +185,15 @@ Branches follow `feature/SCRUM-<n>-<slug>`; each PR targets the branch below it.
 
 ### Changes Required
 
-- **`client/src/lib/api.ts`**: `api`, an `openapi-fetch` client on `paths` with `baseUrl` from `NEXT_PUBLIC_API_BASE_URL`; its `onRequest` middleware adds the ID token from `getCurrentSession()` and throws `Not authenticated` without one, as `authFetch` does. `authFetch` stays for non-JSON calls.
+- **`client/src/lib/api.ts`**: `api`, an `openapi-fetch` client on `paths` with `baseUrl` from `NEXT_PUBLIC_API_BASE_URL`, looking up `fetch` per call so a test's stub applies; its `onRequest` middleware adds the ID token from `getCurrentSession()` and throws `Not authenticated` without one, as `authFetch` does. `authFetch` stays for non-JSON calls.
 - **`routes/user.py`**: `get_me` returns `Data[CurrentUser]`; regenerate. The envelope test's `/me` exception is removed.
 - **`client/src/app/page.tsx`**: drops the hand-written `CurrentUser` (:9-17) for `components['schemas']['CurrentUser']` and reads `data.data` from `api.GET('/api/me')`.
-- **Client tests**: `src/tests/setup.ts` starts an MSW `setupServer` with the generated handlers and `onUnhandledRequest: 'error'`. `page.test.tsx` uses the generated `/api/me` handler, with `server.use` for the error case, in place of mocking `authFetch`; `api.test.ts` covers the middleware.
+- **Client tests**: `src/tests/setup.ts` stubs `fetch` to reject before each test, so an unanswered request fails, and `src/tests/fetch.ts`'s `answerFetch(body, status)` answers one. `page.test.tsx` answers `/api/me` that way in place of mocking `authFetch`; `api.test.ts` covers the middleware by reading the stubbed calls.
 - **Storybook**:
-  - `msw-storybook-addon` (dev). `msw init` writes the worker to `.storybook/public/`, served through `staticDirs` in `main.ts`, so it never ships in the client build.
-  - `preview.ts`: `initialize()`, `loaders: [mswLoader]`, and the generated handlers in `parameters.msw.handlers`.
-  - `main.ts`: `webpackFinal` adds a `NormalModuleReplacementPlugin` that swaps `src/lib/auth` for `.storybook/mocks/auth.ts`, whose `getCurrentSession()` returns a fixed session. `AuthProvider` and the client middleware both import it, so no production code changes.
-  - `home.stories.tsx`: the dashboard with the generated handlers, and a story where `/api/me` answers `403`.
+  - `main.ts`: `env` sets `NEXT_PUBLIC_API_BASE_URL` to the Prism mock (`http://localhost:4010`, `just mock-api`), or `STORYBOOK_API_BASE_URL`; `staticDirs` serves the app's `public/` for the USWDS fonts.
+  - `webpack` pinned below 5.101 (dev): later versions' `DefinePlugin` taps a parser hook Next 14's bundled webpack lacks, which broke `build-storybook` on `main`. CI builds Storybook.
+  - `main.ts`: a small plugin swaps the resolved `src/lib/auth.ts` for `.storybook/mocks/auth.ts`, whose `getCurrentSession()` returns a fixed session; an alias never applies, because the tsconfig paths resolver handles `src/...` first. `AuthProvider`, which `preview.tsx` wraps every story in, and the client middleware both import it, so no production code changes.
+  - `home.stories.tsx`: the dashboard with the API's example user from Prism. The error state is covered by `page.test.tsx`, since Prism answers only documented responses.
 - **Deploy order**: the API and client deploy to DEV separately on merge, so the dashboard shows an error between the two deploys. Acceptable in DEV; the PR says so.
 
 ### Success Criteria
@@ -205,7 +205,7 @@ Branches follow `feature/SCRUM-<n>-<slug>`; each PR targets the branch below it.
 
 #### Manual Verification
 
-- [ ] `pnpm storybook` with no API running renders the dashboard with the example user, and the error story shows the error.
+- [ ] `just mock-api` and `pnpm storybook` render the dashboard with the example user.
 - [ ] `just up`: the dashboard shows the signed-in user.
 
 ## Phase 7: The demo seed (SCRUM-79)
@@ -299,7 +299,7 @@ Branches follow `feature/SCRUM-<n>-<slug>`; each PR targets the branch below it.
 
 ### Changes Required
 
-- **`client/src/components/FilePickerField.tsx`**: checks size and type, requests the upload form, posts the file, stores the document ID; errors through i18next; story against MSW.
+- **`client/src/components/FilePickerField.tsx`**: checks size and type, requests the upload form, posts the file, stores the document ID; errors through i18next; story against the Prism mock.
 - **Terraform** `documents.tf`: private bucket, versioning, SSE-KMS with a customer key, CORS for the client origin, TLS-only policy; task role `s3:PutObject`, `s3:GetObject`, `s3:GetObjectTagging` on it; settings into the task definitions.
 
 ---
@@ -309,7 +309,7 @@ Branches follow `feature/SCRUM-<n>-<slug>`; each PR targets the branch below it.
 - API tests run against the Compose services; the dispatcher, sender, scan job, and job runner are called directly.
 - Concurrency tests run two dispatchers or senders with `asyncio.gather` on separate sessions.
 - Snapshot tests fix email output; day arithmetic takes explicit dates, so no clock is frozen.
-- Client tests use vitest with MSW handlers from the generated mocks.
+- Client tests use vitest, answering `fetch` with `answerFetch`.
 
 ## Security Impact Assessment
 

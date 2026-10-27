@@ -57,6 +57,11 @@ jobs:
           pnpm generate
           git diff --exit-code src/api || (echo "Run \`just generate\` and commit the result." && exit 1)
 
+      - name: Build Storybook
+        run: pnpm build-storybook --quiet
+        env:
+          STORYBOOK_DISABLE_TELEMETRY: 1
+
   test:
     runs-on: ubuntu-latest
     steps:
