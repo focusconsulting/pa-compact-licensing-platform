@@ -213,7 +213,7 @@ Branches follow `feature/SCRUM-<n>-<slug>`; each PR targets the branch below it.
 ### Changes Required
 
 - **`engineering/api/seed/demo.py`**: `async def seed(session) -> list[Expected]`, deterministic, dates relative to `days.compact_today(session)`. It flushes and leaves the commit to its caller; run as a script, it opens a session from `settings`, seeds, commits, and prints a summary.
-  - Refuses to run when any practitioner exists. A migrated database already holds the system user, the 56 states, and the reference rows; "empty" means no domain data.
+  - Refuses a second run (the demo staff already exist): tests share the local database, so refusing on any practitioner would fail for whoever ran a factory. A migrated database already holds the system user, the 56 states, and the reference rows.
   - Writes as `system_context(session)`. The repo has no create functions and `tests/factories.py` writes no history, so a local helper adds each row and calls `history.write(..., before=None)`. It never calls `emit`, so no email goes out.
   - States: KS, OK, MO, CO set `is_member`, `member_effective_on`, `is_live`, with history. Fees: the Commission participation fee and each live state's privilege fee.
   - Users: one `licensee` per practitioner; KS `state_staff` with `{"KS": ["read_private", "write"]}`, KS `state_admin`, OK `state_staff`.
@@ -226,9 +226,9 @@ Branches follow `feature/SCRUM-<n>-<slug>`; each PR targets the branch below it.
     - an open and a closed SII report.
   - An in-force license adverse action leaves that practitioner's privileges `inactive` with `qualifying_license_adverse_action`, set directly, because `deactivate_privileges` emits events.
   - If the module passes 600 lines, the scenarios split into `seed/demo_*.py` modules.
-- **`just seed`** (`engineering/api/justfile:26-28`): runs `uv run --env-file .env python seed/<name>.py` when it exists, else pipes `seed/<name>.sql` into `psql` as today. `just up` keeps seeding `users`.
+- **`just seed`** (`engineering/api/justfile:26-28`): runs `uv run --env-file .env python -m seed.<name>` when `seed/<name>.py` exists, else pipes `seed/<name>.sql` into `psql` as today. `just up` keeps seeding `users`.
 - **`engineering/mocks/cognito/db/local_licensing.json`**: entries for the demo staff and two PAs, password `Local-Passw0rd!`.
-- **`tests/test_demo_seed.py`**: runs `seed` in `db_session` (rolled back). Each `Expected` matches its row in `v_privilege_status`, `v_qualifying_license_status`, `v_compact_eligibility`, or the stored application and request status; each enum above and the four eligibility cases are covered in full; a second run raises.
+- **`tests/test_demo_seed.py`**: runs `seed` in `db_session` (rolled back), and skips on a local database that already holds the demo seed. Each `Expected` matches its row in `v_privilege_status`, `v_qualifying_license_status`, `v_compact_eligibility`, or the stored application and request status; each enum above and the four eligibility cases are covered in full; a second run raises.
 - **`docs/demo.md`**: which login shows which scenario, and the sprint-review script.
 
 ### Success Criteria
