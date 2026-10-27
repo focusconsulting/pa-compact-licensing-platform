@@ -94,7 +94,10 @@ export interface components {
      * @example {
      *       "action": "ssn.revealed",
      *       "actor_email": "pat.morgan@example.com",
+     *       "after": null,
+     *       "before": null,
      *       "entity_id": 42,
+     *       "entity_key": null,
      *       "entity_type": "practitioner",
      *       "occurred_at": "2026-10-21T14:05:00Z",
      *       "reason": "Verifying identity for an application",
@@ -198,6 +201,11 @@ export interface components {
     /**
      * Page
      * @description Where a page sits in a list: its 1-based ``number``, its ``size``, and the ``total`` count across all pages.
+     * @example {
+     *       "number": 1,
+     *       "size": 25,
+     *       "total": 1
+     *     }
      */
     Page: {
       /** Number */
