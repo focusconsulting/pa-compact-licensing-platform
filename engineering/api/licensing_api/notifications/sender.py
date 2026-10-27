@@ -10,7 +10,7 @@ import time
 from datetime import timedelta
 from email.message import EmailMessage
 
-from jinja2 import Environment, TemplateError
+from jinja2 import Environment
 from sqlalchemy import func, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlmodel import col, select
@@ -72,13 +72,15 @@ async def _send_one(
         ctx = await system_context(session)
         # The template and ID only: the address is PII.
         log = {'notification_id': str(notification.public_id), 'template': notification.template}
+        # No exception text or traceback in logs: SMTP errors quote the address. last_error keeps it.
         attempts = notification.attempts + 1
         started = time.monotonic()
         try:
             email = render(environment, notification.template, notification.context, settings)
             await asyncio.to_thread(_deliver, settings, notification.recipient_email, email)
-        # smtplib.SMTPException is an OSError, as are connection failures and timeouts.
-        except (TemplateError, OSError) as error:
+        # Anything, not only SMTP and template errors: one row that cannot be sent (an address
+        # EmailMessage rejects, say) must fail alone, not crash the Worker on every restart.
+        except Exception as error:
             failure = {
                 'attempts': attempts,
                 'last_error': f'{type(error).__name__}: {error}'[:_MAX_ERROR_LENGTH],
@@ -86,16 +88,16 @@ async def _send_one(
             }
             if attempts >= MAX_ATTEMPTS:
                 await _record(session, notification, **failure, status=NotificationStatus.FAILED)
-                logger.exception(
-                    'Notification failed', extra={**log, 'attempts': attempts, 'outcome': 'failed'}
+                logger.error(
+                    'Notification failed',
+                    extra={**log, **_error_log(error, attempts), 'outcome': 'failed'},
                 )
             else:
                 delay = FIRST_RETRY_DELAY * 2 ** (attempts - 1)
                 await _record(session, notification, **failure, next_attempt_at=func.now() + delay)
                 logger.warning(
                     'Notification send failed; will retry',
-                    exc_info=True,
-                    extra={**log, 'attempts': attempts, 'outcome': 'retrying'},
+                    extra={**log, **_error_log(error, attempts), 'outcome': 'retrying'},
                 )
             return False
 
@@ -113,6 +115,10 @@ async def _send_one(
             'Notification sent', extra={**log, 'outcome': 'sent', 'duration_ms': duration_ms}
         )
         return True
+
+
+def _error_log(error: Exception, attempts: int) -> dict[str, object]:
+    return {'attempts': attempts, 'error_type': type(error).__name__}
 
 
 def _deliver(settings: Settings, recipient: str, email: RenderedEmail) -> None:

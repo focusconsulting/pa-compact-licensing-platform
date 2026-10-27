@@ -152,9 +152,31 @@ async def test_a_failed_send_is_retried_later_then_marked_failed_and_logged(
         'Notification failed',
         'failed',
     )
+    assert final.__dict__['error_type'] == 'ConnectionRefusedError'
+    assert final.exc_info is None, 'SMTP errors quote the address, so no traceback is logged'
     assert 'avery@demo.example' not in str(final.__dict__), 'the address is PII and never logged'
     await _make_due(committed_sessions)
     assert await send_pending(committed_sessions, TEST_SETTINGS) == 0, 'a failed email stays failed'
+
+
+async def test_an_address_that_cannot_be_sent_to_fails_alone(committed_sessions, maildev, caplog):
+    await _queue(
+        committed_sessions,
+        'event-1:tests.example',
+        recipient='a@demo.example\r\nBcc: x@demo.example',
+    )
+    await _queue(committed_sessions, 'event-2:tests.example')
+
+    with caplog.at_level(logging.WARNING, logger='licensing_api.notifications.sender'):
+        assert await send_pending(committed_sessions, TEST_SETTINGS) == 1
+
+    rejected, sent = await _notifications(committed_sessions)
+    assert (rejected.status, rejected.attempts) == (NotificationStatus.PENDING, 1)
+    assert rejected.last_error is not None and rejected.last_error.startswith('ValueError')
+    assert sent.status == NotificationStatus.SENT
+    assert [email['to'][0]['address'] for email in _received(maildev)] == ['avery@demo.example']
+    [failure] = [r for r in caplog.records if r.name == 'licensing_api.notifications.sender']
+    assert failure.__dict__['error_type'] == 'ValueError'
 
 
 async def test_a_template_that_cannot_render_fails_the_send(committed_sessions, maildev):
