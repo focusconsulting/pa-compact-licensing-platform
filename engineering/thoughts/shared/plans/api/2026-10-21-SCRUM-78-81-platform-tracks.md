@@ -16,7 +16,7 @@ Build the four remaining epic 2 tracks on the [platform contract](../../../../do
 
 ## Constitution Check
 
-- **I.** New dependencies each get an ADR with pros and cons per option and a row in the API or client README table: `boto3`, `jinja2`, `aiosmtplib`, `openapi-typescript`, `openapi-fetch`, `msw`, `msw-storybook-addon`. Raw SQL appears only for `FOR UPDATE SKIP LOCKED` claims, with a comment.
+- **I.** New dependencies each get an ADR with pros and cons per option and a row in the API or client README table: `boto3`, `jinja2`, `aiosmtplib`, `openapi-typescript`, `openapi-fetch`; Prism runs as a pinned Docker image. Raw SQL appears only for `FOR UPDATE SKIP LOCKED` claims, with a comment.
 - **II.** Document downloads are scoped in the query: out-of-scope documents are `404`. Persona namespaces are checked by a test, and permissions stay the only check.
 - **III.** Every module at 100% line and branch coverage against real Postgres, RustFS, and maildev. The dispatcher, sender, and scan job are tested by calling them, never by a background loop.
 - **IV.** The Worker, cron, and malware scanner run as Docker Compose services on the same code path as AWS. The malware scanner is local tooling under `engineering/mocks/`. The demo seed lives in `engineering/api/seed/`, which `.dockerignore` already excludes.
@@ -27,7 +27,7 @@ Build the four remaining epic 2 tracks on the [platform contract](../../../../do
 - **XII.** Every new setting is in `.env.example`; README covers `just job`, `just seed demo`, `just generate`, and the new Compose services.
 - **XIII.** `licensing_api/days.py` is the single place for day and business-day arithmetic.
 - **XIV.** Additive migrations only: new columns are nullable or defaulted; new tables are empty.
-- **XV.** Each PR below is sized under 600 production lines. Generated code (OpenAPI document, TypeScript client, mocks) is named with its command.
+- **XV.** Each PR below is sized under 600 production lines. Generated code (OpenAPI document, TypeScript client) is named with its command.
 
 ## Current State Analysis
 
@@ -46,7 +46,7 @@ Build the four remaining epic 2 tracks on the [platform contract](../../../../do
 - A route test that changes a record without emitting an event fails.
 - `dispatch_events` delivers each event once per handler, retries with backoff, dead-letters after five attempts, and two Workers never handle the same delivery.
 - `just up` shows an email in maildev seconds after a change; `just job heartbeat` runs a job; `just seed demo` fills an empty database with every application and privilege status.
-- `just generate` regenerates the OpenAPI document, the TypeScript types, and the MSW handlers; CI fails on drift; Storybook renders the dashboard with no API.
+- `just generate` regenerates the OpenAPI document and the TypeScript types; `just mock-api` serves the document's examples with Prism; CI fails on drift; Storybook renders the dashboard with no API.
 - A PA uploads a 20 MB PDF; 21 MB is refused by the bucket; EICAR is tagged infected locally and can never be downloaded; state A gets `404` for state B's document.
 
 ### Key Discoveries
@@ -77,7 +77,7 @@ Branches follow `feature/SCRUM-<n>-<slug>`; each PR targets the branch below it.
 | 2 | `feature/SCRUM-78-dispatcher` | `dispatch_events`, retry, dead-letter (ADR-0012) |
 | 3 | `feature/SCRUM-78-cascade` | `deactivate_privileges`, `GET /commission/audit` |
 | 4 | `feature/SCRUM-79-namespaces` | Persona namespaces, the envelope test, `SYSTEM_ADMIN` |
-| 5 | `feature/SCRUM-79-openapi` | OpenAPI export, drift check, generated types and mocks (ADR-0013) |
+| 5 | `feature/SCRUM-79-openapi` | OpenAPI export, drift check, generated types, Prism mock (ADR-0013) |
 | 6 | `feature/SCRUM-79-client` | Generated client in the app, `/me` moves to `Data`, Storybook on MSW |
 | 7 | `feature/SCRUM-79-demo-seed` | `just seed demo` |
 | 8 | `feature/SCRUM-80-worker` | Worker process, jobs, `just job`, Compose services |
@@ -156,18 +156,18 @@ Branches follow `feature/SCRUM-<n>-<slug>`; each PR targets the branch below it.
 
 ### Changes Required
 
-- **`engineering/api/scripts/export_openapi.py`** (new) and `just openapi`: imports `app` and writes `engineering/api/openapi.json` as `json.dumps(app.openapi(), indent=2, sort_keys=True)` plus a newline. Importing the app needs no database: every setting has a default (`config.py:6-25`) and the engine is created in `lifespan`.
-- **Response examples**: every response model (`CurrentUser`, `AuditEntryOut`, `LiveResp`, `ReadyResp`, `ErrorResponse`) sets `json_schema_extra={'examples': [...]}`. `Data[T]`, `Paged[T]`, and `Page` carry none; the mock generator builds them.
-- **`tests/test_openapi.py`**: every component schema except the `Data`, `Paged`, and `Page` wrappers has an example; the committed `openapi.json` equals a fresh export, so drift fails `just test` locally and in `api.yml`'s existing test job.
+- **`engineering/api/scripts/export_openapi.py`** (new) and `just openapi`: imports `app` and writes `engineering/api/openapi.json` as `json.dumps(document(), indent=2, sort_keys=True)` plus a newline, where `document()` is `app.openapi()` with each example's missing required fields set to `null` (FastAPI drops `None` from examples). Importing the app needs no database: every setting has a default (`config.py:6-25`) and the engine is created in `lifespan`.
+- **Response examples**: every model a route returns (`CurrentUser`, `AuditEntryOut`, `LiveResp`, `ReadyResp`) sets `json_schema_extra=example(...)` (`responses.py`), which builds the model from the given fields and dumps it, so an example missing a field of its model fails. So does `Page`. `Data[T]` and `Paged[T]` carry none; Prism builds them from what they hold.
+- **`routes/__init__.py`**: the `api` router documents `422` as `ErrorResponse`, the body the API sends, replacing FastAPI's `HTTPValidationError`.
+- **`tests/test_openapi.py`**: every model a success response returns, looking inside `Data` and `Paged`, has an example; an example is `null` only in a nullable field; every `422` is `ErrorResponse`; the committed `openapi.json` equals a fresh export, so drift fails `just test` locally and in `api.yml`'s existing test job.
 - **`engineering/client`**:
-  - `openapi-fetch` (dependency); `openapi-typescript` and `msw` (dev). Versions older than `.npmrc`'s 14-day `minimum-release-age`.
-  - `pnpm generate`: `openapi-typescript ../api/openapi.json -o src/api/schema.d.ts`, then `node scripts/generate-mocks.mjs`.
-  - `scripts/generate-mocks.mjs` writes `src/api/mocks.ts`: one MSW handler per operation, answering its success status with a body built from examples. A `$ref` takes the component's first example; `Data_X_` becomes `{data: X}`; `Paged_X_` becomes `{data: [X], page: {number: 1, size: 25, total: 1}}`; `{state_code}` becomes `:state_code`.
-  - Generated files open with a header naming `pnpm generate` and are excluded from eslint and coverage.
-- **Root `justfile`**: `just generate` runs `just openapi`, then `pnpm generate`.
+  - `openapi-typescript` (dev); `openapi-fetch` comes with its first caller in phase 6. No mocking code or dependency.
+  - `pnpm generate`: `openapi-typescript ../api/openapi.json -o src/api/schema.d.ts`, then Prettier.
+  - The generated types open with a header from `openapi-typescript` and are excluded from eslint.
+- **Root `justfile`**: `just generate` runs `just openapi`, then `pnpm generate`. `just mock-api` runs `stoplight/prism:5.15.10` on port 4010 against the committed document (`--platform linux/amd64`, since the image is amd64-only; `-m false`, since its multi-process start fails).
 - **`client.yml`**: the PR path filter adds `engineering/api/openapi.json`; the lint job runs `pnpm generate` and fails on `git diff --exit-code src/api`. It needs no Python, since it reads the committed document.
-- **ADR-0013** (new): `openapi-typescript` + `openapi-fetch` + example-driven MSW handlers, against orval, hey-api, and `msw-auto-mock`; pros and cons.
-- **`engineering/client/README.md`**: a dependency table in the API README's format (Package, Purpose, Docs), with the three new packages and `msw-storybook-addon` from phase 6.
+- **ADR-0013** (new): `openapi-typescript` + `openapi-fetch` + Prism, against generated MSW handlers, orval, hey-api, and `msw-auto-mock`; pros and cons.
+- **`engineering/client/README.md`**: a dependency table in the API README's format (Package, Purpose, Docs), with the new packages and Prism.
 
 ### Success Criteria
 
@@ -179,7 +179,7 @@ Branches follow `feature/SCRUM-<n>-<slug>`; each PR targets the branch below it.
 
 #### Manual Verification
 
-- [ ] `src/api/mocks.ts` answers `/api/me` and `/api/commission/audit` with the examples.
+- [ ] `just mock-api` answers `/api/me` and `/api/commission/audit` with the examples, every required field present, and answers `401` with no bearer token.
 
 ## Phase 6: The app on the generated client (SCRUM-79)
 

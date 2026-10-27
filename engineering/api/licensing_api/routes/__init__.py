@@ -9,6 +9,7 @@ from collections.abc import Mapping, Sequence
 
 from fastapi import APIRouter
 
+from licensing_api.errors import ErrorResponse
 from licensing_api.routes import audit, health, user
 
 NAMESPACES: Mapping[str, Sequence[APIRouter]] = {
@@ -24,7 +25,8 @@ NAMESPACES: Mapping[str, Sequence[APIRouter]] = {
     '/admin': [],
 }
 
-api = APIRouter(prefix='/api')
+# A 422 carries ErrorResponse (errors.validation_error_handler), not FastAPI's default body.
+api = APIRouter(prefix='/api', responses={422: {'model': ErrorResponse}})
 # If we decide to exclude /health routes from /api, that is make them private,
 # include the health.router directly to app. Then update the paths in
 # infrastructure/iac/components/app/terraform/ecs.tf

@@ -2,12 +2,13 @@ import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from licensing_api.dependencies import get_db_engine
 from licensing_api.permissions import public
+from licensing_api.responses import example
 
 logger = logging.getLogger(__name__)
 
@@ -17,11 +18,15 @@ router = APIRouter(prefix='/health', tags=['health'], dependencies=[public()])
 class LiveResp(BaseModel):
     """The liveness response: ``status`` is always ``ok``."""
 
+    model_config = ConfigDict(json_schema_extra=example(status='ok'))
+
     status: str
 
 
 class ReadyResp(BaseModel):
     """The readiness response: whether the database answered."""
+
+    model_config = ConfigDict(json_schema_extra=example(db=True))
 
     db: bool
 
