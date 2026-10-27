@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Annotated, Any
 
 from fastapi import Depends, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from licensing_api.errors import AppError, ErrorCode
 
@@ -21,6 +21,10 @@ class Data[T](BaseModel):
 
 class Page(BaseModel):
     """Where a page sits in a list: its 1-based ``number``, its ``size``, and the ``total`` count across all pages."""
+
+    model_config = ConfigDict(
+        json_schema_extra={'examples': [{'number': 1, 'size': 25, 'total': 1}]}
+    )
 
     number: int
     size: int

@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    # The client's types and mocks are generated from the API's document.
+    # The client's types are generated from the API's document.
     paths: [engineering/client/**, engineering/api/openapi.json]
   workflow_dispatch:
 
@@ -52,7 +52,7 @@ jobs:
       - name: Type check
         run: pnpm typecheck
 
-      - name: Check generated API types and mocks
+      - name: Check generated API types
         run: |
           pnpm generate
           git diff --exit-code src/api || (echo "Run \`just generate\` and commit the result." && exit 1)

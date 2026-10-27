@@ -33,10 +33,18 @@ down:
 seed name="users":
     cd engineering/api && just seed {{ name }}
 
-# Regenerate the API document, then the client's types and mocks from it
+# Regenerate the API document, then the client's types from it
 generate:
     cd engineering/api && just openapi
     cd engineering/client && pnpm generate
+
+# Answer the API's routes with the examples in openapi.json on port 4010 (ADR-0013); any bearer token passes.
+# Point the client at it with NEXT_PUBLIC_API_BASE_URL=http://localhost:4010. The image is amd64-only, and
+# `-m false` avoids Prism 5.15's multi-process start, which fails on its bundled Node.
+mock-api:
+    docker run --rm --init --platform linux/amd64 -p 4010:4010 \
+        -v "$PWD/engineering/api/openapi.json:/openapi.json:ro" \
+        stoplight/prism:5.15.10 mock -m false -h 0.0.0.0 /openapi.json
 
 # Run the end-to-end tests against the running system (start it with `just up` first)
 e2e:
