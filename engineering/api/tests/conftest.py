@@ -90,21 +90,25 @@ async def db_session(client) -> AsyncGenerator[AsyncSession]:
     await engine.dispose()
 
 
-# Tables the Worker's and jobs' code writes in their own transactions, in the order their rows are deleted.
-_WORKER_TABLES = ('job_runs', 'notifications', 'domain_event_deliveries', 'domain_events')
+# Tables the Worker's code writes in its own transactions, in the order their rows are deleted.
+_WORKER_TABLES = ('notifications', 'domain_event_deliveries', 'domain_events')
+# Emptied before the test as well as after: `just job` fills them in the shared local database.
+_JOB_TABLES = ('job_runs',)
 
 
 @pytest.fixture
 async def committed_sessions(client) -> AsyncGenerator[async_sessionmaker[AsyncSession]]:
     """Sessions that really commit, for code that opens its own transactions, such as the dispatcher.
 
-    Every Worker-table row the test leaves is deleted afterwards. Rows the test
-    commits elsewhere are its own to remove.
+    Every Worker-table and job-table row the test leaves is deleted afterwards.
+    Rows the test commits elsewhere are its own to remove.
     """
     # Pooled, as the Worker's engine is, so timings are realistic.
     engine = create_async_engine(TEST_SETTINGS.db_url)
     factory = async_sessionmaker(engine, expire_on_commit=False)
-    async with factory() as session:
+    async with factory() as session, session.begin():
+        for table in _JOB_TABLES:
+            await session.execute(text(f'DELETE FROM {table}'))
         # Raw SQL: these tables are listed by name, and the ORM has nothing to add to a bulk delete.
         leftovers = {
             table: (await session.execute(text(f'SELECT count(*) FROM {table}'))).scalar_one()
@@ -115,7 +119,7 @@ async def committed_sessions(client) -> AsyncGenerator[async_sessionmaker[AsyncS
         yield factory
     finally:
         async with factory() as session, session.begin():
-            for table in _WORKER_TABLES:
+            for table in (*_JOB_TABLES, *_WORKER_TABLES):
                 await session.execute(text(f'DELETE FROM {table}'))
         await engine.dispose()
 
