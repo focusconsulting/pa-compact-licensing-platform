@@ -24,6 +24,7 @@ from licensing_api.repo.privilege_request import PrivilegeRequest
 from licensing_api.repo.qualifying_license import QualifyingLicense
 from licensing_api.repo.sii_report import SiiReport
 from licensing_api.repo.state import State
+from licensing_api.repo.state_contact import StateContact
 
 if TYPE_CHECKING:
     # Annotations only: licensing_api.context imports the repo package, so a runtime import would be circular.
@@ -130,6 +131,15 @@ class FeeHistory(HistoryRecord, table=True):
     entity_id: int = Field(foreign_key='fees.id')
 
 
+class StateContactHistory(HistoryRecord, table=True):
+    """Every change to a state's notification contacts."""
+
+    # SQLModel defines __tablename__ as a declared_attr method; assigning a string is its documented way to name a table.
+    __tablename__ = 'state_contacts_history'  # type: ignore[assignment]
+
+    entity_id: int = Field(foreign_key='state_contacts.id')
+
+
 _HISTORY_TABLES: Mapping[type[SQLModel], type[HistoryRecord]] = {
     Practitioner: PractitionerHistory,
     QualifyingLicense: QualifyingLicenseHistory,
@@ -140,6 +150,7 @@ _HISTORY_TABLES: Mapping[type[SQLModel], type[HistoryRecord]] = {
     SiiReport: SiiReportHistory,
     State: StateHistory,
     Fee: FeeHistory,
+    StateContact: StateContactHistory,
 }
 
 

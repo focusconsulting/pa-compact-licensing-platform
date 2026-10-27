@@ -20,6 +20,7 @@ from licensing_api.repo.practitioner import Practitioner
 from licensing_api.repo.privilege import Privilege
 from licensing_api.repo.privilege_request import PrivilegeRequest, PrivilegeRequestStatus
 from licensing_api.repo.qualifying_license import LicenseStatus, QualifyingLicense
+from licensing_api.repo.state_contact import ContactPurpose, StateContact
 from licensing_api.repo.user import SYSTEM_USER_EMAIL, User
 
 
@@ -188,6 +189,20 @@ async def make_adverse_action(
     }
     fields.update(overrides)
     return await _add(session, AdverseAction(**fields))
+
+
+async def make_state_contact(
+    session: AsyncSession, state_code: str, purpose: ContactPurpose, email: str
+) -> StateContact:
+    return await _add(
+        session,
+        StateContact(
+            state_code=state_code,
+            purpose=purpose,
+            email=email,
+            created_by=await system_user_id(session),
+        ),
+    )
 
 
 async def _add[T](session: AsyncSession, row: T) -> T:
