@@ -1,0 +1,3 @@
+{% extends 'staff.txt' %}
+{% block subject %}New compact eligibility application{% endblock %}
+{% block message %}A PA applied for compact eligibility with {{ state_name }} as their state of qualifying license. The application is waiting for your review.{% endblock %}

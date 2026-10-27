@@ -1,0 +1,3 @@
+{% extends 'staff.txt' %}
+{% block subject %}Application withdrawn{% endblock %}
+{% block message %}An application for compact eligibility with {{ state_name }} as the state of qualifying license was withdrawn. No action is needed.{% endblock %}

@@ -1,0 +1,3 @@
+{% extends 'staff.txt' %}
+{% block subject %}Application resubmitted{% endblock %}
+{% block message %}A PA resubmitted their application for compact eligibility with the information {{ state_name }} asked for. The application is waiting for your review.{% endblock %}

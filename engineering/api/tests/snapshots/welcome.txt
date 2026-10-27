@@ -1,0 +1,12 @@
+This email comes from the PA Compact LOCAL_DEV test system. It is not about a real practitioner, application, or privilege.
+
+Hello Avery,
+
+Your PA Compact account is ready. Once you sign in, you can apply for compact eligibility through your state of qualifying license.
+
+Sign in to see the details: http://localhost:3000
+
+--
+PA Compact Commission Data System
+http://localhost:3000
+This mailbox is not monitored. Please do not reply.
