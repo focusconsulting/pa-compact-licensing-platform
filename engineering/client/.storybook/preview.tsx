@@ -5,18 +5,10 @@ import "../src/styles/styles.scss";
  * @see https://storybook.js.org/docs/configure#configure-story-rendering
  */
 import { Preview } from "@storybook/nextjs";
-import { initialize, mswLoader } from "msw-storybook-addon";
 
-import { handlers } from "../src/api/mocks";
 import { AuthProvider } from "../src/contexts/AuthContext";
 
-// Answers API calls with the generated mocks; a story overrides `msw.handlers.api`.
-initialize({ onUnhandledRequest: "bypass" });
-
 const parameters = {
-  msw: {
-    handlers: { api: handlers },
-  },
   nextjs: {
     appDirectory: true,
   },
@@ -46,7 +38,6 @@ const parameters = {
 
 const preview: Preview = {
   parameters,
-  loaders: [mswLoader],
   decorators: [
     (Story) => (
       <AuthProvider>

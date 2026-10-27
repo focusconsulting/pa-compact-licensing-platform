@@ -47,9 +47,14 @@ const config: StorybookConfig = {
       ),
     },
   },
-  // The app's assets (USWDS fonts), and MSW's service worker, kept out of the
-  // app's public/ so it never ships.
-  staticDirs: ["../public", "./public"],
+  // The app's assets (USWDS fonts).
+  staticDirs: ["../public"],
+  // API calls go to the Prism mock (`just mock-api`) unless told otherwise.
+  env: (config) => ({
+    ...config,
+    NEXT_PUBLIC_API_BASE_URL:
+      process.env.STORYBOOK_API_BASE_URL ?? "http://localhost:4010",
+  }),
   webpackFinal: async (webpackConfig) => {
     webpackConfig.plugins?.push(new SignedInSession());
     return webpackConfig;

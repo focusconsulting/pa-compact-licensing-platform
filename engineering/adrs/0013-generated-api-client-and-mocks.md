@@ -25,21 +25,30 @@ FastAPI already produces the document (`app.openapi()`). What remains is choosin
 1. **The document is committed.** `just openapi` writes `engineering/api/openapi.json` with sorted keys. `tests/test_openapi.py` fails while it differs from the code, so drift fails the API's existing test job.
 2. **Types from [openapi-typescript](https://openapi-ts.dev/).** `pnpm generate` writes `src/api/schema.d.ts`: types only, no runtime code.
 3. **Calls through [openapi-fetch](https://openapi-ts.dev/openapi-fetch/).** A typed `fetch` wrapper over those types; middleware adds the Cognito token (SCRUM-79 part 3).
-4. **Mocks from the API's examples.** Every model a route returns carries an example, which `tests/test_openapi.py` requires. `scripts/generate-mocks.mjs` writes `src/api/mocks.ts`, one [MSW](https://mswjs.io/) handler per operation. Each handler answers with its success status and a body built from those examples; the `Data` and `Paged` envelopes are built around them.
-5. **One command, one check.** `just generate` runs both steps. The client's CI regenerates from the committed document and fails on any difference in `src/api`.
-6. **MSW 2.** [msw-storybook-addon](https://github.com/mswjs/msw-storybook-addon) 3 needs Storybook 9, and its version 2 needs MSW 2. MSW 3 waits for the Storybook upgrade.
+4. **A mock server from the API's examples, outside the client.** `just mock-api` runs [Prism](https://github.com/stoplightio/prism) in Docker against the committed document. It answers each route with its success status and the examples on the API's response models, which `tests/test_openapi.py` requires; the `Data` and `Paged` envelopes are built around them. The client reaches it through its production code, pointed at `http://localhost:4010` by `NEXT_PUBLIC_API_BASE_URL`, so no mocking code is committed in the client.
+5. **One command, one check.** `just generate` writes the document and the types. The client's CI regenerates the types from the committed document and fails on any difference in `src/api`.
 
 ## Pros and cons
 
-### openapi-typescript + openapi-fetch + example-driven MSW handlers (chosen)
+### openapi-typescript + openapi-fetch + Prism (chosen)
 
-- Pro: the types are a `.d.ts` file. Nothing generated runs in the browser except the handlers, which run only in tests and Storybook.
+- Pro: the types are a `.d.ts` file, so nothing generated runs in the browser.
 - Pro: openapi-fetch is about 6 kB with no dependencies and uses the platform `fetch`, so `authFetch`'s behaviour carries over.
-- Pro: mock bodies are the examples the API documents, so a reviewer reads the same data in the docs, the stories, and the tests.
-- Pro: the mock generator is about 80 lines we can read and change (Principle I).
-- Con: the mock generator is ours to maintain, and it knows the `Data` and `Paged` envelopes.
+- Pro: mock bodies are the examples the API documents, so a reviewer reads the same data in the docs and the running mock.
+- Pro: Prism is a separate server, like the other local stand-ins (Principle IV): the client runs its production code against it, and no mock code or dependency enters the client.
+- Pro: Prism checks each request against the document, and rejects a call with no bearer token as the API does.
 - Con: every response model needs a hand-written example; the test makes forgetting one fail.
+- Con: FastAPI drops `null` values from examples, so `scripts/export_openapi.py` puts them back before writing the document.
+- Con: the image is amd64-only (emulated on Apple silicon) and needs `-m false` to start.
+- Con: unit tests and Storybook need the server running, or their own stubs, to reach an API.
 - Con: no React hooks are generated; pages call the client directly.
+
+### openapi-typescript + openapi-fetch + generated MSW handlers
+
+- Pro: tests and Storybook answer API calls in-process, with no server to start.
+- Con: a generator of ours (about 80 lines) and the handlers it writes are committed in the client, alongside the `msw` dependency.
+- Con: the generator knows the `Data` and `Paged` envelopes and fills dropped `null`s itself.
+- Con: MSW 3 needs Storybook 9 for its addon, so MSW stays pinned to 2.
 
 ### orval
 
@@ -67,8 +76,8 @@ FastAPI already produces the document (`app.openapi()`). What remains is choosin
 
 ## Consequences
 
-- New client dependencies: `openapi-fetch`; dev `openapi-typescript`, `msw`, `msw-storybook-addon` (listed in the client README).
-- A route's model change shows up as a diff in `openapi.json`, `schema.d.ts`, and `mocks.ts` in the same PR. These are generated files (Principle XV); review the model, not them.
+- New client dependencies: `openapi-fetch`; dev `openapi-typescript` (listed in the client README). Prism is a pinned Docker image, `stoplight/prism:5.15.10`, run by the root `justfile`.
+- A route's model change shows up as a diff in `openapi.json` and `schema.d.ts` in the same PR. These are generated files (Principle XV); review the model, not them.
 - A PR that changes only the API's document still runs the client's CI, which catches a change the client no longer compiles against.
-- FastAPI drops `null` values from examples, so the mock generator fills a missing nullable field with `null`.
+- `scripts/export_openapi.py` fills a required field an example leaves out with `null`; a test fails if that field is not nullable.
 - Every `/api` route documents its `422` as `ErrorResponse`, the body the API sends, in place of FastAPI's default `HTTPValidationError`, so the generated error type is right.
