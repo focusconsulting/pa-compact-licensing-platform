@@ -138,8 +138,8 @@
         }
       ]
     },
-    "kansas.staff@example.com": {
-      "Username": "kansas.staff@example.com",
+    "kansas.staff@demo.example": {
+      "Username": "kansas.staff@demo.example",
       "Password": "Local-Passw0rd!",
       "UserStatus": "CONFIRMED",
       "Enabled": true,
@@ -152,7 +152,7 @@
         },
         {
           "Name": "email",
-          "Value": "kansas.staff@example.com"
+          "Value": "kansas.staff@demo.example"
         },
         {
           "Name": "email_verified",
@@ -160,8 +160,8 @@
         }
       ]
     },
-    "kansas.admin@example.com": {
-      "Username": "kansas.admin@example.com",
+    "kansas.admin@demo.example": {
+      "Username": "kansas.admin@demo.example",
       "Password": "Local-Passw0rd!",
       "UserStatus": "CONFIRMED",
       "Enabled": true,
@@ -174,7 +174,7 @@
         },
         {
           "Name": "email",
-          "Value": "kansas.admin@example.com"
+          "Value": "kansas.admin@demo.example"
         },
         {
           "Name": "email_verified",
@@ -182,8 +182,8 @@
         }
       ]
     },
-    "oklahoma.staff@example.com": {
-      "Username": "oklahoma.staff@example.com",
+    "oklahoma.staff@demo.example": {
+      "Username": "oklahoma.staff@demo.example",
       "Password": "Local-Passw0rd!",
       "UserStatus": "CONFIRMED",
       "Enabled": true,
@@ -196,7 +196,7 @@
         },
         {
           "Name": "email",
-          "Value": "oklahoma.staff@example.com"
+          "Value": "oklahoma.staff@demo.example"
         },
         {
           "Name": "email_verified",
@@ -204,8 +204,8 @@
         }
       ]
     },
-    "avery.active@example.com": {
-      "Username": "avery.active@example.com",
+    "avery.active@demo.example": {
+      "Username": "avery.active@demo.example",
       "Password": "Local-Passw0rd!",
       "UserStatus": "CONFIRMED",
       "Enabled": true,
@@ -218,7 +218,7 @@
         },
         {
           "Name": "email",
-          "Value": "avery.active@example.com"
+          "Value": "avery.active@demo.example"
         },
         {
           "Name": "email_verified",
@@ -226,8 +226,8 @@
         }
       ]
     },
-    "lex.license-action@example.com": {
-      "Username": "lex.license-action@example.com",
+    "lex.license-action@demo.example": {
+      "Username": "lex.license-action@demo.example",
       "Password": "Local-Passw0rd!",
       "UserStatus": "CONFIRMED",
       "Enabled": true,
@@ -240,7 +240,7 @@
         },
         {
           "Name": "email",
-          "Value": "lex.license-action@example.com"
+          "Value": "lex.license-action@demo.example"
         },
         {
           "Name": "email_verified",

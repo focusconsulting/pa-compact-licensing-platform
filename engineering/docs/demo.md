@@ -18,11 +18,11 @@ Every login uses the password `Local-Passw0rd!` against the local Cognito mock.
 
 | Email | Role | For |
 |---|---|---|
-| `kansas.staff@example.com` | KS `state_staff`, with `read_private` and `write` in KS | Kansas applicants and licenses |
-| `kansas.admin@example.com` | KS `state_admin`, with `read_private` and `admin` in KS | Kansas, and its staff and settings |
-| `oklahoma.staff@example.com` | OK `state_staff`, with `read_private` and `write` in OK | Privileges in Oklahoma, the remote state |
-| `avery.active@example.com` | `licensee` | A PA with an active privilege |
-| `lex.license-action@example.com` | `licensee` | A PA barred by an adverse action |
+| `kansas.staff@demo.example` | KS `state_staff`, with `read_private` and `write` in KS | Kansas applicants and licenses |
+| `kansas.admin@demo.example` | KS `state_admin`, with `read_private` and `admin` in KS | Kansas, and its staff and settings |
+| `oklahoma.staff@demo.example` | OK `state_staff`, with `read_private` and `write` in OK | Privileges in Oklahoma, the remote state |
+| `avery.active@demo.example` | `licensee` | A PA with an active privilege |
+| `lex.license-action@demo.example` | `licensee` | A PA barred by an adverse action |
 
 The team's own logins from `just seed` are `admin` and see everything.
 
@@ -52,8 +52,8 @@ Each practitioner's surname names what they show. Kansas is the state of qualify
 
 ## Sprint review
 
-1. Sign in as `avery.active@example.com`: the dashboard shows a signed-in PA.
-2. Sign in as `kansas.staff@example.com`: a state staff member, scoped to Kansas.
+1. Sign in as `avery.active@demo.example`: the dashboard shows a signed-in PA.
+2. Sign in as `kansas.staff@demo.example`: a state staff member, scoped to Kansas.
 3. Show the statuses the views compute, which each epic's screens will read:
 
    ```bash

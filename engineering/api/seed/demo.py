@@ -42,10 +42,10 @@ LIVE_STATES = ('KS', 'OK', 'MO', 'CO')
 ELIGIBILITY = ('not_barred', 'barred', 'barred_until', 'bar_ended')
 # State staff who sign in through the Cognito mock (engineering/mocks/cognito/db/local_licensing.json).
 STAFF = (
-    ('kansas.staff@example.com', 'Kim', 'Kansas', 'state_staff', 'KS', ['read_private', 'write']),
-    ('kansas.admin@example.com', 'Kai', 'Kansas', 'state_admin', 'KS', ['read_private', 'admin']),
+    ('kansas.staff@demo.example', 'Kim', 'Kansas', 'state_staff', 'KS', ['read_private', 'write']),
+    ('kansas.admin@demo.example', 'Kai', 'Kansas', 'state_admin', 'KS', ['read_private', 'admin']),
     (
-        'oklahoma.staff@example.com',
+        'oklahoma.staff@demo.example',
         'Ola',
         'Oklahoma',
         'state_staff',
@@ -133,7 +133,7 @@ class _Demo:
     async def practitioner(
         self, given: str, family: str, sql_state: str | None = None
     ) -> Practitioner:
-        user = await self.user(f'{given}.{family}@example.com'.lower(), given, family, 'licensee')
+        user = await self.user(f'{given}.{family}@demo.example'.lower(), given, family, 'licensee')
         return await self.add(
             Practitioner(
                 user_id=_id(user),
@@ -318,7 +318,7 @@ class _Demo:
                 reporting_state_code=reporting,
                 description='Complaint under investigation by the board.',
                 contact_name='Board investigator',
-                contact_email=f'investigations@{reporting.lower()}.example.com',
+                contact_email=f'investigations@{reporting.lower()}.demo.example',
                 determined_on=self.day(-25),
                 closed_at=self.at(-5) if closed else None,
                 closed_by=self.ctx.user_id if closed else None,
