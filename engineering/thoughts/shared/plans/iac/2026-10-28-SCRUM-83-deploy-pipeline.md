@@ -524,8 +524,8 @@ Until `test` and `prod` have environment files and Environment variables, the jo
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] On the PR: `check` passes and two plan comments appear, one per component, and update on a second push.
-- [ ] `cd engineering/infrastructure && just check` passes; YAML parses; `pre-commit run --files` on changed Markdown passes.
+- [x] On the PR: `check` passes and two plan comments appear, one per component (PR #140, first run: `ecr` 1 to add, 1 to change; `app` 77 to add); updating on a second push is checked on the next push.
+- [x] `cd engineering/infrastructure && just check` passes; YAML parses; `pre-commit run --files` on changed Markdown passes.
 
 #### Manual Verification:
 - [ ] **The first merge to `main` deploys dev**: the `Deploy` run is green, `https://site.dev-pacompact.aws.focusconsulting.io/api/health/ready` returns ready, the sign-in page renders, and the Worker service has one running task. Watch the run; if it fails partway, the next run resumes from state.
