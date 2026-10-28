@@ -1,0 +1,36 @@
+# The infrastructure under iac/, applied with OpenTofu (ADR-0015). See iac/README.md.
+
+iac := justfile_directory() / "iac"
+
+# Show available commands
+default:
+    @just --list
+
+# Initialise a component against an environment's backend (safe to rerun; switches environments)
+init component env region="us-east-1":
+    cd {{ iac }}/components/{{ component }}/terraform && tofu init -input=false -reconfigure \
+        -backend-config={{ iac }}/environments/{{ env }}/{{ region }}/{{ component }}.backend.hcl
+
+# Plan a component against an environment
+plan component env region="us-east-1": (init component env region)
+    cd {{ iac }}/components/{{ component }}/terraform && tofu plan -input=false \
+        -var-file={{ iac }}/environments/{{ env }}/{{ region }}/{{ component }}.tfvars
+
+# Apply a component to an environment (asks for confirmation)
+apply component env region="us-east-1": (init component env region)
+    cd {{ iac }}/components/{{ component }}/terraform && tofu apply -input=false \
+        -var-file={{ iac }}/environments/{{ env }}/{{ region }}/{{ component }}.tfvars
+
+# Format every .tf file
+fmt:
+    tofu fmt -recursive {{ iac }}
+
+# Validate every component, with no backend or credentials
+validate:
+    for c in {{ iac }}/components/*/terraform; do \
+        (cd "$c" && tofu init -backend=false -input=false >/dev/null && tofu validate) || exit 1; \
+    done
+
+# Everything CI checks: formatting and validation
+check: validate
+    tofu fmt -check -recursive {{ iac }}

@@ -9,7 +9,7 @@
 ```text
 engineering/api/                  Python API (FastAPI, Python 3.13)
 engineering/client/               Next.js frontend (React, TypeScript, USWDS)
-engineering/infrastructure/iac/   Infrastructure as Code (Terraform)
+engineering/infrastructure/iac/   Infrastructure as Code (OpenTofu)
 product/                          Product context: flows, evidence, research corpus
 ```
 
@@ -34,6 +34,10 @@ product/                          Product context: flows, evidence, research cor
      asdf install just 1.48.1
      asdf set just 1.48.1
 
+     asdf plugin add opentofu
+     asdf install opentofu 1.11.6
+     asdf set opentofu 1.11.6
+
      asdf reshim
      npm install -g pnpm@latest-10
    ```
@@ -43,6 +47,8 @@ product/                          Product context: flows, evidence, research cor
   - [uv](https://docs.astral.sh/uv/) (Python package manager)
   - [pnpm](https://pnpm.io/) 10+
   - [just](https://github.com/casey/just) (task runner)
+  - [OpenTofu](https://opentofu.org/) (infrastructure; needed only to plan or apply it, see
+    [`engineering/infrastructure/iac/README.md`](engineering/infrastructure/iac/README.md))
 - Docker, running (local Postgres for the API, and image builds)
 - [pre-commit](https://pre-commit.com/) (`pipx install pre-commit` or `brew install pre-commit`)
 

@@ -24,7 +24,7 @@ I'll help you create a detailed implementation plan. Let me start by understandi
 This is a monorepo with these areas:
 - `client` - `engineering/client/`, frontend (Next.js/TypeScript)
 - `api` - `engineering/api/`, backend (Python/FastAPI)
-- `iac` - `engineering/infrastructure/iac/`, infrastructure (Terraform)
+- `iac` - `engineering/infrastructure/iac/`, infrastructure (OpenTofu)
 - `docs` - `engineering/docs/`, engineering documentation
 - `cross-cutting` - work spanning multiple areas
 
@@ -331,9 +331,8 @@ After structure approval:
 - [ ] Linting, formatting, and type checking pass: `cd engineering/api && just lint`
 
 **For IaC changes (`engineering/infrastructure/iac/`):**
-- [ ] Terraform formats: `cd engineering/infrastructure/iac && terraform fmt -check -recursive`
-- [ ] Terraform validates: `cd engineering/infrastructure/iac/components/<component>/terraform && terraform init -backend=false && terraform validate`
-- [ ] Terraform plan reviewed for each environment it changes (needs AWS credentials)
+- [ ] Formatting and validation pass: `cd engineering/infrastructure && just check`
+- [ ] `just plan <component> <env>` reviewed for each environment it changes (needs AWS credentials)
 
 **For Documentation and product changes:**
 - [ ] Markdown lint passes: `pre-commit run --files <changed files>`

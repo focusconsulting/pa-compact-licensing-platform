@@ -43,6 +43,13 @@ When iterating on the client, use these commands from
 - `pnpm dev` — Next.js dev server
 - `pnpm storybook` — component catalogue
 
+When iterating on the infrastructure, use these commands from
+`engineering/infrastructure/`:
+
+- `just check` — `tofu fmt -check` and `tofu validate`, with no AWS credentials
+- `just plan <component> <env>` / `just apply <component> <env>` — against
+  an environment (needs AWS credentials for its account)
+
 Run the lint, type check, and coverage commands for every component you
 changed before declaring a change complete. If a test fails, fix the
 code, not the test, unless the test is wrong.

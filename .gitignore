@@ -6,7 +6,6 @@
 .claude/scheduled_tasks.lock
 
 # Terraform files to ignore
-.terraform.lock.hcl
 .terraform
 
 # Node dependencies

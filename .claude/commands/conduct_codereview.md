@@ -132,7 +132,7 @@ When invoked, you should:
 - Validate error handling and HTTP status codes
 
 ### For iac/ (Infrastructure as Code)
-- Check Terraform resource naming conventions
+- Check OpenTofu resource naming conventions
 - Review security group and IAM policies
 - Validate variable usage and defaults
 - Check for hardcoded values that should be variables

@@ -66,7 +66,7 @@ cd client && pnpm test && pnpm tsc --noEmit && pnpm lint && cd ..
 cd api && uv run pytest && uv run pyright && uv run ruff check . && uv run ruff format --check . && cd ..
 
 # IaC checks (if applicable)
-cd iac && terraform validate && cd ..
+cd engineering/infrastructure && just check && cd ../..
 ```
 
 Document which checks pass/fail.
