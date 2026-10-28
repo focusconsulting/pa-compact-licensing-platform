@@ -32,7 +32,7 @@ resource "aws_cloudfront_vpc_origin" "alb_origin" {
 # CloudFront VPC Origins automatically creates and manages a security group in the account.
 # We make it available as a data source for other resources
 data "aws_security_group" "cloudfront_vpc_origin" {
-  name = "CloudFront-VPCOrigins-Service-SG"
+  name       = "CloudFront-VPCOrigins-Service-SG"
   depends_on = [aws_cloudfront_vpc_origin.alb_origin]
 }
 

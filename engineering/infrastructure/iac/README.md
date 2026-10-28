@@ -1,17 +1,43 @@
 # PA Compact infrastructure
 
-This is the terraform code for standing up the PA Compact in AWS.
+The AWS infrastructure, as OpenTofu code ([ADR-0015](../../adrs/0015-opentofu-for-infrastructure.md)).
+What it builds is drawn in [`engineering/docs/architecture.md`](../../docs/architecture.md).
 
-## Pre-requesite
+## Layout
 
-Your terminal AWS client must be authenticated to the account associated with
-the environment you will be working with.
+```text
+components/<component>/terraform/   The code: app (everything the system runs on) and ecr (the image repositories)
+environments/<env>/<region>/        One backend and one tfvars file per component, per environment
+```
 
-## Viewing and Applying Terraform
+Each environment is an `<env>/<region>` directory holding
+`<component>.backend.hcl` (where its state lives) and `<component>.tfvars`
+(its values). The code is the same for every environment; only those files
+differ.
 
-Until a pipeline has been created to run this, you must run this manually
+## Prerequisites
 
-1. cd infrastructure/iac/components/<component>/terraform
-2. terraform init -backend-config=../../../environments/dev/us-east-1/<component>.backend.hcl
-3. terraform plan -var-file=../../../environments/dev/us-east-1/<component>.tfvars
-4. terraform apply -var-file=../../../environments/dev/us-east-1/<component>.tfvars
+- OpenTofu and `just`, at the versions in the root [`.tool-versions`](../../../.tool-versions)
+  (`asdf install` from the repository root).
+- AWS credentials for the environment's account in your shell, with access
+  to its state bucket. `just check` needs none.
+
+## Commands
+
+From `engineering/infrastructure/`:
+
+```bash
+just check             # tofu fmt -check and tofu validate on every component; what CI runs
+just fmt               # format every .tf file
+just plan app dev      # plan a component against an environment
+just apply app dev     # apply it (asks for confirmation)
+```
+
+`plan` and `apply` initialise the component against the environment's backend
+first, so switching environments on one checkout needs nothing else. Apply
+`ecr` before `app` in a new environment: `app` needs the repository `ecr`
+creates.
+
+Every pull request that touches this directory runs `just check` in
+[`.github/workflows/iac.yml`](../../../.github/workflows/iac.yml). Plans and
+applies from CI are SCRUM-83's.

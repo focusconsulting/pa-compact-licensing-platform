@@ -24,7 +24,7 @@ provider "aws" {
 }
 
 terraform {
-  required_version = "1.14.9"
+  required_version = "~> 1.11"
 
   required_providers {
     aws = {
@@ -60,7 +60,7 @@ locals {
 
   # Derive the Route 53 hosted zone name by dropping the first DNS label from dns_name.
   # e.g. "site.dev-pacompact.aws.focusconsulting.io" → "dev-pacompact.aws.focusconsulting.io"
-  hosted_zone_name = join(".", slice(split(".", var.dns_name), 1, length(split(".", var.dns_name))))
+  hosted_zone_name   = join(".", slice(split(".", var.dns_name), 1, length(split(".", var.dns_name))))
   db_name            = "licensing"
   db_master_username = "postgres"
   db_port            = 5432

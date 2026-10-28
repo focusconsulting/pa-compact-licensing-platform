@@ -30,7 +30,7 @@
       "Bash(uv *)",
       "Bash(uv)",
       "Bash(alembic *)",
-      "Bash(terraform *)",
+      "Bash(tofu *)",
       "Bash(docker *)",
       "Bash(docker)",
       "Bash(docker-compose *)",

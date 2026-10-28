@@ -28,7 +28,7 @@ resource "aws_iam_role_policy" "cognito_user_import_logs" {
         "logs:GetLogEvents",
         "logs:FilterLogEvents",
       ]
-      Resource = "arn:aws:logs:${data.aws_region.current.name}:*:log-group:/aws/cognito/*"
+      Resource = "arn:aws:logs:${data.aws_region.current.region}:*:log-group:/aws/cognito/*"
     }]
   })
 }

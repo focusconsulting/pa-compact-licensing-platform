@@ -39,8 +39,8 @@ When invoked:
    fi
 
    # For IaC changes
-   if git diff HEAD~N..HEAD --name-only | grep -q "^iac/"; then
-       cd iac && terraform validate && terraform fmt -check && cd ..
+   if git diff HEAD~N..HEAD --name-only | grep -q "^engineering/infrastructure/"; then
+       cd engineering/infrastructure && just check && cd ../..
    fi
 
    # For Documentation changes

@@ -391,7 +391,7 @@ These do not count against the limit:
   it.
 
 Hand-written code counts wherever it lives, including migrations,
-configuration, and Terraform. A pull request over the limit says why in
+configuration, and infrastructure code. A pull request over the limit says why in
 its description.
 
 ## Technology Stack
@@ -478,15 +478,15 @@ for env-driven values only
 
 **E2E**: Playwright (TS) with automated WCAG 2.1 AA scanning
 
-**Infrastructure**: Terraform under
+**Infrastructure**: [OpenTofu](https://opentofu.org/docs/) under
 [`engineering/infrastructure/iac/`](infrastructure/iac/)
 
 - CloudFront in front of both: the client from S3, `/api` from the
   API on ECS Fargate behind an internal ALB
 - Aurora PostgreSQL, Cognito, Secrets Manager / SSM, ECR
 - CloudWatch alarms → SNS → Slack
-- All infrastructure changes go through Terraform; no console changes
-  that Terraform doesn't own
+- All infrastructure changes go through OpenTofu ([ADR-0015](adrs/0015-opentofu-for-infrastructure.md));
+  no console changes that OpenTofu doesn't own
 
 **Task Runner**: `just` — each component's `justfile` is its entry
 point ([API](api/justfile))
@@ -535,4 +535,4 @@ part of the technical plan, covering: what data is involved, its tier,
 where it flows, how it's protected at each step, and what could go
 wrong.
 
-Version: 0.3.0 | Created: 10/05/2026 | Last amended: 10/16/2026
+Version: 0.3.1 | Created: 10/05/2026 | Last amended: 10/28/2026

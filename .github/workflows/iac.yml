@@ -1,0 +1,36 @@
+name: IaC CI
+
+# Formats and validates the OpenTofu code with no AWS credentials. Plans and
+# applies against an environment are SCRUM-83's.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths: [engineering/infrastructure/**, .github/workflows/iac.yml, .tool-versions]
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # The same pins as .tool-versions (constitution Principle XII)
+      - name: Read tool versions
+        id: versions
+        run: |
+          echo "tofu=$(awk '$1 == "opentofu" {print $2}' .tool-versions)" >> "$GITHUB_OUTPUT"
+          echo "just=$(awk '$1 == "just" {print $2}' .tool-versions)" >> "$GITHUB_OUTPUT"
+
+      - uses: opentofu/setup-opentofu@v2
+        with:
+          tofu_version: ${{ steps.versions.outputs.tofu }}
+          tofu_wrapper: false
+
+      - uses: extractions/setup-just@v4
+        with:
+          just-version: ${{ steps.versions.outputs.just }}
+
+      - name: Format and validate
+        working-directory: engineering/infrastructure
+        run: just check

@@ -189,10 +189,10 @@ jobs:
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `cd engineering/infrastructure && just check` passes.
-- [ ] `git grep -n -i terraform -- engineering/infrastructure README.md AGENTS.md engineering/engineering-constitution.md .claude/commands` shows only the `terraform {}` block, directory names, `.terraform.lock.hcl`, and the `terraform_remote_state` data source.
-- [ ] Both lockfiles are tracked: `git ls-files '**/.terraform.lock.hcl'` lists two files.
-- [ ] `pre-commit run --files <changed Markdown and YAML>` passes.
+- [x] `cd engineering/infrastructure && just check` passes.
+- [x] `git grep -n -i terraform -- engineering/infrastructure README.md AGENTS.md engineering/engineering-constitution.md .claude/commands` shows only the `terraform {}` block, directory names, `.terraform.lock.hcl`, and the `terraform_remote_state` data source.
+- [x] Both lockfiles are tracked: `git ls-files '**/.terraform.lock.hcl'` lists two files.
+- [x] `pre-commit run --files <changed Markdown and YAML>` passes.
 - [ ] The `IaC CI` workflow is green on the pull request.
 
 #### Manual Verification:

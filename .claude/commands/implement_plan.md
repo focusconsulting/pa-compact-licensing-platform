@@ -78,11 +78,10 @@ After implementing a phase:
 
    **For IaC (`iac/`) changes:**
    ```bash
-   cd iac
-   terraform validate
-   terraform fmt -check
-   terraform plan            # Review the plan output
-   cd ..
+   cd engineering/infrastructure
+   just check                # tofu fmt -check and tofu validate
+   just plan <component> <env>  # Review the plan output (needs AWS credentials)
+   cd ../..
    ```
 
    **For Documentation (`docs/`) changes:**
@@ -191,7 +190,7 @@ When all phases are complete:
 
    **For IaC changes:**
    ```bash
-   cd iac && terraform validate && terraform fmt && cd ..
+   cd engineering/infrastructure && just check && cd ../..
    ```
 
    **For Documentation changes:**
