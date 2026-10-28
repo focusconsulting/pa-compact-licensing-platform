@@ -1,3 +1,6 @@
+import pytest
+from pydantic import ValidationError
+
 from licensing_api.config import Settings, get_settings, settings
 
 
@@ -19,6 +22,16 @@ def test_jwks_url_uses_the_configured_endpoint():
     assert (
         settings.cognito_jwks_url == 'http://localhost:9229/local_licensing/.well-known/jwks.json'
     )
+
+
+@pytest.mark.parametrize('name', ['LOCAL_DEV', 'DEV', 'TEST', 'STAGING', 'PROD'])
+def test_environment_accepts_each_deployed_environment_name(name: str):
+    assert Settings(environment=name).environment == name
+
+
+def test_environment_rejects_an_unknown_name():
+    with pytest.raises(ValidationError):
+        Settings(environment='stage')  # pyright: ignore[reportArgumentType] -- the rejection under test
 
 
 def test_get_settings_returns_the_process_settings():

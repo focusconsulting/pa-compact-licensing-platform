@@ -1,7 +1,12 @@
 variable "tf_state_bucket" {
-  description = "state bucket"
+  description = "The state bucket this environment's components and its network bootstrap state live in"
   type        = string
-  default     = "focus-dev-pacompact-terraform-state"
+}
+
+variable "network_state_key" {
+  description = "Key in tf_state_bucket of the bootstrap state that exports vpc_id and private_subnet_ids"
+  type        = string
+  default     = "bootstrap/network/default/terraform.tfstate"
 }
 
 variable "aws_region" {
@@ -10,8 +15,12 @@ variable "aws_region" {
 }
 
 variable "environment_name" {
-  description = "The environment to deploy to. (dev | stage | prod)"
+  description = "The environment: dev, test, or prod. Names resources and secrets, and is the ENVIRONMENT the containers run with."
   type        = string
+  validation {
+    condition     = contains(["dev", "test", "prod"], var.environment_name)
+    error_message = "environment_name must be dev, test, or prod."
+  }
 }
 
 variable "db_instance_class" {
@@ -52,8 +61,6 @@ variable "acm_certificate_arn" {
   description = "ACM certificate ARN for HTTPS on the ALB listener (optional; HTTP-only if not set)"
   default     = null
 }
-
-
 
 variable "ecs_max_capacity" {
   type        = number

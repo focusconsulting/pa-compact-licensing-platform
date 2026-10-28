@@ -1,5 +1,6 @@
-aws_region       = "us-east-1"
+# Identity
 environment_name = "dev"
+aws_region       = "us-east-1"
 tf_state_bucket  = "focus-dev-pacompact-terraform-state"
 dns_name         = "site.dev-pacompact.aws.focusconsulting.io"
 
@@ -8,14 +9,8 @@ db_username             = "licensing"
 db_instance_class       = "db.t4g.medium"
 backup_retention_period = 1
 
-# DEV has a jumpbox for SSM tunnels; its security group ID is in dev-jumpbox-sgid-tfvar
-jumpbox_enabled = true
-
-# ECS — ECR image URI, e.g. 123456789012.dkr.ecr.us-east-1.amazonaws.com/licensing-api
+# Compute: the ecr component's repository_url output for this environment
 repo_name = "126942145463.dkr.ecr.us-east-1.amazonaws.com/pacompact-app-dev"
 
-# Optional: supply an ACM certificate ARN to enable HTTPS on the ALB listener
-# acm_certificate_arn = "arn:aws:acm:REGION:ACCOUNT_ID:certificate/CERTIFICATE_ID"
-
-# Slack alerting credentials are read from Secrets Manager: ${environment_name}-slack-tfvar
-# Keys required in that secret: slack_team_id, slack_channel_id
+# Access: dev has a jumpbox for SSM tunnels; its security group ID is in the dev-jumpbox-sgid-tfvar secret
+jumpbox_enabled = true

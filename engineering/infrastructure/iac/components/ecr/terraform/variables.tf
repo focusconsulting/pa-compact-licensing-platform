@@ -1,22 +1,27 @@
 variable "tf_state_bucket" {
-  description = "The name of the S3 bucket to store Terraform state"
-  default     = "focus-dev-pacompact-terraform-state"
+  description = "The state bucket this environment's components live in"
+  type        = string
 }
 
 variable "aws_region" {
-  description = "The AWS region where the infrastructure will be deployed"
-  default     = "us-east-1"
+  description = "The region to deploy to"
+  type        = string
 }
 
 variable "environment_name" {
-  description = "The environment where the infrastructure will be deployed (dev, stage, prod)"
+  description = "The environment: dev, test, or prod. Names the repositories."
+  type        = string
+  validation {
+    condition     = contains(["dev", "test", "prod"], var.environment_name)
+    error_message = "environment_name must be dev, test, or prod."
+  }
 }
 
 variable "repositories" {
-  description = "A list of ECR repositories to be created"
+  description = "The ECR repositories to create"
   type = list(object({
     name                 = string
     image_tag_mutability = string
-    scan_on_push         = bool # Optional, defaults to true if not provided
+    scan_on_push         = bool
   }))
 }

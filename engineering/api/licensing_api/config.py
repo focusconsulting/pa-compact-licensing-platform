@@ -14,7 +14,7 @@ class Settings(BaseSettings):
 
     api_port: int = 8000
     log_level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = 'INFO'
-    environment: Literal['LOCAL_DEV', 'DEV', 'STAGING', 'PROD'] = 'LOCAL_DEV'
+    environment: Literal['LOCAL_DEV', 'DEV', 'TEST', 'STAGING', 'PROD'] = 'LOCAL_DEV'
     otel_enabled: bool = False
     otel_collector_endpoint: str = 'http://localhost:4317'
 
