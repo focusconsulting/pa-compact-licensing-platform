@@ -1,0 +1,71 @@
+name: Deploy
+
+# `just deploy <env>` (engineering/infrastructure/justfile) through the environment's
+# GitHub Environment, whose variables name the AWS role to assume. A push to main
+# deploys dev; release.yml calls this for test and prod from tags.
+on:
+  push:
+    branches: [main]
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: The environment to deploy
+        required: true
+        type: choice
+        options: [dev]
+
+concurrency:
+  group: deploy-${{ inputs.environment || 'dev' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'dev' }}
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read tool versions
+        id: versions
+        run: |
+          echo "tofu=$(awk '$1 == "opentofu" {print $2}' .tool-versions)" >> "$GITHUB_OUTPUT"
+          echo "just=$(awk '$1 == "just" {print $2}' .tool-versions)" >> "$GITHUB_OUTPUT"
+
+      - uses: opentofu/setup-opentofu@v2
+        with:
+          tofu_version: ${{ steps.versions.outputs.tofu }}
+          tofu_wrapper: false
+
+      - uses: extractions/setup-just@v4
+        with:
+          just-version: ${{ steps.versions.outputs.just }}
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: engineering/client/package.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: engineering/client/pnpm-lock.yaml
+
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_APPLY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Deploy
+        working-directory: engineering/infrastructure
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          PUPPETEER_SKIP_DOWNLOAD: "true" # only the client's a11y job needs pa11y's Chrome
+        run: just deploy ${{ inputs.environment || 'dev' }}

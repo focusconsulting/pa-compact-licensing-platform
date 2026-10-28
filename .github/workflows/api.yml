@@ -5,28 +5,12 @@ on:
     branches: [main]
   pull_request:
     paths: [engineering/api/**, engineering/mocks/**]
-  workflow_dispatch:
 
 defaults:
   run:
     working-directory: engineering/api
 
 jobs:
-  changes:
-    runs-on: ubuntu-latest
-    outputs:
-      api: ${{ steps.filter.outputs.api }}
-    steps:
-      - uses: actions/checkout@v7
-      - name: Check changed paths
-        id: filter
-        run: |
-          if git diff --name-only HEAD^ HEAD 2>/dev/null | grep -q "^engineering/api/"; then
-            echo "api=true" >> $GITHUB_OUTPUT
-          else
-            echo "api=false" >> $GITHUB_OUTPUT
-          fi
-
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -88,101 +72,3 @@ jobs:
           flags: api
           files: engineering/api/coverage.xml
           fail_ci_if_error: true
-
-  deploy:
-    name: Deploy to DEV
-    runs-on: ubuntu-latest
-    needs: [changes, lint, test]
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.api == 'true')
-    permissions:
-      id-token: write
-      contents: read
-    defaults:
-      run:
-        working-directory: .
-
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v6
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION }}
-
-      - name: Login to ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build, tag, and push image to ECR
-        id: build-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
-        run: |
-          IMAGE_TAG=$(date +%Y%m%d%H%M%S)-${GITHUB_SHA::10}
-          docker build --target app -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG engineering/api/
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-
-      - name: Download task definition
-        run: |
-          aws ecs describe-task-definition \
-            --task-definition ${{ vars.ECS_TASK_DEFINITION }} \
-            --query taskDefinition \
-            > task-definition.json
-
-      - name: Render new task definition
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: task-definition.json
-          container-name: ${{ vars.ECS_CONTAINER_NAME }}
-          image: ${{ steps.build-image.outputs.image }}
-
-      - name: Deploy to ECS
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ vars.ECS_SERVICE }}
-          cluster: ${{ vars.ECS_CLUSTER }}
-          wait-for-service-stability: true
-
-      # The Worker and jobs run the same image (backlog D8). The API deploys first: its
-      # startup applies the migrations the new Worker and jobs code expects.
-      - name: Download Worker and jobs task definitions
-        run: |
-          aws ecs describe-task-definition --task-definition ${{ vars.ECS_WORKER_TASK_DEFINITION }} \
-            --query taskDefinition > worker-task-definition.json
-          aws ecs describe-task-definition --task-definition ${{ vars.ECS_JOBS_TASK_DEFINITION }} \
-            --query taskDefinition > jobs-task-definition.json
-
-      - name: Render new Worker task definition
-        id: worker-task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: worker-task-definition.json
-          container-name: licensing-worker
-          image: ${{ steps.build-image.outputs.image }}
-
-      - name: Deploy the Worker
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
-        with:
-          task-definition: ${{ steps.worker-task-def.outputs.task-definition }}
-          service: ${{ vars.ECS_WORKER_SERVICE }}
-          cluster: ${{ vars.ECS_CLUSTER }}
-          wait-for-service-stability: true
-
-      - name: Render new jobs task definition
-        id: jobs-task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: jobs-task-definition.json
-          container-name: licensing-jobs
-          image: ${{ steps.build-image.outputs.image }}
-
-      # No service: registering the revision is enough, since each schedule runs the latest one.
-      - name: Register the jobs task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
-        with:
-          task-definition: ${{ steps.jobs-task-def.outputs.task-definition }}
