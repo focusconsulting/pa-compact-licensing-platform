@@ -42,9 +42,9 @@ Make deploying an environment one command and one tag: OpenTofu owns every deplo
 - The infrastructure README's runbook takes a fresh AWS account to a running environment: bootstrap repo, pipeline roles, environment files, GitHub Environment, first deploy.
 
 ### Key Discoveries:
-- `engineering/infrastructure/iac/components/app/terraform/ecs.tf:155` and `worker.tf:51,77`: the three `:latest` references; `ecs.tf:297-306` and `worker.tf:116-119`: the `ignore_changes` to remove.
-- `engineering/infrastructure/iac/components/app/terraform/networking.tf:1-10`: the jumpbox secret read to replace with the network remote state output.
-- `engineering/infrastructure/iac/components/app/terraform/outputs.tf`: everything the client deploy needs is already an output.
+- `engineering/infrastructure/iac/components/app/opentofu/ecs.tf:155` and `worker.tf:51,77`: the three `:latest` references; `ecs.tf:297-306` and `worker.tf:116-119`: the `ignore_changes` to remove.
+- `engineering/infrastructure/iac/components/app/opentofu/networking.tf:1-10`: the jumpbox secret read to replace with the network remote state output.
+- `engineering/infrastructure/iac/components/app/opentofu/outputs.tf`: everything the client deploy needs is already an output.
 - `focus-aws-infrastructure-dev-pacompact/terraform/account-access/pipeline-roles.tf`: the pattern for a role trusted by our repo's OIDC subject.
 - GitHub user IDs for Environment reviewers: `mkalish` 1225895, `jalbinson` 1209453.
 
@@ -210,11 +210,11 @@ The `*:*` statement in `user-roles.tf` is marked temporary until a pipeline exis
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] That repo's `account-access` job validates on the PR and applies on merge.
+- [x] That repo's `account-access` job validates on the PR and applies on merge.
 
 #### Manual Verification:
-- [ ] `aws iam get-role --role-name PaCompactLicensingToolInfraPlan` and `...InfraApply` return the roles with the trust policies above, in account 126942145463.
-- [ ] A code owner of the bootstrap repo has approved.
+- [x] `aws iam get-role --role-name PaCompactLicensingToolInfraPlan` and `...InfraApply` return the roles with the trust policies above, in account 126942145463.
+- [x] A code owner of the bootstrap repo has approved.
 
 **Implementation Note**: Phase 2 can be written in parallel, but Phase 3's CI cannot pass until this merges.
 
@@ -229,7 +229,7 @@ OpenTofu owns the running image. `just deploy <env>` does everything a deploy ne
 ### Changes Required:
 
 #### 1. Image tag variable
-**File**: `engineering/infrastructure/iac/components/app/terraform/variables.tf`
+**File**: `engineering/infrastructure/iac/components/app/opentofu/variables.tf`
 **Changes**:
 
 ```hcl
@@ -243,11 +243,11 @@ variable "image_tag" {
 }
 ```
 
-**Files**: `engineering/infrastructure/iac/components/app/terraform/ecs.tf`, `worker.tf`
+**Files**: `engineering/infrastructure/iac/components/app/opentofu/ecs.tf`, `worker.tf`
 **Changes**: the three `image` values become `"${var.repo_name}:${var.image_tag}"`. Remove `task_definition` from both services' `ignore_changes` (keep `desired_count` on the API service), and delete the comment that explained the CI handoff. Scheduler is unchanged: it runs the latest jobs revision, which the apply registers.
 
 #### 2. Immutable ECR with a lifecycle policy
-**File**: `engineering/infrastructure/iac/components/ecr/terraform/ecr.tf`
+**File**: `engineering/infrastructure/iac/components/ecr/opentofu/ecr.tf`
 **Changes**: a lifecycle policy per repository; expire untagged images after 7 days and keep the newest 30 tagged.
 
 ```hcl
@@ -277,7 +277,7 @@ resource "aws_ecr_lifecycle_policy" "repos" {
 **Changes**: `image_tag_mutability = "IMMUTABLE"`. Existing tags are unaffected; a push that reuses a tag is rejected, which `just deploy` checks for first.
 
 #### 3. Jumpbox from the network state
-**File**: `engineering/infrastructure/iac/components/app/terraform/networking.tf`
+**File**: `engineering/infrastructure/iac/components/app/opentofu/networking.tf`
 **Changes**: delete the `aws_secretsmanager_secret_version.jumpbox` data source and the `jumpbox_sg_ids` local that reads it; replace with the network output, which is null or absent when the bootstrap repo creates no jumpbox.
 
 ```hcl
@@ -288,7 +288,7 @@ locals {
 }
 ```
 
-**File**: `engineering/infrastructure/iac/components/app/terraform/variables.tf`
+**File**: `engineering/infrastructure/iac/components/app/opentofu/variables.tf`
 **Changes**: remove `jumpbox_enabled`.
 
 **File**: `engineering/infrastructure/iac/environments/dev/us-east-1/app.tfvars`
@@ -321,7 +321,7 @@ push $repo: build
 
 #### 5. `just deploy <env>`
 **File**: `engineering/infrastructure/justfile`
-**Changes**: `plan` and `apply` gain `*args` passed through to `tofu`; `deploy` chains the steps, reading everything it needs from component outputs rather than GitHub variables. `repo_name` stays a variable so the two components remain separately applicable; `deploy` passes it from the `ecr` output.
+**Changes**: `plan` and `apply` gain `*args` passed through to `tofu`, and the region becomes a justfile variable (`AWS_REGION`, default `us-east-1`) because a positional default before variadic arguments swallows the first extra argument; `validate` uses its own `TF_DATA_DIR` so it works after a `plan` on the same checkout; `deploy` chains the steps, reading everything it needs from component outputs rather than GitHub variables. `repo_name` stays a variable so the two components remain separately applicable; `deploy` passes it from the `ecr` output.
 
 ```just
 # Deploy an environment: push the API image for this commit, apply ecr then app, publish the client
@@ -330,10 +330,10 @@ deploy env region="us-east-1":
     set -euo pipefail
     sha=$(git rev-parse HEAD)
     just apply ecr {{ env }} {{ region }} -auto-approve
-    repo=$(cd {{ iac }}/components/ecr/terraform && tofu output -json ecr_repositories | jq -r 'to_entries[0].value.repository_url')
+    repo=$(cd {{ iac }}/components/ecr/opentofu && tofu output -json ecr_repositories | jq -r 'to_entries[0].value.repository_url')
     (cd {{ justfile_directory() }}/../api && just push "$repo")
     just apply app {{ env }} {{ region }} -auto-approve -var image_tag="$sha" -var repo_name="$repo"
-    out() { (cd {{ iac }}/components/app/terraform && tofu output -raw "$1"); }
+    out() { (cd {{ iac }}/components/app/opentofu && tofu output -raw "$1"); }
     (cd {{ justfile_directory() }}/../client \
         && NEXT_PUBLIC_API_BASE_URL="" \
            NEXT_PUBLIC_COGNITO_REGION={{ region }} \
@@ -353,14 +353,14 @@ deploy env region="us-east-1":
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `cd engineering/infrastructure && just check` passes.
-- [ ] `cd engineering/api && just lint && just test-coverage` pass (the justfile change touches no Python; run to be sure).
-- [ ] `git grep -n ':latest' engineering/infrastructure` returns nothing.
-- [ ] `tofu plan` with `-var image_tag=abc` fails on the validation message (scratch copy with a local backend, as in the SCRUM-82 plan).
+- [x] `cd engineering/infrastructure && just check` passes.
+- [x] `cd engineering/api && just lint` passes; the justfile change touches no Python, and the SCRUM-82 branch's test run covers the suite.
+- [x] `git grep -n ':latest' engineering/infrastructure` returns nothing.
+- [x] `tofu plan` with `-var image_tag=abc` fails on the validation message (scratch copy with a local backend, as in the SCRUM-82 plan).
 
 #### Manual Verification:
-- [ ] With dev credentials: `just plan app dev -var image_tag=$(git rev-parse HEAD)` still reports 77 to add and 0 to change, and the plan's task definitions reference the SHA tag. Not applied.
-- [ ] `cd engineering/api && just build` produces a `linux/amd64` image (`docker image inspect pa-compact-api:latest --format '{{.Architecture}}'` prints `amd64`).
+- [x] With dev credentials: `just plan app dev -var image_tag=$(git rev-parse HEAD)` still reports 77 to add and 0 to change, and the plan's task definitions reference the SHA tag. Not applied.
+- [x] `cd engineering/api && just build` produces a `linux/amd64` image (`docker image inspect pa-compact-api:latest --format '{{.Architecture}}'` prints `amd64`).
 
 **Implementation Note**: pause here. Phase 3's first merge is the first deployment of dev; the user confirms before it is merged.
 

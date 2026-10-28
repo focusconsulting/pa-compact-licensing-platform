@@ -85,9 +85,17 @@ format:
     uv run ruff check --fix licensing_api tests
     uv run ruff format licensing_api tests
 
-# Build production Docker image
+# Build the production image for Fargate (linux/amd64), tagged with the commit
 build:
-    docker build \
+    docker build --platform linux/amd64 --target app \
         --tag {{ app_name }}:latest \
-        --tag {{ app_name }}:{{ image_tag }} \
-        --target app
+        --tag {{ app_name }}:{{ image_tag }} .
+
+# Push the built image to an ECR repository URL; a tag already there is left alone (tags are immutable)
+push $repo: build
+    aws ecr get-login-password | docker login --username AWS --password-stdin "${repo%%/*}"
+    if aws ecr describe-images --repository-name "${repo##*/}" --image-ids imageTag={{ image_tag }} >/dev/null 2>&1; then \
+        echo "{{ image_tag }} is already in $repo"; \
+    else \
+        docker tag {{ app_name }}:{{ image_tag }} "$repo:{{ image_tag }}" && docker push "$repo:{{ image_tag }}"; \
+    fi

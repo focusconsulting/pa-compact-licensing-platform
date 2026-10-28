@@ -4,7 +4,7 @@ tf_state_bucket  = "focus-dev-pacompact-terraform-state"
 repositories = [
   {
     name                 = "pacompact-app-dev"
-    image_tag_mutability = "MUTABLE"
+    image_tag_mutability = "IMMUTABLE"
     scan_on_push         = true
   }
 ]
