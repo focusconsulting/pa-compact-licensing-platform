@@ -49,8 +49,7 @@ When iterating on the infrastructure, use these commands from
 - `just check` — `tofu fmt -check` and `tofu validate`, with no AWS credentials
 - `just plan <component> <env>` / `just apply <component> <env>` — against
   an environment (needs AWS credentials for its account)
-- `just deploy <env>` — what a merge to `main` runs for `dev`: image, apply,
-  client
+- `just deploy <env>` — what the `Deploy` workflow runs: image, apply, client
 
 Run the lint, type check, and coverage commands for every component you
 changed before declaring a change complete. If a test fails, fix the

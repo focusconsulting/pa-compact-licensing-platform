@@ -1,11 +1,10 @@
 name: Deploy
 
 # `just deploy <env>` (engineering/infrastructure/justfile) through the environment's
-# GitHub Environment, whose variables name the AWS role to assume. A push to main
-# deploys dev; release.yml calls this for test and prod from tags.
+# GitHub Environment, whose variables name the AWS role to assume. dev deploys when
+# someone runs this workflow (decided 2026-10-28: not yet on every merge to main);
+# release.yml calls it for test and prod from tags.
 on:
-  push:
-    branches: [main]
   workflow_call:
     inputs:
       environment:

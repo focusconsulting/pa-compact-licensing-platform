@@ -81,11 +81,12 @@ build, so it always shows the task definitions changing.
 A deploy is `just deploy <env>`: apply `ecr`, build and push the API image
 tagged with the commit, apply `app` with that tag, build the client from the
 app outputs, sync it to S3, and invalidate CloudFront. Nothing else deploys
-anything.
+anything, and nothing deploys on its own: dev is deployed when someone runs
+the `Deploy` workflow, until the team turns on deploy-on-merge.
 
 | Trigger | Environment | Gate |
 |---|---|---|
-| Merge to `main` | `dev` | Branch protection: passing checks and a review |
+| Running the `Deploy` workflow by hand (Actions, Run workflow) | `dev` | Whoever can run workflows; a merge to `main` does not deploy yet |
 | Tag `v*-rc*` | `test` | The `test` GitHub Environment's required reviewers |
 | Tag `v*` (no `-rc`) | `prod` | The `prod` GitHub Environment's required reviewers |
 

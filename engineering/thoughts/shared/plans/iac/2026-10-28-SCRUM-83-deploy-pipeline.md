@@ -436,7 +436,7 @@ gh variable set AWS_REGION --env dev --body us-east-1
 
 #### 3. Deploy workflow
 **File**: `.github/workflows/deploy.yml` (new)
-**Changes**: one job, reusable and also triggered by a push to `main` for `dev`. The Environment gates the role; `concurrency` serializes deploys per environment.
+**Changes**: one job, reusable and runnable by hand for `dev`. Decided 2026-10-28: no `push` to `main` trigger yet; dev deploys when someone runs the workflow, and deploy-on-merge is turned on later by adding the trigger. The Environment gates the role; `concurrency` serializes deploys per environment.
 
 ```yaml
 name: Deploy
