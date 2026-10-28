@@ -196,10 +196,9 @@ jobs:
 - [ ] The `IaC CI` workflow is green on the pull request.
 
 #### Manual Verification:
-- [ ] With credentials for the dev account, `just plan app dev` and `just plan ecr dev` report no changes. If OpenTofu refuses the state because Terraform 1.14 wrote it, stop and record the error on SCRUM-175 before trying anything that writes state.
 - [ ] `asdf install` on a fresh clone installs OpenTofu 1.11.6 and `tofu version` matches.
 
-**Implementation Note**: pause after the dev plans for confirmation before Phase 2.
+**Implementation Note**: the dev plans are run once, after Phase 2 (decided 2026-10-28); Phase 2 does not depend on them.
 
 ---
 
@@ -271,13 +270,13 @@ SCRUM-83's bootstrap runbook grows from this section.
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `cd engineering/infrastructure && just check` passes.
-- [ ] `cd engineering/api && just lint` and `just test-coverage` pass at 100%.
-- [ ] `tofu plan` with `environment_name = "stage"` fails on the validation message (run with `-backend=false` is not possible for plan; use `tofu validate` plus `tofu console` or a throwaway tfvars with `just plan app dev` to confirm the message once).
-- [ ] `pre-commit run --files engineering/infrastructure/iac/README.md` passes.
+- [x] `cd engineering/infrastructure && just check` passes.
+- [x] `cd engineering/api && just lint` and `just test-coverage` pass at 100%.
+- [x] `tofu plan` with `environment_name = "stage"` fails on the validation message. Checked once in a scratch copy of each module with a `backend "local"` override, since plan needs an initialised backend.
+- [x] `pre-commit run --files engineering/infrastructure/iac/README.md` passes.
 
 #### Manual Verification:
-- [ ] `just plan app dev` and `just plan ecr dev` still report no changes.
+- [ ] With credentials for the dev account, `just plan app dev` and `just plan ecr dev` report no changes. This is also the check that OpenTofu reads the state Terraform 1.14 last wrote (ADR-0015). If OpenTofu refuses the state, record the error on SCRUM-175 before running anything that writes state.
 - [ ] A reader can list, from the README alone, everything a `test` environment needs before its first plan.
 
 ---

@@ -13,7 +13,8 @@ environments/<env>/<region>/        One backend and one tfvars file per componen
 Each environment is an `<env>/<region>` directory holding
 `<component>.backend.hcl` (where its state lives) and `<component>.tfvars`
 (its values). The code is the same for every environment; only those files
-differ.
+differ, and the module refuses an `environment_name` other than `dev`,
+`test`, or `prod`.
 
 ## Prerequisites
 
@@ -41,3 +42,57 @@ creates.
 Every pull request that touches this directory runs `just check` in
 [`.github/workflows/iac.yml`](../../../.github/workflows/iac.yml). Plans and
 applies from CI are SCRUM-83's.
+
+## What differs between environments
+
+Everything an environment chooses is a variable set in its tfvars files;
+the module has no environment-specific defaults. A variable with a default
+may be left out of the tfvars file when the default is right.
+
+### `ecr`
+
+| Variable | What it sets | `dev` |
+|---|---|---|
+| `environment_name` | The environment's name, in every resource name | `dev` |
+| `aws_region` | Where the repositories live | `us-east-1` |
+| `tf_state_bucket` | The state bucket | `focus-dev-pacompact-terraform-state` |
+| `repositories` | The repositories to create: name, tag mutability, scan on push | `pacompact-app-dev`, mutable, scanned |
+
+### `app`
+
+| Variable | What it sets | `dev` | Default |
+|---|---|---|---|
+| `environment_name` | The environment's name: resource and secret names, and the containers' `ENVIRONMENT` (upper-cased) | `dev` | required |
+| `aws_region` | Where everything but the CloudFront certificate lives | `us-east-1` | required |
+| `tf_state_bucket` | The state bucket, which also holds the network bootstrap state | `focus-dev-pacompact-terraform-state` | required |
+| `network_state_key` | Key of the bootstrap state that exports `vpc_id` and `private_subnet_ids` | default | `bootstrap/network/default/terraform.tfstate` |
+| `dns_name` | The site's host name; its parent is the Route 53 zone, the certificate, and the email domain | `site.dev-pacompact.aws.focusconsulting.io` | required |
+| `db_username` | The application's database user | `licensing` | required |
+| `db_instance_class` | Aurora instance class | `db.t4g.medium` | `db.t4g.medium` |
+| `instance_count` | Aurora instances | default | `1` |
+| `backup_retention_period` | Days of automated database backups | `1` | `30` |
+| `repo_name` | The `ecr` component's `repository_url` for the API image | the dev repository | required |
+| `ecs_max_capacity` | Most API tasks the autoscaler may run | default | `2` |
+| `jumpbox_enabled` | Allow the environment's jumpbox to reach ECS and the database | `true` | `false` |
+| `commission_ops_email` | The Commission's operational mailbox; empty sends nothing | default | empty |
+| `cognito_callback_url`, `cognito_logout_url` | Cognito redirect URLs | default | `https://<dns_name>` |
+| `acm_certificate_arn` | Declared for an HTTPS listener on the load balancer; not yet used (SCRUM-84) | default | none |
+
+## Adding an environment
+
+1. Create `environments/<env>/<region>/` with `ecr.backend.hcl`,
+   `ecr.tfvars`, `app.backend.hcl`, and `app.tfvars`, copying `dev`'s and
+   changing the values in the tables above. Each backend's `key` carries the
+   environment name.
+2. Make what the module looks up, which it does not create:
+   - The state bucket, with versioning, and the network bootstrap state at
+     `network_state_key` exporting `vpc_id` and `private_subnet_ids`.
+   - A public Route 53 hosted zone for the parent of `dns_name`, and an issued
+     wildcard ACM certificate for it in `us-east-1`.
+   - Secrets Manager secrets `<env>-slack-tfvar` (keys `slack_team_id`,
+     `slack_channel_id`) and, when `jumpbox_enabled`, `<env>-jumpbox-sgid-tfvar`
+     (key `jumpbox_sg_id`).
+   - SES production access for the account; a new account's SES sends only to
+     verified addresses.
+3. `just apply ecr <env>`, put its `repository_url` in `app.tfvars` as
+   `repo_name`, then `just apply app <env>`.
