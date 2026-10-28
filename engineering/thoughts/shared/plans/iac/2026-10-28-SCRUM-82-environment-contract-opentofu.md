@@ -276,7 +276,7 @@ SCRUM-83's bootstrap runbook grows from this section.
 - [x] `pre-commit run --files engineering/infrastructure/iac/README.md` passes.
 
 #### Manual Verification:
-- [ ] With credentials for the dev account, `just plan app dev` and `just plan ecr dev` report no changes. This is also the check that OpenTofu reads the state Terraform 1.14 last wrote (ADR-0015). If OpenTofu refuses the state, record the error on SCRUM-175 before running anything that writes state.
+- [x] With credentials for the dev account, `just plan app dev` and `just plan ecr dev` were run on 2026-10-28. OpenTofu read both states. `ecr`: no changes. `app`: 77 to add, 0 to change, 0 to destroy, because the app state is empty (182 bytes, last written 2026-05-21) and the account holds no ECS, Aurora, CloudFront, or Cognito resources: dev is not deployed. Nothing was applied; standing dev up is SCRUM-83's.
 - [ ] A reader can list, from the README alone, everything a `test` environment needs before its first plan.
 
 ---

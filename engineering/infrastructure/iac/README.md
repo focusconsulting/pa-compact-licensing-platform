@@ -20,8 +20,39 @@ differ, and the module refuses an `environment_name` other than `dev`,
 
 - OpenTofu and `just`, at the versions in the root [`.tool-versions`](../../../.tool-versions)
   (`asdf install` from the repository root).
-- AWS credentials for the environment's account in your shell, with access
-  to its state bucket. `just check` needs none.
+- The AWS CLI (`asdf plugin add awscli`), signed in to the environment's
+  account as below. `just check` needs no credentials.
+
+### Getting access
+
+Each environment is its own AWS account, reached through Focus's IAM
+Identity Center with the `AccountDeveloperAccess` role. The Identity Center
+start URL is not in this public repository; ask the team for it. Then add
+to `~/.aws/config`:
+
+```ini
+[sso-session focus]
+sso_start_url = <the start URL>
+sso_region = us-east-1
+
+[profile dev-pacompact]
+sso_session = focus
+sso_account_id = 126942145463
+sso_role_name = AccountDeveloperAccess
+region = us-east-1
+```
+
+Sign in once a day and point the commands at the profile:
+
+```bash
+aws sso login --profile dev-pacompact
+aws sts get-caller-identity --profile dev-pacompact   # Account must be 126942145463
+export AWS_PROFILE=dev-pacompact
+just plan app dev
+```
+
+A new environment gets its own `[profile <env>-pacompact]` block with its
+account ID, and the same role.
 
 ## Commands
 
