@@ -1,5 +1,6 @@
-"""Every table model matches its table, and every table has a model (ADR-0005)."""
+"""Every table model matches its table, every table has a model, and every status enum matches its CHECK (ADR-0005)."""
 
+import re
 from datetime import date, datetime
 from uuid import UUID
 
@@ -7,6 +8,11 @@ from sqlalchemy import Column, text
 from sqlmodel import AutoString, SQLModel
 
 import licensing_api.repo  # noqa: F401 -- registers every table model on SQLModel.metadata
+from licensing_api.repo.participation_application import ApplicationStatus
+from licensing_api.repo.privilege import AdministratorStatus, DeactivationReason
+from licensing_api.repo.privilege_request import PrivilegeRequestStatus
+from licensing_api.repo.qualifying_license import LicenseStatus
+from licensing_api.repo.status import LicenseComputedStatus
 
 _POSTGRES_TYPES_BY_PYTHON_TYPE = {
     int: {'smallint', 'integer', 'bigint'},
@@ -85,3 +91,34 @@ async def test_every_table_has_a_model(db_session):
     database = await _database_columns(db_session)
     modelled = {table.name for table in SQLModel.metadata.sorted_tables}
     assert set(database) - modelled - _TABLES_WITHOUT_MODELS == set()
+
+
+_STATUS_CHECKS = {
+    'chk_participation_applications_status': ApplicationStatus,
+    'chk_privilege_requests_status': PrivilegeRequestStatus,
+    'chk_privileges_administrator_status': AdministratorStatus,
+    'chk_privileges_deactivation_reason': DeactivationReason,
+    'chk_qualifying_licenses_state_reported_status': LicenseStatus,
+}
+
+
+async def test_every_status_enum_matches_its_check(db_session):
+    result = await db_session.execute(
+        text(
+            'SELECT conname, pg_get_constraintdef(oid) FROM pg_constraint WHERE conname = ANY(:names)'
+        ),
+        {'names': list(_STATUS_CHECKS)},
+    )
+    # Postgres renders IN (...) as = ANY (ARRAY['draft'::text, ...]).
+    allowed = {
+        name: set(re.findall(r"'([a-z_]+)'::text", definition)) for name, definition in result
+    }
+
+    assert allowed == {
+        name: {member.value for member in enum} for name, enum in _STATUS_CHECKS.items()
+    }
+
+
+def test_computed_license_statuses_include_every_reported_status():
+    # The license status query passes a non-active reported status through (repo/status.py).
+    assert set(LicenseStatus) <= set(LicenseComputedStatus)
