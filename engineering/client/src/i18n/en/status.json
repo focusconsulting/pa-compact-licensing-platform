@@ -1,0 +1,42 @@
+{
+  "application": {
+    "draft": "Draft",
+    "submitted": "Under review",
+    "info_requested": "Information requested",
+    "eligible": "Eligible",
+    "denied": "Not eligible",
+    "withdrawn": "Withdrawn",
+    "eligibility_withdrawn": "Eligibility withdrawn",
+    "superseded": "Replaced"
+  },
+  "privilegeRequest": {
+    "pending_payment": "Awaiting payment",
+    "submitted": "Submitted",
+    "issued": "Issued",
+    "denied": "Denied",
+    "withdrawn": "Withdrawn"
+  },
+  "pill": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "privilege": {
+    "active": "Active",
+    "expired": "Expired",
+    "encumbered": "Encumbered",
+    "inactive": "Inactive"
+  },
+  "privilegeQualifier": {
+    "active": "Expires: {{date}}",
+    "expired": "Expired: {{date}}",
+    "inactive": "Deactivated"
+  },
+  "license": {
+    "active": "Active",
+    "expired": "Expired",
+    "lapsed": "Lapsed",
+    "inactive": "Inactive",
+    "terminated": "Terminated",
+    "encumbered": "Encumbered"
+  }
+}

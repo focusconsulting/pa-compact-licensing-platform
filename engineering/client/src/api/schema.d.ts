@@ -89,6 +89,20 @@ export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
     /**
+     * ApplicationStatus
+     * @description The participation application's states (FLOW-06).
+     * @enum {string}
+     */
+    ApplicationStatus:
+      | "draft"
+      | "submitted"
+      | "info_requested"
+      | "eligible"
+      | "denied"
+      | "withdrawn"
+      | "eligibility_withdrawn"
+      | "superseded";
+    /**
      * AuditEntryOut
      * @description One staff read of private data or security event. ``before`` and ``after`` never hold an SSN.
      * @example {
@@ -192,6 +206,18 @@ export interface components {
       details: string[];
     };
     /**
+     * LicenseComputedStatus
+     * @description The statuses ``QualifyingLicenseStatus`` reports: the state's reported statuses, plus ``encumbered``.
+     * @enum {string}
+     */
+    LicenseComputedStatus:
+      | "active"
+      | "expired"
+      | "lapsed"
+      | "inactive"
+      | "terminated"
+      | "encumbered";
+    /**
      * LiveResp
      * @description The liveness response: ``status`` is always ``ok``.
      * @example {
@@ -225,6 +251,22 @@ export interface components {
       data: components["schemas"]["AuditEntryOut"][];
       page: components["schemas"]["Page"];
     };
+    /**
+     * PrivilegeComputedStatus
+     * @description What a privilege's holder and the public see (FLOW-06), in order of precedence.
+     * @enum {string}
+     */
+    PrivilegeComputedStatus: "inactive" | "expired" | "encumbered" | "active";
+    /**
+     * PrivilegeRequestStatus
+     * @description A privilege request's states (FLOW-06).
+     *
+     *     ``withdrawn`` replaces FLOW-06's ``abandoned``: Rule 3 §3.7(b)(1) says an
+     *     incomplete request is "deemed incomplete and to have been withdrawn".
+     * @enum {string}
+     */
+    PrivilegeRequestStatus:
+      "pending_payment" | "submitted" | "issued" | "denied" | "withdrawn";
     /**
      * ReadyResp
      * @description The readiness response: whether the database answered.
