@@ -42,7 +42,7 @@ One record, read top to bottom, ending in the reviewer's decision. C4 · Jordan 
 Where each user starts.
 
 - PA, before applying: `h1`, an `h2` with the steps as a Process list, the list of what to have ready, and the Button to start (B1 · Dashboard, [`3504:33283`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3504-33283)).
-- PA, once eligible: `h1`, then one `h2` section per record. The qualifying license is a summary line, who verified it, and its StatusTag. Privileges show an empty state and the Button to apply until there are some (C8 · Dashboard: eligible, [`3539:37813`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3539-37813)).
+- PA, once eligible: `h1`, then one `h2` section per record. The qualifying license is a summary line, who verified it, and its StatusTag. Privileges show an empty state and the Button to apply until there are some (C8 · Dashboard: eligible, [`3539:37625`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3539-37625)).
 - Staff: `h1` (the state's name), then a Collection with one item per task: its link with a count where it has one, and one line saying what it's for (C2 · Sample State home, [`3538:36309`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3538-36309)).
 
 ### Confirm and result
@@ -64,6 +64,6 @@ One screen per portal shows a finished template. Each is a DRAFT until the Commi
 
 | Portal | Exemplar | Template | Approved |
 |---|---|---|---|
-| PA | C8 · Dashboard: eligible ([`3539:37813`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3539-37813)) | Dashboard | No |
+| PA | C8 · Dashboard: eligible ([`3539:37625`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3539-37625)) | Dashboard | No |
 | State | C4 · Jordan Sample ([`3539:36719`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3539-36719)) | Case view | No |
 | Commission | Placeholder: none drawn. The draft "Flow: Commission dashboards, reports and payments" page ([`3752:4665`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3752-4665)) will hold it. | Queue | No |
