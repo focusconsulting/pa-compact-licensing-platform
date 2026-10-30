@@ -6,5 +6,12 @@
   "requiredText": "Required fields are marked with an asterisk",
   "optionalText": " (optional)",
   "nextTitle": "Save and Continue →",
-  "backTitle": "← Back"
+  "backTitle": "← Back",
+  "goBack": "Go back",
+  "stepIndicator": {
+    "step": "Step",
+    "of": "of",
+    "complete": "completed",
+    "incomplete": "not completed"
+  }
 }
