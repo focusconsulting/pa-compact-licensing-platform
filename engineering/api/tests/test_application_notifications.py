@@ -206,7 +206,7 @@ async def test_a_denial_names_its_reason_and_no_commission_email_goes_while_unse
                 'denial_reason': 'Does not hold current NCCPA certification',
             },
         )
-    ], 'no Commission email while commission_ops_email is unset (Q-14)'
+    ], 'no Commission email while commission_ops_email is unset'
 
 
 async def test_a_withdrawn_application_emails_the_pa_and_the_qualifying_state(db_session, contacts):

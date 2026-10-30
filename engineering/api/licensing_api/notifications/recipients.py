@@ -60,7 +60,7 @@ async def state_contacts(
 
 
 def commission_ops() -> list[Recipient]:
-    """The Commission's operations mailbox, or none while ``commission_ops_email`` is unset (Q-14)."""
+    """The Commission's operations mailbox, or none while ``commission_ops_email`` is unset."""
     return [Recipient(settings.commission_ops_email)] if settings.commission_ops_email else []
 
 
