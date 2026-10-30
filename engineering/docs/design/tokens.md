@@ -2,7 +2,7 @@
 
 The names screens may use for colour, type, spacing, and radius. A token is a USWDS theme token, written as USWDS writes it: `"primary-dark"`, spacing `2`, type `"lg"`, radius `"md"`. It is set through its `$theme-*` setting in [`_uswds-theme.scss`](../../client/src/styles/_uswds-theme.scss) and read through USWDS functions and mixins (`color()`, `units()`, `u-*`, `typeset()`, `radius()`). Project SCSS holds no hex, `px`, or font-weight literal. The only names the project adds are the five status-tag tones.
 
-Values are USWDS defaults until the Commission's brand assets arrive (Q-09 in [`mvp-ticket-breakdown.md`](../../product/backlog/mvp-ticket-breakdown.md#6-sprint-1--questions-for-the-client)); SCRUM-86 sets them. A new value changes a setting, not a name.
+Values are USWDS defaults, as placeholders, until the Commission's brand assets arrive (Q-09 in [`mvp-ticket-breakdown.md`](../../../product/backlog/mvp-ticket-breakdown.md#6-sprint-1--questions-for-the-client)). A new value changes a setting, not a name. Storybook's Design/Theme stories render every token with its current value.
 
 The Figma Parts Library is the USWDS Figma kit, which names a family's base grade `medium`: Figma's `theme/color/primary/medium` is `primary` here.
 
@@ -31,27 +31,7 @@ Every status maps to one tone in [`src/lib/status.ts`](../../client/src/lib/stat
 
 A grade difference of 50 or more passes WCAG AA for text ([USWDS color](https://designsystem.digital.gov/design-tokens/color/overview/)). `warning-darker` on `warning-lighter` is only 45, hence `ink`. If a brand changes a state family, keep each pair at 50 or more. The label carries the meaning, never the colour alone.
 
-SCRUM-86 commits the tones as a Sass map, and the status tag emits one class per tone:
-
-```scss
-@use "sass:map";
-@use "uswds-core";
-
-$status-tag-tones: (
-  "success": ("background": "success-lighter", "text": "success-darker"),
-  "info": ("background": "info-lighter", "text": "info-darker"),
-  "warning": ("background": "warning-lighter", "text": "ink"),
-  "error": ("background": "error-lighter", "text": "error-darker"),
-  "neutral": ("background": "base-lighter", "text": "base-darkest"),
-);
-
-@each $tone, $colors in $status-tag-tones {
-  .status-tag--#{$tone} {
-    @include uswds-core.u-bg(map.get($colors, "background"));
-    @include uswds-core.u-text(map.get($colors, "text"));
-  }
-}
-```
+[`src/styles/status-tag.scss`](../../client/src/styles/status-tag.scss) holds the tones as a Sass map and emits one `.status-tag--{tone}` class per tone.
 
 ## Type
 
@@ -81,7 +61,6 @@ Public Sans for every role, Q-09's default.
 
 ## Raw values still to replace
 
-SCRUM-86 and SCRUM-87 replace these with the token beside each:
+SCRUM-87 replaces these with the token beside each:
 
 - `src/styles/layout.scss`: `#162e51` with `primary-darker`; `#fff` with `white`
-- `src/styles/form.scss`: `#71767a` with `base`; `gap: 10px` with `1` or `105`; `font-weight: 600` with `semibold`; `480px` with `mobile-lg`
