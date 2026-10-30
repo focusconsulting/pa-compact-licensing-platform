@@ -80,10 +80,11 @@ Branches follow `feature/SCRUM-<n>-<slug>`; each PR targets the branch below it.
 | 5 | `feature/SCRUM-79-openapi` | OpenAPI export, drift check, generated types, Prism mock (ADR-0013) |
 | 6 | `feature/SCRUM-79-client` | Generated client in the app, `/me` moves to `Data`, Storybook on Prism |
 | 7 | `feature/SCRUM-79-demo-seed` | `just seed demo` |
-| 8 | `feature/SCRUM-80-worker` | Worker process, jobs, `just job`, Compose services |
-| 9 | `feature/SCRUM-80-email` | `send_pending`, templates, `state_contacts` (ADR-0014) |
-| 10 | `feature/SCRUM-80-handlers` | FLOW-07 email handlers, the event catalogue test, `docs/notifications.md` |
-| 11 | `feature/SCRUM-80-terraform` | Worker service, scheduler, alarms, SES |
+| 8 | `feature/SCRUM-80-worker` | Worker process, jobs, `just job`, `just worker` beside `just dev` |
+| 9 | `feature/SCRUM-80-email` | `send_pending`, templates (ADR-0014) |
+| 10a | `feature/SCRUM-80-handlers-applications` | `state_contacts`, `HANDLERS`, practitioner and application email handlers |
+| 10b | `feature/SCRUM-80-handlers-privileges` | Privilege, payment, QL, adverse-action and SII handlers, the event catalogue test, `docs/notifications.md` |
+| 11 | `feature/SCRUM-80-terraform` | Worker service, scheduler, alarms, SES (validated here; applied to DEV by hand) |
 | 12 | `feature/SCRUM-81-documents` | Document upload, scan, download (ADR-0015) |
 | 13 | `feature/SCRUM-81-file-picker` | `FilePickerField` uploads; documents bucket Terraform |
 
@@ -248,20 +249,22 @@ Branches follow `feature/SCRUM-<n>-<slug>`; each PR targets the branch below it.
 - **`licensing_api/logging_config.py`**: the JSON logging setup moves out of `__main__.py` so the Worker shares it.
 - **`licensing_api/worker.py`**: `python -m licensing_api.worker` loops `dispatch_events` (and `send_pending` from phase 9), sleeps when idle, stops on SIGTERM.
 - **`licensing_api/jobs/`**: `Job(name, run)`, `JOBS`, `python -m licensing_api.jobs run <name>`; `heartbeat` and `dispatch_events`. Migration: `job_runs` (job, started_at, finished_at, outcome, error).
-- **Compose**: `worker` and `cron` services under the `app` profile (same image, dev target); `cron` runs supercronic with `engineering/api/jobs.crontab`. `just up` starts them after migrating. `just job <name>`.
-- Tests: the job runner records success and failure; a test fails when a job is missing from the crontab or the Terraform schedule list.
+- **Local run**: `just worker` runs the Worker on the host with reload, and `just up` starts it beside `just dev`. Locally, jobs run by hand with `just job <name>`; there is no local scheduler (decided 2026-10-27).
+- Tests: the job runner records success and failure; the Worker drains 1,000 events in under a minute; phase 11 adds a test that fails when a job has no Terraform schedule.
 
 ## Phase 9: Sending email (SCRUM-80)
 
 ### Changes Required
 
 - **Settings**: `smtp_*`, `email_from_address`, `client_base_url`, `commission_ops_email` (Q-14 placeholder value in `.env.example`).
-- **Migration**: `notifications.next_attempt_at`; `state_contacts` (state_code, purpose `applications` | `privileges` | `discipline`, email; unique per state, purpose, email) with history.
+- **Migration**: `notifications.next_attempt_at`. (`state_contacts` moves to phase 10a.)
 - **`licensing_api/notifications/`**: `render(template, context, environment)` with Jinja (autoescape, `StrictUndefined`), a base layout with the environment banner outside PROD, HTML and text from one template; `sender.send_pending(...)` per the contract, retrying with backoff and marking `failed` after five attempts.
 - **ADR-0014** (new): `jinja2` and `aiosmtplib`, against the standard library (`string.Template`, `smtplib` in a thread); pros and cons.
 - Tests: snapshot tests for every template (`tests/snapshots/`, updated with `UPDATE_SNAPSHOTS=1`); sending through maildev's API; a repeated key sends once; two senders never send the same row.
 
 ## Phase 10: The FLOW-07 handlers (SCRUM-80)
+
+Split in two PRs to stay under 600 lines: 10a adds `state_contacts` (moved from phase 9), `HANDLERS`, and the practitioner and application handlers; 10b adds the rest, the catalogue test, and the docs. Handlers are built for every emailing event now, tested by emitting the event; email copy is drafted by engineering and reviewed by product through the snapshots (decided 2026-10-27).
 
 ### Changes Required
 
@@ -279,7 +282,7 @@ Branches follow `feature/SCRUM-<n>-<slug>`; each PR targets the branch below it.
 - `alerting.tf`: running Worker tasks below one; metric filters and alarms for `event_dead_lettered`, `job_failed`, `notification_failed`.
 - `ses.tf` (new): domain identity, DKIM, custom MAIL FROM with SPF, DMARC record, SMTP credentials in Secrets Manager.
 - `.github/workflows/api.yml`: the deploy also renders and deploys the Worker task definition.
-- Verified by `terraform fmt -check` and `terraform validate`.
+- Verified by `terraform fmt -check` and `terraform validate`. Jamie applies it to DEV and sends a test email; SES sandbox limits DEV to verified recipients until production access is requested.
 
 ## Phase 12: Documents (SCRUM-81)
 

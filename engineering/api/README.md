@@ -47,6 +47,17 @@ just dev
 
 Visit <http://localhost:8000/docs> to see the endpoints exposed.
 
+Events are delivered to their handlers, and email is sent, only while the Worker runs
+([ADR-0012](../adrs/0012-outbox-dispatcher.md)). Run it beside the API:
+
+```bash
+just worker
+```
+
+Scheduled jobs ([`licensing_api/jobs.py`](./licensing_api/jobs.py)) run in AWS on an
+EventBridge schedule; locally there is no scheduler, so run one by name with
+`just job <name>`.
+
 ### 4. Stop infrastructure
 
 ```bash

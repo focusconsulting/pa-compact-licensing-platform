@@ -17,6 +17,7 @@ from licensing_api.repo.history import (
     SiiReportHistory,
     StateHistory,
 )
+from licensing_api.repo.job_run import JobRun
 from licensing_api.repo.notification import Notification
 from licensing_api.repo.participation_application import ParticipationApplication
 from licensing_api.repo.practitioner import Practitioner, PractitionerSsn
@@ -46,6 +47,7 @@ __all__ = [
     'DomainEventDelivery',
     'Fee',
     'FeeHistory',
+    'JobRun',
     'Notification',
     'ParticipationApplication',
     'ParticipationApplicationHistory',

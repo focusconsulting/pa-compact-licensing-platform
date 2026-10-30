@@ -1,17 +1,26 @@
-"""The Worker: delivers outbox events to their handlers (D2, D8, ADR-0012)."""
+"""The Worker: delivers outbox events to their handlers (D2, D8, ADR-0012).
+
+``python -m licensing_api.worker`` runs it until SIGTERM or SIGINT; ``just worker`` runs it locally.
+"""
 
 from __future__ import annotations
 
+import asyncio
 import logging
+import signal
+from contextlib import suppress
 from datetime import timedelta
 
 from sqlalchemy import func, update
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlmodel import col, select
 
+from licensing_api.config import settings
 from licensing_api.context import system_context
 from licensing_api.events import HandlerRegistry
+from licensing_api.handlers import HANDLERS
+from licensing_api.logging_config import configure_logging
 from licensing_api.repo.domain_event import DomainEvent, DomainEventDelivery, EventType
 
 logger = logging.getLogger(__name__)
@@ -23,8 +32,48 @@ FIRST_RETRY_DELAY = timedelta(seconds=30)
 # Postgres cancels a handler's query that runs longer, which fails the delivery like any error.
 # Not asyncio.timeout: cancelling mid-query breaks the connection, so the failure could not be recorded.
 HANDLER_STATEMENT_TIMEOUT = timedelta(seconds=60)
+# An idle Worker waits this long before looking for new events again.
+IDLE_POLL_INTERVAL = timedelta(seconds=1)
 _MAX_ERROR_LENGTH = 2000
 _EVENT_TYPES = frozenset(EventType)
+_STOP_SIGNALS = (signal.SIGTERM, signal.SIGINT)
+
+
+async def main() -> None:
+    """Run the Worker with the registered ``HANDLERS`` until SIGTERM (an ECS stop) or SIGINT."""
+    stop = asyncio.Event()
+    loop = asyncio.get_running_loop()
+    for stop_signal in _STOP_SIGNALS:
+        loop.add_signal_handler(stop_signal, stop.set)
+    engine = create_async_engine(settings.db_url, pool_pre_ping=True)
+    try:
+        await run_worker(
+            async_sessionmaker(engine, expire_on_commit=False), HandlerRegistry(HANDLERS), stop
+        )
+    finally:
+        await engine.dispose()
+        for stop_signal in _STOP_SIGNALS:
+            loop.remove_signal_handler(stop_signal)
+
+
+async def run_worker(
+    session_factory: async_sessionmaker[AsyncSession],
+    registry: HandlerRegistry,
+    stop: asyncio.Event,
+    *,
+    idle_poll_interval: timedelta = IDLE_POLL_INTERVAL,
+) -> None:
+    """Deliver events until ``stop`` is set, waiting ``idle_poll_interval`` whenever none are due.
+
+    ``stop`` is checked between batches, so a delivery in progress always finishes and
+    commits; ECS waits 30 seconds after SIGTERM before it kills the task.
+    """
+    logger.info('Worker started')
+    while not stop.is_set():
+        if await dispatch_events(session_factory, registry) == 0:
+            with suppress(TimeoutError):
+                await asyncio.wait_for(stop.wait(), idle_poll_interval.total_seconds())
+    logger.info('Worker stopped')
 
 
 async def dispatch_events(
@@ -171,3 +220,11 @@ async def _record(session: AsyncSession, delivery: DomainEventDelivery, **values
         )
         .values(**values)
     )
+
+
+if __name__ == '__main__':
+    # Run from the imported module, so log records name it rather than '__main__'.
+    import licensing_api.worker as entry_point
+
+    configure_logging()
+    asyncio.run(entry_point.main())

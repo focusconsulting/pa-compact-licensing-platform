@@ -80,8 +80,8 @@ just up
 
 That installs dependencies, creates `engineering/api/.env` and
 `engineering/client/.env` from their examples if missing, starts the
-local services, applies migrations, loads the local users, and runs the API
-and client. Ctrl-C stops the API and client; `just down` stops the services.
+local services, applies migrations, loads the local users, and runs the API,
+the Worker, and the client. Ctrl-C stops them; `just down` stops the services.
 With the system running, `just e2e` runs the Playwright tests
 ([`engineering/e2e/`](engineering/e2e/README.md)).
 No AWS account or credentials are needed.
@@ -123,6 +123,8 @@ just migrate           # Apply migrations
 just seed              # Load the local users
 just seed demo         # Add demo practitioners in every status (engineering/docs/demo.md)
 just dev               # Run API with hot reload (localhost:8000/docs)
+just worker            # Run the Worker, which sends email and runs event handlers
+just job heartbeat     # Run one scheduled job once
 ```
 
 `just test` also needs `just infra` running.

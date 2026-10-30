@@ -111,6 +111,10 @@ The transactional outbox (backlog D2): an event is written in the same transacti
 
 `handler` is a name registered with the handler, `<owning module>.<what it does>` in lower snake case, e.g. `notifications.send_privilege_issued`. It is never derived from the Python import path: renaming a module would change the key, and the worker would handle events again. A handler keeps its name for as long as its delivery rows exist.
 
+### `job_runs`
+
+One row per run of a scheduled job (backlog D8): `job` (its name in `licensing_api/jobs.py`), `started_at`, and `finished_at` with `outcome` (`succeeded` or `failed`) and `error`, set together when it ends. A run whose task died first keeps a NULL outcome. Tier: internal.
+
 ### `notifications`
 
 An email the worker sends (backlog D7); F-11 adds the code. Tier: private.
