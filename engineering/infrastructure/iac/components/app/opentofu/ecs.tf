@@ -145,7 +145,7 @@ resource "aws_ecs_task_definition" "api_task" {
   container_definitions = jsonencode([
     {
       name      = "${local.application_name}-api"
-      image     = "${var.repo_name}:latest"
+      image     = "${var.repo_name}:${var.image_tag}"
       essential = true
       portMappings = [
         {
@@ -159,7 +159,7 @@ resource "aws_ecs_task_definition" "api_task" {
         { name = "DB_PORT", value = tostring(local.db_port) },
         { name = "DB_NAME", value = local.db_name },
         { name = "ENVIRONMENT", value = upper(var.environment_name) },
-        { name = "LOG_LEVEL", value = var.log_level },
+        { name = "LOG_LEVEL", value = "INFO" },
         { name = "OTEL_ENABLED", value = "true" },
         { name = "CORS_ORIGINS", value = jsonencode(["https://${var.dns_name}"]) },
       ]
@@ -290,13 +290,8 @@ resource "aws_ecs_service" "api_service" {
   desired_count = 1 # Initial count; managed by auto-scaling after first deploy
 
   lifecycle {
-    # CI/CD deploys new task definition revisions (new image tags) independently of OpenTofu.
-    # Without this, every `tofu apply` would revert the service to the revision OpenTofu
-    # last created, undoing CI deployments. OpenTofu still manages the task definition config
-    # (env vars, health check, etc.) — it just doesn't pin the service to a specific revision.
-    #
-    # desired_count is ignored so that auto-scaling adjustments are not reverted on next apply.
-    ignore_changes = [task_definition, desired_count]
+    # Auto-scaling owns the count after the first apply.
+    ignore_changes = [desired_count]
   }
 }
 

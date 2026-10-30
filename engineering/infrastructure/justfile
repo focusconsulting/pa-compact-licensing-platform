@@ -2,35 +2,61 @@
 
 iac := justfile_directory() / "iac"
 
+# Every environment lives in one region (SOW §2, United States only); override with AWS_REGION=... for another
+region := env("AWS_REGION", "us-east-1")
+
 # Show available commands
 default:
     @just --list
 
 # Initialise a component against an environment's backend (safe to rerun; switches environments)
-init component env region="us-east-1":
+init component env:
     cd {{ iac }}/components/{{ component }}/opentofu && tofu init -input=false -reconfigure \
         -backend-config={{ iac }}/environments/{{ env }}/{{ region }}/{{ component }}.backend.hcl
 
-# Plan a component against an environment
-plan component env region="us-east-1": (init component env region)
+# Plan a component against an environment; extra arguments go to tofu plan (e.g. -var image_tag=...)
+plan component env *args: (init component env)
     cd {{ iac }}/components/{{ component }}/opentofu && tofu plan -input=false \
-        -var-file={{ iac }}/environments/{{ env }}/{{ region }}/{{ component }}.tfvars
+        -var-file={{ iac }}/environments/{{ env }}/{{ region }}/{{ component }}.tfvars {{ args }}
 
-# Apply a component to an environment (asks for confirmation)
-apply component env region="us-east-1": (init component env region)
+# Apply a component to an environment (asks for confirmation unless -auto-approve is passed)
+apply component env *args: (init component env)
     cd {{ iac }}/components/{{ component }}/opentofu && tofu apply -input=false \
-        -var-file={{ iac }}/environments/{{ env }}/{{ region }}/{{ component }}.tfvars
+        -var-file={{ iac }}/environments/{{ env }}/{{ region }}/{{ component }}.tfvars {{ args }}
+
+# Deploy an environment: push the API image for this commit, apply ecr then app, publish the client
+deploy env:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    sha=$(git rev-parse HEAD)
+    just apply ecr {{ env }} -auto-approve
+    repo=$(cd {{ iac }}/components/ecr/opentofu && tofu output -json ecr_repositories | jq -r 'to_entries[0].value.repository_url')
+    (cd {{ justfile_directory() }}/../api && just push "$repo")
+    just apply app {{ env }} -auto-approve -var image_tag="$sha" -var repo_name="$repo"
+    out() { (cd {{ iac }}/components/app/opentofu && tofu output -raw "$1"); }
+    # Every NEXT_PUBLIC_* value is set explicitly so a laptop's .env cannot leak into the build:
+    # the API is same-origin behind CloudFront, and Cognito is the real service (no endpoint, SRP).
+    (cd {{ justfile_directory() }}/../client \
+        && NEXT_PUBLIC_BASE_PATH="" \
+           NEXT_PUBLIC_API_BASE_URL="" \
+           NEXT_PUBLIC_COGNITO_ENDPOINT_URL="" \
+           NEXT_PUBLIC_COGNITO_AUTH_FLOW="" \
+           NEXT_PUBLIC_COGNITO_REGION={{ region }} \
+           NEXT_PUBLIC_COGNITO_USER_POOL_ID="$(out cognito_user_pool_id)" \
+           NEXT_PUBLIC_COGNITO_CLIENT_ID="$(out cognito_client_id)" \
+           pnpm install --frozen-lockfile && pnpm build)
+    aws s3 sync {{ justfile_directory() }}/../client/out/ "s3://$(out client_assets_bucket)/" --delete
+    aws cloudfront create-invalidation --distribution-id "$(out cloudfront_distribution_id)" --paths "/*" >/dev/null
 
 # Format every .tf file
 fmt:
     tofu fmt -recursive {{ iac }}
 
-# Validate every component, with no backend or credentials. Its own data directory, so a
-# checkout that has run `plan` against an environment's backend still validates offline.
+# Validate every component, with no backend or credentials (in its own data dir, so a prior `plan` is undisturbed)
 validate:
     for c in {{ iac }}/components/*/opentofu; do \
-        (cd "$c" && export TF_DATA_DIR=.terraform/validate && \
-            tofu init -backend=false -input=false >/dev/null && tofu validate) || exit 1; \
+        (cd "$c" && TF_DATA_DIR=.terraform/validate tofu init -backend=false -input=false >/dev/null \
+            && TF_DATA_DIR=.terraform/validate tofu validate) || exit 1; \
     done
 
 # Everything CI checks: formatting and validation

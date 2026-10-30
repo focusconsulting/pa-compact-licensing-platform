@@ -48,7 +48,16 @@ variable "db_username" {
 
 variable "repo_name" {
   type        = string
-  description = "ECR repository URI for the API container image"
+  description = "ECR repository URL for the API image: the ecr component's repository_url output"
+}
+
+variable "image_tag" {
+  type        = string
+  description = "The API image tag to run from repo_name: the commit SHA that built it. Passed by `just deploy`, never set in tfvars."
+  validation {
+    condition     = can(regex("^[0-9a-f]{40}$", var.image_tag))
+    error_message = "image_tag is the 40-character commit SHA the image was built from."
+  }
 }
 
 variable "dns_name" {
@@ -78,12 +87,6 @@ variable "cognito_logout_url" {
   type        = string
   description = "Cognito logout redirect URL. Defaults to https://<dns_name> if not set."
   default     = null
-}
-
-variable "jumpbox_enabled" {
-  type        = bool
-  description = "Allow ingress from the jumpbox whose security group ID is in the <environment>-jumpbox-sgid-tfvar secret. Only DEV has a jumpbox."
-  default     = false
 }
 
 variable "commission_ops_email" {
