@@ -27,7 +27,7 @@ OpenTofu is the Linux Foundation's fork of Terraform 1.5, under the MPL-2.0. It 
 1. **OpenTofu runs the infrastructure.** The pinned version is in `.tool-versions` (constitution Principle XII); the module's `required_version` constrains OpenTofu, not Terraform.
 2. **The provider lockfile is committed.** `.terraform.lock.hcl` leaves `.gitignore`, so every machine and CI install the same provider builds. Principle XV already lists it as a lockfile.
 3. **`just` is the entry point**, as for the API and client: `engineering/infrastructure/justfile` holds `init`, `plan`, `apply`, `fmt`, `validate`, and `check`, each taking a component and an environment. `gen-tf-plan.py` is removed.
-4. **Nothing else changes.** File names keep the `.tf` extension and the `terraform {}` block, which OpenTofu reads; the directory stays `components/<name>/terraform/`, so existing links and state keys hold.
+4. **The code directory is `components/<name>/opentofu/`.** File names keep the `.tf` extension and the `terraform {}` block, `terraform_remote_state`, and `.terraform.lock.hcl`, which are OpenTofu's own names. State keys and the state bucket keep their names: they are S3 objects, and renaming them is a migration this decision does not need.
 
 ## Pros and cons
 

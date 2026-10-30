@@ -1,6 +1,6 @@
 # Jumpbox Ingress for DEV Debugging
 
-The networking Terraform (`infrastructure/iac/components/app/terraform/networking.tf`)
+The networking code (`infrastructure/iac/components/app/opentofu/networking.tf`)
 includes conditional ingress rules on the ECS, RDS, and ElastiCache security groups
 that allow all traffic from a designated jumpbox EC2 instance.
 
@@ -8,7 +8,7 @@ These rules are **off by default** and only activated when `jumpbox_sg_id` is su
 at apply time:
 
 ```bash
-terraform apply \
+tofu apply \
   -var-file=environments/dev/us-east-1/app.tfvars \
   -var="jumpbox_sg_id=sg-xxxxxxxxxxxxxxxxx"
 ```

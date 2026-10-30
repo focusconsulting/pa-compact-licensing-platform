@@ -6,7 +6,7 @@ What it builds is drawn in [`engineering/docs/architecture.md`](../../docs/archi
 ## Layout
 
 ```text
-components/<component>/terraform/   The code: app (everything the system runs on) and ecr (the image repositories)
+components/<component>/opentofu/   The code: app (everything the system runs on) and ecr (the image repositories)
 environments/<env>/<region>/        One backend and one tfvars file per component, per environment
 ```
 
@@ -14,7 +14,7 @@ Each environment is an `<env>/<region>` directory holding
 `<component>.backend.hcl` (where its state lives) and `<component>.tfvars`
 (its values). The code is the same for every environment; only those files
 differ, and the module refuses an `environment_name` other than `dev`,
-`test`, or `prod`.
+`staging`, or `prod`.
 
 ## Prerequisites
 

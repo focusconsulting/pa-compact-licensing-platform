@@ -290,9 +290,9 @@ resource "aws_ecs_service" "api_service" {
   desired_count = 1 # Initial count; managed by auto-scaling after first deploy
 
   lifecycle {
-    # CI/CD deploys new task definition revisions (new image tags) independently of terraform.
-    # Without this, every `terraform apply` would revert the service to the revision terraform
-    # last created, undoing CI deployments. Terraform still manages the task definition config
+    # CI/CD deploys new task definition revisions (new image tags) independently of OpenTofu.
+    # Without this, every `tofu apply` would revert the service to the revision OpenTofu
+    # last created, undoing CI deployments. OpenTofu still manages the task definition config
     # (env vars, health check, etc.) — it just doesn't pin the service to a specific revision.
     #
     # desired_count is ignored so that auto-scaling adjustments are not reverted on next apply.

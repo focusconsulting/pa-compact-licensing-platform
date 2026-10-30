@@ -43,7 +43,7 @@ terraform {
 
 # All Focus accounts are setup with a default VPC and this module will use that.
 # The VPC's characteristics (e.g. vpc id, subnet cidrs, ...) can be read from the
-# terraform state bucket.
+# state bucket.
 data "terraform_remote_state" "network" {
   backend = "s3"
   config = {
@@ -74,7 +74,7 @@ locals {
   optional_preload_library  = ""
 
   default_psql_cluster_parameters = {
-    log_autovacuum_min_duration = { value = 10001 } # 10001 instead of 10000 since setting the default value results in Terraform not tracking this parameter in the state file, making it think this is always a proposed change.
+    log_autovacuum_min_duration = { value = 10001 } # 10001 instead of 10000 since setting the default value results in OpenTofu not tracking this parameter in the state file, making it think this is always a proposed change.
     log_connections             = { value = 1 }
     log_disconnections          = { value = 1 }
     log_lock_waits              = { value = 1 }

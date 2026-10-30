@@ -29,7 +29,7 @@ NAMESPACES: Mapping[str, Sequence[APIRouter]] = {
 api = APIRouter(prefix='/api', responses={422: {'model': ErrorResponse}})
 # If we decide to exclude /health routes from /api, that is make them private,
 # include the health.router directly to app. Then update the paths in
-# infrastructure/iac/components/app/terraform/ecs.tf
+# infrastructure/iac/components/app/opentofu/ecs.tf
 api.include_router(health.router)
 for prefix, routers in NAMESPACES.items():
     for router in routers:
