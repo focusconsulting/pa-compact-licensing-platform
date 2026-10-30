@@ -28,5 +28,9 @@
     "date": "Date",
     "what": "What happened",
     "by": "By"
+  },
+  "card": {
+    "actions": "Actions",
+    "about": "for {{record}}"
   }
 }
