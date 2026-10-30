@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 from jinja2 import TemplateNotFound, UndefinedError
 
+from licensing_api.notifications.preview import SAMPLE_CONTEXTS
 from licensing_api.notifications.render import (
     TEMPLATES_DIR,
     long_date,
@@ -16,52 +17,6 @@ from tests.conftest import TEST_SETTINGS
 from tests.snapshots import assert_matches_snapshot
 
 TEST_TEMPLATES_DIR = Path(__file__).parent / 'email_templates'
-
-# A context for every template in licensing_api/notifications/templates, as its handler builds it.
-_PA = {'first_name': 'Avery', 'state_name': 'Kansas'}
-_RS = {'first_name': 'Avery', 'remote_state_name': 'Oklahoma'}
-_PRIVILEGE = {'privilege_number': 'PA-OK-000042', 'expires_on': '2027-12-31'}
-_ACTION = {'reporting_state_name': 'Oklahoma', 'against_license': False, 'is_emergency': False}
-SAMPLE_CONTEXTS: dict[str, dict[str, object]] = {
-    'welcome': {'first_name': 'Avery'},
-    'application_submitted': _PA,
-    'application_submitted_state': {'state_name': 'Kansas'},
-    'application_info_requested': _PA,
-    'application_resubmitted_state': {'state_name': 'Kansas'},
-    'application_eligible': _PA,
-    'application_denied': _PA | {'denial_reason': 'Does not hold current NCCPA certification'},
-    'application_decided_commission': {'state_name': 'Kansas', 'eligible': False},
-    'application_withdrawn': _PA,
-    'application_withdrawn_state': {'state_name': 'Kansas'},
-    'application_eligibility_withdrawn': _PA,
-    'application_eligibility_withdrawn_state': {
-        'state_name': 'Kansas',
-        'remote_state_name': 'Oklahoma',
-    },
-    'privilege_requested': _RS,
-    'privilege_requested_state': {'remote_state_name': 'Oklahoma'},
-    'payment_declined': _RS,
-    'privilege_issued': _RS | _PRIVILEGE,
-    'privilege_issued_staff': {'remote_state_name': 'Oklahoma'},
-    'privilege_denied': _RS | {'denial_reason': 'Does not hold current NCCPA certification'},
-    'privilege_denied_staff': {'remote_state_name': 'Oklahoma'},
-    'privilege_deactivated': _RS
-    | {'privilege_number': 'PA-OK-000042', 'note': 'Supervision agreement lapsed.'},
-    'privilege_deactivated_state': {
-        'remote_state_name': 'Oklahoma',
-        'privilege_number': 'PA-OK-000042',
-    },
-    'privilege_expiring': _RS | _PRIVILEGE,
-    'privilege_expired': _RS | _PRIVILEGE,
-    'license_status_changed': _PA | {'status': 'inactive'},
-    'license_status_changed_state': {'state_name': 'Kansas', 'status': 'inactive'},
-    'adverse_action_reported': _ACTION | {'first_name': 'Avery'},
-    'adverse_action_reported_staff': _ACTION | {'is_emergency': True},
-    'adverse_action_lifted': _ACTION | {'first_name': 'Avery'},
-    'adverse_action_lifted_staff': _ACTION,
-    'sii_flagged_state': {'reporting_state_name': 'Kansas'},
-    'sii_closed_state': {'reporting_state_name': 'Kansas'},
-}
 
 _EXAMPLE_CONTEXT = {
     'state_name': 'Kansas',

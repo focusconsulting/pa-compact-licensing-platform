@@ -20,7 +20,7 @@ Email to states and the Commission never names the practitioner: it says what ha
 
 ## Catalogue
 
-Handlers live in `licensing_api/notifications/` and are registered in `licensing_api/handlers.py`. Templates are in `licensing_api/notifications/templates/`; rendered examples of each are in `engineering/api/tests/snapshots/`.
+Handlers live in `licensing_api/notifications/` and are registered in `licensing_api/handlers.py`. Templates are in `licensing_api/notifications/templates/`; rendered examples of each are in `engineering/api/tests/snapshots/`, and `just email-preview` sends them all to maildev.
 
 | Event | Handler | PA | State | Commission |
 |---|---|---|---|---|
@@ -48,5 +48,5 @@ Each handler's handler name is `notifications.<handler>`, which keys its deliver
 ## Adding a notification
 
 1. Add `<name>.txt` (blocks `subject` and `message`) and `<name>.html` (block `message`), extending `pa` or `staff`.
-2. Add a sample context to `SAMPLE_CONTEXTS` in `tests/test_email_render.py` and run `UPDATE_SNAPSHOTS=1 just test tests/test_email_render.py`; review the new snapshot files.
+2. Add a sample context to `SAMPLE_CONTEXTS` in `licensing_api/notifications/preview.py` and run `UPDATE_SNAPSHOTS=1 just test tests/test_email_render.py`; review the new snapshot files.
 3. Queue it from a handler with `recipients.queue`, register the handler in `licensing_api/handlers.py`, and add a row to the table above.
