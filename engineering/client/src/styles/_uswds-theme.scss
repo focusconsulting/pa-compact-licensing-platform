@@ -21,6 +21,9 @@ for a full list of available settings.
   // Use USWDS defaults for typography
   $theme-style-body-element: true,
   $theme-font-type-sans: "public-sans",
+  $theme-font-role-heading: "sans",
+  $theme-font-role-alt: "sans",
+  $theme-font-weight-semibold: 600,
   $theme-global-content-styles: true,
   $theme-global-link-styles: true,
   $theme-global-paragraph-styles: true
