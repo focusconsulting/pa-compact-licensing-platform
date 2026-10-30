@@ -13,8 +13,8 @@ environments/<env>/<region>/        One backend and one tfvars file per componen
 Each environment is an `<env>/<region>` directory holding
 `<component>.backend.hcl` (where its state lives) and `<component>.tfvars`
 (its values). The code is the same for every environment; only those files
-differ, and the module refuses an `environment_name` other than `dev`,
-`staging`, or `prod`.
+differ, and the module refuses an `environment_name` other than `staging`
+or `prod`.
 
 ## Prerequisites
 
@@ -35,7 +35,7 @@ to `~/.aws/config`:
 sso_start_url = <the start URL>
 sso_region = us-east-1
 
-[profile dev-pacompact]
+[profile staging-pacompact]
 sso_session = focus
 sso_account_id = 126942145463
 sso_role_name = AccountDeveloperAccess
@@ -45,14 +45,15 @@ region = us-east-1
 Sign in once a day and point the commands at the profile:
 
 ```bash
-aws sso login --profile dev-pacompact
-aws sts get-caller-identity --profile dev-pacompact   # Account must be 126942145463
-export AWS_PROFILE=dev-pacompact
-just plan app dev
+aws sso login --profile staging-pacompact
+aws sts get-caller-identity --profile staging-pacompact   # Account must be 126942145463
+export AWS_PROFILE=staging-pacompact
+just plan app staging
 ```
 
-A new environment gets its own `[profile <env>-pacompact]` block with its
-account ID, and the same role.
+The staging account is the one Focus created as `dev-pacompact`, which is why
+its state bucket and DNS zone carry that name. A new environment gets its own
+`[profile <env>-pacompact]` block with its account ID, and the same role.
 
 ## Commands
 
@@ -61,8 +62,8 @@ From `engineering/infrastructure/`:
 ```bash
 just check             # tofu fmt -check and tofu validate on every component; what CI runs
 just fmt               # format every .tf file
-just plan app dev      # plan a component against an environment
-just apply app dev     # apply it (asks for confirmation)
+just plan app staging  # plan a component against an environment
+just apply app staging # apply it (asks for confirmation)
 ```
 
 `plan` and `apply` initialise the component against the environment's backend
@@ -82,18 +83,18 @@ may be left out of the tfvars file when the default is right.
 
 ### `ecr`
 
-| Variable | What it sets | `dev` |
+| Variable | What it sets | `staging` |
 |---|---|---|
-| `environment_name` | The environment's name, in every resource name | `dev` |
+| `environment_name` | The environment's name, in every resource name | `staging` |
 | `aws_region` | Where the repositories live | `us-east-1` |
 | `tf_state_bucket` | The state bucket | `focus-dev-pacompact-terraform-state` |
-| `repositories` | The repositories to create: name, tag mutability, scan on push | `pacompact-app-dev`, mutable, scanned |
+| `repositories` | The repositories to create: name, tag mutability, scan on push | `pacompact-app-staging`, mutable, scanned |
 
 ### `app`
 
-| Variable | What it sets | `dev` | Default |
+| Variable | What it sets | `staging` | Default |
 |---|---|---|---|
-| `environment_name` | The environment's name: resource and secret names, and the containers' `ENVIRONMENT` (upper-cased) | `dev` | required |
+| `environment_name` | The environment's name: resource and secret names, and the containers' `ENVIRONMENT` (upper-cased) | `staging` | required |
 | `aws_region` | Where everything but the CloudFront certificate lives | `us-east-1` | required |
 | `tf_state_bucket` | The state bucket, which also holds the network bootstrap state | `focus-dev-pacompact-terraform-state` | required |
 | `network_state_key` | Key of the bootstrap state that exports `vpc_id` and `private_subnet_ids` | default | `bootstrap/network/default/terraform.tfstate` |
@@ -102,7 +103,7 @@ may be left out of the tfvars file when the default is right.
 | `db_instance_class` | Aurora instance class | `db.t4g.medium` | `db.t4g.medium` |
 | `instance_count` | Aurora instances | default | `1` |
 | `backup_retention_period` | Days of automated database backups | `1` | `30` |
-| `repo_name` | The `ecr` component's `repository_url` for the API image | the dev repository | required |
+| `repo_name` | The `ecr` component's `repository_url` for the API image | the staging repository | required |
 | `ecs_max_capacity` | Most API tasks the autoscaler may run | default | `2` |
 | `jumpbox_enabled` | Allow the environment's jumpbox to reach ECS and the database | `true` | `false` |
 | `commission_ops_email` | The Commission's operational mailbox; empty sends nothing | default | empty |
@@ -112,7 +113,7 @@ may be left out of the tfvars file when the default is right.
 ## Adding an environment
 
 1. Create `environments/<env>/<region>/` with `ecr.backend.hcl`,
-   `ecr.tfvars`, `app.backend.hcl`, and `app.tfvars`, copying `dev`'s and
+   `ecr.tfvars`, `app.backend.hcl`, and `app.tfvars`, copying `staging`'s and
    changing the values in the tables above. Each backend's `key` carries the
    environment name.
 2. Make what the module looks up, which it does not create:

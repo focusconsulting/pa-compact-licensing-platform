@@ -15,11 +15,11 @@ variable "aws_region" {
 }
 
 variable "environment_name" {
-  description = "The environment: dev, staging, or prod. Names resources and secrets, and is the ENVIRONMENT the containers run with."
+  description = "The environment: staging or prod. Names resources and secrets, and is the ENVIRONMENT the containers run with."
   type        = string
   validation {
-    condition     = contains(["dev", "staging", "prod"], var.environment_name)
-    error_message = "environment_name must be dev, staging, or prod."
+    condition     = contains(["staging", "prod"], var.environment_name)
+    error_message = "environment_name must be staging or prod."
   }
 }
 
@@ -82,7 +82,7 @@ variable "cognito_logout_url" {
 
 variable "jumpbox_enabled" {
   type        = bool
-  description = "Allow ingress from the jumpbox whose security group ID is in the <environment>-jumpbox-sgid-tfvar secret. Only DEV has a jumpbox."
+  description = "Allow ingress from the jumpbox whose security group ID is in the <environment>-jumpbox-sgid-tfvar secret. Only staging has a jumpbox."
   default     = false
 }
 

@@ -120,7 +120,7 @@ jobs:
         run: pnpm a11y
 
   deploy:
-    name: Deploy to DEV
+    name: Deploy to staging
     runs-on: ubuntu-latest
     needs: [changes, lint, test, a11y]
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.client == 'true')
@@ -157,7 +157,7 @@ jobs:
       - name: Fetch Cognito config from Secrets Manager
         run: |
           SECRET=$(aws secretsmanager get-secret-value \
-            --secret-id "dev-cognito-config" \
+            --secret-id "staging-cognito-config" \
             --query SecretString --output text)
           echo "NEXT_PUBLIC_COGNITO_USER_POOL_ID=$(echo "$SECRET" | jq -r .user_pool_id)" >> "$GITHUB_ENV"
           echo "NEXT_PUBLIC_COGNITO_CLIENT_ID=$(echo "$SECRET" | jq -r .client_id)"       >> "$GITHUB_ENV"
