@@ -33,26 +33,26 @@ updates:
       pip-all:
         patterns: ["*"]
 
-  # Terraform providers — app component
+  # OpenTofu providers — app component
   - package-ecosystem: terraform
-    directory: /engineering/infrastructure/iac/components/app/terraform
+    directory: /engineering/infrastructure/iac/components/app/opentofu
     schedule:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
     groups:
-      terraform-app-all:
+      opentofu-app-all:
         patterns: ["*"]
 
-  # Terraform providers — ecr component
+  # OpenTofu providers — ecr component
   - package-ecosystem: terraform
-    directory: /engineering/infrastructure/iac/components/ecr/terraform
+    directory: /engineering/infrastructure/iac/components/ecr/opentofu
     schedule:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
     groups:
-      terraform-ecr-all:
+      opentofu-ecr-all:
         patterns: ["*"]
 
   # GitHub Actions

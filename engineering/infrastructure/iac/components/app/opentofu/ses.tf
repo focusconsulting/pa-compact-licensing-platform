@@ -2,7 +2,7 @@
 # no-reply@<environment's hosted zone> with DKIM, SPF on a custom MAIL FROM domain, and DMARC.
 #
 # A new account's SES is in the sandbox: it sends only to verified addresses until
-# production access is requested for the account, outside Terraform.
+# production access is requested for the account, outside OpenTofu.
 
 locals {
   email_domain     = local.hosted_zone_name
@@ -59,7 +59,7 @@ resource "aws_route53_record" "dmarc" {
 }
 
 # SMTP needs an access key, which a task role cannot provide. The user may send only from
-# the domain's no-reply address. Rotate with `terraform apply -replace=aws_iam_access_key.ses_smtp`,
+# the domain's no-reply address. Rotate with `tofu apply -replace=aws_iam_access_key.ses_smtp`,
 # then force a new Worker deployment.
 resource "aws_iam_user" "ses_smtp" {
   name = "${var.environment_name}-${local.application_name}-ses-smtp"

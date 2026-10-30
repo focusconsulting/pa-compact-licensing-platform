@@ -18,7 +18,7 @@ resource "aws_secretsmanager_secret" "db_credentials" {
 
 # The master password is generated here and lives only in Secrets Manager (and
 # the encrypted state). To rotate it, replace the resource:
-#   terraform apply -replace=random_password.db_master
+#   tofu apply -replace=random_password.db_master
 # then force a new ECS deployment so tasks pick up the new secret.
 resource "random_password" "db_master" {
   length  = 32

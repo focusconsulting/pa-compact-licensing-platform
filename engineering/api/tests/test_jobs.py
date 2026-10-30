@@ -78,11 +78,11 @@ async def test_the_command_rejects_an_unknown_job(capsys):
 
 
 _SCHEDULER_TF = (
-    Path(__file__).parents[2] / 'infrastructure/iac/components/app/terraform/scheduler.tf'
+    Path(__file__).parents[2] / 'infrastructure/iac/components/app/opentofu/scheduler.tf'
 )
 
 
-def test_every_job_has_a_schedule_in_terraform():
+def test_every_job_has_a_schedule_in_opentofu():
     schedules = re.search(r'job_schedules = \{(.*?)\n  \}', _SCHEDULER_TF.read_text(), re.DOTALL)
     assert schedules is not None, 'scheduler.tf no longer defines local.job_schedules'
 

@@ -5,7 +5,7 @@
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
 
-# Terraform files to ignore
+# OpenTofu files to ignore
 .terraform
 
 # Node dependencies
