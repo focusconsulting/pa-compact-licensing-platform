@@ -117,7 +117,7 @@ One row per run of a scheduled job (backlog D8): `job` (its name in `licensing_a
 
 ### `notifications`
 
-An email the worker sends (backlog D7); F-11 adds the code. Tier: private.
+An email the worker sends (backlog D7) with `send_pending` (`licensing_api/notifications/sender.py`). Tier: private.
 
 | Column | Type | Meaning |
 |---|---|---|
@@ -127,6 +127,7 @@ An email the worker sends (backlog D7); F-11 adds the code. Tier: private.
 | `context` | JSONB | Template values |
 | `idempotency_key` | TEXT, unique | A repeated request sends once |
 | `status` | TEXT, CHECK | `pending`, `sent`, `failed`; `sent_at` is set exactly when `sent` |
+| `attempts`, `last_error`, `next_attempt_at` | INTEGER, TEXT, TIMESTAMPTZ | A failed send is retried at `next_attempt_at`; the fifth failure marks it `failed` ([ADR-0014](../adrs/0014-email-templates-and-smtp.md)) |
 
 ## Core entities
 

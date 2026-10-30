@@ -1,0 +1,7 @@
+{% if environment != 'PROD' %}This email comes from the PA Compact {{ environment }} test system. It is not about a real practitioner, application, or privilege.
+
+{% endif %}{% block body %}{% endblock %}
+--
+PA Compact Commission Data System
+{{ client_base_url }}
+This mailbox is not monitored. Please do not reply.
