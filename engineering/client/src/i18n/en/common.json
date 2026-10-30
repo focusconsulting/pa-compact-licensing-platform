@@ -28,5 +28,15 @@
     "date": "Date",
     "what": "What happened",
     "by": "By"
+  },
+  "card": {
+    "licenseNumber": "License number",
+    "privilegeNumber": "Privilege number",
+    "expires": "Expires",
+    "activeFrom": "Active from",
+    "discipline": "Discipline status",
+    "viewDetails": "View details",
+    "actions": "Actions",
+    "about": "for {{record}}"
   }
 }
