@@ -1,0 +1,3 @@
+{% extends 'staff.txt' %}
+{% block subject %}New privilege request for {{ remote_state_name }}{% endblock %}
+{% block message %}A PA paid for a privilege to practice in {{ remote_state_name }}. The request is waiting for your review.{% endblock %}

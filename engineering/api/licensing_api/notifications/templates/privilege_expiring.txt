@@ -1,0 +1,3 @@
+{% extends 'pa.txt' %}
+{% block subject %}Your privilege in {{ remote_state_name }} expires on {{ expires_on | long_date }}{% endblock %}
+{% block message %}Your privilege to practice in {{ remote_state_name }}, number {{ privilege_number }}, expires on {{ expires_on | long_date }}. To keep practicing there after that date, you will need a new privilege.{% endblock %}

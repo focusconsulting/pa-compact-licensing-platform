@@ -1,0 +1,3 @@
+{% extends 'staff.txt' %}
+{% block subject %}Significant investigative information closed by {{ reporting_state_name }}{% endblock %}
+{% block message %}{{ reporting_state_name }} closed its report of significant investigative information about a PA who holds a license or privilege in your state.{% endblock %}

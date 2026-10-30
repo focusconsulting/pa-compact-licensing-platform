@@ -1,0 +1,3 @@
+{% extends 'staff.txt' %}
+{% block subject %}Privilege denied in {{ remote_state_name }}{% endblock %}
+{% block message %}{{ remote_state_name }} denied a PA's request for a privilege to practice.{% endblock %}

@@ -152,7 +152,7 @@ These are fixed here so the tracks build in parallel. Each becomes code, with te
 
 ### `.3` events, history, audit, the privilege cascade
 
-Implemented: `deactivate_privileges` and `dispatch_events` are in [Helpers](#helpers), the day module in [Counting days](#counting-days), and `GET /commission/audit` lists the audit log for the Commission (`compact_admin`). The event-catalogue test (every `EventType` has a test) lands with the `.5` handlers, the first code that consumes every event type.
+Implemented: `deactivate_privileges` and `dispatch_events` are in [Helpers](#helpers), the day module in [Counting days](#counting-days), and `GET /commission/audit` lists the audit log for the Commission (`compact_admin`).
 
 ### `.4` API rules, client generation, demo seed
 
@@ -172,7 +172,7 @@ async def send_pending(
     Returns the number sent."""
 ```
 
-Implemented: the Worker process runs `dispatch_events` then `send_pending` until SIGTERM (`just worker`), and `python -m licensing_api.jobs run <name>` runs a scheduled job (`just job <name>`). Templates are Jinja files rendered with a test-system banner outside PROD, sent over SMTP with the standard library ([ADR-0014](../adrs/0014-email-templates-and-smtp.md)).
+Implemented: the Worker process runs `dispatch_events` then `send_pending` until SIGTERM (`just worker`), and `python -m licensing_api.jobs run <name>` runs a scheduled job (`just job <name>`). Templates are Jinja files rendered with a test-system banner outside PROD, sent over SMTP with the standard library ([ADR-0014](../adrs/0014-email-templates-and-smtp.md)). [Notifications](notifications.md) lists which event emails whom; `tests/test_event_catalogue.py` fails an event type with no handler, named owner, or test.
 
 ### `.6` documents
 
