@@ -35,7 +35,8 @@ async def _application(session: AsyncSession, event: DomainEvent) -> Participati
 @handler('notifications.send_welcome', EventType.PRACTITIONER_REGISTERED)
 async def send_welcome(session: AsyncSession, ctx: ChangeContext, event: DomainEvent) -> None:
     """Welcome a newly registered PA."""
-    assert event.aggregate_id is not None
+    if event.aggregate_id is None:
+        raise ValueError(f'{event.type} event {event.event_id} has no aggregate_id')
     pa = await practitioner(session, event.aggregate_id)
     await queue(session, ctx, event, 'welcome', [pa.recipient], {'first_name': pa.first_name})
 
