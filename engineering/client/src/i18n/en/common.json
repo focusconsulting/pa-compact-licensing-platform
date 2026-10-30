@@ -21,5 +21,6 @@
     "age": "Age",
     "days_one": "{{count}} day",
     "days_other": "{{count}} days"
-  }
+  },
+  "breadcrumbs": "Breadcrumbs"
 }
