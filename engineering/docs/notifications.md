@@ -14,7 +14,7 @@ Outside PROD, every email's subject starts with the environment, such as `[DEV]`
 
 - **The PA**: their correspondence email (Rule 4 §4.3(c)(8)), or their sign-in email when they gave none. The address is copied when the email is queued.
 - **A state**: the addresses in `state_contacts` for that state and a purpose: `applications` (as state of qualifying license), `privileges` (as remote state), or `discipline`. A state with no contact for a purpose gets no email for it.
-- **The Commission**: `COMMISSION_OPS_EMAIL`. Which mailbox this is is open question Q-14; while it is empty, the Commission gets no email.
+- **The Commission**: `COMMISSION_OPS_EMAIL`. The mailbox is still to be chosen ([SCRUM-178](https://focusdigital.atlassian.net/browse/SCRUM-178)); while it is empty, the Commission gets no email.
 
 Email to states and the Commission never names the practitioner: it says what happened and links to sign-in, where the reader sees only the records their permissions allow. Email to the PA never carries a state's information-request note or anything about SII (ML §8.C).
 
