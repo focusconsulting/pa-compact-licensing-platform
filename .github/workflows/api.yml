@@ -45,10 +45,10 @@ jobs:
         run: uv sync --frozen
 
       - name: Ruff check
-        run: uv run ruff check licensing_api tests
+        run: uv run ruff check licensing_api tests conftest.py
 
       - name: Ruff format check
-        run: uv run ruff format --check licensing_api tests
+        run: uv run ruff format --check licensing_api tests conftest.py
 
       - name: Pyright
         run: uv run pyright licensing_api seed
