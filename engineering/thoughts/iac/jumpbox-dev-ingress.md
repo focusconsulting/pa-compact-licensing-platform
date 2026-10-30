@@ -1,4 +1,4 @@
-# Jumpbox Ingress for DEV Debugging
+# Jumpbox Ingress for staging debugging
 
 The networking code (`infrastructure/iac/components/app/opentofu/networking.tf`)
 includes conditional ingress rules on the ECS, RDS, and ElastiCache security groups
@@ -9,7 +9,7 @@ at apply time:
 
 ```bash
 tofu apply \
-  -var-file=environments/dev/us-east-1/app.tfvars \
+  -var-file=environments/staging/us-east-1/app.tfvars \
   -var="jumpbox_sg_id=sg-xxxxxxxxxxxxxxxxx"
 ```
 
@@ -25,12 +25,12 @@ direct TCP access to:
 ## Why this is useful
 
 With the tunnel running, a developer can set environment variable overrides pointing
-at DEV resources and run the API (or any tooling) locally against the real DEV
+at staging resources and run the API (or any tooling) locally against the real staging
 database and cache — without deploying a new container image. This is particularly
 helpful for:
 
 - Reproducing a bug that only appears against real data
-- Running ad-hoc queries or migrations against DEV RDS directly
+- Running ad-hoc queries or migrations against staging RDS directly
 - Testing Redis behaviour against the live ElastiCache cluster
 
 ## How to use
@@ -47,17 +47,17 @@ helpful for:
 
 3. Start the SSM tunnel using the `aws-tunnel-to-service` shell function.
 
-4. Create a local env override file (e.g. `api/.env.dev`) pointing at the
+4. Create a local env override file (e.g. `api/.env.staging`) pointing at the
    tunnelled ports. This file is gitignored via the root `.env*` rule:
    ```bash
-   # api/.env.dev
+   # api/.env.staging
    DB_HOST=127.0.0.1
    DB_PORT=5433
    DB_NAME=licensing
    DB_USER=licensing
-   DB_PASSWORD=<dev password from Secrets Manager>
+   DB_PASSWORD=<staging password from Secrets Manager>
    REDIS_URL=redis://127.0.0.1:6380
-   ENVIRONMENT=DEV
+   ENVIRONMENT=STAGING
    LOG_LEVEL=DEBUG
    ```
 

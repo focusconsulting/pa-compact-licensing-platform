@@ -9,11 +9,11 @@ variable "aws_region" {
 }
 
 variable "environment_name" {
-  description = "The environment: dev, staging, or prod. Names the repositories."
+  description = "The environment: staging or prod. Names the repositories."
   type        = string
   validation {
-    condition     = contains(["dev", "staging", "prod"], var.environment_name)
-    error_message = "environment_name must be dev, staging, or prod."
+    condition     = contains(["staging", "prod"], var.environment_name)
+    error_message = "environment_name must be staging or prod."
   }
 }
 
