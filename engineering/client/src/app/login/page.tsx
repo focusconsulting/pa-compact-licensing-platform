@@ -82,7 +82,7 @@ export default function LoginPage() {
 
   if (pendingChallenge) {
     return (
-      <main className="usa-section">
+      <div className="usa-section">
         <div className="grid-container">
           <h1>Set a new password</h1>
           <p>You must set a new password before continuing.</p>
@@ -116,12 +116,12 @@ export default function LoginPage() {
             </Button>
           </Form>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="usa-section">
+    <div className="usa-section">
       <div className="grid-container">
         <h1>Sign in</h1>
         {error && (
@@ -154,6 +154,6 @@ export default function LoginPage() {
           </Button>
         </Form>
       </div>
-    </main>
+    </div>
   );
 }

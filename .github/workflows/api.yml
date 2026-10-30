@@ -45,10 +45,10 @@ jobs:
         run: uv sync --frozen
 
       - name: Ruff check
-        run: uv run ruff check licensing_api tests
+        run: uv run ruff check licensing_api tests conftest.py
 
       - name: Ruff format check
-        run: uv run ruff format --check licensing_api tests
+        run: uv run ruff format --check licensing_api tests conftest.py
 
       - name: Pyright
         run: uv run pyright licensing_api seed
@@ -73,7 +73,9 @@ jobs:
       - name: Start services
         run: |
           docker compose up -d --wait --build
-          docker compose wait rustfs-init >/dev/null
+          # rustfs-init exits once the bucket exists; `docker wait` reads its exit code even after it has
+          # stopped, where `docker compose wait` finds no container and fails.
+          test "$(docker wait "$(docker compose ps -aq rustfs-init)")" = 0
 
       - name: Run tests with coverage
         run: |

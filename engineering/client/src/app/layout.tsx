@@ -7,6 +7,8 @@ import "src/styles/styles.scss";
 import { Metadata } from "next";
 import { AuthProvider } from "src/contexts/AuthContext";
 import I18nProvider from "src/components/I18nProvider";
+import AppShell from "src/components/AppShell";
+import { CurrentUserProvider } from "src/contexts/CurrentUserContext";
 
 export const metadata: Metadata = {
   title: {
@@ -20,13 +22,17 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
-/** Root layout for every page: sets the page title and provides i18n and the signed-in user. */
+/** Root layout for every page: sets the page title, provides i18n and the signed-in user, and wraps the page in the shell. */
 export default function RootLayout({ children }: LayoutProps) {
   return (
     <html lang="en">
       <body>
         <I18nProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <CurrentUserProvider>
+              <AppShell>{children}</AppShell>
+            </CurrentUserProvider>
+          </AuthProvider>
         </I18nProvider>
       </body>
     </html>

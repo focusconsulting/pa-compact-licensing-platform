@@ -28,8 +28,6 @@ just install
 
 This should be run before launching the service. Everytime it is invoked, the data in services is reset.
 
-You might need to reset the data for testing if a test doesn't clean up properly after itself. However, tests should be written such that the clean up after themselves.
-
 ```bash
 just infra
 ```
@@ -66,12 +64,16 @@ just infra-down
 
 ## Running tests
 
+Tests never touch your local data. Each run drops and recreates its own empty
+database, `<DB_NAME>_test`, and migrates it ([`conftest.py`](./conftest.py)).
+The first argument to `just test` is the env file.
+
 ```bash
 # Run all tests
 just test
 
 # Run a specific test by name
-just test -k test_live_returns_200
+just test .env -k test_live_returns_200
 
 # Run with coverage report printed to terminal
 just test-coverage
