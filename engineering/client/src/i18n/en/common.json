@@ -22,5 +22,11 @@
     "days_one": "{{count}} day",
     "days_other": "{{count}} days"
   },
-  "breadcrumbs": "Breadcrumbs"
+  "breadcrumbs": "Breadcrumbs",
+  "history": {
+    "heading": "History",
+    "date": "Date",
+    "what": "What happened",
+    "by": "By"
+  }
 }
