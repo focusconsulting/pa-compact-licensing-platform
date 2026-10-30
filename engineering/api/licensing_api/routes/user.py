@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter
 from pydantic import BaseModel, ConfigDict, Field
 
-from licensing_api.permissions import require
+from licensing_api.permissions import Permission, held_permissions, require
 from licensing_api.repo.user import User
 from licensing_api.responses import Data, example
 
@@ -25,6 +25,7 @@ class CurrentUser(BaseModel):
             role='state_staff',
             state_code='KS',
             is_active=True,
+            permissions=[Permission.READ_GENERAL, Permission.WRITE],
         ),
     )
 
@@ -35,6 +36,8 @@ class CurrentUser(BaseModel):
     role: str
     state_code: str | None
     is_active: bool
+    # Held in their own state, for showing navigation. Routes still check every request.
+    permissions: list[Permission]
 
 
 @router.get(
@@ -44,4 +47,7 @@ class CurrentUser(BaseModel):
 )
 async def get_me(caller: Annotated[User, require()]) -> Data[CurrentUser]:
     """Return the signed-in caller's profile."""
-    return Data(data=CurrentUser.model_validate(caller))
+    held = held_permissions(caller, caller.state_code)
+    # ``User.permissions`` is the grants map, so the profile is built from a dict, not the row.
+    profile = caller.model_dump() | {'permissions': [p for p in Permission if p in held]}
+    return Data(data=CurrentUser.model_validate(profile))
