@@ -73,7 +73,9 @@ jobs:
       - name: Start services
         run: |
           docker compose up -d --wait --build
-          docker compose wait rustfs-init >/dev/null
+          # rustfs-init exits once the bucket exists; `docker wait` reads its exit code even after it has
+          # stopped, where `docker compose wait` finds no container and fails.
+          test "$(docker wait "$(docker compose ps -aq rustfs-init)")" = 0
 
       - name: Run tests with coverage
         run: |
