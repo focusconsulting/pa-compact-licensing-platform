@@ -1,0 +1,10 @@
+This email comes from the PA Compact LOCAL_DEV test system. It is not about a real practitioner, application, or privilege.
+
+Kansas withdrew the compact eligibility of a PA who holds a privilege to practice in Oklahoma. That privilege is no longer active.
+
+Sign in to see the details: http://localhost:3000
+
+--
+PA Compact Commission Data System
+http://localhost:3000
+This mailbox is not monitored. Please do not reply.

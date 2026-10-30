@@ -16,8 +16,8 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoes
 from licensing_api.config import Settings
 
 TEMPLATES_DIR = Path(__file__).parent / 'templates'
-# Layouts the templates extend, never sent on their own.
-LAYOUTS = frozenset({'base'})
+# Layouts the templates extend, never sent on their own: ``pa`` greets the PA, ``staff`` writes to a state or the Commission.
+LAYOUTS = frozenset({'base', 'pa', 'staff'})
 
 
 @dataclass(frozen=True)

@@ -17,7 +17,24 @@ from tests.snapshots import assert_matches_snapshot
 TEST_TEMPLATES_DIR = Path(__file__).parent / 'email_templates'
 
 # A context for every template in licensing_api/notifications/templates, as its handler builds it.
-SAMPLE_CONTEXTS: dict[str, dict[str, object]] = {}
+_PA = {'first_name': 'Avery', 'state_name': 'Kansas'}
+SAMPLE_CONTEXTS: dict[str, dict[str, object]] = {
+    'welcome': {'first_name': 'Avery'},
+    'application_submitted': _PA,
+    'application_submitted_state': {'state_name': 'Kansas'},
+    'application_info_requested': _PA,
+    'application_resubmitted_state': {'state_name': 'Kansas'},
+    'application_eligible': _PA,
+    'application_denied': _PA | {'denial_reason': 'Does not hold current NCCPA certification'},
+    'application_decided_commission': {'state_name': 'Kansas', 'eligible': False},
+    'application_withdrawn': _PA,
+    'application_withdrawn_state': {'state_name': 'Kansas'},
+    'application_eligibility_withdrawn': _PA,
+    'application_eligibility_withdrawn_state': {
+        'state_name': 'Kansas',
+        'remote_state_name': 'Oklahoma',
+    },
+}
 
 _EXAMPLE_CONTEXT = {
     'state_name': 'Kansas',

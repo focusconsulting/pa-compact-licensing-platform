@@ -1,0 +1,5 @@
+{% extends 'pa.txt' %}
+{% block subject %}Your application to {{ state_name }} was denied{% endblock %}
+{% block message %}{{ state_name }} denied your application for compact eligibility.{% if denial_reason %} The reason it gave: {{ denial_reason }}.{% endif %}
+
+{# FLOW-02: a denial is appealed with the state of qualifying license, under its law. #}You may appeal this decision with {{ state_name }} under its law.{% endblock %}

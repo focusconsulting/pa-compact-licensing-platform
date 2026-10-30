@@ -1,0 +1,5 @@
+{% extends 'base.txt' %}
+{% block body %}{% block message %}{% endblock %}
+
+Sign in to see the details: {{ client_base_url }}
+{% endblock %}

@@ -15,6 +15,7 @@ from licensing_api.repo.history import (
     PrivilegeRequestHistory,
     QualifyingLicenseHistory,
     SiiReportHistory,
+    StateContactHistory,
     StateHistory,
 )
 from licensing_api.repo.job_run import JobRun
@@ -32,6 +33,7 @@ from licensing_api.repo.reference import (
 )
 from licensing_api.repo.sii_report import SiiReport
 from licensing_api.repo.state import State
+from licensing_api.repo.state_contact import StateContact
 from licensing_api.repo.status import CompactEligibility, PrivilegeStatus, QualifyingLicenseStatus
 from licensing_api.repo.user import User
 
@@ -70,6 +72,8 @@ __all__ = [
     'SiiReport',
     'SiiReportHistory',
     'State',
+    'StateContact',
+    'StateContactHistory',
     'StateHistory',
     'User',
 ]

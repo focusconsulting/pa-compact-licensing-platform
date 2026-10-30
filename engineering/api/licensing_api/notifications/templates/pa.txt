@@ -1,0 +1,7 @@
+{% extends 'base.txt' %}
+{% block body %}Hello{% if first_name %} {{ first_name }}{% endif %},
+
+{% block message %}{% endblock %}
+
+Sign in to see the details: {{ client_base_url }}
+{% endblock %}

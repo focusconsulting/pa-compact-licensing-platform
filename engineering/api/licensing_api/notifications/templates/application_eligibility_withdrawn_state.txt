@@ -1,0 +1,3 @@
+{% extends 'staff.txt' %}
+{% block subject %}Compact eligibility withdrawn for a privilege holder in {{ remote_state_name }}{% endblock %}
+{% block message %}{{ state_name }} withdrew the compact eligibility of a PA who holds a privilege to practice in {{ remote_state_name }}. That privilege is no longer active.{% endblock %}
