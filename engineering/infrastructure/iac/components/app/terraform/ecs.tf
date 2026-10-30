@@ -159,7 +159,7 @@ resource "aws_ecs_task_definition" "api_task" {
         { name = "DB_PORT", value = tostring(local.db_port) },
         { name = "DB_NAME", value = local.db_name },
         { name = "ENVIRONMENT", value = upper(var.environment_name) },
-        { name = "LOG_LEVEL", value = "INFO" },
+        { name = "LOG_LEVEL", value = var.log_level },
         { name = "OTEL_ENABLED", value = "true" },
         { name = "CORS_ORIGINS", value = jsonencode(["https://${var.dns_name}"]) },
       ]
