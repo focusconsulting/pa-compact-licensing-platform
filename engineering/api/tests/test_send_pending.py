@@ -2,12 +2,9 @@
 
 import asyncio
 import logging
-import os
-from collections.abc import Generator
 from datetime import UTC, datetime
 from email.message import EmailMessage
 
-import httpx
 import pytest
 from sqlalchemy import text, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -19,19 +16,10 @@ from licensing_api.notifications import sender
 from licensing_api.notifications.render import TEMPLATES_DIR, RenderedEmail, template_environment
 from licensing_api.notifications.sender import MAX_ATTEMPTS, send_pending
 from licensing_api.repo.notification import Notification, NotificationStatus, notify
-from tests.conftest import TEST_SETTINGS
+from tests.conftest import TEST_SETTINGS, received_emails
 from tests.test_email_render import TEST_TEMPLATES_DIR
 
-_MAILDEV = f'http://localhost:{os.environ.get("MAILDEV_UI_PORT", "1080")}'
 _CONTEXT = {'state_name': 'Kansas', 'practitioner_name': 'Avery Active', 'application_id': 7}
-
-
-@pytest.fixture
-def maildev() -> Generator[httpx.Client]:
-    """maildev's REST API, emptied before the test."""
-    with httpx.Client(base_url=_MAILDEV) as client:
-        client.delete('/email/all').raise_for_status()
-        yield client
 
 
 @pytest.fixture(autouse=True)
@@ -39,10 +27,6 @@ def _example_template(monkeypatch):
     """Lets the sender find the test template beside the production ones."""
     templates = template_environment((TEST_TEMPLATES_DIR, TEMPLATES_DIR))
     monkeypatch.setattr(sender, 'template_environment', lambda: templates)
-
-
-def _received(maildev: httpx.Client) -> list[dict]:
-    return maildev.get('/email').raise_for_status().json()
 
 
 async def _queue(
@@ -80,7 +64,7 @@ async def test_a_queued_email_is_sent_once_with_text_and_html(committed_sessions
     assert await send_pending(committed_sessions, TEST_SETTINGS) == 1
     assert await send_pending(committed_sessions, TEST_SETTINGS) == 0
 
-    [email] = _received(maildev)
+    [email] = received_emails(maildev)
     assert email['subject'] == '[LOCAL_DEV] Your application to Kansas was received'
     assert [to['address'] for to in email['to']] == ['avery@demo.example']
     assert [sent_from['address'] for sent_from in email['from']] == ['no-reply@licensing.localhost']
@@ -96,7 +80,7 @@ async def test_a_repeated_notification_is_sent_once(committed_sessions, maildev)
     await _queue(committed_sessions, 'event-1:tests.example')
 
     assert await send_pending(committed_sessions, TEST_SETTINGS) == 1
-    assert len(_received(maildev)) == 1
+    assert len(received_emails(maildev)) == 1
 
 
 async def test_two_senders_never_send_the_same_email(committed_sessions, maildev):
@@ -111,7 +95,7 @@ async def test_two_senders_never_send_the_same_email(committed_sessions, maildev
     )
 
     assert sum(sent) == 20
-    recipients = [email['to'][0]['address'] for email in _received(maildev)]
+    recipients = [email['to'][0]['address'] for email in received_emails(maildev)]
     assert sorted(recipients) == sorted(f'pa{n}@demo.example' for n in range(20))
 
 
@@ -174,7 +158,9 @@ async def test_an_address_that_cannot_be_sent_to_fails_alone(committed_sessions,
     assert (rejected.status, rejected.attempts) == (NotificationStatus.PENDING, 1)
     assert rejected.last_error is not None and rejected.last_error.startswith('ValueError')
     assert sent.status == NotificationStatus.SENT
-    assert [email['to'][0]['address'] for email in _received(maildev)] == ['avery@demo.example']
+    assert [email['to'][0]['address'] for email in received_emails(maildev)] == [
+        'avery@demo.example'
+    ]
     [failure] = [r for r in caplog.records if r.name == 'licensing_api.notifications.sender']
     assert failure.__dict__['error_type'] == 'ValueError'
 
@@ -187,7 +173,7 @@ async def test_a_template_that_cannot_render_fails_the_send(committed_sessions, 
     [notification] = await _notifications(committed_sessions)
     assert notification.last_error is not None
     assert notification.last_error.startswith("TemplateNotFound: 'no_such_template.txt' not found")
-    assert _received(maildev) == []
+    assert received_emails(maildev) == []
 
 
 class _RecordingSmtp:
@@ -224,7 +210,7 @@ def test_ses_settings_upgrade_to_tls_and_log_in_before_sending(monkeypatch):
         smtp_username='ses-smtp-user',
     )
 
-    sender._deliver(ses, 'avery@demo.example', RenderedEmail('Subject', 'Text', '<p>HTML</p>'))
+    sender.deliver(ses, 'avery@demo.example', RenderedEmail('Subject', 'Text', '<p>HTML</p>'))
 
     assert _RecordingSmtp.calls == [
         ('connect', ('email-smtp.us-east-1.amazonaws.com', 587, 30.0)),

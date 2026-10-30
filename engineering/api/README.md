@@ -58,6 +58,10 @@ Scheduled jobs ([`licensing_api/jobs.py`](./licensing_api/jobs.py)) run in AWS o
 EventBridge schedule; locally there is no scheduler, so run one by name with
 `just job <name>`.
 
+To check how emails look, `just email-preview` sends every template, filled with
+sample data, to maildev at <http://localhost:1080>. Name templates to send only those,
+and pass `--to` to choose the address.
+
 ### 4. Stop infrastructure
 
 ```bash

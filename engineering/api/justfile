@@ -47,6 +47,10 @@ worker env-file=".env":
 job name env-file=".env":
     uv run --env-file {{ env-file }} python -m licensing_api.jobs run {{ name }}
 
+# Send every email template, or those named, with sample data to maildev (`just email-preview welcome --to me@example.com`)
+email-preview *args:
+    uv run --env-file .env python -m licensing_api.notifications.preview {{ args }}
+
 # Run tests (pass additional args with: just test -k test_name)
 test env-file=".env" *args:
     uv run --env-file {{ env-file }} pytest {{ args }}

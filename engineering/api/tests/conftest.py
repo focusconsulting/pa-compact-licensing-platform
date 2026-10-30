@@ -1,8 +1,10 @@
 import base64
+import os
 import uuid
 from collections.abc import AsyncGenerator, Callable, Generator
 from unittest.mock import patch
 
+import httpx
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi.testclient import TestClient
@@ -27,6 +29,7 @@ TEST_SETTINGS = Settings(
 )
 
 _TEST_CLIENT_ID = 'test-client-id'
+_MAILDEV = f'http://localhost:{os.environ.get("MAILDEV_UI_PORT", "1080")}'
 _TEST_KID = 'test-key-1'
 
 
@@ -182,3 +185,15 @@ def auth_header(_private_key) -> Callable[[str], dict]:
         return {'Authorization': f'Bearer {token}'}
 
     return _make
+
+
+@pytest.fixture
+def maildev() -> Generator[httpx.Client]:
+    """maildev's REST API, emptied before the test."""
+    with httpx.Client(base_url=_MAILDEV) as client:
+        client.delete('/email/all').raise_for_status()
+        yield client
+
+
+def received_emails(maildev: httpx.Client) -> list[dict]:
+    return maildev.get('/email').raise_for_status().json()

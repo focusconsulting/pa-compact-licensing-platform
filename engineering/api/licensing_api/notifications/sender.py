@@ -77,7 +77,7 @@ async def _send_one(
         started = time.monotonic()
         try:
             email = render(environment, notification.template, notification.context, settings)
-            await asyncio.to_thread(_deliver, settings, notification.recipient_email, email)
+            await asyncio.to_thread(deliver, settings, notification.recipient_email, email)
         # Anything, not only SMTP and template errors: one row that cannot be sent (an address
         # EmailMessage rejects, say) must fail alone, not crash the Worker on every restart.
         except Exception as error:
@@ -121,7 +121,7 @@ def _error_log(error: Exception, attempts: int) -> dict[str, object]:
     return {'attempts': attempts, 'error_type': type(error).__name__}
 
 
-def _deliver(settings: Settings, recipient: str, email: RenderedEmail) -> None:
+def deliver(settings: Settings, recipient: str, email: RenderedEmail) -> None:
     """Send one email, blocking; run in a thread so the Worker's event loop keeps running."""
     message = EmailMessage()
     message['Subject'] = email.subject
