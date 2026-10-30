@@ -54,3 +54,18 @@ output "cognito_user_import_role_arn" {
   description = "IAM role ARN for Cognito user import CloudWatch logging"
   value       = aws_iam_role.cognito_user_import.arn
 }
+
+output "worker_service_name" {
+  description = "The Worker's ECS service; CI deploys new images to it"
+  value       = aws_ecs_service.worker_service.name
+}
+
+output "worker_task_definition_family" {
+  description = "The Worker's task definition family"
+  value       = aws_ecs_task_definition.worker_task.family
+}
+
+output "jobs_task_definition_family" {
+  description = "The scheduled jobs' task definition family; CI registers a revision per deploy"
+  value       = aws_ecs_task_definition.jobs_task.family
+}

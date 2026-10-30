@@ -104,3 +104,106 @@ resource "aws_chatbot_slack_channel_configuration" "api_alerts" {
   slack_channel_id   = local.slack["slack_channel_id"]
   sns_topic_arns     = [aws_sns_topic.api_alerts.arn]
 }
+
+# ---------------------------------------------------------------------------
+# The Worker and scheduled jobs (backlog D8). Each alarm reads the structured
+# fields the code logs (outcome, logger, job), not message text.
+# ---------------------------------------------------------------------------
+
+locals {
+  worker_metrics_namespace = "${local.application_name}/${var.environment_name}/worker"
+
+  # name => log group, filter pattern, and the alarm's description
+  worker_log_alarms = {
+    EventsDeadLettered = {
+      log_group   = aws_cloudwatch_log_group.worker_logs.name
+      pattern     = "{ $.outcome = \"dead_lettered\" }"
+      description = "An event delivery was dead-lettered after five failed attempts (ADR-0012); replay it once fixed"
+    }
+    NotificationsFailed = {
+      log_group   = aws_cloudwatch_log_group.worker_logs.name
+      pattern     = "{ $.logger = \"licensing_api.notifications.sender\" && $.outcome = \"failed\" }"
+      description = "An email failed five times and will not be retried (ADR-0014); last_error on the notifications row says why"
+    }
+    JobsFailed = {
+      log_group   = aws_cloudwatch_log_group.jobs_logs.name
+      pattern     = "{ $.logger = \"licensing_api.jobs\" && $.outcome = \"failed\" }"
+      description = "A scheduled job failed; its job_runs row and log say why"
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_metric_filter" "worker" {
+  for_each = local.worker_log_alarms
+
+  name           = "${var.environment_name}-${local.application_name}-${each.key}"
+  log_group_name = each.value.log_group
+  pattern        = each.value.pattern
+
+  metric_transformation {
+    name      = each.key
+    namespace = local.worker_metrics_namespace
+    value     = "1"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "worker" {
+  for_each = local.worker_log_alarms
+
+  alarm_name          = "${var.environment_name}-${local.application_name}-${each.key}"
+  alarm_description   = each.value.description
+  namespace           = local.worker_metrics_namespace
+  metric_name         = aws_cloudwatch_log_metric_filter.worker[each.key].metric_transformation[0].name
+  statistic           = "Sum"
+  period              = 300
+  evaluation_periods  = 1
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  threshold           = 1
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = [aws_sns_topic.api_alerts.arn]
+  ok_actions          = [aws_sns_topic.api_alerts.arn]
+}
+
+resource "aws_cloudwatch_metric_alarm" "worker_not_running" {
+  alarm_name          = "${var.environment_name}-${local.application_name}-worker-not-running"
+  alarm_description   = "No Worker task has run for two minutes: events are not delivered and no email is sent"
+  namespace           = "ECS/ContainerInsights"
+  metric_name         = "RunningTaskCount"
+  dimensions          = { ClusterName = aws_ecs_cluster.app_cluster.name, ServiceName = aws_ecs_service.worker_service.name }
+  statistic           = "Minimum"
+  period              = 60
+  evaluation_periods  = 2
+  comparison_operator = "LessThanThreshold"
+  threshold           = 1
+  # Container Insights reports nothing for a service with no tasks.
+  treat_missing_data = "breaching"
+  alarm_actions      = [aws_sns_topic.api_alerts.arn]
+  ok_actions         = [aws_sns_topic.api_alerts.arn]
+}
+
+resource "aws_cloudwatch_log_metric_filter" "heartbeat" {
+  name           = "${var.environment_name}-${local.application_name}-HeartbeatSucceeded"
+  log_group_name = aws_cloudwatch_log_group.jobs_logs.name
+  pattern        = "{ $.job = \"heartbeat\" && $.outcome = \"succeeded\" }"
+
+  metric_transformation {
+    name      = "HeartbeatSucceeded"
+    namespace = local.worker_metrics_namespace
+    value     = "1"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "jobs_not_running" {
+  alarm_name          = "${var.environment_name}-${local.application_name}-jobs-not-running"
+  alarm_description   = "The hourly heartbeat job has not succeeded for two hours: the scheduler is not starting jobs"
+  namespace           = local.worker_metrics_namespace
+  metric_name         = aws_cloudwatch_log_metric_filter.heartbeat.metric_transformation[0].name
+  statistic           = "Sum"
+  period              = 3600
+  evaluation_periods  = 2
+  comparison_operator = "LessThanThreshold"
+  threshold           = 1
+  treat_missing_data  = "breaching"
+  alarm_actions       = [aws_sns_topic.api_alerts.arn]
+  ok_actions          = [aws_sns_topic.api_alerts.arn]
+}

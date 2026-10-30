@@ -78,3 +78,20 @@ variable "jumpbox_enabled" {
   description = "Allow ingress from the jumpbox whose security group ID is in the <environment>-jumpbox-sgid-tfvar secret. Only DEV has a jumpbox."
   default     = false
 }
+
+variable "commission_ops_email" {
+  description = "The Commission mailbox for operational notifications (open question Q-14); empty sends none"
+  type        = string
+  default     = ""
+}
+
+variable "log_level" {
+  description = "Log level for the API, the Worker, and scheduled jobs"
+  type        = string
+  default     = "INFO"
+
+  validation {
+    condition     = contains(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], var.log_level)
+    error_message = "log_level must be one of DEBUG, INFO, WARNING, ERROR, CRITICAL."
+  }
+}
