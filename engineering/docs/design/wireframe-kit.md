@@ -8,15 +8,15 @@ Every frame is the same three parts: Header, the content in the grid's main colu
 
 ### Wizard step
 
-One question group per page, in a sequence. B3 to B7 ([`3504:33649`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3504-33649) is B4 · Find your license).
+A form split into a few steps, each a page of related sections. B2 · Apply to join the PA Compact ([`3504:33405`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3504-33405)) is step 1 of 2; B6 · Statements and submit ([`3504:33893`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3504-33893)) is step 2.
 
-1. Step indicator
+1. Step indicator, with the step's name
 2. `h1`, and the intro line where the wireframe has one
 3. Required fields note
-4. Fields: Label with Text input, Select, Radio, Checkbox, or Memorable date
+4. Sections, each an `h2` and its fields: Label with Text input, Select, Radio, Checkbox, or Memorable date. A section can end in its own Button, such as "Find my license".
 5. Actions: the primary Button, then a Back link
 
-The last step is a review: a Summary box with a Change link per answer, then any statement to agree to and the typed-name field (B8 · Check your application, [`3504:34137`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3504-34137)).
+The last step holds what the PA agrees to: each statement with its Checkbox, then the typed-name field and the submit Button.
 
 ### Queue
 
@@ -39,10 +39,11 @@ One record, read top to bottom, ending in the reviewer's decision. C4 · Jordan 
 
 ### Dashboard
 
-Where each user starts. For a PA, B1 · Dashboard ([`3504:33283`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3504-33283)); for state staff, C2 · Sample State home ([`3538:36309`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3538-36309)).
+Where each user starts.
 
-- PA: `h1`, then where the PA stands: a line and the Button for the next action, or the application's Step indicator once it's sent (B11).
-- Staff: `h1` (the state's name), then a Collection with one item per task, each with its count where it has one.
+- PA, before applying: `h1`, an `h2` with the steps as a Process list, the list of what to have ready, and the Button to start (B1 · Dashboard, [`3504:33283`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3504-33283)).
+- PA, once eligible: `h1`, then one `h2` section per record. The qualifying license is a summary line, who verified it, and its StatusTag. Privileges show an empty state and the Button to apply until there are some (C8 · Dashboard: eligible, [`3539:37813`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3539-37813)).
+- Staff: `h1` (the state's name), then a Collection with one item per task: its link with a count where it has one, and one line saying what it's for (C2 · Sample State home, [`3538:36309`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3538-36309)).
 
 ### Confirm and result
 
@@ -63,6 +64,6 @@ One screen per portal shows a finished template. Each is a DRAFT until the Commi
 
 | Portal | Exemplar | Template | Approved |
 |---|---|---|---|
-| PA | B11 · Dashboard: application ([`3504:34385`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3504-34385)) | Dashboard | No |
+| PA | C8 · Dashboard: eligible ([`3539:37813`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3539-37813)) | Dashboard | No |
 | State | C4 · Jordan Sample ([`3539:36719`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3539-36719)) | Case view | No |
 | Commission | Placeholder: none drawn. The draft "Flow: Commission dashboards, reports and payments" page ([`3752:4665`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3752-4665)) will hold it. | Queue | No |
