@@ -11,7 +11,7 @@ from licensing_api.context import system_context
 from licensing_api.events import HandlerRegistry
 from licensing_api.handlers import HANDLERS
 from licensing_api.notifications import applications
-from licensing_api.repo.domain_event import EventType, emit
+from licensing_api.repo.domain_event import DomainEvent, EventType, emit
 from licensing_api.repo.notification import Notification
 from licensing_api.repo.participation_application import ApplicationStatus, ParticipationApplication
 from licensing_api.repo.privilege import AdministratorStatus, DeactivationReason
@@ -70,6 +70,16 @@ async def test_a_pa_with_no_correspondence_email_is_written_to_at_their_sign_in_
     )
 
     assert queued == [('welcome', 'signin@demo.example', {'first_name': None})]
+
+
+async def test_a_registration_with_no_practitioner_id_fails_and_names_the_event(db_session):
+    ctx = await system_context(db_session)
+    event = DomainEvent(
+        type=EventType.PRACTITIONER_REGISTERED, aggregate_type='practitioner', aggregate_key='x'
+    )
+
+    with pytest.raises(ValueError, match=f'{event.event_id} has no aggregate_id'):
+        await applications.send_welcome.run(db_session, ctx, event)
 
 
 async def test_a_submitted_application_emails_the_pa_and_the_qualifying_states_contacts(
@@ -176,7 +186,7 @@ async def test_a_denial_names_its_reason_and_no_commission_email_goes_while_unse
                 'denial_reason': 'Does not hold current NCCPA certification',
             },
         )
-    ], 'no Commission email while commission_ops_email is unset (Q-14)'
+    ], 'no Commission email while commission_ops_email is unset'
 
 
 async def test_a_withdrawn_application_emails_the_pa_and_the_qualifying_state(db_session, contacts):
