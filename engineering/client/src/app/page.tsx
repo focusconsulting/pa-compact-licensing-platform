@@ -1,35 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import ProtectedRoute from "src/components/ProtectedRoute";
-import { useAuth } from "src/contexts/AuthContext";
-import type { components } from "src/api/schema";
-import { api } from "src/lib/api";
-import { Button } from "@trussworks/react-uswds";
-
-type CurrentUser = components["schemas"]["CurrentUser"];
+import { useCurrentUser } from "src/contexts/CurrentUserContext";
 
 function Dashboard() {
-  const { signOut } = useAuth();
-  const [user, setUser] = useState<CurrentUser | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    api
-      .GET("/api/me")
-      .then(({ data, response }) => {
-        if (!data) throw new Error(`${response.status}`);
-        setUser(data.data);
-      })
-      .catch((e: unknown) =>
-        setError(e instanceof Error ? e.message : "Failed to load user"),
-      );
-  }, []);
+  const { user, error } = useCurrentUser();
 
   return (
-    <main className="usa-section">
+    <div className="usa-section">
       <div className="grid-container">
-        <h2 className="usa-header--basic">Dashboard</h2>
+        <h1>Dashboard</h1>
         {error && <p className="text-red">{error}</p>}
         {user && (
           <table className="usa-table usa-table--borderless">
@@ -63,11 +43,8 @@ function Dashboard() {
             </tbody>
           </table>
         )}
-        <Button type="button" onClick={signOut}>
-          Sign out
-        </Button>
       </div>
-    </main>
+    </div>
   );
 }
 

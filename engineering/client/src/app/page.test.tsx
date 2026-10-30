@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 
 import type { CognitoUserSession } from "amazon-cognito-identity-js";
 
 import { useAuth } from "src/contexts/AuthContext";
+import { CurrentUserProvider } from "src/contexts/CurrentUserContext";
 import { getCurrentSession } from "src/lib/auth";
 import { expectNoAxeViolations } from "src/tests/axe";
 import { answerFetch } from "src/tests/fetch";
-import Home from "./page";
+import HomePage from "./page";
 
 vi.mock("src/lib/auth");
 vi.mock("src/contexts/AuthContext");
@@ -39,7 +39,16 @@ const mockUser = {
   role: "admin",
   state_code: "CA",
   is_active: true,
+  permissions: ["read_general"],
 };
+
+function Home() {
+  return (
+    <CurrentUserProvider>
+      <HomePage />
+    </CurrentUserProvider>
+  );
+}
 
 function answerMe(overrides: Record<string, unknown>) {
   answerFetch({ data: { ...mockUser, ...overrides } });
@@ -80,18 +89,6 @@ describe("Home (Dashboard) page", () => {
     await waitFor(() =>
       expect(screen.getByText("Not authenticated")).toBeInTheDocument(),
     );
-  });
-
-  it("calls signOut when sign-out button is clicked", async () => {
-    const user = userEvent.setup();
-    answerMe({ given_name: null, family_name: null });
-
-    render(<Home />);
-
-    await waitFor(() => screen.getByRole("button", { name: /Sign out/i }));
-    await user.click(screen.getByRole("button", { name: /Sign out/i }));
-
-    expect(mockSignOut).toHaveBeenCalled();
   });
 
   it("shows dash for name when given_name and family_name are null", async () => {

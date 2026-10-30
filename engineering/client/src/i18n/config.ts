@@ -6,6 +6,7 @@ import address from "./en/address.json";
 import date from "./en/date.json";
 import country from "./en/country.json";
 import status from "./en/status.json";
+import shell from "./en/shell.json";
 
 export const defaultNS = "common";
 
@@ -20,6 +21,7 @@ void i18next.use(initReactI18next).init({
       date,
       country,
       status,
+      shell,
     },
   },
   defaultNS,

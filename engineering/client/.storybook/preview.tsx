@@ -7,6 +7,8 @@ import "../src/styles/styles.scss";
 import { Preview } from "@storybook/nextjs";
 
 import { AuthProvider } from "../src/contexts/AuthContext";
+import { CurrentUserProvider } from "../src/contexts/CurrentUserContext";
+import I18nProvider from "../src/components/I18nProvider";
 
 const parameters = {
   nextjs: {
@@ -40,9 +42,13 @@ const preview: Preview = {
   parameters,
   decorators: [
     (Story) => (
-      <AuthProvider>
-        <Story />
-      </AuthProvider>
+      <I18nProvider>
+        <AuthProvider>
+          <CurrentUserProvider>
+            <Story />
+          </CurrentUserProvider>
+        </AuthProvider>
+      </I18nProvider>
     ),
   ],
 };

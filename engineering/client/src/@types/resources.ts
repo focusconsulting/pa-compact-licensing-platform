@@ -5,6 +5,7 @@ import countries from "../i18n/en/countries.json";
 import country from "../i18n/en/country.json";
 import date from "../i18n/en/date.json";
 import status from "../i18n/en/status.json";
+import shell from "../i18n/en/shell.json";
 
 const resources = {
   common,
@@ -14,6 +15,7 @@ const resources = {
   country,
   date,
   status,
+  shell,
 } as const;
 
 export default resources;

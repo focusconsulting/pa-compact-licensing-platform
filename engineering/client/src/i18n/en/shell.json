@@ -1,0 +1,28 @@
+{
+  "skipLink": "Skip to main content",
+  "wordmark": "PA Compact",
+  "menu": "Menu",
+  "primaryNav": "Primary navigation",
+  "signOut": "Sign out",
+  "staffName": "{{name}}, {{state}}",
+  "nav": {
+    "dashboard": "Dashboard",
+    "application": "Application",
+    "home": "Home",
+    "applications": "Applications to review",
+    "upload": "Upload license records",
+    "uploads": "Past uploads",
+    "practitioners": "PA records",
+    "settings": "Settings"
+  },
+  "returnToTop": "Return to top",
+  "identifier": {
+    "domain": "pacompact.org",
+    "label": "Agency identifier",
+    "official": "An official website of the PA Compact Commission",
+    "linksLabel": "Important links",
+    "about": "About PA Compact Commission",
+    "accessibility": "Accessibility support",
+    "privacy": "Privacy policy"
+  }
+}
