@@ -30,6 +30,9 @@
     "by": "By"
   },
   "card": {
+    "licenseNumber": "License number",
+    "expires": "Expires",
+    "discipline": "Discipline status",
     "actions": "Actions",
     "about": "for {{record}}"
   }
