@@ -4,11 +4,11 @@ import json
 from pathlib import Path
 
 import pytest
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
 from licensing_api.__main__ import app
 from licensing_api.responses import example
-from scripts.export_openapi import document
+from scripts.export_openapi import STATUS_ENUMS, document
 
 _DOCUMENT = Path(__file__).parents[1] / 'openapi.json'
 _SCHEMAS = document()['components']['schemas']
@@ -18,6 +18,11 @@ _WRAPPERS = ('Data_', 'Paged_')
 
 def test_the_committed_document_matches_the_code():
     assert json.loads(_DOCUMENT.read_text()) == document(), 'run `just openapi`'
+
+
+@pytest.mark.parametrize('enum', STATUS_ENUMS, ids=lambda enum: enum.__name__)
+def test_every_status_the_client_labels_is_in_the_document(enum):
+    assert _SCHEMAS[enum.__name__] == TypeAdapter(enum).json_schema()
 
 
 def _models(schema: dict) -> set[str]:
