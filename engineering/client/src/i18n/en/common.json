@@ -13,5 +13,13 @@
     "of": "of",
     "complete": "completed",
     "incomplete": "not completed"
+  },
+  "queue": {
+    "heading": "{{heading}} ({{count}})",
+    "viewing": "Viewing:",
+    "clearFilters": "Clear filters",
+    "age": "Age",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days"
   }
 }
