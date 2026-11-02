@@ -1,0 +1,32 @@
+@use "sass:map";
+@use "uswds-core";
+
+$status-tag-tones: (
+  "success": (
+    "background": "success-lighter",
+    "text": "success-darker",
+  ),
+  "info": (
+    "background": "info-lighter",
+    "text": "info-darker",
+  ),
+  "warning": (
+    "background": "warning-lighter",
+    "text": "ink",
+  ),
+  "error": (
+    "background": "error-lighter",
+    "text": "error-darker",
+  ),
+  "neutral": (
+    "background": "base-lighter",
+    "text": "base-darkest",
+  ),
+);
+
+@each $tone, $colors in $status-tag-tones {
+  .status-tag--#{$tone} {
+    @include uswds-core.u-bg(map.get($colors, "background"));
+    @include uswds-core.u-text(map.get($colors, "text"));
+  }
+}

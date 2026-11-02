@@ -89,6 +89,20 @@ export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
     /**
+     * ApplicationStatus
+     * @description The participation application's states (FLOW-06).
+     * @enum {string}
+     */
+    ApplicationStatus:
+      | "draft"
+      | "submitted"
+      | "info_requested"
+      | "eligible"
+      | "denied"
+      | "withdrawn"
+      | "eligibility_withdrawn"
+      | "superseded";
+    /**
      * AuditEntryOut
      * @description One staff read of private data or security event. ``before`` and ``after`` never hold an SSN.
      * @example {
@@ -141,6 +155,10 @@ export interface components {
      *       "family_name": "Morgan",
      *       "given_name": "Pat",
      *       "is_active": true,
+     *       "permissions": [
+     *         "read_general",
+     *         "write"
+     *       ],
      *       "role": "state_staff",
      *       "state_code": "KS",
      *       "user_id": "6f1c2b0e-8d4a-4c3e-9b7a-2f5d1e0c9a84"
@@ -155,6 +173,8 @@ export interface components {
       given_name: string | null;
       /** Is Active */
       is_active: boolean;
+      /** Permissions */
+      permissions: components["schemas"]["Permission"][];
       /** Role */
       role: string;
       /** State Code */
@@ -192,6 +212,18 @@ export interface components {
       details: string[];
     };
     /**
+     * LicenseComputedStatus
+     * @description The statuses ``QualifyingLicenseStatus`` reports: the state's reported statuses, plus ``encumbered``.
+     * @enum {string}
+     */
+    LicenseComputedStatus:
+      | "active"
+      | "expired"
+      | "lapsed"
+      | "inactive"
+      | "terminated"
+      | "encumbered";
+    /**
      * LiveResp
      * @description The liveness response: ``status`` is always ``ok``.
      * @example {
@@ -225,6 +257,36 @@ export interface components {
       data: components["schemas"]["AuditEntryOut"][];
       page: components["schemas"]["Page"];
     };
+    /**
+     * Permission
+     * @description What a caller may do: granted by role in every state (``ROLE_PERMISSIONS``), or per state in ``users.permissions``.
+     * @enum {string}
+     */
+    Permission:
+      | "manage_own_record"
+      | "read_general"
+      | "compact_admin"
+      | "system_admin"
+      | "read_private"
+      | "read_ssn"
+      | "write"
+      | "admin";
+    /**
+     * PrivilegeComputedStatus
+     * @description What a privilege's holder and the public see (FLOW-06), in order of precedence.
+     * @enum {string}
+     */
+    PrivilegeComputedStatus: "inactive" | "expired" | "encumbered" | "active";
+    /**
+     * PrivilegeRequestStatus
+     * @description A privilege request's states (FLOW-06).
+     *
+     *     ``withdrawn`` replaces FLOW-06's ``abandoned``: Rule 3 §3.7(b)(1) says an
+     *     incomplete request is "deemed incomplete and to have been withdrawn".
+     * @enum {string}
+     */
+    PrivilegeRequestStatus:
+      "pending_payment" | "submitted" | "issued" | "denied" | "withdrawn";
     /**
      * ReadyResp
      * @description The readiness response: whether the database answered.

@@ -52,6 +52,10 @@ The [confidentiality tiers](data-model.md#confidentiality-tiers) map onto these:
 
 A value that names no permission matches nothing, so a typo denies rather than allows. Grants are read on every request, so a change takes effect on the user's next request. The F-04 staff CLI will create staff and change their grants, writing each change to `audit_log` as a security event.
 
+## What the client sees
+
+`GET /api/me` returns `permissions`: everything the user holds in their own state. The client shows each portal's navigation from it ([`navigation.ts`](../client/src/lib/navigation.ts)) and never from `role`. Hiding a link is not a check; the route still is.
+
 ## What a permission does not decide
 
 A permission decides whether a user may call a route, not which rows they see. A `state_staff` user with `read_private` in Kansas sees only the PAs connected to Kansas (Rule 5 §5.6(a)), and a licensee sees only their own record. The route's query applies that scope, and a record outside it returns `404` (constitution Principle II).

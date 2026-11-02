@@ -1,5 +1,7 @@
 import uuid
 
+import pytest
+
 from licensing_api.__main__ import app
 from licensing_api.errors import ErrorCode
 from licensing_api.repo.user import get_user_by_email
@@ -78,3 +80,33 @@ def test_me_inactive_user_returns_403(client, auth_header, route_db_session):
     body = response.json()
     assert body['code'] == ErrorCode.UserInactive
     assert 'User is inactive' in body['details']
+
+
+@pytest.mark.parametrize(
+    ('overrides', 'expected'),
+    [
+        ({'role': 'licensee'}, ['manage_own_record']),
+        (
+            {
+                'role': 'state_staff',
+                'state_code': 'KS',
+                'permissions': {
+                    'KS': ['write', 'read_private', 'not_a_permission'],
+                    'MO': ['admin'],
+                },
+            },
+            ['read_general', 'read_private', 'write'],
+        ),
+        ({'role': 'compact_admin'}, ['read_general', 'compact_admin', 'read_private']),
+    ],
+)
+def test_me_returns_permissions_held_in_own_state(
+    client, auth_header, route_db_session, overrides, expected
+):
+    email = _email()
+    client.portal.call(lambda: make_user(route_db_session, email=email, **overrides))
+
+    response = client.get('/api/me', headers=auth_header(email))
+
+    assert response.status_code == 200
+    assert response.json()['data']['permissions'] == expected

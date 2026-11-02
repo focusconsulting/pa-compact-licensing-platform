@@ -1,6 +1,21 @@
 {
   "components": {
     "schemas": {
+      "ApplicationStatus": {
+        "description": "The participation application's states (FLOW-06).",
+        "enum": [
+          "draft",
+          "submitted",
+          "info_requested",
+          "eligible",
+          "denied",
+          "withdrawn",
+          "eligibility_withdrawn",
+          "superseded"
+        ],
+        "title": "ApplicationStatus",
+        "type": "string"
+      },
       "AuditEntryOut": {
         "description": "One staff read of private data or security event. ``before`` and ``after`` never hold an SSN.",
         "examples": [
@@ -134,6 +149,10 @@
             "family_name": "Morgan",
             "given_name": "Pat",
             "is_active": true,
+            "permissions": [
+              "read_general",
+              "write"
+            ],
             "role": "state_staff",
             "state_code": "KS",
             "user_id": "6f1c2b0e-8d4a-4c3e-9b7a-2f5d1e0c9a84"
@@ -170,6 +189,13 @@
             "title": "Is Active",
             "type": "boolean"
           },
+          "permissions": {
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            },
+            "title": "Permissions",
+            "type": "array"
+          },
           "role": {
             "title": "Role",
             "type": "string"
@@ -198,7 +224,8 @@
           "family_name",
           "role",
           "state_code",
-          "is_active"
+          "is_active",
+          "permissions"
         ],
         "title": "CurrentUser",
         "type": "object"
@@ -249,6 +276,19 @@
         ],
         "title": "ErrorResponse",
         "type": "object"
+      },
+      "LicenseComputedStatus": {
+        "description": "The statuses ``QualifyingLicenseStatus`` reports: the state's reported statuses, plus ``encumbered``.",
+        "enum": [
+          "active",
+          "expired",
+          "lapsed",
+          "inactive",
+          "terminated",
+          "encumbered"
+        ],
+        "title": "LicenseComputedStatus",
+        "type": "string"
       },
       "LiveResp": {
         "description": "The liveness response: ``status`` is always ``ok``.",
@@ -319,6 +359,44 @@
         ],
         "title": "Paged[AuditEntryOut]",
         "type": "object"
+      },
+      "Permission": {
+        "description": "What a caller may do: granted by role in every state (``ROLE_PERMISSIONS``), or per state in ``users.permissions``.",
+        "enum": [
+          "manage_own_record",
+          "read_general",
+          "compact_admin",
+          "system_admin",
+          "read_private",
+          "read_ssn",
+          "write",
+          "admin"
+        ],
+        "title": "Permission",
+        "type": "string"
+      },
+      "PrivilegeComputedStatus": {
+        "description": "What a privilege's holder and the public see (FLOW-06), in order of precedence.",
+        "enum": [
+          "inactive",
+          "expired",
+          "encumbered",
+          "active"
+        ],
+        "title": "PrivilegeComputedStatus",
+        "type": "string"
+      },
+      "PrivilegeRequestStatus": {
+        "description": "A privilege request's states (FLOW-06).\n\n``withdrawn`` replaces FLOW-06's ``abandoned``: Rule 3 \u00a73.7(b)(1) says an\nincomplete request is \"deemed incomplete and to have been withdrawn\".",
+        "enum": [
+          "pending_payment",
+          "submitted",
+          "issued",
+          "denied",
+          "withdrawn"
+        ],
+        "title": "PrivilegeRequestStatus",
+        "type": "string"
       },
       "ReadyResp": {
         "description": "The readiness response: whether the database answered.",

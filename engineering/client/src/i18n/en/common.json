@@ -6,5 +6,37 @@
   "requiredText": "Required fields are marked with an asterisk",
   "optionalText": " (optional)",
   "nextTitle": "Save and Continue →",
-  "backTitle": "← Back"
+  "backTitle": "← Back",
+  "goBack": "Go back",
+  "stepIndicator": {
+    "step": "Step",
+    "of": "of",
+    "complete": "completed",
+    "incomplete": "not completed"
+  },
+  "queue": {
+    "heading": "{{heading}} ({{count}})",
+    "viewing": "Viewing:",
+    "clearFilters": "Clear filters",
+    "age": "Age",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days"
+  },
+  "breadcrumbs": "Breadcrumbs",
+  "history": {
+    "heading": "History",
+    "date": "Date",
+    "what": "What happened",
+    "by": "By"
+  },
+  "card": {
+    "licenseNumber": "License number",
+    "privilegeNumber": "Privilege number",
+    "expires": "Expires",
+    "activeFrom": "Active from",
+    "discipline": "Discipline status",
+    "viewDetails": "View details",
+    "actions": "Actions",
+    "about": "for {{record}}"
+  }
 }
