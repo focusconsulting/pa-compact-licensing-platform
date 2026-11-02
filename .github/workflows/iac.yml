@@ -78,6 +78,7 @@ jobs:
       - name: Plan
         working-directory: engineering/infrastructure
         run: |
+          set -o pipefail # otherwise tee's exit status hides a failed plan
           extra=""
           if [ "${{ matrix.component }}" = app ]; then extra="-var image_tag=${{ github.event.pull_request.head.sha }}"; fi
           just plan ${{ matrix.component }} staging -no-color -lock=false $extra 2>&1 | tee plan.txt
