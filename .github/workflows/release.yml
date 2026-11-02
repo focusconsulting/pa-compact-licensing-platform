@@ -1,6 +1,6 @@
 name: Release
 
-# A tag promotes a commit: v*-rc* deploys test, any other v* deploys prod, each
+# A tag promotes a commit: v*-rc* deploys staging, any other v* deploys prod, each
 # through its GitHub Environment's required reviewers.
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
       - id: map
         run: |
           case "$GITHUB_REF_NAME" in
-            v*-rc*) echo "environment=test" >> "$GITHUB_OUTPUT" ;;
+            v*-rc*) echo "environment=staging" >> "$GITHUB_OUTPUT" ;;
             v*)     echo "environment=prod" >> "$GITHUB_OUTPUT" ;;
           esac
 

@@ -1,9 +1,9 @@
 name: Deploy
 
 # `just deploy <env>` (engineering/infrastructure/justfile) through the environment's
-# GitHub Environment, whose variables name the AWS role to assume. dev deploys when
+# GitHub Environment, whose variables name the AWS role to assume. staging deploys when
 # someone runs this workflow (decided 2026-10-28: not yet on every merge to main);
-# release.yml calls it for test and prod from tags.
+# release.yml calls it for staging and prod from tags.
 on:
   workflow_call:
     inputs:
@@ -16,16 +16,16 @@ on:
         description: The environment to deploy
         required: true
         type: choice
-        options: [dev]
+        options: [staging]
 
 concurrency:
-  group: deploy-${{ inputs.environment || 'dev' }}
+  group: deploy-${{ inputs.environment || 'staging' }}
   cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment || 'dev' }}
+    environment: ${{ inputs.environment || 'staging' }}
     permissions:
       id-token: write
       contents: read
@@ -67,4 +67,4 @@ jobs:
         env:
           AWS_REGION: ${{ vars.AWS_REGION }}
           PUPPETEER_SKIP_DOWNLOAD: "true" # only the client's a11y job needs pa11y's Chrome
-        run: just deploy ${{ inputs.environment || 'dev' }}
+        run: just deploy ${{ inputs.environment || 'staging' }}

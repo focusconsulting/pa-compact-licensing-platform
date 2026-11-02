@@ -146,7 +146,7 @@ pnpm dev                     # Run dev server (localhost:3000)
 
 ### Troubleshooting
 
-- **`Input should be 'LOCAL_DEV', 'DEV', 'STAGING' or 'PROD'`** when
+- **`Input should be 'LOCAL_DEV', 'STAGING' or 'PROD'`** when
   running the API or its tests: a variable exported in your shell is
   overriding `.env`, because `uv run --env-file` does not replace
   variables that are already set. Check with `env | grep -i environment`

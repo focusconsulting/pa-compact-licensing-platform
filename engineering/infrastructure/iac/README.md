@@ -13,8 +13,8 @@ environments/<env>/<region>/        One backend and one tfvars file per componen
 Each environment is an `<env>/<region>` directory holding
 `<component>.backend.hcl` (where its state lives) and `<component>.tfvars`
 (its values). The code is the same for every environment; only those files
-differ, and the module refuses an `environment_name` other than `dev`,
-`staging`, or `prod`.
+differ, and the module refuses an `environment_name` other than `staging`
+or `prod`.
 
 ## Prerequisites
 
@@ -35,7 +35,7 @@ to `~/.aws/config`:
 sso_start_url = <the start URL>
 sso_region = us-east-1
 
-[profile dev-pacompact]
+[profile staging-pacompact]
 sso_session = focus
 sso_account_id = 126942145463
 sso_role_name = AccountDeveloperAccess
@@ -45,14 +45,15 @@ region = us-east-1
 Sign in once a day and point the commands at the profile:
 
 ```bash
-aws sso login --profile dev-pacompact
-aws sts get-caller-identity --profile dev-pacompact   # Account must be 126942145463
-export AWS_PROFILE=dev-pacompact
-just plan app dev
+aws sso login --profile staging-pacompact
+aws sts get-caller-identity --profile staging-pacompact   # Account must be 126942145463
+export AWS_PROFILE=staging-pacompact
+just plan app staging
 ```
 
-A new environment gets its own `[profile <env>-pacompact]` block with its
-account ID, and the same role.
+The staging account is the one Focus created as `dev-pacompact`, which is why
+its state bucket and DNS zone carry that name. A new environment gets its own
+`[profile <env>-pacompact]` block with its account ID, and the same role.
 
 ## Commands
 
@@ -61,8 +62,8 @@ From `engineering/infrastructure/`:
 ```bash
 just check             # tofu fmt -check and tofu validate on every component; what CI runs
 just fmt               # format every .tf file
-just plan app dev      # plan a component against an environment
-just apply app dev     # apply it (asks for confirmation)
+just plan app staging  # plan a component against an environment
+just apply app staging # apply it (asks for confirmation)
 ```
 
 `plan` and `apply` initialise the component against the environment's backend
@@ -72,7 +73,7 @@ creates.
 
 Every pull request that touches this directory runs `just check` in
 [`.github/workflows/iac.yml`](../../../.github/workflows/iac.yml), then plans
-each component against `dev` and posts the plan as a comment on the pull
+each component against `staging` and posts the plan as a comment on the pull
 request. The `app` plan runs the image the pull request's commit would
 build, so it always shows the task definitions changing.
 
@@ -81,20 +82,20 @@ build, so it always shows the task definitions changing.
 A deploy is `just deploy <env>`: apply `ecr`, build and push the API image
 tagged with the commit, apply `app` with that tag, build the client from the
 app outputs, sync it to S3, and invalidate CloudFront. Nothing else deploys
-anything, and nothing deploys on its own: dev is deployed when someone runs
+anything, and nothing deploys on its own: staging is deployed when someone runs
 the `Deploy` workflow, until the team turns on deploy-on-merge.
 
 | Trigger | Environment | Gate |
 |---|---|---|
-| Running the `Deploy` workflow by hand (Actions, Run workflow) | `dev` | Whoever can run workflows; a merge to `main` does not deploy yet |
-| Tag `v*-rc*` | `test` | The `test` GitHub Environment's required reviewers |
+| Running the `Deploy` workflow by hand (Actions, Run workflow) | `staging` | Whoever can run workflows; a merge to `main` does not deploy yet |
+| Tag `v*-rc*` | `staging` | The `staging` GitHub Environment's protection rules |
 | Tag `v*` (no `-rc`) | `prod` | The `prod` GitHub Environment's required reviewers |
 
 [`deploy.yml`](../../../.github/workflows/deploy.yml) runs it from the
 environment's GitHub Environment, whose variables name the role to assume
 (`AWS_APPLY_ROLE_ARN`) and the region. Deploys to one environment run one at
-a time. From a laptop, with the environment's credentials, `just deploy dev`
-does the same thing. Until `test` and `prod` have environment files, a tag
+a time. From a laptop, with the environment's credentials, `just deploy staging`
+does the same thing. Until `prod` has environment files, a tag
 stops at the Environment's review and, if approved, fails at `just init`.
 
 ## What differs between environments
@@ -105,18 +106,18 @@ may be left out of the tfvars file when the default is right.
 
 ### `ecr`
 
-| Variable | What it sets | `dev` |
+| Variable | What it sets | `staging` |
 |---|---|---|
-| `environment_name` | The environment's name, in every resource name | `dev` |
+| `environment_name` | The environment's name, in every resource name | `staging` |
 | `aws_region` | Where the repositories live | `us-east-1` |
 | `tf_state_bucket` | The state bucket | `focus-dev-pacompact-terraform-state` |
-| `repositories` | The repositories to create: name, tag mutability, scan on push | `pacompact-app-dev`, immutable, scanned |
+| `repositories` | The repositories to create: name, tag mutability, scan on push | `pacompact-app-staging`, immutable, scanned |
 
 ### `app`
 
-| Variable | What it sets | `dev` | Default |
+| Variable | What it sets | `staging` | Default |
 |---|---|---|---|
-| `environment_name` | The environment's name: resource and secret names, and the containers' `ENVIRONMENT` (upper-cased) | `dev` | required |
+| `environment_name` | The environment's name: resource and secret names, and the containers' `ENVIRONMENT` (upper-cased) | `staging` | required |
 | `aws_region` | Where everything but the CloudFront certificate lives | `us-east-1` | required |
 | `tf_state_bucket` | The state bucket, which also holds the network bootstrap state | `focus-dev-pacompact-terraform-state` | required |
 | `network_state_key` | Key of the bootstrap state that exports `vpc_id` and `private_subnet_ids` | default | `bootstrap/network/default/terraform.tfstate` |
@@ -125,7 +126,7 @@ may be left out of the tfvars file when the default is right.
 | `db_instance_class` | Aurora instance class | `db.t4g.medium` | `db.t4g.medium` |
 | `instance_count` | Aurora instances | default | `1` |
 | `backup_retention_period` | Days of automated database backups | `1` | `30` |
-| `repo_name` | The `ecr` component's `repository_url` for the API image | the dev repository | required |
+| `repo_name` | The `ecr` component's `repository_url` for the API image | the staging repository | required |
 | `image_tag` | The commit SHA whose image runs; `just deploy` passes it, tfvars never set it | per deploy | required |
 | `ecs_max_capacity` | Most API tasks the autoscaler may run | default | `2` |
 | `commission_ops_email` | The Commission's operational mailbox; empty sends nothing | default | empty |
@@ -135,7 +136,7 @@ may be left out of the tfvars file when the default is right.
 ## Adding an environment
 
 1. Create `environments/<env>/<region>/` with `ecr.backend.hcl`,
-   `ecr.tfvars`, `app.backend.hcl`, and `app.tfvars`, copying `dev`'s and
+   `ecr.tfvars`, `app.backend.hcl`, and `app.tfvars`, copying `staging`'s and
    changing the values in the tables above. Each backend's `key` carries the
    environment name.
 2. Make what the module looks up, which it does not create:

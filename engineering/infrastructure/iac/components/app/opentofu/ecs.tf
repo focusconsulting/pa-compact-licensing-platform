@@ -251,7 +251,8 @@ resource "aws_lb_listener" "api_listener" {
 }
 
 resource "aws_lb_target_group" "api_target_group" {
-  name        = "${var.environment_name}-${local.application_name}-api-target-group"
+  # Target group names are capped at 32 characters; "staging-licensing-api-target-group" is 34.
+  name        = "${var.environment_name}-${local.application_name}-api-tg"
   port        = 8000
   protocol    = "HTTP"
   vpc_id      = data.terraform_remote_state.network.outputs.vpc_id

@@ -1,7 +1,7 @@
 name: IaC CI
 
 # Formats and validates the OpenTofu code with no credentials, then plans each
-# component against dev on pull requests and posts the plan as a comment.
+# component against staging on pull requests and posts the plan as a comment.
 # Deploys are .github/workflows/deploy.yml.
 on:
   push:
@@ -78,9 +78,10 @@ jobs:
       - name: Plan
         working-directory: engineering/infrastructure
         run: |
+          set -o pipefail # otherwise tee's exit status hides a failed plan
           extra=""
           if [ "${{ matrix.component }}" = app ]; then extra="-var image_tag=${{ github.event.pull_request.head.sha }}"; fi
-          just plan ${{ matrix.component }} dev -no-color -lock=false $extra 2>&1 | tee plan.txt
+          just plan ${{ matrix.component }} staging -no-color -lock=false $extra 2>&1 | tee plan.txt
 
       - name: Comment the plan
         if: always()
