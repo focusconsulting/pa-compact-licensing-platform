@@ -31,8 +31,8 @@ resource "aws_rds_cluster" "rds_aurora_cluster" {
   engine_version                      = "16.13"
   db_subnet_group_name                = aws_db_subnet_group.rds_subnet_group.name
   database_name                       = local.db_name
-  master_username                     = jsondecode(aws_secretsmanager_secret_version.db_credentials_version.secret_string)["username"]
-  master_password                     = jsondecode(aws_secretsmanager_secret_version.db_credentials_version.secret_string)["password"]
+  master_username                     = var.db_username
+  master_password                     = random_password.db_master.result
   iam_database_authentication_enabled = false
   port                                = local.db_port
   db_cluster_parameter_group_name     = aws_rds_cluster_parameter_group.cluster.id

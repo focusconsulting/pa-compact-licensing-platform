@@ -88,9 +88,11 @@ resource "aws_secretsmanager_secret" "ses_smtp" {
 }
 
 # The SMTP password is derived from the access key's secret for this region.
+# Write-only (see secrets.tf): bump secret_string_wo_version when the key is replaced.
 resource "aws_secretsmanager_secret_version" "ses_smtp" {
-  secret_id = aws_secretsmanager_secret.ses_smtp.id
-  secret_string = jsonencode({
+  secret_id                = aws_secretsmanager_secret.ses_smtp.id
+  secret_string_wo_version = 1
+  secret_string_wo = jsonencode({
     username = aws_iam_access_key.ses_smtp.id
     password = aws_iam_access_key.ses_smtp.ses_smtp_password_v4
   })
