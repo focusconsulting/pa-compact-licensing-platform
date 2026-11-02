@@ -1,5 +1,7 @@
 import pytest
 from pydantic import ValidationError
+from sqlalchemy.engine import make_url
+from yoyo.connections import parse_uri
 
 from licensing_api.config import Settings, get_settings, settings
 
@@ -32,6 +34,30 @@ def test_environment_accepts_each_deployed_environment_name(name: str):
 def test_environment_rejects_an_unknown_name():
     with pytest.raises(ValidationError):
         Settings(environment='DEV')  # pyright: ignore[reportArgumentType] -- the rejection under test
+
+
+# Every character secrets.tf's random_password may generate that means something in a URL.
+URL_SPECIAL_PASSWORD = 'a#b?c:d[e]{f}%g<h>i!j^k&l*m(n)o=p+q'
+
+
+def test_db_urls_carry_a_password_with_url_special_characters():
+    settings = Settings(
+        db_user='licensing', db_password=URL_SPECIAL_PASSWORD, db_host='db', db_port=5432
+    )
+
+    async_url = make_url(settings.db_url)
+    sync_url = parse_uri(settings.sync_db_url)
+
+    assert (async_url.password, async_url.host, async_url.port) == (
+        URL_SPECIAL_PASSWORD,
+        'db',
+        5432,
+    )
+    assert (sync_url.password, sync_url.hostname, sync_url.port) == (
+        URL_SPECIAL_PASSWORD,
+        'db',
+        5432,
+    )
 
 
 def test_get_settings_returns_the_process_settings():
