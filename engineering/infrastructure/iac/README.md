@@ -72,8 +72,31 @@ first, so switching environments on one checkout needs nothing else. Apply
 creates.
 
 Every pull request that touches this directory runs `just check` in
-[`.github/workflows/iac.yml`](../../../.github/workflows/iac.yml). Plans and
-applies from CI are SCRUM-83's.
+[`.github/workflows/iac.yml`](../../../.github/workflows/iac.yml), then plans
+each component against `staging` and posts the plan as a comment on the pull
+request. The `app` plan runs the image the pull request's commit would
+build, so it always shows the task definitions changing.
+
+## Deploying
+
+A deploy is `just deploy <env>`: apply `ecr`, build and push the API image
+tagged with the commit, apply `app` with that tag, build the client from the
+app outputs, sync it to S3, and invalidate CloudFront. Nothing else deploys
+anything, and nothing deploys on its own: staging is deployed when someone runs
+the `Deploy` workflow, until the team turns on deploy-on-merge.
+
+| Trigger | Environment | Gate |
+|---|---|---|
+| Running the `Deploy` workflow by hand (Actions, Run workflow) | `staging` | Whoever can run workflows; a merge to `main` does not deploy yet |
+| Tag `v*-rc*` | `staging` | The `staging` GitHub Environment's protection rules |
+| Tag `v*` (no `-rc`) | `prod` | The `prod` GitHub Environment's required reviewers |
+
+[`deploy.yml`](../../../.github/workflows/deploy.yml) runs it from the
+environment's GitHub Environment, whose variables name the role to assume
+(`AWS_APPLY_ROLE_ARN`) and the region. Deploys to one environment run one at
+a time. From a laptop, with the environment's credentials, `just deploy staging`
+does the same thing. Until `prod` has environment files, a tag
+stops at the Environment's review and, if approved, fails at `just init`.
 
 ## What differs between environments
 
@@ -88,7 +111,7 @@ may be left out of the tfvars file when the default is right.
 | `environment_name` | The environment's name, in every resource name | `staging` |
 | `aws_region` | Where the repositories live | `us-east-1` |
 | `tf_state_bucket` | The state bucket | `focus-dev-pacompact-terraform-state` |
-| `repositories` | The repositories to create: name, tag mutability, scan on push | `pacompact-app-staging`, mutable, scanned |
+| `repositories` | The repositories to create: name, tag mutability, scan on push | `pacompact-app-staging`, immutable, scanned |
 
 ### `app`
 
@@ -104,8 +127,8 @@ may be left out of the tfvars file when the default is right.
 | `instance_count` | Aurora instances | default | `1` |
 | `backup_retention_period` | Days of automated database backups | `1` | `30` |
 | `repo_name` | The `ecr` component's `repository_url` for the API image | the staging repository | required |
+| `image_tag` | The commit SHA whose image runs; `just deploy` passes it, tfvars never set it | per deploy | required |
 | `ecs_max_capacity` | Most API tasks the autoscaler may run | default | `2` |
-| `jumpbox_enabled` | Allow the environment's jumpbox to reach ECS and the database | `true` | `false` |
 | `commission_ops_email` | The Commission's operational mailbox; empty sends nothing | default | empty |
 | `cognito_callback_url`, `cognito_logout_url` | Cognito redirect URLs | default | `https://<dns_name>` |
 | `acm_certificate_arn` | Declared for an HTTPS listener on the load balancer; not yet used (SCRUM-84) | default | none |
@@ -121,9 +144,10 @@ may be left out of the tfvars file when the default is right.
      `network_state_key` exporting `vpc_id` and `private_subnet_ids`.
    - A public Route 53 hosted zone for the parent of `dns_name`, and an issued
      wildcard ACM certificate for it in `us-east-1`.
-   - Secrets Manager secrets `<env>-slack-tfvar` (keys `slack_team_id`,
-     `slack_channel_id`) and, when `jumpbox_enabled`, `<env>-jumpbox-sgid-tfvar`
-     (key `jumpbox_sg_id`).
+   - The Secrets Manager secret `<env>-slack-tfvar` (keys `slack_team_id`,
+     `slack_channel_id`). A jumpbox, if wanted, is the bootstrap repo's
+     `create_jumpbox`; the module reads its security group from the network
+     state.
    - SES production access for the account; a new account's SES sends only to
      verified addresses.
 3. `just apply ecr <env>`, put its `repository_url` in `app.tfvars` as
