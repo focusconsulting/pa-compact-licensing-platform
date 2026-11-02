@@ -21,6 +21,9 @@ updates:
       # plugin-react 6 needs vite 8; vitest 3 runs on vite 7.
       - dependency-name: "@vitejs/plugin-react"
         update-types: ["version-update:semver-major"]
+      # eslint-config-airbnb-extended 3 supports ESLint 9 only (ADR-0016).
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
 
   # Python / uv (engineering/api/)
   - package-ecosystem: uv
