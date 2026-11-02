@@ -1,4 +1,5 @@
 from typing import Literal
+from urllib.parse import quote
 
 from pydantic_settings import BaseSettings
 
@@ -41,12 +42,17 @@ class Settings(BaseSettings):
     @property
     def db_url(self) -> str:
         """The asyncpg URL the app's database engine connects with."""
-        return f'postgresql+asyncpg://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}'
+        return f'postgresql+asyncpg://{self._db_credentials}@{self.db_host}:{self.db_port}/{self.db_name}'
 
     @property
     def sync_db_url(self) -> str:
         """The plain ``postgresql://`` URL yoyo migrations connect with."""
-        return f'postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}'
+        return f'postgresql://{self._db_credentials}@{self.db_host}:{self.db_port}/{self.db_name}'
+
+    @property
+    def _db_credentials(self) -> str:
+        """``user:password`` percent-encoded: generated passwords contain ``#``, ``?``, ``:`` and other URL delimiters."""
+        return f'{quote(self.db_user, safe="")}:{quote(self.db_password, safe="")}'
 
     @property
     def cognito_jwks_url(self) -> str:
