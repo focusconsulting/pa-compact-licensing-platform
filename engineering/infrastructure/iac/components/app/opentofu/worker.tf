@@ -50,7 +50,7 @@ resource "aws_ecs_task_definition" "worker_task" {
   container_definitions = jsonencode([
     {
       name        = local.worker_container_name
-      image       = "${var.repo_name}:latest"
+      image       = "${var.repo_name}:${var.image_tag}"
       essential   = true
       command     = ["python", "-m", "licensing_api.worker"]
       environment = local.worker_environment
@@ -81,7 +81,7 @@ resource "aws_ecs_task_definition" "jobs_task" {
   container_definitions = jsonencode([
     {
       name      = local.jobs_container_name
-      image     = "${var.repo_name}:latest"
+      image     = "${var.repo_name}:${var.image_tag}"
       essential = true
       # Each schedule overrides the command with `run <job>`; on its own this lists the jobs.
       command     = ["python", "-m", "licensing_api.jobs", "--help"]
@@ -111,10 +111,5 @@ resource "aws_ecs_service" "worker_service" {
     subnets          = data.terraform_remote_state.network.outputs.private_subnet_ids
     security_groups  = [aws_security_group.ecs_sg.id]
     assign_public_ip = false
-  }
-
-  lifecycle {
-    # CI deploys new revisions with new image tags; see aws_ecs_service.api_service.
-    ignore_changes = [task_definition]
   }
 }

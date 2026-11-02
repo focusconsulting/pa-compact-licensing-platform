@@ -87,7 +87,7 @@ may be left out of the tfvars file when the default is right.
 | `environment_name` | The environment's name, in every resource name | `dev` |
 | `aws_region` | Where the repositories live | `us-east-1` |
 | `tf_state_bucket` | The state bucket | `focus-dev-pacompact-terraform-state` |
-| `repositories` | The repositories to create: name, tag mutability, scan on push | `pacompact-app-dev`, mutable, scanned |
+| `repositories` | The repositories to create: name, tag mutability, scan on push | `pacompact-app-dev`, immutable, scanned |
 
 ### `app`
 
@@ -103,8 +103,8 @@ may be left out of the tfvars file when the default is right.
 | `instance_count` | Aurora instances | default | `1` |
 | `backup_retention_period` | Days of automated database backups | `1` | `30` |
 | `repo_name` | The `ecr` component's `repository_url` for the API image | the dev repository | required |
+| `image_tag` | The commit SHA whose image runs; `just deploy` passes it, tfvars never set it | per deploy | required |
 | `ecs_max_capacity` | Most API tasks the autoscaler may run | default | `2` |
-| `jumpbox_enabled` | Allow the environment's jumpbox to reach ECS and the database | `true` | `false` |
 | `commission_ops_email` | The Commission's operational mailbox; empty sends nothing | default | empty |
 | `cognito_callback_url`, `cognito_logout_url` | Cognito redirect URLs | default | `https://<dns_name>` |
 | `acm_certificate_arn` | Declared for an HTTPS listener on the load balancer; not yet used (SCRUM-84) | default | none |
@@ -120,9 +120,10 @@ may be left out of the tfvars file when the default is right.
      `network_state_key` exporting `vpc_id` and `private_subnet_ids`.
    - A public Route 53 hosted zone for the parent of `dns_name`, and an issued
      wildcard ACM certificate for it in `us-east-1`.
-   - Secrets Manager secrets `<env>-slack-tfvar` (keys `slack_team_id`,
-     `slack_channel_id`) and, when `jumpbox_enabled`, `<env>-jumpbox-sgid-tfvar`
-     (key `jumpbox_sg_id`).
+   - The Secrets Manager secret `<env>-slack-tfvar` (keys `slack_team_id`,
+     `slack_channel_id`). A jumpbox, if wanted, is the bootstrap repo's
+     `create_jumpbox`; the module reads its security group from the network
+     state.
    - SES production access for the account; a new account's SES sends only to
      verified addresses.
 3. `just apply ecr <env>`, put its `repository_url` in `app.tfvars` as
