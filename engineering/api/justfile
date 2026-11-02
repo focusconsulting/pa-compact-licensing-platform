@@ -73,8 +73,8 @@ lint: lint-ruff typecheck
 
 # Run ruff linter and format check
 lint-ruff:
-    uv run ruff check licensing_api tests
-    uv run ruff format --check licensing_api tests
+    uv run ruff check licensing_api tests conftest.py
+    uv run ruff format --check licensing_api tests conftest.py
 
 # Run pyright type checker
 typecheck:
@@ -82,8 +82,8 @@ typecheck:
 
 # Format code with ruff
 format:
-    uv run ruff check --fix licensing_api tests
-    uv run ruff format licensing_api tests
+    uv run ruff check --fix licensing_api tests conftest.py
+    uv run ruff format licensing_api tests conftest.py
 
 # Build the production image for Fargate (linux/amd64), tagged with the commit
 build:

@@ -58,9 +58,3 @@ Public Sans for every role, Q-09's default.
 ## Radius
 
 `0`, `sm`, `md`, `lg`, `pill`, set through `$theme-border-radius-sm`, `-md`, and `-lg`.
-
-## Raw values still to replace
-
-SCRUM-87 replaces these with the token beside each:
-
-- `src/styles/layout.scss`: `#162e51` with `primary-darker`; `#fff` with `white`
