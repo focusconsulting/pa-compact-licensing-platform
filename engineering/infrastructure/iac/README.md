@@ -71,8 +71,31 @@ first, so switching environments on one checkout needs nothing else. Apply
 creates.
 
 Every pull request that touches this directory runs `just check` in
-[`.github/workflows/iac.yml`](../../../.github/workflows/iac.yml). Plans and
-applies from CI are SCRUM-83's.
+[`.github/workflows/iac.yml`](../../../.github/workflows/iac.yml), then plans
+each component against `dev` and posts the plan as a comment on the pull
+request. The `app` plan runs the image the pull request's commit would
+build, so it always shows the task definitions changing.
+
+## Deploying
+
+A deploy is `just deploy <env>`: apply `ecr`, build and push the API image
+tagged with the commit, apply `app` with that tag, build the client from the
+app outputs, sync it to S3, and invalidate CloudFront. Nothing else deploys
+anything, and nothing deploys on its own: dev is deployed when someone runs
+the `Deploy` workflow, until the team turns on deploy-on-merge.
+
+| Trigger | Environment | Gate |
+|---|---|---|
+| Running the `Deploy` workflow by hand (Actions, Run workflow) | `dev` | Whoever can run workflows; a merge to `main` does not deploy yet |
+| Tag `v*-rc*` | `test` | The `test` GitHub Environment's required reviewers |
+| Tag `v*` (no `-rc`) | `prod` | The `prod` GitHub Environment's required reviewers |
+
+[`deploy.yml`](../../../.github/workflows/deploy.yml) runs it from the
+environment's GitHub Environment, whose variables name the role to assume
+(`AWS_APPLY_ROLE_ARN`) and the region. Deploys to one environment run one at
+a time. From a laptop, with the environment's credentials, `just deploy dev`
+does the same thing. Until `test` and `prod` have environment files, a tag
+stops at the Environment's review and, if approved, fails at `just init`.
 
 ## What differs between environments
 

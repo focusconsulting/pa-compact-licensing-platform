@@ -1,7 +1,8 @@
 name: IaC CI
 
-# Formats and validates the OpenTofu code with no AWS credentials. Plans and
-# applies against an environment are SCRUM-83's.
+# Formats and validates the OpenTofu code with no credentials, then plans each
+# component against dev on pull requests and posts the plan as a comment.
+# Deploys are .github/workflows/deploy.yml.
 on:
   push:
     branches: [main]
@@ -34,3 +35,55 @@ jobs:
       - name: Format and validate
         working-directory: engineering/infrastructure
         run: just check
+
+  plan:
+    if: github.event_name == 'pull_request'
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        component: [ecr, app]
+    env:
+      TF_IN_AUTOMATION: "true"
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read tool versions
+        id: versions
+        run: |
+          echo "tofu=$(awk '$1 == "opentofu" {print $2}' .tool-versions)" >> "$GITHUB_OUTPUT"
+          echo "just=$(awk '$1 == "just" {print $2}' .tool-versions)" >> "$GITHUB_OUTPUT"
+
+      - uses: opentofu/setup-opentofu@v2
+        with:
+          tofu_version: ${{ steps.versions.outputs.tofu }}
+          tofu_wrapper: false
+
+      - uses: extractions/setup-just@v4
+        with:
+          just-version: ${{ steps.versions.outputs.just }}
+
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_PLAN_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      # The app component runs the image this commit would build, so its plan always
+      # shows the task definitions changing; merging deploys that commit.
+      - name: Plan
+        working-directory: engineering/infrastructure
+        run: |
+          extra=""
+          if [ "${{ matrix.component }}" = app ]; then extra="-var image_tag=${{ github.event.pull_request.head.sha }}"; fi
+          just plan ${{ matrix.component }} dev -no-color -lock=false $extra 2>&1 | tee plan.txt
+
+      - name: Comment the plan
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/comment-plan.sh ${{ github.event.pull_request.number }} ${{ matrix.component }} engineering/infrastructure/plan.txt
