@@ -1,0 +1,26 @@
+name: Release
+
+# A tag promotes a commit: v*-rc* deploys test, any other v* deploys prod, each
+# through its GitHub Environment's required reviewers.
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  target:
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.map.outputs.environment }}
+    steps:
+      - id: map
+        run: |
+          case "$GITHUB_REF_NAME" in
+            v*-rc*) echo "environment=test" >> "$GITHUB_OUTPUT" ;;
+            v*)     echo "environment=prod" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+  deploy:
+    needs: target
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: ${{ needs.target.outputs.environment }}
