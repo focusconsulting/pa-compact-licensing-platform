@@ -1,13 +1,7 @@
-# The jumpbox security group ID is read from Secrets Manager only where a
-# jumpbox exists (var.jumpbox_enabled), so other environments apply without
-# the secret and get no jumpbox ingress.
-data "aws_secretsmanager_secret_version" "jumpbox" {
-  count     = var.jumpbox_enabled ? 1 : 0
-  secret_id = "${var.environment_name}-jumpbox-sgid-tfvar"
-}
-
 locals {
-  jumpbox_sg_ids = [for v in data.aws_secretsmanager_secret_version.jumpbox : jsondecode(v.secret_string)["jumpbox_sg_id"]]
+  # The account's bootstrap repo exports the jumpbox's security group when it creates
+  # one (create_jumpbox); states applied before that output existed have none.
+  jumpbox_sg_ids = compact([try(data.terraform_remote_state.network.outputs.jumpbox_security_group_id, null)])
 }
 
 # Security Group for the internal Application Load Balancer
