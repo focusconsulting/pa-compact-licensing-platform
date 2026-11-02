@@ -5,6 +5,7 @@ import basic from "./en/basic.json";
 import address from "./en/address.json";
 import date from "./en/date.json";
 import country from "./en/country.json";
+import status from "./en/status.json";
 
 export const defaultNS = "common";
 
@@ -18,6 +19,7 @@ void i18next.use(initReactI18next).init({
       address,
       date,
       country,
+      status,
     },
   },
   defaultNS,
