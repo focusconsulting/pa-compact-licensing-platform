@@ -39,7 +39,9 @@ jobs:
 
       - name: Start the local services
         working-directory: engineering/api
-        run: docker compose -p pa-compact up -d --wait --build
+        run: |
+          docker compose -p pa-compact up -d --wait --build
+          docker compose -p pa-compact run --rm rustfs-init
 
       - name: Start the API (migrated and seeded)
         working-directory: engineering/api

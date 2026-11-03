@@ -23,7 +23,7 @@ install:
 # Start the local services in the background (Postgres, maildev, RustFS, Cognito mock) and wait until ready
 services:
     {{ compose }} up -d --wait --build
-    {{ compose }} wait rustfs-init >/dev/null
+    {{ compose }} run --rm rustfs-init >/dev/null
 
 # Stop the local services
 down:
