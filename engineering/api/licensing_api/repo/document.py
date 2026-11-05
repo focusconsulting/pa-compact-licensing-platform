@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+from datetime import datetime
 from enum import StrEnum
 from uuid import UUID, uuid4
 
 from sqlmodel import Field
 
-from licensing_api.repo.base import AuditColumns
+from licensing_api.repo.base import AuditColumns, TimestampTZ
 
 
 class DocumentOwnerType(StrEnum):
@@ -54,3 +55,16 @@ class Document(AuditColumns, table=True):
     content_type: str
     size_bytes: int
     scan_status: str = ScanStatus.PENDING
+    # When the scan's result was recorded, and when the Worker last looked for one.
+    scanned_at: datetime | None = Field(default=None, sa_type=TimestampTZ)
+    scan_checked_at: datetime | None = Field(default=None, sa_type=TimestampTZ)
+
+    @property
+    def is_attached(self) -> bool:
+        """Whether the document belongs to a record yet."""
+        return self.owner_type is not None
+
+
+def storage_key_for(public_id: UUID) -> str:
+    """The object key: the document's public ID, never anything the uploader typed."""
+    return f'documents/{public_id}'
