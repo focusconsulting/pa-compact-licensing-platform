@@ -13,6 +13,7 @@ class ErrorCode(StrEnum):
     UserNotFound = 'USER_NOT_FOUND'
     UserInactive = 'USER_INACTIVE'
     Forbidden = 'FORBIDDEN'
+    NotFound = 'NOT_FOUND'
     ValidationError = 'VALIDATION_ERROR'
     HttpError = 'HTTP_ERROR'
     InternalError = 'INTERNAL_ERROR'
