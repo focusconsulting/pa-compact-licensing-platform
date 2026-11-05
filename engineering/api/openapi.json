@@ -242,6 +242,18 @@
         "title": "Data[CurrentUser]",
         "type": "object"
       },
+      "Data_DocumentDownload_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/DocumentDownload"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Data[DocumentDownload]",
+        "type": "object"
+      },
       "Data_DocumentOut_": {
         "properties": {
           "data": {
@@ -264,6 +276,32 @@
           "data"
         ],
         "title": "Data[DocumentUpload]",
+        "type": "object"
+      },
+      "DocumentDownload": {
+        "description": "A link that downloads the document's scanned file; it expires at ``expires_at``.",
+        "examples": [
+          {
+            "expires_at": "2026-11-05T15:04:05Z",
+            "url": "https://example-documents.s3.amazonaws.com/documents/0b9c7a52-4f1e-4d38-9f43-2a5d6f1c8e70?versionId=1"
+          }
+        ],
+        "properties": {
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "expires_at"
+        ],
+        "title": "DocumentDownload",
         "type": "object"
       },
       "DocumentOut": {
@@ -423,6 +461,7 @@
           "USER_INACTIVE",
           "FORBIDDEN",
           "NOT_FOUND",
+          "DOCUMENT_NOT_CLEAN",
           "VALIDATION_ERROR",
           "HTTP_ERROR",
           "INTERNAL_ERROR"
@@ -851,6 +890,108 @@
         ]
       }
     },
+    "/api/commission/documents/{document_id}": {
+      "get": {
+        "description": "A document's details, including whether its malware scan has finished.",
+        "operationId": "Get_any_document_api_commission_documents__document_id__get",
+        "parameters": [
+          {
+            "description": "The document's ID",
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "description": "The document's ID",
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_DocumentOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Any Document",
+        "tags": [
+          "commission"
+        ]
+      }
+    },
+    "/api/commission/documents/{document_id}/download": {
+      "get": {
+        "description": "A link, valid for one minute, that downloads the document as a file. Only a document whose malware scan found it clean can be downloaded; `409 DOCUMENT_NOT_CLEAN` otherwise. Every download is recorded in the audit log.",
+        "operationId": "Download_any_document_api_commission_documents__document_id__download_get",
+        "parameters": [
+          {
+            "description": "The document's ID",
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "description": "The document's ID",
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_DocumentDownload_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Download Any Document",
+        "tags": [
+          "commission"
+        ]
+      }
+    },
     "/api/health/live": {
       "get": {
         "description": "Check whether the application is ready to receive requests",
@@ -1050,6 +1191,57 @@
         ]
       }
     },
+    "/api/me/documents/{document_id}/download": {
+      "get": {
+        "description": "A link, valid for one minute, that downloads the document as a file. Only a document whose malware scan found it clean can be downloaded; `409 DOCUMENT_NOT_CLEAN` otherwise.",
+        "operationId": "Download_my_document_api_me_documents__document_id__download_get",
+        "parameters": [
+          {
+            "description": "The document's ID",
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "description": "The document's ID",
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_DocumentDownload_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Download My Document",
+        "tags": [
+          "me"
+        ]
+      }
+    },
     "/api/states/{state_code}/documents": {
       "post": {
         "description": "Creates a `pending` document and returns a form, valid for five minutes, that uploads exactly `size_bytes` of `content_type` straight to storage. The file is scanned for malware before anyone can download it.",
@@ -1169,6 +1361,69 @@
           }
         ],
         "summary": "Get A State'S Document",
+        "tags": [
+          "states"
+        ]
+      }
+    },
+    "/api/states/{state_code}/documents/{document_id}/download": {
+      "get": {
+        "description": "A link, valid for one minute, that downloads the document as a file. Only a document whose malware scan found it clean can be downloaded; `409 DOCUMENT_NOT_CLEAN` otherwise. Every download is recorded in the audit log.",
+        "operationId": "Download_a_state_s_document_api_states__state_code__documents__document_id__download_get",
+        "parameters": [
+          {
+            "description": "Two-letter state code",
+            "in": "path",
+            "name": "state_code",
+            "required": true,
+            "schema": {
+              "description": "Two-letter state code",
+              "pattern": "^[A-Za-z]{2}$",
+              "title": "State Code",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The document's ID",
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "description": "The document's ID",
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_DocumentDownload_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Download A State'S Document",
         "tags": [
           "states"
         ]

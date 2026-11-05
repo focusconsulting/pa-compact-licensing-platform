@@ -16,6 +16,9 @@ MAX_BYTES = 20 * 1024 * 1024
 # Long enough for 20 MiB on a slow connection; the link only uploads to one new key.
 UPLOAD_LINK_LIFETIME = timedelta(minutes=5)
 
+# Long enough for the browser to follow it at once; a link that leaks is soon useless.
+DOWNLOAD_LINK_LIFETIME = timedelta(minutes=1)
+
 
 class DocumentType(StrEnum):
     """The content types the bucket accepts."""

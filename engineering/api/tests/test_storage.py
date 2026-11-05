@@ -63,12 +63,19 @@ async def test_the_bucket_refuses_another_content_type(storage):
     assert await storage.read_start(key, 1) == b''
 
 
-def test_a_download_link_saves_the_file_under_its_name(storage):
+async def test_a_download_link_saves_one_version_under_its_name(storage):
     key = _key()
     _post(storage, key, b'%PDF-1.7 x', declared=10, content_type='application/pdf')
+    current = await storage.current_version(key)
+    assert current is not None and current.version_id is not None
+    _post(storage, key, b'%PDF-1.7 y', declared=10, content_type='application/pdf')
 
     url = storage.presign_download(
-        key, file_name='Ordre "final" é.pdf', content_type='application/pdf', expires=_MINUTE
+        key,
+        file_name='Ordre "final" é.pdf',
+        content_type='application/pdf',
+        version_id=current.version_id,
+        expires=_MINUTE,
     )
     response = httpx.get(url)
 
