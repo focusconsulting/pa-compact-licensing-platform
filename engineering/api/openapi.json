@@ -242,6 +242,179 @@
         "title": "Data[CurrentUser]",
         "type": "object"
       },
+      "Data_DocumentOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/DocumentOut"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Data[DocumentOut]",
+        "type": "object"
+      },
+      "Data_DocumentUpload_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/DocumentUpload"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Data[DocumentUpload]",
+        "type": "object"
+      },
+      "DocumentOut": {
+        "description": "A document's details. ``scan_status`` is ``clean`` once it may be downloaded.",
+        "examples": [
+          {
+            "content_type": "application/pdf",
+            "created_at": "2026-11-05T15:04:05Z",
+            "file_name": "nccpa-certificate.pdf",
+            "id": "0b9c7a52-4f1e-4d38-9f43-2a5d6f1c8e70",
+            "kind": "nccpa_certificate",
+            "scan_status": "pending",
+            "size_bytes": 482113
+          }
+        ],
+        "properties": {
+          "content_type": {
+            "title": "Content Type",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "file_name": {
+            "title": "File Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "scan_status": {
+            "$ref": "#/components/schemas/ScanStatus"
+          },
+          "size_bytes": {
+            "title": "Size Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "file_name",
+          "content_type",
+          "size_bytes",
+          "kind",
+          "scan_status",
+          "created_at"
+        ],
+        "title": "DocumentOut",
+        "type": "object"
+      },
+      "DocumentType": {
+        "description": "The content types the bucket accepts.",
+        "enum": [
+          "application/pdf",
+          "image/png",
+          "image/jpeg",
+          "text/csv",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        ],
+        "title": "DocumentType",
+        "type": "string"
+      },
+      "DocumentUpload": {
+        "description": "The new ``pending`` document and the form that uploads its file.",
+        "examples": [
+          {
+            "document": {
+              "content_type": "application/pdf",
+              "created_at": "2026-11-05T15:04:05Z",
+              "file_name": "nccpa-certificate.pdf",
+              "id": "0b9c7a52-4f1e-4d38-9f43-2a5d6f1c8e70",
+              "kind": "nccpa_certificate",
+              "scan_status": "pending",
+              "size_bytes": 482113
+            },
+            "upload": {
+              "expires_at": "2026-11-05T15:04:05Z",
+              "fields": {
+                "Content-Type": "application/pdf",
+                "key": "documents/0b9c7a52-4f1e-4d38-9f43-2a5d6f1c8e70"
+              },
+              "url": "https://example-documents.s3.amazonaws.com/"
+            }
+          }
+        ],
+        "properties": {
+          "document": {
+            "$ref": "#/components/schemas/DocumentOut"
+          },
+          "upload": {
+            "$ref": "#/components/schemas/UploadForm"
+          }
+        },
+        "required": [
+          "document",
+          "upload"
+        ],
+        "title": "DocumentUpload",
+        "type": "object"
+      },
+      "DocumentUploadIn": {
+        "additionalProperties": false,
+        "description": "The file the browser is about to upload. The bucket refuses any other size or type.",
+        "examples": [
+          {
+            "content_type": "application/pdf",
+            "file_name": "nccpa-certificate.pdf",
+            "kind": "nccpa_certificate",
+            "size_bytes": 482113
+          }
+        ],
+        "properties": {
+          "content_type": {
+            "$ref": "#/components/schemas/DocumentType"
+          },
+          "file_name": {
+            "maxLength": 255,
+            "minLength": 1,
+            "pattern": "^[^/\\\\\\x00-\\x1f\\x7f]+$",
+            "title": "File Name",
+            "type": "string"
+          },
+          "kind": {
+            "pattern": "^[a-z][a-z0-9_]{0,49}$",
+            "title": "Kind",
+            "type": "string"
+          },
+          "size_bytes": {
+            "maximum": 20971520.0,
+            "minimum": 1.0,
+            "title": "Size Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "file_name",
+          "content_type",
+          "size_bytes",
+          "kind"
+        ],
+        "title": "DocumentUploadIn",
+        "type": "object"
+      },
       "ErrorCode": {
         "description": "The machine-readable ``code`` in every error response.",
         "enum": [
@@ -249,6 +422,7 @@
           "USER_NOT_FOUND",
           "USER_INACTIVE",
           "FORBIDDEN",
+          "NOT_FOUND",
           "VALIDATION_ERROR",
           "HTTP_ERROR",
           "INTERNAL_ERROR"
@@ -415,6 +589,55 @@
           "db"
         ],
         "title": "ReadyResp",
+        "type": "object"
+      },
+      "ScanStatus": {
+        "description": "A document's malware-scan result (``scan_status``); an upload starts ``pending``.",
+        "enum": [
+          "pending",
+          "clean",
+          "infected",
+          "error"
+        ],
+        "title": "ScanStatus",
+        "type": "string"
+      },
+      "UploadForm": {
+        "description": "POST the ``fields`` and then the file, as ``multipart/form-data`` field ``file``, to ``url``.",
+        "examples": [
+          {
+            "expires_at": "2026-11-05T15:04:05Z",
+            "fields": {
+              "Content-Type": "application/pdf",
+              "key": "documents/0b9c7a52-4f1e-4d38-9f43-2a5d6f1c8e70"
+            },
+            "url": "https://example-documents.s3.amazonaws.com/"
+          }
+        ],
+        "properties": {
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "fields": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Fields",
+            "type": "object"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "fields",
+          "expires_at"
+        ],
+        "title": "UploadForm",
         "type": "object"
       }
     },
@@ -726,6 +949,228 @@
         "summary": "Get Current User",
         "tags": [
           "me"
+        ]
+      }
+    },
+    "/api/me/documents": {
+      "post": {
+        "description": "Creates a `pending` document and returns a form, valid for five minutes, that uploads exactly `size_bytes` of `content_type` straight to storage. The file is scanned for malware before anyone can download it.",
+        "operationId": "Upload_my_document_api_me_documents_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentUploadIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_DocumentUpload_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Upload My Document",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/me/documents/{document_id}": {
+      "get": {
+        "description": "A document's details, including whether its malware scan has finished.",
+        "operationId": "Get_my_document_api_me_documents__document_id__get",
+        "parameters": [
+          {
+            "description": "The document's ID",
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "description": "The document's ID",
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_DocumentOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get My Document",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/states/{state_code}/documents": {
+      "post": {
+        "description": "Creates a `pending` document and returns a form, valid for five minutes, that uploads exactly `size_bytes` of `content_type` straight to storage. The file is scanned for malware before anyone can download it.",
+        "operationId": "Upload_a_state_s_document_api_states__state_code__documents_post",
+        "parameters": [
+          {
+            "description": "Two-letter state code",
+            "in": "path",
+            "name": "state_code",
+            "required": true,
+            "schema": {
+              "description": "Two-letter state code",
+              "pattern": "^[A-Za-z]{2}$",
+              "title": "State Code",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentUploadIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_DocumentUpload_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Upload A State'S Document",
+        "tags": [
+          "states"
+        ]
+      }
+    },
+    "/api/states/{state_code}/documents/{document_id}": {
+      "get": {
+        "description": "A document's details, including whether its malware scan has finished.",
+        "operationId": "Get_a_state_s_document_api_states__state_code__documents__document_id__get",
+        "parameters": [
+          {
+            "description": "Two-letter state code",
+            "in": "path",
+            "name": "state_code",
+            "required": true,
+            "schema": {
+              "description": "Two-letter state code",
+              "pattern": "^[A-Za-z]{2}$",
+              "title": "State Code",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The document's ID",
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "description": "The document's ID",
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_DocumentOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get A State'S Document",
+        "tags": [
+          "states"
         ]
       }
     }

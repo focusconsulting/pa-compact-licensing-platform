@@ -8,6 +8,7 @@ from licensing_api.repo.domain_event import DomainEvent, DomainEventDelivery
 from licensing_api.repo.fee import Fee
 from licensing_api.repo.history import (
     AdverseActionHistory,
+    DocumentHistory,
     FeeHistory,
     ParticipationApplicationHistory,
     PractitionerHistory,
@@ -45,6 +46,7 @@ __all__ = [
     'CompactEligibility',
     'CompactSettings',
     'Document',
+    'DocumentHistory',
     'DomainEvent',
     'DomainEventDelivery',
     'Fee',
