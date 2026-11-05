@@ -16,7 +16,7 @@ from licensing_api.repo.document import Document, ScanStatus, storage_key_for
 from licensing_api.repo.domain_event import DomainEvent, EventType
 from licensing_api.repo.history import DocumentHistory
 from licensing_api.scans import SCAN_TIMEOUT, check_document_scans
-from licensing_api.storage import SCAN_TAG, Storage, create_storage
+from licensing_api.storage import SCAN_TAG, CurrentVersion, Storage, create_storage
 from tests.conftest import TEST_SETTINGS
 from tests.factories import system_user_id
 
@@ -184,6 +184,34 @@ async def test_a_link_never_used_waits_until_the_timeout(db_session, rolled_back
     await db_session.refresh(document)
 
     assert document.scan_status == ScanStatus.PENDING
+
+
+@pytest.mark.parametrize(
+    ('version_id', 'start', 'reason'),
+    [(None, b'a,b\n', 'unversioned'), ('v1', b'', 'missing')],
+    ids=['no version', 'version gone'],
+)
+async def test_a_clean_tag_is_not_enough_without_the_bytes_of_one_version(
+    db_session, rolled_back_sessions, storage, caplog, monkeypatch, version_id, start, reason
+):
+    document, _ = await _document(db_session, storage, body=b'a,b\n', content_type='text/csv')
+    tagged = create_storage(TEST_SETTINGS)
+
+    async def current_version(key: str) -> CurrentVersion:
+        return CurrentVersion(version_id=version_id, scan_status='NO_THREATS_FOUND')
+
+    async def read_start(key: str, size: int, *, version_id: str | None = None) -> bytes:
+        return start
+
+    monkeypatch.setattr(tagged, 'current_version', current_version)
+    monkeypatch.setattr(tagged, 'read_start', read_start)
+
+    with caplog.at_level(logging.INFO, logger='licensing_api.scans'):
+        await check_document_scans(rolled_back_sessions, tagged, batch_size=1)
+    await db_session.refresh(document)
+
+    assert document.scan_status == ScanStatus.ERROR
+    assert caplog.records[-1].__dict__['reason'] == reason
 
 
 async def test_a_storage_error_leaves_the_document_pending(

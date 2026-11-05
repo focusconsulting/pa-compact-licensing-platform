@@ -119,9 +119,15 @@ async def _result(
     status = _TAG_RESULTS.get(current.scan_status, ScanStatus.ERROR)
     if status is not ScanStatus.CLEAN:
         return status, current.scan_status.lower()
+    # Fail closed: downloads serve only the recorded version, so clean needs one.
+    if not current.version_id:
+        return ScanStatus.ERROR, 'unversioned'
     start = await storage.read_start(
         document.storage_key, _START_BYTES, version_id=current.version_id
     )
+    # Empty when the version vanished after its tag was read; an empty CSV would otherwise pass.
+    if not start:
+        return ScanStatus.ERROR, 'missing'
     if not matches_type(document.content_type, start):
         return ScanStatus.ERROR, 'type_mismatch'
     return ScanStatus.CLEAN, None
