@@ -142,6 +142,11 @@ may be left out of the tfvars file when the default is right.
 2. Make what the module looks up, which it does not create:
    - The state bucket, with versioning, and the network bootstrap state at
      `network_state_key` exporting `vpc_id` and `private_subnet_ids`.
+   - Outbound internet access from those private subnets, which the bootstrap
+     repo's `nat_type` sets. The tasks can't start without it: they fetch
+     secrets and images and verify Cognito tokens over the internet. Staging
+     uses `fck-nat`, a single low-cost NAT instance. **Production must use
+     `aws-gateway`**, the AWS managed NAT Gateway.
    - A public Route 53 hosted zone for the parent of `dns_name`, and an issued
      wildcard ACM certificate for it in `us-east-1`.
    - The Secrets Manager secret `<env>-slack-tfvar` (keys `slack_team_id`,
