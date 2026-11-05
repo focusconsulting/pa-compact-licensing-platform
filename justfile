@@ -23,7 +23,7 @@ install:
 # Start the local services in the background (Postgres, maildev, RustFS, the malware scanner, Cognito mock) and wait until ready
 services:
     {{ compose }} --profile scanner up -d --wait --build
-    {{ compose }} wait rustfs-init >/dev/null
+    {{ compose }} run --rm rustfs-init >/dev/null
 
 # Stop the local services
 down:
