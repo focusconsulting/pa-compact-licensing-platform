@@ -46,9 +46,12 @@ services:
       retries: 30
 
   # Creates the documents bucket with AWS's own CLI, versioned as in AWS, with
-  # CORS for the browser's presigned POST from the client; then exits.
+  # CORS for the browser's presigned POST from the client; then exits. Run it with
+  # `docker compose run --rm rustfs-init` after `up --wait`: the profile keeps it out
+  # of `up`, whose --wait fails when a one-shot container exits before it checks.
   rustfs-init:
     image: amazon/aws-cli:2.31.18
+    profiles: ["init"]
     depends_on:
       rustfs:
         condition: service_healthy
