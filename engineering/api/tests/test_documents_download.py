@@ -55,6 +55,7 @@ async def _document(
     owner_type: DocumentOwnerType | None = None,
     owner_id: int | None = None,
     owner_key: str | None = None,
+    uploaded_in_state: str | None = None,
     scan_status: ScanStatus = ScanStatus.CLEAN,
     version_id: str | None = 'v1',
 ) -> Document:
@@ -64,6 +65,7 @@ async def _document(
         owner_type=owner_type,
         owner_id=owner_id,
         owner_key=owner_key,
+        uploaded_in_state=uploaded_in_state,
         kind='proof',
         file_name='order.pdf',
         content_type='application/pdf',
@@ -131,7 +133,11 @@ async def _world(session: AsyncSession) -> World:
             session, system, owner_type=owner.SII_REPORT, owner_id=sii.id
         ),
         'state': await _document(session, system, owner_type=owner.STATE, owner_key='KS'),
-        'unattached_by_staff': await _document(session, staff['KS'].id),  # type: ignore[arg-type]  # flushed rows have ids
+        'unattached_by_staff': await _document(
+            session,
+            staff['KS'].id,  # type: ignore[arg-type]  # flushed rows have ids
+            uploaded_in_state='KS',
+        ),
         'unattached_by_pa': await _document(session, pa.id),  # type: ignore[arg-type]  # flushed rows have ids
     }
     emails = {
@@ -195,9 +201,13 @@ def test_state_staff_need_read_private(client, auth_header, route_db_session):
     assert response.status_code == 403
 
 
-async def _stored(session: AsyncSession, storage: Storage, created_by: int) -> Document:
+async def _stored(
+    session: AsyncSession, storage: Storage, created_by: int, uploaded_in_state: str | None = None
+) -> Document:
     """A clean, scanned document whose upload link was used again after the scan."""
-    document = await _document(session, created_by, version_id=None)
+    document = await _document(
+        session, created_by, uploaded_in_state=uploaded_in_state, version_id=None
+    )
     scanned = storage._client.put_object(
         Bucket=_BUCKET, Key=document.storage_key, Body=b'%PDF-1.7 scanned'
     )['VersionId']
@@ -236,7 +246,7 @@ def test_a_pa_downloads_the_scanned_version_unaudited(
 def test_every_staff_download_is_audited(client, auth_header, route_db_session, storage):
     staff = client.portal.call(_staff, route_db_session, 'KS')
     commission = client.portal.call(lambda: make_user(route_db_session, role='compact_admin'))
-    document = client.portal.call(_stored, route_db_session, storage, staff.id)
+    document = client.portal.call(_stored, route_db_session, storage, staff.id, 'KS')
 
     for url, user in [
         (f'/api/states/KS/documents/{document.public_id}/download', staff),
@@ -274,3 +284,38 @@ def test_only_a_clean_document_downloads(client, auth_header, route_db_session):
     ]
 
     assert {(r.status_code, r.json()['code']) for r in responses} == {(409, 'DOCUMENT_NOT_CLEAN')}
+
+
+def test_an_unattached_upload_belongs_to_the_state_it_was_uploaded_for(
+    client, auth_header, route_db_session
+):
+    # A KS staff member who also holds grants in OK, uploading for OK.
+    uploader = client.portal.call(
+        lambda: make_user(
+            route_db_session,
+            role='state_staff',
+            state_code='KS',
+            permissions={'KS': ['read_private'], 'OK': ['read_private', 'write']},
+        )
+    )
+    ks = client.portal.call(_staff, route_db_session, 'KS')
+    ok = client.portal.call(_staff, route_db_session, 'OK')
+    document_id = client.post(
+        '/api/states/OK/documents',
+        json={
+            'file_name': 'order.pdf',
+            'content_type': 'application/pdf',
+            'size_bytes': 10,
+            'kind': 'order',
+        },
+        headers=auth_header(uploader.email),
+    ).json()['data']['document']['id']
+
+    seen_by_ok = client.get(
+        f'/api/states/OK/documents/{document_id}', headers=auth_header(ok.email)
+    )
+    seen_by_ks = client.get(
+        f'/api/states/KS/documents/{document_id}', headers=auth_header(ks.email)
+    )
+
+    assert (seen_by_ok.status_code, seen_by_ks.status_code) == (200, 404)

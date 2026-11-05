@@ -41,7 +41,7 @@ is `404` (constitution Principle II).
 | privilege request | theirs | `s` is its remote state |
 | adverse action, SII report | never | `s` reported it, or holds a license or privilege of the PA |
 | state | no | `s` is that state |
-| none yet, or ingestion batch | they uploaded it | the uploader's state is `s` |
+| none yet, or ingestion batch | they uploaded it | it was uploaded under `/states/{s}` |
 
 `/commission` (`compact_admin`) sees every document. Every staff download writes
 `document.downloaded` to the audit log; a PA reading their own does not.

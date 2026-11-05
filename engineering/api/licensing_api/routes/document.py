@@ -169,7 +169,7 @@ async def upload_my_document(
     storage: Annotated[Storage, Depends(get_storage)],
 ) -> Data[DocumentUpload]:
     """A PA's upload, unattached until a record they submit attaches it."""
-    return Data(data=await _upload(session, ctx, storage, body))
+    return Data(data=await _upload(session, ctx, storage, body, uploaded_in_state=None))
 
 
 @states.post(
@@ -187,7 +187,9 @@ async def upload_state_document(
     storage: Annotated[Storage, Depends(get_storage)],
 ) -> Data[DocumentUpload]:
     """A state staff member's upload, such as an order to attach to an adverse action (FLOW-05)."""
-    return Data(data=await _upload(session, ctx, storage, body))
+    return Data(
+        data=await _upload(session, ctx, storage, body, uploaded_in_state=state_code.upper())
+    )
 
 
 _DETAILS_DESCRIPTION = "A document's details, including whether its malware scan has finished."
@@ -279,7 +281,12 @@ async def download_any_document(
 
 
 async def _upload(
-    session: AsyncSession, ctx: ChangeContext, storage: Storage, body: DocumentUploadIn
+    session: AsyncSession,
+    ctx: ChangeContext,
+    storage: Storage,
+    body: DocumentUploadIn,
+    *,
+    uploaded_in_state: str | None,
 ) -> DocumentUpload:
     public_id = uuid4()
     document = Document(
@@ -289,6 +296,7 @@ async def _upload(
         content_type=body.content_type,
         size_bytes=body.size_bytes,
         storage_key=storage_key_for(public_id),
+        uploaded_in_state=uploaded_in_state,
         created_by=ctx.user_id,
     )
     session.add(document)

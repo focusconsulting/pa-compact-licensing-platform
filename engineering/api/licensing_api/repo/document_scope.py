@@ -18,7 +18,6 @@ from licensing_api.repo.privilege import Privilege
 from licensing_api.repo.privilege_request import PrivilegeRequest
 from licensing_api.repo.qualifying_license import QualifyingLicense
 from licensing_api.repo.sii_report import SiiReport
-from licensing_api.repo.user import User
 
 
 def visible_to_practitioner(practitioner_id: int | None, user_id: int) -> ColumnElement[bool]:
@@ -52,21 +51,16 @@ def visible_to_state(state_code: str) -> ColumnElement[bool]:
     An application belongs to its state of qualifying license and a privilege request to its
     remote state; a practitioner's, adverse action's, or SII report's documents are seen by the
     reporting state and every state where the PA holds a license or privilege, the states that
-    are told about them (FLOW-07). Unattached uploads belong to the uploader's state.
+    are told about them (FLOW-07). Unattached uploads belong to the state they were uploaded for.
     """
     state_code = state_code.upper()
-    uploaded_here = exists(
-        select(1).where(
-            col(User.id) == col(Document.created_by), col(User.state_code) == state_code
-        )
-    )
     return or_(
         and_(
             or_(
                 col(Document.owner_type).is_(None),
                 col(Document.owner_type) == DocumentOwnerType.INGESTION_BATCH,
             ),
-            uploaded_here,
+            col(Document.uploaded_in_state) == state_code,
         ),
         and_(
             col(Document.owner_type) == DocumentOwnerType.STATE,
