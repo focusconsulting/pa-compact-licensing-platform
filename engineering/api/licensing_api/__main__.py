@@ -24,6 +24,7 @@ from licensing_api.request_logger import (
     UnhandledExceptionMiddleware,
 )
 from licensing_api.routes import api
+from licensing_api.storage import create_storage
 
 
 def _configure_otel(app: FastAPI) -> None:  # pragma: no cover
@@ -88,6 +89,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     engine = create_async_engine(settings.db_url, pool_pre_ping=True)
     app.state.session_factory = async_sessionmaker(engine, expire_on_commit=False)
     app.state.db_engine = engine
+    app.state.storage = create_storage(settings)
 
     yield
     await engine.dispose()
