@@ -62,7 +62,7 @@ flowchart LR
     cdn["<b>CDN</b><br/><i>[AWS CloudFront]</i>"]
     client["<b>Client</b><br/><i>[Next.js]</i><br/>Browser application"]
     api["<b>API</b><br/><i>[FastAPI / ECS Fargate]</i><br/>System services"]
-    worker["<b>Worker</b><br/><i>[Python / ECS Fargate service]</i><br/>Delivers domain events, sends email"]
+    worker["<b>Worker</b><br/><i>[Python / ECS Fargate service]</i><br/>Delivers domain events, sends email, records malware scans"]
     jobs["<b>Scheduled jobs</b><br/><i>[Python / ECS Fargate task]</i><br/>One run per schedule"]
     db@{shape: cyl, label: "<b>Database</b><br/><i>[Aurora PostgreSQL 16]</i><br/>Records, history, domain events, audit log"}
     files@{shape: cyl, label: "<b>Document storage</b><br/><i>[Amazon S3]</i><br/>Uploaded proofs, orders, and verification documents"}
@@ -74,6 +74,7 @@ flowchart LR
   nccpa["<b>NCCPA</b><br/>Certification"]
   observability["<b>CloudWatch</b><br/>Logs, metrics, alarms"]
   scheduler["<b>EventBridge Scheduler</b><br/>Starts jobs"]
+  guardduty["<b>GuardDuty Malware Protection</b><br/>Scans each upload"]
 
   user -- "<b>Accesses</b><br/><i>[HTTPS]</i>" --> cdn
   user -- "<b>Authenticates</b><br/><i>[SRP / HTTPS]</i>" --> cognito
@@ -81,7 +82,10 @@ flowchart LR
   cdn -- "<b>Forwards /api</b><br/><i>[HTTPS]</i>" --> api
   api -- "<b>Verifies (JWKS)</b><br/><i>[HTTPS]</i>" --> cognito
   api -- "<b>Reads and writes</b><br/><i>[SQL / TLS]</i>" --> db
-  api -- "<b>Reads and writes</b><br/><i>[HTTPS]</i>" --> files
+  api -- "<b>Signs upload and download links</b><br/><i>[HTTPS]</i>" --> files
+  user -- "<b>Uploads and downloads documents</b><br/><i>[presigned HTTPS]</i>" --> files
+  guardduty -- "<b>Scans and tags</b><br/><i>[S3 events]</i>" --> files
+  worker -- "<b>Reads scan tags</b><br/><i>[HTTPS]</i>" --> files
   worker -- "<b>Reads and writes</b><br/><i>[SQL / TLS]</i>" --> db
   worker -- "<b>Sends email</b><br/><i>[SMTP / STARTTLS]</i>" --> ses
   worker -- "<b>Logs</b><br/><i>[awslogs]</i>" --> observability
@@ -97,7 +101,7 @@ flowchart LR
   classDef external fill:#999999,stroke:#8a8a8a,color:#fff
   class user person
   class cdn,client,api,worker,jobs,db,files container
-  class cognito,ses,payments,nccpa,observability,scheduler external
+  class cognito,ses,payments,nccpa,observability,scheduler,guardduty external
 ```
 
 ## Locally
@@ -114,4 +118,5 @@ and [`engineering/api/.env.example`](../api/.env.example).
 | SES | maildev |
 | EventBridge Scheduler | None: run a job by hand with `just job <name>` |
 | S3 | RustFS |
+| GuardDuty Malware Protection | ClamAV and a tagger that writes the same tag ([`engineering/mocks/malware-scanner`](../mocks/malware-scanner/README.md)); not started in CI |
 | Payment Provider, NCCPA | Mock servers, built with the tickets that write their clients |

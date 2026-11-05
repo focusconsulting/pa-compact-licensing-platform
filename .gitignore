@@ -13,3 +13,6 @@ node_modules/
 
 # Next.js build output
 .next/
+
+# ClamAV signatures for the local malware scanner
+engineering/api/.clamav/

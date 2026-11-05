@@ -45,7 +45,7 @@ The producer writes the event in the same transaction as the change (transaction
 | `qualifying_license.status_changed` | L-01 / A-01 | cascade privileges; notify PA, RS ops |
 | `adverse_action.reported` / `.lifted` | A-02 | cascade; notify PA, all states with QL/privilege, Commission [R5 §5.6(b)]; metrics (reporting timeliness) |
 | `sii.flagged` / `.closed` | A-02 | notify states with QL/privilege only — never the PA [ML §8.C] |
-| `document.uploaded` | F-12 | history only; D-01 lists documents |
+| `document.uploaded` / `.scanned` | F-12 | history only; D-01 lists documents |
 
 Every producer above also writes a history row; history is the consumer that makes the record "include all changes" (R5 §5.3(e)) and feeds the dashboard timelines (L-04, D-01), which are rendered from history rows, not from stored events.
 

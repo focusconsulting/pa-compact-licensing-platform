@@ -129,6 +129,19 @@ async def committed_sessions(client) -> AsyncGenerator[async_sessionmaker[AsyncS
 
 
 @pytest.fixture
+def rolled_back_sessions(db_session) -> async_sessionmaker[AsyncSession]:
+    """Sessions for code that opens its own transactions, inside ``db_session``'s rolled-back one.
+
+    Use instead of ``committed_sessions`` when the code writes history, which is append-only
+    and so could not be cleaned up. Every session shares one connection, so row locks never
+    block each other here.
+    """
+    return async_sessionmaker(
+        bind=db_session.bind, join_transaction_mode='create_savepoint', expire_on_commit=False
+    )
+
+
+@pytest.fixture
 def route_db_session(client) -> Generator[AsyncSession]:
     """Gives every route in the test one session whose work is rolled back when the test ends.
 

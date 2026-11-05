@@ -20,14 +20,14 @@ install:
     cd engineering/api && uv sync
     cd engineering/client && pnpm install
 
-# Start the local services in the background (Postgres, maildev, RustFS, Cognito mock) and wait until ready
+# Start the local services in the background (Postgres, maildev, RustFS, the malware scanner, Cognito mock) and wait until ready
 services:
-    {{ compose }} up -d --wait --build
+    {{ compose }} --profile scanner up -d --wait --build
     {{ compose }} wait rustfs-init >/dev/null
 
 # Stop the local services
 down:
-    {{ compose }} down
+    {{ compose }} --profile scanner down
 
 # Load local seed data from engineering/api/seed/: `users` (safe to rerun), or `demo` (docs/demo.md)
 seed name="users":
