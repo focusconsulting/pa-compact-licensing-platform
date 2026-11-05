@@ -110,7 +110,7 @@ Every API PR regenerates `openapi.json` and the client's `schema.d.ts` with `jus
 
 - **ADR-0017** `engineering/adrs/0017-s3-client.md`: `boto3` with `asyncio.to_thread` (chosen), `aioboto3`/`aiobotocore`, hand-rolled SigV4 over `httpx`; pros and cons each. Presigning is local; only tag reads, heads, and ranged reads do I/O.
 - **`pyproject.toml`**: `boto3`; dev `boto3-stubs[s3]` for pyright. README dependency table rows.
-- **`licensing_api/config.py`**: `s3_endpoint_url: str | None = None`, `s3_region = 'us-east-1'`, `s3_documents_bucket = 'documents'`, `s3_access_key_id: str | None = None`, `s3_secret_access_key: str | None = None`. `.env.example` keeps its values; its comment already describes AWS.
+- **`licensing_api/config.py`**: `s3_endpoint_url: str | None = None`, `s3_region = 'us-east-1'`, `s3_documents_bucket = 'documents'`. Credentials come from boto3's own chain, not settings (decided 2026-11-05, after the repo's secrets hook refused key fields): the task role in AWS, `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` in `.env` locally, replacing `S3_ACCESS_KEY_ID`/`S3_SECRET_ACCESS_KEY`.
 - **`licensing_api/storage.py`** (new): `Storage(client, bucket)` built once by `create_storage(settings)`; the API keeps it on `app.state` (set in `lifespan`) behind a `get_storage` dependency, the Worker builds its own.
   - `presign_upload(key, *, content_type, size_bytes, expires) -> PresignedUpload(url, fields)`: POST policy with `content-length-range` `[size_bytes, size_bytes]` and exact `Content-Type`.
   - `presign_download(key, *, file_name, content_type, expires) -> str`: `ResponseContentDisposition` `attachment; filename*=UTF-8''…`, `ResponseContentType`.
