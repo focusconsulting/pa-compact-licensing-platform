@@ -1,5 +1,5 @@
 # The Worker and scheduled jobs (backlog D8): the API's image with another command.
-# The Worker delivers events and sends email; each job is a one-off task EventBridge
+# The Worker delivers events, sends email, and records malware scans; each job is a one-off task EventBridge
 # Scheduler starts (scheduler.tf).
 
 locals {
@@ -18,6 +18,8 @@ locals {
     { name = "EMAIL_FROM_ADDRESS", value = "no-reply@${local.email_domain}" },
     { name = "CLIENT_BASE_URL", value = "https://${var.dns_name}" },
     { name = "COMMISSION_OPS_EMAIL", value = var.commission_ops_email },
+    { name = "S3_REGION", value = var.aws_region },
+    { name = "S3_DOCUMENTS_BUCKET", value = aws_s3_bucket.documents.id },
   ]
 
   worker_secrets = [
