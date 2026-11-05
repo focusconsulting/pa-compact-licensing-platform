@@ -184,3 +184,5 @@ Builds on `require` (download permission, with record scoping in the query), `Ch
 | `get_storage` | `dependencies.py` | FastAPI dependency: the documents bucket (`Storage`), built once at start-up ([ADR-0017](../adrs/0017-s3-client.md)) |
 
 Implemented in part: `POST /me/documents` and `POST /states/{state_code}/documents` (`write`) create a `pending` document, emit `document.uploaded`, and return a five-minute presigned POST for exactly the declared size and type (PDF, PNG, JPEG, CSV, DOCX; at most 20 MiB). `GET .../documents/{id}` returns its details to the uploader.
+
+The Worker runs `check_document_scans(session_factory, storage, *, batch_size=20) -> int` (`scans.py`) on every pass. It reads the `GuardDutyMalwareScanStatus` tag of each pending document's current version at most every 5 seconds, checks a clean file starts like its type, and records `clean`, `infected`, or `error` with the version, history, and `document.scanned`. No result within 15 minutes is `error`. Each result logs `Document scanned` with `outcome` and `reason`.

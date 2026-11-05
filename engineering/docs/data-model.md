@@ -182,6 +182,7 @@ A file in object storage owned by one record (D9). `created_by` is the uploader.
 | `scan_status` | TEXT CHECK | `pending`, `clean`, `infected`, `error`; only `clean` may be downloaded |
 | `scanned_at` | TIMESTAMPTZ, NULL | When the malware scan's result was recorded |
 | `scan_checked_at` | TIMESTAMPTZ, NULL | When the Worker last looked for a result; it looks again 5 seconds later |
+| `scanned_version_id` | TEXT, NULL | The object version the result belongs to. An upload link can be used again until it expires, making a new version; downloads serve this one only |
 
 The object key is `documents/<public_id>`, never a name the uploader typed. Uploads, scan results, and attachment to an owner are kept in `documents_history`; a document is attached once and never moves (Rule 4 §4.3(e)(4)).
 

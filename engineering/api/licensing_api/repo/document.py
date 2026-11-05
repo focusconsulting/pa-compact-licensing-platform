@@ -58,6 +58,8 @@ class Document(AuditColumns, table=True):
     # When the scan's result was recorded, and when the Worker last looked for one.
     scanned_at: datetime | None = Field(default=None, sa_type=TimestampTZ)
     scan_checked_at: datetime | None = Field(default=None, sa_type=TimestampTZ)
+    # The object version the result belongs to; downloads serve this version only.
+    scanned_version_id: str | None = None
 
     @property
     def is_attached(self) -> bool:

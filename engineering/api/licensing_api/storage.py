@@ -34,6 +34,18 @@ _MISSING = frozenset({'NoSuchKey', '404'})
 
 
 @dataclass(frozen=True)
+class CurrentVersion:
+    """An object's current version and its scan tag, ``None`` until the scan writes one.
+
+    An upload link can be used again until it expires, and each use makes a new version, so a
+    scan result belongs to one version, not to the key.
+    """
+
+    version_id: str | None
+    scan_status: str | None
+
+
+@dataclass(frozen=True)
 class PresignedUpload:
     """Where a browser POSTs one file, and the form fields it sends before the file."""
 
@@ -79,22 +91,29 @@ class Storage:
             ExpiresIn=int(expires.total_seconds()),
         )
 
-    async def scan_tag(self, key: str) -> str | None:
-        """The malware scan's result tag, or ``None`` before the scan or for a missing object."""
+    async def current_version(self, key: str) -> CurrentVersion | None:
+        """The object's current version and scan tag, or ``None`` for a missing object."""
 
-        def read() -> str | None:
-            tags = self._client.get_object_tagging(Bucket=self._bucket, Key=key)['TagSet']
-            return next((tag['Value'] for tag in tags if tag['Key'] == SCAN_TAG), None)
+        def read() -> CurrentVersion:
+            response = self._client.get_object_tagging(Bucket=self._bucket, Key=key)
+            status = next(
+                (tag['Value'] for tag in response['TagSet'] if tag['Key'] == SCAN_TAG), None
+            )
+            return CurrentVersion(version_id=response.get('VersionId'), scan_status=status)
 
         return await self._call('get_object_tagging', key, read, missing=None)
 
-    async def read_start(self, key: str, size: int) -> bytes:
-        """The first ``size`` bytes, or ``b''`` for a missing object."""
+    async def read_start(self, key: str, size: int, *, version_id: str | None = None) -> bytes:
+        """The first ``size`` bytes of a version (the current one by default), or ``b''`` if missing."""
 
         def read() -> bytes:
-            response = self._client.get_object(
-                Bucket=self._bucket, Key=key, Range=f'bytes=0-{size - 1}'
-            )
+            byte_range = f'bytes=0-{size - 1}'
+            if version_id:
+                response = self._client.get_object(
+                    Bucket=self._bucket, Key=key, Range=byte_range, VersionId=version_id
+                )
+            else:
+                response = self._client.get_object(Bucket=self._bucket, Key=key, Range=byte_range)
             return response['Body'].read()
 
         return await self._call('get_object', key, read, missing=b'')

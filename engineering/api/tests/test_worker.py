@@ -23,7 +23,7 @@ _EVENTS = 1000
 
 
 async def test_two_workers_drain_a_thousand_events_in_under_a_minute_handling_each_once(
-    committed_sessions,
+    committed_sessions, storage
 ):
     async with committed_sessions() as session, session.begin():
         ctx = await system_context(session)
@@ -44,8 +44,8 @@ async def test_two_workers_drain_a_thousand_events_in_under_a_minute_handling_ea
     started = time.monotonic()
     await asyncio.wait_for(
         asyncio.gather(
-            run_worker(committed_sessions, registry, TEST_SETTINGS, stop),
-            run_worker(committed_sessions, registry, TEST_SETTINGS, stop),
+            run_worker(committed_sessions, registry, TEST_SETTINGS, storage, stop),
+            run_worker(committed_sessions, registry, TEST_SETTINGS, storage, stop),
         ),
         timeout=60,
     )
@@ -55,7 +55,7 @@ async def test_two_workers_drain_a_thousand_events_in_under_a_minute_handling_ea
     assert set(handled.values()) == {1}
 
 
-async def test_an_idle_worker_waits_then_stops_when_asked(committed_sessions, caplog):
+async def test_an_idle_worker_waits_then_stops_when_asked(committed_sessions, storage, caplog):
     stop = asyncio.Event()
     polls = 0
 
@@ -76,6 +76,7 @@ async def test_an_idle_worker_waits_then_stops_when_asked(committed_sessions, ca
             committed_sessions,
             HandlerRegistry([]),
             TEST_SETTINGS,
+            storage,
             stop,
             idle_poll_interval=timedelta(milliseconds=50),
         )
@@ -104,7 +105,7 @@ async def test_the_worker_process_stops_on_sigterm_or_sigint(
     assert not asyncio.get_running_loop().remove_signal_handler(stop_signal)
 
 
-async def test_the_worker_sends_queued_email(committed_sessions, monkeypatch):
+async def test_the_worker_sends_queued_email(committed_sessions, storage, monkeypatch):
     sent = asyncio.Event()
 
     async def send(*args: object, **kwargs: object) -> int:
@@ -116,8 +117,27 @@ async def test_the_worker_sends_queued_email(committed_sessions, monkeypatch):
     monkeypatch.setattr(worker, 'send_pending', send)
     stop = asyncio.Event()
     running = asyncio.create_task(
-        run_worker(committed_sessions, HandlerRegistry([]), TEST_SETTINGS, stop)
+        run_worker(committed_sessions, HandlerRegistry([]), TEST_SETTINGS, storage, stop)
     )
     await asyncio.wait_for(sent.wait(), timeout=5)
+    stop.set()
+    await asyncio.wait_for(running, timeout=5)
+
+
+async def test_the_worker_records_document_scans(committed_sessions, storage, monkeypatch):
+    scanned = asyncio.Event()
+
+    async def check(*args: object, **kwargs: object) -> int:
+        if scanned.is_set():
+            return 0
+        scanned.set()
+        return 1
+
+    monkeypatch.setattr(worker, 'check_document_scans', check)
+    stop = asyncio.Event()
+    running = asyncio.create_task(
+        run_worker(committed_sessions, HandlerRegistry([]), TEST_SETTINGS, storage, stop)
+    )
+    await asyncio.wait_for(scanned.wait(), timeout=5)
     stop.set()
     await asyncio.wait_for(running, timeout=5)

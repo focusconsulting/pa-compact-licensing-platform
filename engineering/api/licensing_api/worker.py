@@ -1,4 +1,4 @@
-"""The Worker: delivers outbox events to their handlers and sends queued email (D2, D7, D8, ADR-0012).
+"""The Worker: delivers outbox events, sends queued email, and records malware scans (D2, D7, D8, D9).
 
 ``python -m licensing_api.worker`` runs it until SIGTERM or SIGINT; ``just worker`` runs it locally.
 """
@@ -23,6 +23,8 @@ from licensing_api.handlers import HANDLERS
 from licensing_api.logging_config import configure_logging
 from licensing_api.notifications.sender import send_pending
 from licensing_api.repo.domain_event import DomainEvent, DomainEventDelivery, EventType
+from licensing_api.scans import check_document_scans
+from licensing_api.storage import Storage, create_storage
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +54,7 @@ async def main() -> None:
             async_sessionmaker(engine, expire_on_commit=False),
             HandlerRegistry(HANDLERS),
             settings,
+            create_storage(settings),
             stop,
         )
     finally:
@@ -64,11 +67,12 @@ async def run_worker(
     session_factory: async_sessionmaker[AsyncSession],
     registry: HandlerRegistry,
     settings: Settings,
+    storage: Storage,
     stop: asyncio.Event,
     *,
     idle_poll_interval: timedelta = IDLE_POLL_INTERVAL,
 ) -> None:
-    """Deliver events and send email until ``stop`` is set, waiting ``idle_poll_interval`` whenever neither is due.
+    """Deliver events, send email, and record scans until ``stop`` is set, waiting ``idle_poll_interval`` whenever none is due.
 
     ``stop`` is checked between batches, so a delivery in progress always finishes and
     commits; ECS waits 30 seconds after SIGTERM before it kills the task.
@@ -78,7 +82,8 @@ async def run_worker(
         attempted = await dispatch_events(session_factory, registry)
         # After dispatch, so email a handler has just queued goes out in the same pass.
         sent = await send_pending(session_factory, settings)
-        if attempted == 0 and sent == 0:
+        scanned = await check_document_scans(session_factory, storage)
+        if attempted == 0 and sent == 0 and scanned == 0:
             with suppress(TimeoutError):
                 await asyncio.wait_for(stop.wait(), idle_poll_interval.total_seconds())
     logger.info('Worker stopped')
