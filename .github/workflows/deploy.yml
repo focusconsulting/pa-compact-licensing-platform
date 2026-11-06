@@ -18,6 +18,9 @@ on:
         type: choice
         options: [staging]
 
+permissions:
+  contents: read
+
 concurrency:
   group: deploy-${{ inputs.environment || 'staging' }}
   cancel-in-progress: false

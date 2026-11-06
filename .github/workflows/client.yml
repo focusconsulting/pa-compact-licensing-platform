@@ -7,6 +7,9 @@ on:
     # The client's types are generated from the API's document.
     paths: [engineering/client/**, engineering/api/openapi.json]
 
+permissions:
+  contents: read
+
 defaults:
   run:
     working-directory: engineering/client

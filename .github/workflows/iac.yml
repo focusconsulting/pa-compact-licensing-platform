@@ -10,6 +10,9 @@ on:
     paths: [engineering/infrastructure/**, .github/workflows/iac.yml, .tool-versions]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest

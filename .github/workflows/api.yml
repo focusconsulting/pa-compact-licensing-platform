@@ -6,6 +6,9 @@ on:
   pull_request:
     paths: [engineering/api/**, engineering/mocks/**]
 
+permissions:
+  contents: read
+
 defaults:
   run:
     working-directory: engineering/api
