@@ -82,8 +82,8 @@ Rule 4 §4.5. A state route requires `READ_PRIVATE` in that state; the Commissio
 | `privilege_request` | theirs | `s` = `remote_state_code` |
 | `adverse_action`, `sii_report` | never | `s` = `reporting_state_code` or in `states_holding(PA)` |
 | `state` | no | `s` = `owner_key` |
-| unattached | they uploaded it | the uploader's `users.state_code` = `s` |
-| `ingestion_batch` | no | the uploader's state (same as unattached until SCRUM-149) |
+| unattached | they uploaded it | `documents.uploaded_in_state` = `s`, set from the upload route's path (security review, 2026-11-05: not the uploader's home state, which can differ or change) |
+| `ingestion_batch` | no | same as unattached until SCRUM-149 |
 
 The Commission sees every document. Every staff download writes `document.downloaded` to `audit_log`; a PA's own download does not.
 

@@ -176,6 +176,7 @@ A file in object storage owned by one record (D9). `created_by` is the uploader.
 | Column | Type | Meaning |
 |---|---|---|
 | `owner_type`, `owner_id`, `owner_key` | TEXT CHECK, BIGINT, TEXT | `practitioner`, `participation_application`, `privilege_request`, `adverse_action`, `sii_report`, `ingestion_batch` with `owner_id`; `state` with `owner_key` (the code). No foreign key. All three are NULL while a file is uploaded ahead of its owner, e.g. an adverse action whose only evidence is the order (FLOW-05) |
+| `uploaded_in_state` | FK `states`, NULL | The state staff uploaded it for, from the route; NULL for a PA's upload. Scopes it until it is attached |
 | `kind` | TEXT | What it proves; free text until Q-07 |
 | `storage_key` | TEXT, unique | S3 (RustFS locally) object key |
 | `file_name`, `content_type`, `size_bytes` | | |

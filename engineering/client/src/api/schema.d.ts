@@ -24,6 +24,46 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/commission/documents/{document_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Any Document
+     * @description A document's details, including whether its malware scan has finished.
+     */
+    get: operations["Get_any_document_api_commission_documents__document_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/commission/documents/{document_id}/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Download Any Document
+     * @description A link, valid for one minute, that downloads the document as a file. Only a document whose malware scan found it clean can be downloaded; `409 DOCUMENT_NOT_CLEAN` otherwise. Every download is recorded in the audit log.
+     */
+    get: operations["Download_any_document_api_commission_documents__document_id__download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/health/live": {
     parameters: {
       query?: never;
@@ -124,6 +164,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/me/documents/{document_id}/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Download My Document
+     * @description A link, valid for one minute, that downloads the document as a file. Only a document whose malware scan found it clean can be downloaded; `409 DOCUMENT_NOT_CLEAN` otherwise.
+     */
+    get: operations["Download_my_document_api_me_documents__document_id__download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/states/{state_code}/documents": {
     parameters: {
       query?: never;
@@ -156,6 +216,26 @@ export interface paths {
      * @description A document's details, including whether its malware scan has finished.
      */
     get: operations["Get_a_state_s_document_api_states__state_code__documents__document_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/states/{state_code}/documents/{document_id}/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Download A State'S Document
+     * @description A link, valid for one minute, that downloads the document as a file. Only a document whose malware scan found it clean can be downloaded; `409 DOCUMENT_NOT_CLEAN` otherwise. Every download is recorded in the audit log.
+     */
+    get: operations["Download_a_state_s_document_api_states__state_code__documents__document_id__download_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -269,6 +349,10 @@ export interface components {
     Data_CurrentUser_: {
       data: components["schemas"]["CurrentUser"];
     };
+    /** Data[DocumentDownload] */
+    Data_DocumentDownload_: {
+      data: components["schemas"]["DocumentDownload"];
+    };
     /** Data[DocumentOut] */
     Data_DocumentOut_: {
       data: components["schemas"]["DocumentOut"];
@@ -276,6 +360,23 @@ export interface components {
     /** Data[DocumentUpload] */
     Data_DocumentUpload_: {
       data: components["schemas"]["DocumentUpload"];
+    };
+    /**
+     * DocumentDownload
+     * @description A link that downloads the document's scanned file; it expires at ``expires_at``.
+     * @example {
+     *       "expires_at": "2026-11-05T15:04:05Z",
+     *       "url": "https://example-documents.s3.amazonaws.com/documents/0b9c7a52-4f1e-4d38-9f43-2a5d6f1c8e70?versionId=1"
+     *     }
+     */
+    DocumentDownload: {
+      /**
+       * Expires At
+       * Format: date-time
+       */
+      expires_at: string;
+      /** Url */
+      url: string;
     };
     /**
      * DocumentOut
@@ -379,6 +480,7 @@ export interface components {
       | "USER_INACTIVE"
       | "FORBIDDEN"
       | "NOT_FOUND"
+      | "DOCUMENT_NOT_CLEAN"
       | "VALIDATION_ERROR"
       | "HTTP_ERROR"
       | "INTERNAL_ERROR";
@@ -560,6 +662,70 @@ export interface operations {
       };
     };
   };
+  Get_any_document_api_commission_documents__document_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The document's ID */
+        document_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_DocumentOut_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Download_any_document_api_commission_documents__document_id__download_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The document's ID */
+        document_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_DocumentDownload_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
   Liveness_check_api_health_live_get: {
     parameters: {
       query?: never;
@@ -712,6 +878,38 @@ export interface operations {
       };
     };
   };
+  Download_my_document_api_me_documents__document_id__download_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The document's ID */
+        document_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_DocumentDownload_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
   Upload_a_state_s_document_api_states__state_code__documents_post: {
     parameters: {
       query?: never;
@@ -769,6 +967,40 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["Data_DocumentOut_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Download_a_state_s_document_api_states__state_code__documents__document_id__download_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Two-letter state code */
+        state_code: string;
+        /** @description The document's ID */
+        document_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_DocumentDownload_"];
         };
       };
       /** @description Unprocessable Content */
