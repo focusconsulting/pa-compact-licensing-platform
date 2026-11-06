@@ -31,7 +31,10 @@ function AddressFields({ id, label, hint, className }: AddressFieldsProps) {
   function updateValue({
     line1 = null,
     line2 = null,
-  }: { line1?: string | null; line2?: string | null }): void {
+  }: {
+    line1?: string | null;
+    line2?: string | null;
+  }): void {
     if (line1 != null) setLine1State(line1);
     if (line2 != null) setLine2State(line2);
     const val = [line1 ?? line1State, line2 ?? line2State].join("\n");
