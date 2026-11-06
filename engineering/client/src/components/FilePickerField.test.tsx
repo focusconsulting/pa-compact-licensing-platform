@@ -128,6 +128,29 @@ describe("FilePickerField component", () => {
     });
   });
 
+  it("puts the status on its own line below the hint", async () => {
+    const user = userEvent.setup();
+    upload("clean");
+    renderWithForm(
+      <FilePickerField
+        id="doc"
+        label="Upload document"
+        kind="proof"
+        hint="PDF only"
+      />,
+    );
+
+    await user.upload(fileInput(), new File(["%"], "proof.pdf"));
+
+    expect(await screen.findByText("proof.pdf uploaded.")).toHaveClass(
+      "margin-top-1",
+    );
+    expect(fileInput()).toHaveAttribute(
+      "aria-describedby",
+      "docHint docStatus",
+    );
+  });
+
   it("says it is checking the file while the scan runs", async () => {
     const user = userEvent.setup();
     upload("pending");

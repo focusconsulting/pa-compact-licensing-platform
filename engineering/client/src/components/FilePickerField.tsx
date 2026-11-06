@@ -133,17 +133,22 @@ export function FilePickerField({
         {label}
       </Label>
       {hint && (
-        <span className="usa-hint" id={`${id}Hint`}>
+        <div className="usa-hint" id={`${id}Hint`}>
           {hint}
-        </span>
+        </div>
       )}
-      <span
+      <div
         id={`${id}Status`}
-        className={isError ? "usa-error-message" : "usa-hint"}
+        className={[
+          isError ? "usa-error-message" : "usa-hint",
+          message && hint && "margin-top-1",
+        ]
+          .filter(Boolean)
+          .join(" ")}
         role={isError ? "alert" : "status"}
       >
         {message}
-      </span>
+      </div>
       <FileInput
         id={id}
         name={id}
