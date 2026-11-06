@@ -130,6 +130,11 @@ locals {
       pattern     = "{ $.logger = \"licensing_api.jobs\" && $.outcome = \"failed\" }"
       description = "A scheduled job failed; its job_runs row and log say why"
     }
+    DocumentsInfected = {
+      log_group   = aws_cloudwatch_log_group.worker_logs.name
+      pattern     = "{ $.logger = \"licensing_api.scans\" && $.outcome = \"infected\" }"
+      description = "GuardDuty found malware in an uploaded document; it can never be downloaded. The log's document_id says which"
+    }
   }
 }
 

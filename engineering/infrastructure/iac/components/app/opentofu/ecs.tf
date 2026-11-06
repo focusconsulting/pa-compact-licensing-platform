@@ -162,6 +162,8 @@ resource "aws_ecs_task_definition" "api_task" {
         { name = "LOG_LEVEL", value = "INFO" },
         { name = "OTEL_ENABLED", value = "true" },
         { name = "CORS_ORIGINS", value = jsonencode(["https://${var.dns_name}"]) },
+        { name = "S3_REGION", value = var.aws_region },
+        { name = "S3_DOCUMENTS_BUCKET", value = aws_s3_bucket.documents.id },
       ]
       secrets = [
         {

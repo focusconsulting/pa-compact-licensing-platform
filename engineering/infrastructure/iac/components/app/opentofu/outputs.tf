@@ -69,3 +69,8 @@ output "jobs_task_definition_family" {
   description = "The scheduled jobs' task definition family; CI registers a revision per deploy"
   value       = aws_ecs_task_definition.jobs_task.family
 }
+
+output "documents_bucket" {
+  description = "S3 bucket holding uploaded documents, scanned by GuardDuty Malware Protection"
+  value       = aws_s3_bucket.documents.bucket
+}
