@@ -1,3 +1,4 @@
+import type { JSX } from "react";
 import type { Meta, StoryObj } from "@storybook/nextjs";
 
 import { STATUS_TONES, type StatusKind, type StatusView } from "src/lib/status";
