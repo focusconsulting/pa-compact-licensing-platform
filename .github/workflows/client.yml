@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
         with:
           package_json_file: engineering/client/package.json
 
@@ -54,7 +54,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
         with:
           package_json_file: engineering/client/package.json
 
@@ -71,7 +71,7 @@ jobs:
         run: pnpm test:coverage
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v7
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: client
@@ -84,7 +84,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
         with:
           package_json_file: engineering/client/package.json
 
