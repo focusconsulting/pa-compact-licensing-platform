@@ -90,6 +90,17 @@ describe("AddressFields component", () => {
     expect(document.getElementById("addrLine2")).toHaveValue("Apt 2");
   });
 
+  it("empties address line 1 when the user clears it", async () => {
+    const user = userEvent.setup();
+    renderWithForm(<AddressFields id="addr" label="Address" hint="" />);
+
+    const line1Input = screen.getByRole("textbox", { name: /Address line 1/i });
+    await user.type(line1Input, "1");
+    await user.clear(line1Input);
+
+    expect(line1Input).toHaveValue("");
+  });
+
   // axe walks all ~200 country options, which can outlast Vitest's
   // 5-second default on a CI runner.
   it("has no axe violations", { timeout: 30_000 }, async () => {
