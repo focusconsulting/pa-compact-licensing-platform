@@ -1,0 +1,2 @@
+10038	IGNORE	(Content Security Policy Header Not Set) CloudFront response headers policy, SCRUM-84; see engineering/docs/security/false-positives.md
+10020	IGNORE	(Missing Anti-clickjacking Header) CloudFront response headers policy, SCRUM-84; see engineering/docs/security/false-positives.md
