@@ -34,7 +34,10 @@ CMD ["uv", "run", "uvicorn", "licensing_api.__main__:app", "--reload", "--host=0
 # Prod
 FROM python:3.13-alpine AS app
 
-RUN addgroup -g 1000 python && \
+# The app runs from the venv; the base image's pip, with its vendored urllib3,
+# msgpack, and setuptools, would only add unpatched packages to scans.
+RUN python -m pip uninstall -y pip && \
+    addgroup -g 1000 python && \
     adduser -u 1000 -G python -D python
 
 RUN mkdir /app && chown python:python /app
