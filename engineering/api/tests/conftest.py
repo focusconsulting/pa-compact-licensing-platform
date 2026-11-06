@@ -5,10 +5,10 @@ from collections.abc import AsyncGenerator, Callable, Generator
 from unittest.mock import patch
 
 import httpx
+import jwt
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi.testclient import TestClient
-from jose import jwt as jose_jwt
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncConnection,
@@ -171,7 +171,7 @@ def auth_header(_private_key) -> Callable[[str], dict]:
     """Returns a helper that builds a signed Authorization Bearer header for the given email."""
 
     def _make(email: str) -> dict:
-        token = jose_jwt.encode(
+        token = jwt.encode(
             {
                 'sub': str(uuid.uuid5(uuid.NAMESPACE_URL, email)),
                 'email': email,
