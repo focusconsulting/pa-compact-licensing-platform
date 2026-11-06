@@ -13,16 +13,24 @@ const mockAuthenticateUser = vi.hoisted(() => vi.fn());
 const mockCompleteNewPasswordChallenge = vi.hoisted(() => vi.fn());
 const mockSetAuthenticationFlowType = vi.hoisted(() => vi.fn());
 
-vi.mock("amazon-cognito-identity-js", () => ({
-  CognitoUserPool: vi
-    .fn()
-    .mockReturnValue({ getCurrentUser: mockGetCurrentUser }),
-  CognitoUser: vi.fn().mockImplementation(() => ({
+// The SDK's classes are called with `new`, which Vitest mocks only through a
+// `function` or class implementation, not an arrow function or mockReturnValue.
+function MockCognitoUserPool() {
+  return { getCurrentUser: mockGetCurrentUser };
+}
+
+function MockCognitoUser() {
+  return {
     authenticateUser: mockAuthenticateUser,
     setAuthenticationFlowType: mockSetAuthenticationFlowType,
     completeNewPasswordChallenge: mockCompleteNewPasswordChallenge,
     signOut: vi.fn(),
-  })),
+  };
+}
+
+vi.mock("amazon-cognito-identity-js", () => ({
+  CognitoUserPool: vi.fn(MockCognitoUserPool),
+  CognitoUser: vi.fn(MockCognitoUser),
   AuthenticationDetails: vi.fn(),
 }));
 

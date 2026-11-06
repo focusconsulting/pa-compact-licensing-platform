@@ -100,6 +100,51 @@ describe("FormStep component", () => {
     expect(onSubmit).toHaveBeenCalled();
   });
 
+  it("shows the submitting spinner even with no onSubmit handler", async () => {
+    const user = userEvent.setup();
+    render(
+      <FormStep>
+        <p>Content</p>
+      </FormStep>,
+    );
+    await user.click(screen.getByRole("button", { name: /Save and Continue/ }));
+    expect(
+      screen.getByAltText("A spinner indicating the form is being submitted"),
+    ).toBeInTheDocument();
+  });
+
+  it("shows no spinner on submit when noSpinner is set", async () => {
+    const user = userEvent.setup();
+    render(
+      <FormStep noSpinner>
+        <p>Content</p>
+      </FormStep>,
+    );
+    await user.click(screen.getByRole("button", { name: /Save and Continue/ }));
+    expect(
+      screen.queryByAltText("A spinner indicating the form is being submitted"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("leaves the submit event's default to the handler when noPreventDefault is set", async () => {
+    const user = userEvent.setup();
+    let prevented: boolean | undefined;
+    render(
+      <FormStep
+        noPreventDefault
+        onSubmit={(event) => {
+          prevented = event.defaultPrevented;
+          // jsdom can't navigate; stop the native submission here instead.
+          event.preventDefault();
+        }}
+      >
+        <p>Content</p>
+      </FormStep>,
+    );
+    await user.click(screen.getByRole("button", { name: /Save and Continue/ }));
+    expect(prevented).toBe(false);
+  });
+
   it("calls onBack when back button is clicked", async () => {
     const user = userEvent.setup();
     const onBack = vi.fn();

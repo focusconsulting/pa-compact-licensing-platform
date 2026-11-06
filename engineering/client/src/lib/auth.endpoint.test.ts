@@ -1,8 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-const MockCognitoUserPool = vi.hoisted(() =>
-  vi.fn().mockReturnValue({ getCurrentUser: () => null }),
-);
+// Constructed with `new`, which Vitest mocks only through a `function` or
+// class implementation.
+function CognitoUserPool() {
+  return { getCurrentUser: () => null };
+}
+
+const MockCognitoUserPool = vi.hoisted(() => vi.fn());
 
 vi.mock("amazon-cognito-identity-js", () => ({
   CognitoUserPool: MockCognitoUserPool,
@@ -13,7 +17,7 @@ vi.mock("amazon-cognito-identity-js", () => ({
 describe("user pool endpoint", () => {
   beforeEach(() => {
     vi.resetModules();
-    MockCognitoUserPool.mockClear();
+    MockCognitoUserPool.mockReset().mockImplementation(CognitoUserPool);
     vi.stubEnv("NEXT_PUBLIC_COGNITO_USER_POOL_ID", "local_licensing");
     vi.stubEnv("NEXT_PUBLIC_COGNITO_CLIENT_ID", "licensing-local-client");
   });
