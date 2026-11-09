@@ -7,14 +7,16 @@ for a full list of available settings.
 ----------------------------------------
 */
 
+$base-path: "" !default;
+
 @use "uswds-core" with (
   // Disable scary but mostly irrelevant warnings:
   $theme-show-notifications: false,
 
   // Specify USWDS font and image paths.
   // Same paths are successfully used for both Next.js and Storybook.
-  $theme-font-path: add-base-path("/uswds/fonts"),
-  $theme-image-path: add-base-path("/uswds/img"),
+  $theme-font-path: "#{$base-path}/uswds/fonts",
+  $theme-image-path: "#{$base-path}/uswds/img",
   // Ensure utility classes always override other styles
   $utilities-use-important: true,
 

@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file -- one mock class per SDK constructor */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { CognitoUserSession } from "amazon-cognito-identity-js";
 
@@ -14,15 +15,22 @@ const mockCompleteNewPasswordChallenge = vi.hoisted(() => vi.fn());
 const mockSetAuthenticationFlowType = vi.hoisted(() => vi.fn());
 
 vi.mock("amazon-cognito-identity-js", () => ({
-  CognitoUserPool: vi
-    .fn()
-    .mockReturnValue({ getCurrentUser: mockGetCurrentUser }),
-  CognitoUser: vi.fn().mockImplementation(() => ({
-    authenticateUser: mockAuthenticateUser,
-    setAuthenticationFlowType: mockSetAuthenticationFlowType,
-    completeNewPasswordChallenge: mockCompleteNewPasswordChallenge,
-    signOut: vi.fn(),
-  })),
+  CognitoUserPool: vi.fn(
+    class {
+      getCurrentUser = mockGetCurrentUser;
+    },
+  ),
+  CognitoUser: vi.fn(
+    class {
+      authenticateUser = mockAuthenticateUser;
+
+      setAuthenticationFlowType = mockSetAuthenticationFlowType;
+
+      completeNewPasswordChallenge = mockCompleteNewPasswordChallenge;
+
+      signOut = vi.fn();
+    },
+  ),
   AuthenticationDetails: vi.fn(),
 }));
 

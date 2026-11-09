@@ -8,7 +8,7 @@ const AnyStatusTag = StatusTag as (props: {
   kind: StatusKind;
   status: string;
   view?: StatusView;
-}) => JSX.Element;
+}) => React.JSX.Element;
 
 const meta: Meta<typeof StatusTag> = {
   title: "Components/StatusTag",
