@@ -404,7 +404,8 @@ docs.
 **Backend Framework**: [FastAPI](https://fastapi.tiangolo.com/) (ASGI)
 
 - uvicorn locally, gunicorn with uvicorn workers in containers
-- Cognito ID tokens verified with `python-jose` against the pool's JWKS
+- Cognito ID tokens verified with `PyJWT` against the pool's JWKS
+  ([ADR-0018](adrs/0018-pyjwt-for-cognito-token-verification.md))
 - `domain_events` Worker as a separate process on the same image
 - [Pydantic 2.12](https://docs.pydantic.dev/2.12/) for request and
   response models
