@@ -18,7 +18,7 @@ updates:
       # and Storybook all load.
       - dependency-name: typescript
         update-types: ["version-update:semver-major"]
-      # plugin-react 6 needs vite 8; vitest 3 runs on vite 7.
+      # plugin-react 6 needs vite 8; we run vite 7.
       - dependency-name: "@vitejs/plugin-react"
         update-types: ["version-update:semver-major"]
       # eslint-config-airbnb-extended 3 supports ESLint 9 only (ADR-0016).
