@@ -425,8 +425,8 @@ docs.
 **Cache**: none. Permissions and other per-request data are read from
 Postgres. Adding a cache requires an ADR showing the measured need.
 
-**Frontend**: [Next.js 14](https://nextjs.org/docs/14/app) (App Router),
-[React 18](https://18.react.dev/), TypeScript (`strict`)
+**Frontend**: [Next.js 16](https://nextjs.org/docs/app) (App Router),
+[React 19](https://react.dev/), TypeScript (`strict`)
 
 - Built as a static export (`output: "export"` in
   [`next.config.js`](client/next.config.js)) and served from S3 through
