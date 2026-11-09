@@ -22,12 +22,11 @@ pool's JWKS ([`auth.py`](../api/licensing_api/auth.py)). It did so with
 
 `python-jose` 3.5.0 carries a critical advisory (PYSEC-2026-4298,
 algorithm confusion) and its `ecdsa` dependency a high one
-(PYSEC-2026-1325); neither has a fixed release, and SCRUM-75's scanners
-fail a PR on either. The API's call pins `algorithms=['RS256']` and passes
-an RSA JWK, and an HS256 token keyed with the public key is rejected by
-both libraries, so the advisory was not exploitable through this call. It
-still fails the gate, and a library with open criticals and no fix is not
-one to verify identity with.
+(PYSEC-2026-1325); neither had a fixed release as of this ADR's date, and
+SCRUM-75's scanners fail a PR on either. The API's call pins
+`algorithms=['RS256']` and passes an RSA JWK, and an HS256 token keyed
+with the public key is rejected by both libraries, so the advisory was not
+exploitable through this call, but it still fails the gate.
 
 ## Decision
 
@@ -55,8 +54,9 @@ only accepted algorithm, `aud` checked against the client ID, then
 
 ### Keep python-jose with an accepted-risk entry
 
-- Con: the gate's exceptions are for findings that don't apply; this one
-  has no fix coming.
+- Con: the exception has to be maintained, and it keeps `ecdsa`, `rsa`,
+  and `pyasn1` installed, dependencies our app never uses; `ecdsa`
+  carries a high advisory of its own (PYSEC-2026-1325).
 
 ## Consequences
 
