@@ -45,7 +45,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@vitejs/plugin-react": "^5.2.0",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^5.0.5",
     "autoprefixer": "^10.6.1",
     "axe-core": "^4.14.0",
     "eslint": "^9.39.5",
@@ -64,7 +64,7 @@
     "stylelint": "^17.16.0",
     "stylelint-config-standard-scss": "^16.0.0",
     "typescript": "^5",
-    "vitest": "^3.2.1",
+    "vitest": "^5.0.5",
     "webpack": "~5.112.2"
   },
   "engines": {
