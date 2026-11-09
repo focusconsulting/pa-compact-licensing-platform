@@ -7,6 +7,10 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 10
+    cooldown:
+      # Matches minimum-release-age in .npmrc, so Dependabot never proposes
+      # a version pnpm refuses to install. Security updates skip it.
+      default-days: 14
     groups:
       # Majors stay out of the group, so one breaking upgrade can't hold back
       # the safe ones; each opens its own PR.
@@ -32,6 +36,10 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 10
+    cooldown:
+      # uv has no install-time release-age check, so this is the API's only
+      # wait. Security updates skip it.
+      default-days: 14
     groups:
       pip-all:
         patterns: ["*"]
@@ -84,6 +92,10 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    cooldown:
+      # Matches minimum-release-age in .npmrc, so Dependabot never proposes
+      # a version pnpm refuses to install. Security updates skip it.
+      default-days: 14
     groups:
       e2e-all:
         patterns: ["*"]
