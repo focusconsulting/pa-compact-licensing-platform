@@ -24,7 +24,7 @@
     "@trussworks/react-uswds": "^13.0.0",
     "@uswds/uswds": "^3.14.0",
     "amazon-cognito-identity-js": "^6.3.22",
-    "i18next": "^25.10.1",
+    "i18next": "^26.5.11",
     "next": "^14.2.35",
     "openapi-fetch": "^0.17.0",
     "react": "^18",
