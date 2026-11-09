@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const MockCognitoUserPool = vi.hoisted(() =>
-  vi.fn().mockReturnValue({ getCurrentUser: () => null }),
+  vi.fn(
+    class {
+      getCurrentUser = vi.fn(() => null);
+    },
+  ),
 );
 
 vi.mock("amazon-cognito-identity-js", () => ({
