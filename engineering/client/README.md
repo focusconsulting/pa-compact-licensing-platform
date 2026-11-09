@@ -34,12 +34,12 @@ Prism answers each route with the examples in the document.
 
 ## Key dependencies
 
-| Package                                                | Purpose                                                                                                             | Docs                                    |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| [openapi-typescript](https://openapi-ts.dev/)          | Generates `src/api/schema.d.ts` from the API's OpenAPI document                                                     | <https://openapi-ts.dev/>               |
-| [openapi-fetch](https://openapi-ts.dev/openapi-fetch/) | The typed API client in `src/lib/api.ts`                                                                            | <https://openapi-ts.dev/openapi-fetch/> |
-| [Prism](https://github.com/stoplightio/prism) (Docker) | `just mock-api`: a mock API from the document, never installed in the app                                           | <https://docs.stoplight.io/docs/prism/> |
-| [webpack](https://webpack.js.org/)                     | Pinned below 5.101 for Storybook: later versions' `DefinePlugin` taps a parser hook Next 14's bundled webpack lacks | <https://webpack.js.org/>               |
+| Package                                                | Purpose                                                                   | Docs                                    |
+| ------------------------------------------------------ | ------------------------------------------------------------------------- | --------------------------------------- |
+| [openapi-typescript](https://openapi-ts.dev/)          | Generates `src/api/schema.d.ts` from the API's OpenAPI document           | <https://openapi-ts.dev/>               |
+| [openapi-fetch](https://openapi-ts.dev/openapi-fetch/) | The typed API client in `src/lib/api.ts`                                  | <https://openapi-ts.dev/openapi-fetch/> |
+| [Prism](https://github.com/stoplightio/prism) (Docker) | `just mock-api`: a mock API from the document, never installed in the app | <https://docs.stoplight.io/docs/prism/> |
+| [webpack](https://webpack.js.org/)                     | Storybook's bundler; `next build` uses Turbopack                          | <https://webpack.js.org/>               |
 
 ## Dependency overrides
 

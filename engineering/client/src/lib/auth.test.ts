@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file -- one mock class per SDK constructor */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { CognitoUserSession } from "amazon-cognito-identity-js";
 
@@ -13,24 +14,23 @@ const mockAuthenticateUser = vi.hoisted(() => vi.fn());
 const mockCompleteNewPasswordChallenge = vi.hoisted(() => vi.fn());
 const mockSetAuthenticationFlowType = vi.hoisted(() => vi.fn());
 
-// The SDK's classes are called with `new`, which Vitest mocks only through a
-// `function` or class implementation, not an arrow function or mockReturnValue.
-function MockCognitoUserPool() {
-  return { getCurrentUser: mockGetCurrentUser };
-}
-
-function MockCognitoUser() {
-  return {
-    authenticateUser: mockAuthenticateUser,
-    setAuthenticationFlowType: mockSetAuthenticationFlowType,
-    completeNewPasswordChallenge: mockCompleteNewPasswordChallenge,
-    signOut: vi.fn(),
-  };
-}
-
 vi.mock("amazon-cognito-identity-js", () => ({
-  CognitoUserPool: vi.fn(MockCognitoUserPool),
-  CognitoUser: vi.fn(MockCognitoUser),
+  CognitoUserPool: vi.fn(
+    class {
+      getCurrentUser = mockGetCurrentUser;
+    },
+  ),
+  CognitoUser: vi.fn(
+    class {
+      authenticateUser = mockAuthenticateUser;
+
+      setAuthenticationFlowType = mockSetAuthenticationFlowType;
+
+      completeNewPasswordChallenge = mockCompleteNewPasswordChallenge;
+
+      signOut = vi.fn();
+    },
+  ),
   AuthenticationDetails: vi.fn(),
 }));
 

@@ -1,4 +1,3 @@
-import type { JSX } from "react";
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 
@@ -18,7 +17,7 @@ const AnyStatusTag = StatusTag as (props: {
   kind: StatusKind;
   status: string;
   view?: StatusView;
-}) => JSX.Element;
+}) => React.JSX.Element;
 
 // Every status of every kind, from the contract the API's enums are checked against.
 const EVERY = (Object.keys(STATUS_TONES) as StatusKind[]).flatMap((kind) =>

@@ -90,7 +90,7 @@ describe("AddressFields component", () => {
     expect(document.getElementById("addrLine2")).toHaveValue("Apt 2");
   });
 
-  it("empties address line 1 when the user clears it", async () => {
+  it("keeps the input empty when address line 1 is cleared", async () => {
     const user = userEvent.setup();
     renderWithForm(<AddressFields id="addr" label="Address" hint="" />);
 

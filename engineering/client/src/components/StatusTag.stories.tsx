@@ -1,4 +1,3 @@
-import type { JSX } from "react";
 import type { Meta, StoryObj } from "@storybook/nextjs";
 
 import { STATUS_TONES, type StatusKind, type StatusView } from "src/lib/status";
@@ -9,7 +8,7 @@ const AnyStatusTag = StatusTag as (props: {
   kind: StatusKind;
   status: string;
   view?: StatusView;
-}) => JSX.Element;
+}) => React.JSX.Element;
 
 const meta: Meta<typeof StatusTag> = {
   title: "Components/StatusTag",
