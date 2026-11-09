@@ -396,10 +396,12 @@ its description.
 
 ## Technology Stack
 
-Documentation links point at the version in the lockfile; a PR that
-moves a dependency to a new version updates its link. FastAPI, SQLModel,
-USWDS, react-uswds, i18next, and React Hook Form publish only current
-docs.
+Documentation links point at the version in the lockfile, to the
+precision its docs are published at: the major for most, the minor for
+Pydantic, SQLAlchemy, `yoyo`, and `pytest`. A PR that moves a dependency
+past its linked version updates the link, Dependabot's included: the
+reviewer pushes the change before merging. FastAPI, SQLModel, USWDS,
+react-uswds, i18next, and React Hook Form publish only current docs.
 
 **Backend Framework**: [FastAPI](https://fastapi.tiangolo.com/) (ASGI)
 
@@ -460,6 +462,19 @@ system); local settings come from [`.env.example`](api/.env.example)
 
 **Package Managers**: `uv` (Python), `pnpm` (Node)
 
+- Frontend dependencies are declared with `^` ranges, so minor and
+  patch releases are taken by default; `pnpm-lock.yaml` is what gets
+  installed. A tighter pin says why in the component README's
+  dependency table.
+- A release must be 14 days old before it is installed or proposed:
+  `minimum-release-age` in each `.npmrc`, and `cooldown` in
+  [`.github/dependabot.yml`](../.github/dependabot.yml) for npm and uv.
+- An urgent security fix skips the wait. Dependabot security updates
+  ignore the cooldown, but pnpm still refuses a version under 14 days
+  old, so the PR lists that version (`name@version`) in pnpm's
+  `minimumReleaseAgeExclude`, and the entry is removed once it is 14
+  days old.
+
 **Configuration**:
 [`pydantic-settings`](https://docs.pydantic.dev/2.12/concepts/pydantic_settings/)
 for env-driven values only
@@ -470,7 +485,7 @@ for env-driven values only
 - `ruff` (lint + format), `pyright`
 - [`pytest` 9.0](https://docs.pytest.org/en/9.0.x/) + `pytest-asyncio`,
   `coverage` (branch)
-- `eslint`, `tsc --noEmit`, [`vitest` 3](https://v3.vitest.dev/) +
+- `eslint`, `tsc --noEmit`, [`vitest` 5](https://vitest.dev/) +
   Testing Library
 - `pre-commit` ([config](../.pre-commit-config.yaml)): ruff, gitleaks,
   markdownlint, file hygiene
@@ -535,4 +550,4 @@ part of the technical plan, covering: what data is involved, its tier,
 where it flows, how it's protected at each step, and what could go
 wrong.
 
-Version: 0.3.1 | Created: 10/05/2026 | Last amended: 10/28/2026
+Version: 0.4.0 | Created: 10/05/2026 | Last amended: 11/09/2026
