@@ -51,7 +51,3 @@ its parent's own range includes the fixed version.
 | ------------------------------------------------------------- | ------------------------------------------------------- |
 | `serve>compression` `^1.8.2`                                  | serve 14.2.7 pins 1.8.1 (high advisory)                 |
 | `@storybook/builder-webpack5>webpack-dev-middleware` `^7.4.6` | Storybook 10.6 asks for `^6.1.2` (high, fixed in 7.4.6) |
-
-`pnpm.auditConfig.ignoreGhsas` holds advisories `pnpm audit` should not
-fail on; each has an entry, with its reason and expiry, in the
-[false-positive register](../docs/security/false-positives.md).
