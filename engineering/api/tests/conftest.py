@@ -5,10 +5,10 @@ from collections.abc import AsyncGenerator, Callable, Generator
 from unittest.mock import patch
 
 import httpx
+import jwt
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi.testclient import TestClient
-from jose import jwt as jose_jwt
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncConnection,
@@ -22,6 +22,7 @@ from sqlalchemy.pool import NullPool
 from licensing_api.__main__ import app
 from licensing_api.config import Settings, get_settings
 from licensing_api.dependencies import get_db_session
+from licensing_api.storage import Storage, create_storage
 from tests.record_guard import RecordGuard
 
 TEST_SETTINGS = Settings(
@@ -171,7 +172,7 @@ def auth_header(_private_key) -> Callable[[str], dict]:
     """Returns a helper that builds a signed Authorization Bearer header for the given email."""
 
     def _make(email: str) -> dict:
-        token = jose_jwt.encode(
+        token = jwt.encode(
             {
                 'sub': str(uuid.uuid5(uuid.NAMESPACE_URL, email)),
                 'email': email,
@@ -185,6 +186,12 @@ def auth_header(_private_key) -> Callable[[str], dict]:
         return {'Authorization': f'Bearer {token}'}
 
     return _make
+
+
+@pytest.fixture(scope='session')
+def storage() -> Storage:
+    """The documents bucket in RustFS."""
+    return create_storage(TEST_SETTINGS)
 
 
 @pytest.fixture
