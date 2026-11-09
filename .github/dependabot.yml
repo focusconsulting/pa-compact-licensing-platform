@@ -14,7 +14,7 @@ updates:
         patterns: ["*"]
         update-types: ["minor", "patch"]
     ignore:
-      # TypeScript 7 ships no compiler API, which Next 14, typescript-eslint
+      # TypeScript 7 ships no compiler API, which Next, typescript-eslint
       # and Storybook all load.
       - dependency-name: typescript
         update-types: ["version-update:semver-major"]
