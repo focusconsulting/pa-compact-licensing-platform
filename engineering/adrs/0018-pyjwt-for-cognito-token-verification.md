@@ -4,7 +4,7 @@ status: proposed
 date: 2026-11-06
 ---
 
-# ADR-0017: PyJWT for Cognito Token Verification
+# ADR-0018: PyJWT for Cognito Token Verification
 
 ## Status
 

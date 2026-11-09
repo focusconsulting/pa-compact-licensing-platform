@@ -22,6 +22,7 @@ from sqlalchemy.pool import NullPool
 from licensing_api.__main__ import app
 from licensing_api.config import Settings, get_settings
 from licensing_api.dependencies import get_db_session
+from licensing_api.storage import Storage, create_storage
 from tests.record_guard import RecordGuard
 
 TEST_SETTINGS = Settings(
@@ -185,6 +186,12 @@ def auth_header(_private_key) -> Callable[[str], dict]:
         return {'Authorization': f'Bearer {token}'}
 
     return _make
+
+
+@pytest.fixture(scope='session')
+def storage() -> Storage:
+    """The documents bucket in RustFS."""
+    return create_storage(TEST_SETTINGS)
 
 
 @pytest.fixture

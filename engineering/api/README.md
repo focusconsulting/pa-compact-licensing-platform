@@ -165,13 +165,15 @@ just --list
 | [opentelemetry-instrumentation-fastapi](https://opentelemetry-python-contrib.readthedocs.io/) | Auto-instrument FastAPI requests | <https://opentelemetry-python-contrib.readthedocs.io/> |
 | [opentelemetry-instrumentation-asyncpg](https://opentelemetry-python-contrib.readthedocs.io/) | Auto-instrument asyncpg queries  | <https://opentelemetry-python-contrib.readthedocs.io/> |
 | [opentelemetry-exporter-otlp-proto-grpc](https://opentelemetry-python.readthedocs.io/) | Export traces/metrics to ADOT sidecar via gRPC | <https://opentelemetry-python.readthedocs.io/> |
-| [PyJWT[crypto]](https://pyjwt.readthedocs.io/en/stable/)                          | JWT validation (Cognito ID tokens, [ADR-0017](../adrs/0017-pyjwt-for-cognito-token-verification.md)) | <https://pyjwt.readthedocs.io/en/stable/> |
+| [PyJWT[crypto]](https://pyjwt.readthedocs.io/en/stable/)                          | JWT validation (Cognito ID tokens, [ADR-0018](../adrs/0018-pyjwt-for-cognito-token-verification.md)) | <https://pyjwt.readthedocs.io/en/stable/> |
 | [httpx](https://www.python-httpx.org/)                                            | HTTP client (JWKS fetching)     | <https://www.python-httpx.org/>                                |
 | [Jinja](https://jinja.palletsprojects.com/en/stable/)                             | Email templates ([ADR-0014](../adrs/0014-email-templates-and-smtp.md)) | <https://jinja.palletsprojects.com/en/stable/> |
+| [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)       | Documents bucket: presigned links, scan tags ([ADR-0017](../adrs/0017-s3-client.md)) | <https://boto3.amazonaws.com/v1/documentation/api/latest/index.html> |
 | [uv](https://docs.astral.sh/uv/)                                                  | Dependency management           | <https://docs.astral.sh/uv/>                                   |
 | [pytest](https://docs.pytest.org/en/9.0.x/)                                       | Test framework                  | <https://docs.pytest.org/en/9.0.x/>                            |
 | [pytest-asyncio](https://pytest-asyncio.readthedocs.io/en/stable/)                | Async test support              | <https://pytest-asyncio.readthedocs.io/en/stable/>             |
 | [asgi-lifespan](https://github.com/florimondmanca/asgi-lifespan)                  | ASGI lifespan for tests         | <https://github.com/florimondmanca/asgi-lifespan>               |
+| [boto3-stubs](https://youtype.github.io/boto3_stubs_docs/mypy_boto3_s3/)           | Types for the S3 client (dev)   | <https://youtype.github.io/boto3_stubs_docs/mypy_boto3_s3/>  |
 | [ruff](https://docs.astral.sh/ruff/)                                              | Linter and formatter            | <https://docs.astral.sh/ruff/>                                 |
 | [pyright](https://microsoft.github.io/pyright/)                                   | Static type checker             | <https://microsoft.github.io/pyright/>                         |
 

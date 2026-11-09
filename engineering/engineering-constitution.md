@@ -405,7 +405,7 @@ docs.
 
 - uvicorn locally, gunicorn with uvicorn workers in containers
 - Cognito ID tokens verified with `PyJWT` against the pool's JWKS
-  ([ADR-0017](adrs/0017-pyjwt-for-cognito-token-verification.md))
+  ([ADR-0018](adrs/0018-pyjwt-for-cognito-token-verification.md))
 - `domain_events` Worker as a separate process on the same image
 - [Pydantic 2.12](https://docs.pydantic.dev/2.12/) for request and
   response models
