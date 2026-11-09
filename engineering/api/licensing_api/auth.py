@@ -6,9 +6,9 @@ from typing import Annotated
 from uuid import UUID
 
 import httpx
+import jwt
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError, jwt
 from pydantic import BaseModel, ConfigDict
 
 from licensing_api.config import Settings, get_settings
@@ -41,7 +41,7 @@ def _verify_token(token: str, settings: Settings) -> dict:
     """Validate a Cognito ID token and return its claims."""
     try:
         unverified_header = jwt.get_unverified_header(token)
-    except JWTError as e:
+    except jwt.PyJWTError as e:
         raise AppError(401, ErrorCode.InvalidToken, ['Invalid token format']) from e
 
     jwks = _get_jwks(settings.cognito_jwks_url)
@@ -53,11 +53,11 @@ def _verify_token(token: str, settings: Settings) -> dict:
     try:
         claims = jwt.decode(
             token,
-            key,
+            jwt.PyJWK(key, algorithm='RS256'),
             algorithms=['RS256'],
             audience=settings.cognito_client_id,
         )
-    except JWTError as e:
+    except jwt.PyJWTError as e:
         raise AppError(401, ErrorCode.InvalidToken, ['Token validation failed']) from e
 
     if claims.get('token_use') != 'id':
