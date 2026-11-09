@@ -76,6 +76,11 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    ignore:
+      # Moving to Python 3.14 is its own change, made with the uv image's
+      # python3.13 tag and the workflows' python-version.
+      - dependency-name: python
+        update-types: ["version-update:semver-minor"]
 
   # cognito-local image (engineering/mocks/cognito/, local tooling)
   - package-ecosystem: docker
