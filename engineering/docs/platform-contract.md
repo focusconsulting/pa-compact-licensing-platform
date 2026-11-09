@@ -121,6 +121,70 @@ async def list_applications(
 
 `require` decides who may call a route, not which rows they see: a record outside the caller's scope is filtered by the route's query and returns `404` (constitution Principle II).
 
+### Permission matrix
+
+What each role reaches, by route family, decided in [ADR-0017](../adrs/0017-state-standing-and-relationship-scoping.md). A `/states/{st}` row applies only to a caller with **standing** in `st`: `st` is their `state_code`, or they hold a grant there. Without standing the route returns `403 FORBIDDEN`, whatever the role. **✓** means the role alone passes; **grant** means the user also needs that permission granted in the state (in `*` for a Commission user); **own** means only their own record. SCRUM-104's role × endpoint test is driven from this table.
+
+| Route family | Declares | Rows the query returns | `licensee` | `state_staff` | `state_admin` | `compact_admin` | `admin` |
+|---|---|---|---|---|---|---|---|
+| `/me`: the caller's account | `require()` | The caller | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `/me/...`: profile, applications, privilege requests, payments | `manage_own_record` | The caller's practitioner | own | — | — | — | — |
+| `/public/...`: verification, live states, fees | `public()` | Public tier only | Anyone, signed in or not | | | | |
+| `/states/{st}/practitioners/...`: search, profile, history, documents | `read_general` | `related_to(st)` | — | ✓ | ✓ | — | — |
+| The private fields in those responses | `read_private` in `st` | Same | — | grant | grant | — | — |
+| `/states/{st}/practitioners/{id}/ssn`: reveal, audited | `read_ssn` | `related_to(st)` | — | grant | grant | — | — |
+| `/states/{st}/applications`: SQL queue and case view | `read_general` | `sql_state_code = st`, out of `draft` | — | ✓ | ✓ | — | — |
+| `/states/{st}/applications/{id}/...`: verify, request information, decide, withdraw eligibility | `write` | Same | — | grant | grant | — | — |
+| `/states/{st}/qualifying-licenses`, `/license-ingestions`: enter, update, upload | `write` | `state_code = st` | — | grant | grant | — | — |
+| `/states/{st}/privilege-requests`: remote-state queue and case view | `read_general` | `remote_state_code = st`, out of `pending_payment` | — | ✓ | ✓ | — | — |
+| `/states/{st}/privilege-requests/{id}/...`, `/privileges/{id}/...`: issue, deny, change status | `write` | `remote_state_code = st` | — | grant | grant | — | — |
+| `/states/{st}/adverse-actions`, `/sii-reports`: read | `read_general` | The practitioner is `related_to(st)` | — | ✓ | ✓ | — | — |
+| The same: report, update, lift, close | `write` | Reported by `st` | — | grant | grant | — | — |
+| `/states/{st}/settings`: fees, proofs, contacts, practice requirements | `admin` | The state itself | — | grant | grant | — | — |
+| `/states/{st}/member-contacts`, `/reports`, `/dashboard` | `read_general` | The state's own figures; every member state's contacts | — | ✓ | ✓ | — | — |
+| `/commission/...`: every state's records, reports, member contacts, audit log | `compact_admin` | Every state | — | — | — | ✓ | ✓ |
+| `/commission/practitioners/{id}/ssn`: reveal, audited | `compact_admin`, then `read_ssn` | Every state | — | — | — | grant | — |
+| `/commission/settings`, `/commission/states/{st}`, `/commission/privileges/{id}/deactivate` | `compact_admin` | Every state | — | — | — | ✓ | ✓ |
+| `/admin/...` | `system_admin` | | — | — | — | — | ✓ |
+
+A `state_admin` is given the `admin` grant for their state when their account is created; the role itself adds nothing a `state_staff` user lacks. Creating staff and changing grants is the SCRUM-105 CLI, not a route: `admin` and `compact_admin` may act in any state, and a holder of the `admin` grant in a state may act in that state.
+
+A route that needs two permissions, such as the Commission SSN reveal, declares the namespace's permission on its router and the second on the route. A route that returns private fields only to some callers decides it with `held_permissions(caller, st)`, not with a second route.
+
+### Relationships
+
+`licensing_api/repo/scope.py` (SCRUM-104). Each predicate is a `ColumnElement[bool]` correlated on `practitioners.id`, for use as `select(Practitioner).where(related_to(st))` or inside an `EXISTS`. A relationship, once formed, persists: denials, withdrawals, and expiry do not end it.
+
+| Predicate | True when |
+|---|---|
+| `is_sql_for(state_code)` | A participation application names the state as `sql_state_code` and has left `draft` |
+| `is_remote_for(state_code)` | A privilege request names the state as `remote_state_code` and has left `pending_payment` |
+| `holds_license_in(state_code)` | A qualifying license in the state is linked to the practitioner |
+| `related_to(state_code)` | Any of the three: the PAs whose uniform data set the state may see (Rule 4 §4.6(a)) |
+
+An action on one record checks that record's state column, not `related_to`. A Kansas user can read a PA whose SQL is Kansas and who holds a privilege in Missouri, but can decide only the application whose `sql_state_code` is `KS`.
+
+### Profile fields
+
+The uniform data set the PA enters (Rule 4 §4.3(c)(1)–(10)) is held in five groups on `practitioners`. Each group carries `<group>_entered_by`, `<group>_verified_by_state`, and `<group>_verified_at` ([data model](data-model.md#practitioners)).
+
+| Group | Fields | Rule 4 §4.3(c) |
+|---|---|---|
+| `identity` | `legal_first_name`, `legal_middle_name`, `legal_last_name`, `name_suffix`, `practitioner_other_names` rows, `sex_code`, `date_of_birth`, `practitioner_ssn` | (1)–(5) |
+| `residence` | `residence_line1`, `residence_line2`, `residence_city`, `residence_region`, `residence_postal_code`, `residence_country_code` | (6) |
+| `contact` | `phone`, `correspondence_email` | (7)–(8) |
+| `education` | `pa_program_name`, `pa_program_graduation_year` | (9) |
+| `certification` | `nccpa_certification_number`, `nccpa_certification_status`, `nccpa_certification_expires_on` | (10) |
+
+Stamps follow these rules:
+
+- **Who stamps.** Only the state of qualifying license stamps, when it confirms identity on the case view (epic 7). It stamps every group at once, with `verified_by_state` set to the application's `sql_state_code`. That confirmation is the state's "verify and submit" of these fields.
+- **Who enters.** `<group>_entered_by` is the last user who wrote the group: the PA, or staff entering on their behalf.
+- **A PA edit keeps the stamp.** It writes a history row and emits `practitioner.profile_changed`. Whether a field changed since verification is read from history (`changed_at` after `<group>_verified_at`), not stored.
+- **Unstamped fields.** `npi` is not in the adopted data set and is never stamped. The NCCPA lookup result (SCRUM-153) sits beside the `certification` group, with its own source and `fetched_at`; it never overwrites what the PA entered and is never stamped.
+- **Change logs.** The address and email change logs (Rule 4 §4.3(e)(1)–(2)) are the `residence_*` and `correspondence_email` changes in `practitioners_history`, dated by `changed_at`. They have no table of their own.
+- **Sign-in email.** `users.email` is not part of the data set. `correspondence_email` is, and email goes to it when it is set ([notifications](notifications.md)).
+
 ## Response shapes
 
 `licensing_api/responses.py` and `licensing_api/repo/pagination.py`. Errors keep `{"code", "details"}` (`errors.py`).
@@ -177,3 +241,11 @@ Implemented: the Worker process runs `dispatch_events` then `send_pending` until
 ### `.6` documents
 
 Builds on `require` (download permission, with record scoping in the query), `ChangeContext`, `history.write` (documents are part of the retained record), and `audit_log.write` (a staff download of a private document is a read that is audited).
+
+### Epic 5: roles, permissions, and accounts
+
+The epic 5 tracks build against the [permission matrix](#permission-matrix), [relationships](#relationships), and [profile fields](#profile-fields) above.
+
+- **SCRUM-104** adds the standing check and the `*` grant key to `require` and `held_permissions`, adds `repo/scope.py`, and adds the role × endpoint test.
+- **SCRUM-105** adds the staff CLI. It refuses a grant outside the caller's states, and refuses `*` for anyone but a `compact_admin`.
+- **SCRUM-107** adds `practitioner_other_names` and the profile routes.

@@ -153,9 +153,20 @@ A PA's uniform data set (Rule 4 §4.3(c)), held by the Commission and written by
 | `pa_program_name`, `pa_program_graduation_year` | TEXT, SMALLINT | §4.3(c)(9) |
 | `nccpa_certification_number`, `_status`, `_expires_on` | TEXT, TEXT, DATE | §4.3(c)(10) |
 | `npi` | TEXT, NULL | Not in the adopted uniform data set; optional, never verified |
-| `<group>_entered_by`, `<group>_verified_by_state`, `<group>_verified_at` | FK `users`, FK `states`, TIMESTAMPTZ | Provenance for each group: `identity`, `residence`, `contact`, `education`, `certification`. A state and a time are set together or not at all |
+| `<group>_entered_by`, `<group>_verified_by_state`, `<group>_verified_at` | FK `users`, FK `states`, TIMESTAMPTZ | Provenance for each group: `identity`, `residence`, `contact`, `education`, `certification`. A state and a time are set together or not at all. Which fields each group covers, and the rules for stamping it, are in the [platform contract](platform-contract.md#profile-fields) |
 
-Other names (§4.3(c)(2)) and the address and email change log (§4.3(e)(1)–(2)) are reserved for epic 5.
+The address and email change logs (§4.3(e)(1)–(2)) are read from `practitioners_history`.
+
+### `practitioner_other_names`
+
+Other names a PA has used, previously or currently (§4.3(c)(2)), covered by the `identity` stamp. Tier: private. Owner: epic 5 (SCRUM-107), which creates it.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `practitioner_id` | FK | |
+| `first_name`, `middle_name`, `last_name`, `name_suffix` | TEXT | `last_name` is required |
+
+Changes are kept in `practitioner_other_names_history`.
 
 ### `practitioner_ssn`
 

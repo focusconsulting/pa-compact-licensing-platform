@@ -11,7 +11,9 @@ held in state S = the permissions their role holds everywhere
                 + the permissions granted to them in S
 ```
 
-S is the state in the route's path, such as `KS` in `/states/KS/applications`, or the user's own `state_code` when the path names none.
+S is the state in the route's path, such as `KS` in `/states/KS/applications`, or the user's own `state_code` when the path names none. A user with no `state_code` (the Commission roles) holds their `*` grants there.
+
+In a `/states/{state_code}` path the user must first have **standing** in S: S is their `state_code`, or they hold a grant there. Without it they are refused whatever their role holds, so a Kansas user cannot use Missouri's routes, and Commission users read states only through `/commission` ([ADR-0017](../adrs/0017-state-standing-and-relationship-scoping.md)).
 
 Routes never check a role. To change what a role may do, change `ROLE_PERMISSIONS`, not the routes.
 
@@ -50,6 +52,8 @@ The [confidentiality tiers](data-model.md#confidentiality-tiers) map onto these:
 {"KS": ["write", "read_private"], "MO": ["read_private"]}
 ```
 
+A `compact_admin` user who may reveal SSNs holds `{"*": ["read_ssn"]}`. `*` is the only key a Commission user holds, `read_ssn` is the only permission granted under it, and it gives no standing in any state.
+
 A value that names no permission matches nothing, so a typo denies rather than allows. Grants are read on every request, so a change takes effect on the user's next request. The F-04 staff CLI will create staff and change their grants, writing each change to `audit_log` as a security event.
 
 ## What the client sees
@@ -58,7 +62,7 @@ A value that names no permission matches nothing, so a typo denies rather than a
 
 ## What a permission does not decide
 
-A permission decides whether a user may call a route, not which rows they see. A `state_staff` user with `read_private` in Kansas sees only the PAs connected to Kansas (Rule 5 §5.6(a)), and a licensee sees only their own record. The route's query applies that scope, and a record outside it returns `404` (constitution Principle II).
+A permission decides whether a user may call a route, not which rows they see. A `state_staff` user with `read_private` in Kansas sees only the PAs related to Kansas, and a licensee sees only their own record. The route's query applies that scope with the [relationship predicates](platform-contract.md#relationships), and a record outside it returns `404` (constitution Principle II). Which role reaches which route family is the [permission matrix](platform-contract.md#permission-matrix).
 
 ## Namespaces
 
