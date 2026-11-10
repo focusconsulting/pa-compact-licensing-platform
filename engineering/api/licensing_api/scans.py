@@ -1,6 +1,6 @@
 """Recording each document's malware scan, from the tag GuardDuty writes (backlog D9, F-12).
 
-The Worker runs ``check_document_scans`` on every pass. A document stays ``pending`` until
+The Worker runs ``check_document_scans`` in a loop of its own. A document stays ``pending`` until
 its current version carries a result; only ``clean`` documents can ever be downloaded.
 """
 
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 # an upload link that was never used.
 SCAN_TIMEOUT = timedelta(minutes=15)
 # A pending document is looked at again after this long, so a few uploads do not keep the
-# Worker calling S3 on every pass.
+# Worker calling S3 on every loop.
 RECHECK_INTERVAL = timedelta(seconds=5)
 # Enough for every type's signature, and for a CSV's first lines.
 _START_BYTES = 8192
