@@ -98,7 +98,7 @@ No AWS account or credentials are needed.
 | API docs | <http://localhost:8000/docs> |
 | Email (maildev) | <http://localhost:1080> |
 | File storage console (RustFS, `rustfsadmin` / `rustfsadmin`) | <http://localhost:9301> |
-| Malware scanner (ClamAV; first start downloads signatures for a minute or two) | `docker compose -p pa-compact logs malware-scanner` |
+| Malware scanner (tags uploads as GuardDuty would) | `docker compose -p pa-compact logs malware-scanner` |
 
 Sign in as any user in
 [`engineering/mocks/cognito/db/local_licensing.json`](engineering/mocks/cognito/db/local_licensing.json)

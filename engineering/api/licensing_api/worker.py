@@ -8,6 +8,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import signal
+from collections.abc import Awaitable, Callable
 from contextlib import suppress
 from datetime import timedelta
 
@@ -72,21 +73,37 @@ async def run_worker(
     *,
     idle_poll_interval: timedelta = IDLE_POLL_INTERVAL,
 ) -> None:
-    """Deliver events, send email, and record scans until ``stop`` is set, waiting ``idle_poll_interval`` whenever none is due.
+    """Deliver events, send email, and record scans until ``stop`` is set.
 
-    ``stop`` is checked between batches, so a delivery in progress always finishes and
-    commits; ECS waits 30 seconds after SIGTERM before it kills the task.
+    Scans run in their own loop, so a user waiting on a scan never waits behind a batch of
+    deliveries, and a slow S3 never holds up events or email. Each loop waits
+    ``idle_poll_interval`` whenever it finds nothing due, and checks ``stop`` between batches,
+    so a delivery in progress always finishes and commits; ECS waits 30 seconds after SIGTERM
+    before it kills the task.
     """
-    logger.info('Worker started')
-    while not stop.is_set():
+
+    async def deliver() -> int:
         attempted = await dispatch_events(session_factory, registry)
         # After dispatch, so email a handler has just queued goes out in the same pass.
-        sent = await send_pending(session_factory, settings)
-        scanned = await check_document_scans(session_factory, storage)
-        if attempted == 0 and sent == 0 and scanned == 0:
+        return attempted + await send_pending(session_factory, settings)
+
+    async def scan() -> int:
+        return await check_document_scans(session_factory, storage)
+
+    logger.info('Worker started')
+    async with asyncio.TaskGroup() as loops:
+        loops.create_task(_until_stopped(deliver, stop, idle_poll_interval))
+        loops.create_task(_until_stopped(scan, stop, idle_poll_interval))
+    logger.info('Worker stopped')
+
+
+async def _until_stopped(
+    step: Callable[[], Awaitable[int]], stop: asyncio.Event, idle_poll_interval: timedelta
+) -> None:
+    while not stop.is_set():
+        if await step() == 0:
             with suppress(TimeoutError):
                 await asyncio.wait_for(stop.wait(), idle_poll_interval.total_seconds())
-    logger.info('Worker stopped')
 
 
 async def dispatch_events(

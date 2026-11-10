@@ -106,6 +106,23 @@ resource "aws_s3_bucket_policy" "documents" {
           ArnNotEquals    = { "aws:PrincipalArn" = aws_iam_role.guardduty_malware_protection.arn }
         }
       },
+      {
+        # Otherwise anyone allowed to tag, such as an account administrator, could mark an
+        # infected version clean and make it readable.
+        Sid       = "OnlyGuardDutyTags"
+        Effect    = "Deny"
+        Principal = "*"
+        Action = [
+          "s3:PutObjectTagging",
+          "s3:PutObjectVersionTagging",
+          "s3:DeleteObjectTagging",
+          "s3:DeleteObjectVersionTagging",
+        ]
+        Resource = "${aws_s3_bucket.documents.arn}/*"
+        Condition = {
+          ArnNotEquals = { "aws:PrincipalArn" = aws_iam_role.guardduty_malware_protection.arn }
+        }
+      },
     ]
   })
   depends_on = [aws_s3_bucket_public_access_block.documents]

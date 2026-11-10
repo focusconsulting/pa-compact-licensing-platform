@@ -124,20 +124,43 @@ async def test_the_worker_sends_queued_email(committed_sessions, storage, monkey
     await asyncio.wait_for(running, timeout=5)
 
 
-async def test_the_worker_records_document_scans(committed_sessions, storage, monkeypatch):
-    scanned = asyncio.Event()
+@pytest.mark.parametrize(
+    ('stuck', 'running_step'),
+    [('dispatch_events', 'check_document_scans'), ('check_document_scans', 'send_pending')],
+)
+async def test_scans_and_deliveries_never_wait_on_each_other(
+    committed_sessions, storage, monkeypatch, stuck, running_step
+):
+    release = asyncio.Event()
+    ran_again = asyncio.Event()
+    runs = 0
 
-    async def check(*args: object, **kwargs: object) -> int:
-        if scanned.is_set():
-            return 0
-        scanned.set()
-        return 1
+    async def blocked(*args: object, **kwargs: object) -> int:
+        await release.wait()
+        return 0
 
-    monkeypatch.setattr(worker, 'check_document_scans', check)
+    async def step(*args: object, **kwargs: object) -> int:
+        # Twice: one run could come before the stuck step in a shared loop.
+        nonlocal runs
+        runs += 1
+        if runs == 2:
+            ran_again.set()
+        return 0
+
+    monkeypatch.setattr(worker, stuck, blocked)
+    monkeypatch.setattr(worker, running_step, step)
     stop = asyncio.Event()
     running = asyncio.create_task(
-        run_worker(committed_sessions, HandlerRegistry([]), TEST_SETTINGS, storage, stop)
+        run_worker(
+            committed_sessions,
+            HandlerRegistry([]),
+            TEST_SETTINGS,
+            storage,
+            stop,
+            idle_poll_interval=timedelta(milliseconds=10),
+        )
     )
-    await asyncio.wait_for(scanned.wait(), timeout=5)
+    await asyncio.wait_for(ran_again.wait(), timeout=5)
     stop.set()
+    release.set()
     await asyncio.wait_for(running, timeout=5)
