@@ -70,6 +70,7 @@ _SHIPPED_EVENT_TYPES = frozenset(
         'adverse_action.lifted',
         'sii.flagged',
         'sii.closed',
+        'document.uploaded',
     }
 )
 # Types removed from EventType through the two-release process in the platform contract.

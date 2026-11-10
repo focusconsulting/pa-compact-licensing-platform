@@ -142,6 +142,7 @@ Every API PR regenerates `openapi.json` and the client's `schema.d.ts` with `jus
   - `NO_THREATS_FOUND` → `read_start(8 KiB)`; signature matches → `clean`, else `error`.
   - `THREATS_FOUND` → `infected`. `UNSUPPORTED`, `ACCESS_DENIED`, `FAILED` → `error`.
   - No tag and created 15 minutes ago → `error`; otherwise stamp `scan_checked_at` and move on.
+  - Tags and bytes are read from the object's current version, and a result also stores that `VersionId` in `documents.scanned_version_id` (new migration). An upload link lasts five minutes and can be reused, so a later POST makes a new, unscanned version; only the stored version is ever served (security review, 2026-11-05).
   - A result sets `scanned_at`, writes history, emits `document.scanned`, logs `Document scanned` with `outcome`. An S3 error logs and stamps `scan_checked_at`. Returns the number of results recorded.
 - **`worker.py`**: builds `Storage`; `run_worker(..., storage, ...)` runs the step after `send_pending` and counts it toward the idle check.
 - **`engineering/mocks/malware-scanner/`**: `Dockerfile` (`python:3.13-slim`, pinned `boto3`), `scanner.py` (lists the bucket, streams each untagged object to `clamd` with `INSTREAM`, tags it `NO_THREATS_FOUND`/`THREATS_FOUND`/`FAILED`), `README.md`.
@@ -154,7 +155,7 @@ Every API PR regenerates `openapi.json` and the client's `schema.d.ts` with `jus
 ### Changes Required
 
 - **`repo/document.py`**: `visible_to_practitioner(practitioner_id, user_id)` and `visible_to_state(state_code)` return SQL conditions per [Scope](#scope), using `EXISTS` on the owner tables and the `states_holding` union.
-- **`routes/document.py`**: the metadata route takes the scope; `GET …/documents/{document_id}/download` under `/me`, `/states/{state_code}` (`READ_PRIVATE`), `/commission` (`COMPACT_ADMIN`) → `Data[DocumentDownload]` `{url, expires_at}`; `404 NOT_FOUND` out of scope; `409 DOCUMENT_NOT_CLEAN` unless `clean`; staff calls write `audit_log.write(…, 'document.downloaded', document)`.
+- **`routes/document.py`**: the metadata route takes the scope; `GET …/documents/{document_id}/download` under `/me`, `/states/{state_code}` (`READ_PRIVATE`), `/commission` (`COMPACT_ADMIN`) → `Data[DocumentDownload]` `{url, expires_at}`, the link naming `scanned_version_id`; `404 NOT_FOUND` out of scope; `409 DOCUMENT_NOT_CLEAN` unless `clean`; staff calls write `audit_log.write(…, 'document.downloaded', document)`.
 - **Docs**: `docs/documents.md`; `roles-and-permissions.md`; `platform-contract.md` `.6` implemented.
 - **Tests** `tests/test_documents_download.py`: the Scope table row by row, each with an in-scope and out-of-scope caller; state A `404` on state B's application document; pending and infected `409`; audit row for staff only; the link returns the bytes.
 
