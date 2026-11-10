@@ -36,7 +36,9 @@ FROM python:3.13.18-alpine@sha256:1e1f6334529d1fb26a2ef619d7cffb30a7c7d7cc1cc733
 
 # The app runs from the venv; the base image's pip, with its vendored urllib3,
 # msgpack, and setuptools, would only add unpatched packages to scans.
-RUN python -m pip uninstall -y pip && \
+# zlib 1.4 fixes CVE-2026-4738, which the pinned base image predates.
+RUN apk upgrade --no-cache zlib && \
+    python -m pip uninstall -y pip && \
     addgroup -g 1000 python && \
     adduser -u 1000 -G python -D python
 
