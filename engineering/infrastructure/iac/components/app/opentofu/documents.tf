@@ -50,7 +50,8 @@ resource "aws_s3_bucket_ownership_controls" "documents" {
   }
 }
 
-# Versioned: a reused upload link makes a new version, and downloads serve only the scanned one.
+# Versioned: an upload form can be posted again until it expires, so downloads serve only
+# the version the Worker saw scanned. The UI never reuses a key; each file is a new document.
 resource "aws_s3_bucket_versioning" "documents" {
   bucket = aws_s3_bucket.documents.id
   versioning_configuration {
