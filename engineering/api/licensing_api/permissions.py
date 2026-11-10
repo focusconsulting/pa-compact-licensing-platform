@@ -9,7 +9,7 @@ from typing import Annotated, Any
 
 from fastapi import Depends, Request
 from fastapi.dependencies.models import Dependant
-from fastapi.routing import APIRoute
+from fastapi.routing import RouteContext
 
 from licensing_api.context import current_user
 from licensing_api.errors import AppError, ErrorCode
@@ -130,7 +130,7 @@ def public() -> Any:
     return Depends(_open)
 
 
-def route_access(route: APIRoute) -> RouteAccess | None:
+def route_access(route: RouteContext) -> RouteAccess | None:
     """The access declaration in ``route``'s dependencies, or None when it has none."""
     return _find_access(route.dependant)
 

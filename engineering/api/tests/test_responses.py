@@ -5,7 +5,7 @@ from typing import Annotated
 import pytest
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
-from fastapi.routing import APIRoute
+from fastapi.routing import APIRoute, iter_route_contexts
 from fastapi.testclient import TestClient
 from pydantic import BaseModel
 from sqlmodel import col, select
@@ -130,8 +130,8 @@ def _bare_bodies(routes: list) -> list[str]:
     """The /api routes outside /api/health whose body is neither Data, Paged, nor empty."""
     return [
         route.path
-        for route in routes
-        if isinstance(route, APIRoute)
+        for route in iter_route_contexts(routes)
+        if isinstance(route.original_route, APIRoute)
         and route.path.startswith('/api')
         and not route.path.startswith('/api/health')
         and not (route.response_model is None or issubclass(route.response_model, (Data, Paged)))
