@@ -100,6 +100,23 @@ describe("FormStep component", () => {
     expect(onSubmit).toHaveBeenCalled();
   });
 
+  it("submits natively without a spinner when asked to", () => {
+    render(
+      <FormStep noSpinner noPreventDefault>
+        <p>Content</p>
+      </FormStep>,
+    );
+    const form = document.getElementById("form")!;
+    const event = new Event("submit", { bubbles: true, cancelable: true });
+
+    form.dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(false);
+    expect(
+      screen.queryByAltText(/spinner indicating the form is being submitted/),
+    ).not.toBeInTheDocument();
+  });
+
   it("calls onBack when back button is clicked", async () => {
     const user = userEvent.setup();
     const onBack = vi.fn();

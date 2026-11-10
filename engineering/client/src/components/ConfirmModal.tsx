@@ -12,7 +12,7 @@ import {
 export interface ConfirmModalProps {
   id: string;
   /** Shared with the page's `ModalToggleButton opener`, which opens it. */
-  modalRef: RefObject<ModalRef>;
+  modalRef: RefObject<ModalRef | null>;
   heading: ReactNode;
   /** What confirming will do. */
   children: ReactNode;

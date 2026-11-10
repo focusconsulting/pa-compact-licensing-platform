@@ -84,6 +84,86 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/me/documents": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upload My Document
+     * @description Creates a `pending` document and returns a form, valid for five minutes, that uploads exactly `size_bytes` of `content_type` straight to storage. The file is scanned for malware before anyone can download it.
+     */
+    post: operations["Upload_my_document_api_me_documents_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/me/documents/{document_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get My Document
+     * @description A document's details, including whether its malware scan has finished.
+     */
+    get: operations["Get_my_document_api_me_documents__document_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/states/{state_code}/documents": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upload A State'S Document
+     * @description Creates a `pending` document and returns a form, valid for five minutes, that uploads exactly `size_bytes` of `content_type` straight to storage. The file is scanned for malware before anyone can download it.
+     */
+    post: operations["Upload_a_state_s_document_api_states__state_code__documents_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/states/{state_code}/documents/{document_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get A State'S Document
+     * @description A document's details, including whether its malware scan has finished.
+     */
+    get: operations["Get_a_state_s_document_api_states__state_code__documents__document_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -189,6 +269,105 @@ export interface components {
     Data_CurrentUser_: {
       data: components["schemas"]["CurrentUser"];
     };
+    /** Data[DocumentOut] */
+    Data_DocumentOut_: {
+      data: components["schemas"]["DocumentOut"];
+    };
+    /** Data[DocumentUpload] */
+    Data_DocumentUpload_: {
+      data: components["schemas"]["DocumentUpload"];
+    };
+    /**
+     * DocumentOut
+     * @description A document's details. ``scan_status`` is ``clean`` once it may be downloaded.
+     * @example {
+     *       "content_type": "application/pdf",
+     *       "created_at": "2026-11-05T15:04:05Z",
+     *       "file_name": "nccpa-certificate.pdf",
+     *       "id": "0b9c7a52-4f1e-4d38-9f43-2a5d6f1c8e70",
+     *       "kind": "nccpa_certificate",
+     *       "scan_status": "pending",
+     *       "size_bytes": 482113
+     *     }
+     */
+    DocumentOut: {
+      /** Content Type */
+      content_type: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** File Name */
+      file_name: string;
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Kind */
+      kind: string;
+      scan_status: components["schemas"]["ScanStatus"];
+      /** Size Bytes */
+      size_bytes: number;
+    };
+    /**
+     * DocumentType
+     * @description The content types the bucket accepts.
+     * @enum {string}
+     */
+    DocumentType:
+      | "application/pdf"
+      | "image/png"
+      | "image/jpeg"
+      | "text/csv"
+      | "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    /**
+     * DocumentUpload
+     * @description The new ``pending`` document and the form that uploads its file.
+     * @example {
+     *       "document": {
+     *         "content_type": "application/pdf",
+     *         "created_at": "2026-11-05T15:04:05Z",
+     *         "file_name": "nccpa-certificate.pdf",
+     *         "id": "0b9c7a52-4f1e-4d38-9f43-2a5d6f1c8e70",
+     *         "kind": "nccpa_certificate",
+     *         "scan_status": "pending",
+     *         "size_bytes": 482113
+     *       },
+     *       "upload": {
+     *         "expires_at": "2026-11-05T15:04:05Z",
+     *         "fields": {
+     *           "Content-Type": "application/pdf",
+     *           "key": "documents/0b9c7a52-4f1e-4d38-9f43-2a5d6f1c8e70"
+     *         },
+     *         "url": "https://example-documents.s3.amazonaws.com/"
+     *       }
+     *     }
+     */
+    DocumentUpload: {
+      document: components["schemas"]["DocumentOut"];
+      upload: components["schemas"]["UploadForm"];
+    };
+    /**
+     * DocumentUploadIn
+     * @description The file the browser is about to upload. The bucket refuses any other size or type.
+     * @example {
+     *       "content_type": "application/pdf",
+     *       "file_name": "nccpa-certificate.pdf",
+     *       "kind": "nccpa_certificate",
+     *       "size_bytes": 482113
+     *     }
+     */
+    DocumentUploadIn: {
+      content_type: components["schemas"]["DocumentType"];
+      /** File Name */
+      file_name: string;
+      /** Kind */
+      kind: string;
+      /** Size Bytes */
+      size_bytes: number;
+    };
     /**
      * ErrorCode
      * @description The machine-readable ``code`` in every error response.
@@ -199,6 +378,7 @@ export interface components {
       | "USER_NOT_FOUND"
       | "USER_INACTIVE"
       | "FORBIDDEN"
+      | "NOT_FOUND"
       | "VALIDATION_ERROR"
       | "HTTP_ERROR"
       | "INTERNAL_ERROR";
@@ -297,6 +477,37 @@ export interface components {
     ReadyResp: {
       /** Db */
       db: boolean;
+    };
+    /**
+     * ScanStatus
+     * @description A document's malware-scan result (``scan_status``); an upload starts ``pending``.
+     * @enum {string}
+     */
+    ScanStatus: "pending" | "clean" | "infected" | "error";
+    /**
+     * UploadForm
+     * @description POST the ``fields`` and then the file, as ``multipart/form-data`` field ``file``, to ``url``.
+     * @example {
+     *       "expires_at": "2026-11-05T15:04:05Z",
+     *       "fields": {
+     *         "Content-Type": "application/pdf",
+     *         "key": "documents/0b9c7a52-4f1e-4d38-9f43-2a5d6f1c8e70"
+     *       },
+     *       "url": "https://example-documents.s3.amazonaws.com/"
+     *     }
+     */
+    UploadForm: {
+      /**
+       * Expires At
+       * Format: date-time
+       */
+      expires_at: string;
+      /** Fields */
+      fields: {
+        [key: string]: string;
+      };
+      /** Url */
+      url: string;
     };
   };
   responses: never;
@@ -423,6 +634,141 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["Data_CurrentUser_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Upload_my_document_api_me_documents_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DocumentUploadIn"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_DocumentUpload_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Get_my_document_api_me_documents__document_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The document's ID */
+        document_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_DocumentOut_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Upload_a_state_s_document_api_states__state_code__documents_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Two-letter state code */
+        state_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DocumentUploadIn"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_DocumentUpload_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Get_a_state_s_document_api_states__state_code__documents__document_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Two-letter state code */
+        state_code: string;
+        /** @description The document's ID */
+        document_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_DocumentOut_"];
         };
       };
       /** @description Unprocessable Content */

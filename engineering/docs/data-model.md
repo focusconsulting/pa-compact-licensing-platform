@@ -180,6 +180,10 @@ A file in object storage owned by one record (D9). `created_by` is the uploader.
 | `storage_key` | TEXT, unique | S3 (RustFS locally) object key |
 | `file_name`, `content_type`, `size_bytes` | | |
 | `scan_status` | TEXT CHECK | `pending`, `clean`, `infected`, `error`; only `clean` may be downloaded |
+| `scanned_at` | TIMESTAMPTZ, NULL | When the malware scan's result was recorded |
+| `scan_checked_at` | TIMESTAMPTZ, NULL | When the Worker last looked for a result; it looks again 5 seconds later |
+
+The object key is `documents/<public_id>`, never a name the uploader typed. Uploads, scan results, and attachment to an owner are kept in `documents_history`; a document is attached once and never moves (Rule 4 §4.3(e)(4)).
 
 ### `qualifying_licenses`
 

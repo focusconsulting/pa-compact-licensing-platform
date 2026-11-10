@@ -45,7 +45,8 @@ services:
       timeout: 2s
       retries: 30
 
-  # Creates the documents bucket with AWS's own CLI, then exits. Run it with
+  # Creates the documents bucket with AWS's own CLI, versioned as in AWS, with
+  # CORS for the browser's presigned POST from the client; then exits. Run it with
   # `docker compose run --rm rustfs-init` after `up --wait`: the profile keeps it out
   # of `up`, whose --wait fails when a one-shot container exits before it checks.
   rustfs-init:
@@ -61,8 +62,12 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
-        aws --endpoint-url http://rustfs:9000 s3api head-bucket --bucket documents 2>/dev/null \
-          || aws --endpoint-url http://rustfs:9000 s3api create-bucket --bucket documents
+        set -e
+        s3="aws --endpoint-url http://rustfs:9000 s3api"
+        $$s3 head-bucket --bucket documents 2>/dev/null || $$s3 create-bucket --bucket documents
+        $$s3 put-bucket-versioning --bucket documents --versioning-configuration Status=Enabled
+        $$s3 put-bucket-cors --bucket documents --cors-configuration \
+          '{"CORSRules":[{"AllowedOrigins":["http://localhost:3000"],"AllowedMethods":["POST"],"AllowedHeaders":["*"],"MaxAgeSeconds":3000}]}'
 
   # Sign-in: cognito-local with the local users (engineering/mocks/cognito)
   cognito-local:

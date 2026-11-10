@@ -14,11 +14,11 @@ updates:
         patterns: ["*"]
         update-types: ["minor", "patch"]
     ignore:
-      # TypeScript 7 ships no compiler API, which Next 14, typescript-eslint
+      # TypeScript 7 ships no compiler API, which Next, typescript-eslint
       # and Storybook all load.
       - dependency-name: typescript
         update-types: ["version-update:semver-major"]
-      # plugin-react 6 needs vite 8; vitest 3 runs on vite 7.
+      # plugin-react 6 needs vite 8; we run vite 7.
       - dependency-name: "@vitejs/plugin-react"
         update-types: ["version-update:semver-major"]
       # eslint-config-airbnb-extended 3 supports ESLint 9 only (ADR-0016).
@@ -68,6 +68,19 @@ updates:
     groups:
       actions-all:
         patterns: ["*"]
+
+  # API base images (engineering/api/Dockerfile)
+  - package-ecosystem: docker
+    directory: /engineering/api
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    ignore:
+      # Moving to Python 3.14 is its own change, made with the uv image's
+      # python3.13 tag and the workflows' python-version.
+      - dependency-name: python
+        update-types: ["version-update:semver-minor"]
 
   # cognito-local image (engineering/mocks/cognito/, local tooling)
   - package-ecosystem: docker

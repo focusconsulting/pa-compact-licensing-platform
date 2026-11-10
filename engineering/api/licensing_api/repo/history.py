@@ -16,6 +16,7 @@ from sqlmodel import Field, SQLModel
 
 from licensing_api.repo.adverse_action import AdverseAction
 from licensing_api.repo.base import TimestampTZ, entity_ref, utc_now
+from licensing_api.repo.document import Document
 from licensing_api.repo.fee import Fee
 from licensing_api.repo.participation_application import ParticipationApplication
 from licensing_api.repo.practitioner import Practitioner
@@ -140,6 +141,15 @@ class StateContactHistory(HistoryRecord, table=True):
     entity_id: int = Field(foreign_key='state_contacts.id')
 
 
+class DocumentHistory(HistoryRecord, table=True):
+    """Every change to a document: its upload, scan result, and owner."""
+
+    # SQLModel defines __tablename__ as a declared_attr method; assigning a string is its documented way to name a table.
+    __tablename__ = 'documents_history'  # type: ignore[assignment]
+
+    entity_id: int = Field(foreign_key='documents.id')
+
+
 _HISTORY_TABLES: Mapping[type[SQLModel], type[HistoryRecord]] = {
     Practitioner: PractitionerHistory,
     QualifyingLicense: QualifyingLicenseHistory,
@@ -151,6 +161,7 @@ _HISTORY_TABLES: Mapping[type[SQLModel], type[HistoryRecord]] = {
     State: StateHistory,
     Fee: FeeHistory,
     StateContact: StateContactHistory,
+    Document: DocumentHistory,
 }
 
 

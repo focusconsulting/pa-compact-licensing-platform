@@ -1,3 +1,5 @@
-@forward "uswds-theme";
+@forward "uswds-theme" with (
+  $base-path: $base-path
+);
 @forward "uswds";
 @forward "uswds-theme-custom-styles";

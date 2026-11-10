@@ -43,6 +43,7 @@ class EventType(StrEnum):
     ADVERSE_ACTION_LIFTED = 'adverse_action.lifted'
     SII_FLAGGED = 'sii.flagged'
     SII_CLOSED = 'sii.closed'
+    DOCUMENT_UPLOADED = 'document.uploaded'
 
 
 # IDs, codes, and dates only: an event is read by every handler and kept forever, so it never carries PII.
