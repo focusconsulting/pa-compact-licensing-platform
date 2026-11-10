@@ -24,7 +24,7 @@ one a state submits (Rule 4 §4.3(e)(4)). A document is never deleted.
 4. **Download.** `GET .../documents/{id}/download` returns a link valid for one
    minute to the scanned version, saved as a file. Anything but `clean` is
    `409 DOCUMENT_NOT_CLEAN`. In AWS, the bucket also refuses any version not
-   tagged `NO_THREATS_FOUND`.
+   tagged `NO_THREATS_FOUND`, and only GuardDuty may change a version's tags.
 
 `GET .../documents/{id}` returns a document's details, including `scan_status`,
 so the client can show when a scan finishes.
