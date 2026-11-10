@@ -9,6 +9,7 @@ from licensing_api.repo.domain_event import EventType
 _CONSUMED_ELSEWHERE = {
     EventType.PRACTITIONER_PROFILE_CHANGED: 'U-03 propagates the change to every state the PA is in',
     EventType.PRACTITIONER_EMAIL_CHANGE_REQUESTED: 'U-03 sends the verification code',
+    EventType.DOCUMENT_UPLOADED: 'history only; D-01 lists documents',
 }
 
 

@@ -39,6 +39,12 @@ class Settings(BaseSettings):
     # The Commission mailbox for operational notifications; empty sends none.
     commission_ops_email: str = ''
 
+    # Documents over the S3 API (ADR-0017). The endpoint is unset in AWS; locally it is RustFS.
+    # Credentials are boto3's own chain: the task role in AWS, AWS_* variables locally.
+    s3_endpoint_url: str | None = None
+    s3_region: str = 'us-east-1'
+    s3_documents_bucket: str = 'documents'
+
     @property
     def db_url(self) -> str:
         """The asyncpg URL the app's database engine connects with."""
