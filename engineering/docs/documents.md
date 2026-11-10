@@ -13,8 +13,8 @@ one a state submits (Rule 4 §4.3(e)(4)). A document is never deleted.
    the bucket accepts only the declared size and type. Allowed: PDF, PNG, JPEG,
    CSV, DOCX, at most 20 MiB. Event: `document.uploaded`.
 2. **Scan.** GuardDuty Malware Protection scans each new object version and tags
-   it `GuardDutyMalwareScanStatus` (locally, ClamAV and
-   [`malware-scanner`](../mocks/malware-scanner/README.md) do the same). The
+   it `GuardDutyMalwareScanStatus` (locally,
+   [`malware-scanner`](../mocks/malware-scanner/README.md) does the same). The
    Worker reads the tag of each pending document's current version, checks a
    clean file starts like its type, and records `clean`, `infected`, or `error`
    with that version. No result within 15 minutes is `error`. Event:
@@ -28,6 +28,25 @@ one a state submits (Rule 4 §4.3(e)(4)). A document is never deleted.
 
 `GET .../documents/{id}` returns a document's details, including `scan_status`,
 so the client can show when a scan finishes.
+
+## Timings
+
+| What | How long | Set by |
+|---|---|---|
+| Upload form valid | 5 minutes | `UPLOAD_LINK_LIFETIME` (`documents.py`) |
+| GuardDuty scans and tags a version | AWS publishes no figure; measure it in staging | GuardDuty |
+| Local stand-in tags a version | within 2 seconds | `POLL_SECONDS` (`malware-scanner`) |
+| Worker looks again when nothing was due | 1 second | `IDLE_POLL_INTERVAL` (`worker.py`) |
+| Worker rechecks one pending document's tag | at most every 5 seconds | `RECHECK_INTERVAL` (`scans.py`) |
+| No tag, so recorded as `error` | 15 minutes after the document was created | `SCAN_TIMEOUT` (`scans.py`) |
+| File picker asks for `scan_status` | every 2 seconds | `SCAN_POLL_MS` (client `lib/documents.ts`) |
+| Download link valid | 1 minute | `DOWNLOAD_LINK_LIFETIME` (`documents.py`) |
+
+So once GuardDuty tags a file, the user sees the result within about 7 seconds:
+up to 5 for the Worker's recheck and 2 for the file picker's next poll. The
+timeout counts from creation, not upload, so a file posted just before its form
+expires still has 10 minutes to be scanned. The scan loop runs apart from event
+delivery and email, so neither delays the other.
 
 ## Who may see a document
 

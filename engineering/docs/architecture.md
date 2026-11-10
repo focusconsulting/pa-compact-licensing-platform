@@ -118,5 +118,5 @@ and [`engineering/api/.env.example`](../api/.env.example).
 | SES | maildev |
 | EventBridge Scheduler | None: run a job by hand with `just job <name>` |
 | S3 | RustFS |
-| GuardDuty Malware Protection | ClamAV and a tagger that writes the same tag ([`engineering/mocks/malware-scanner`](../mocks/malware-scanner/README.md)); not started in CI |
+| GuardDuty Malware Protection | A tagger that writes the same tag, `THREATS_FOUND` for the EICAR test file ([`engineering/mocks/malware-scanner`](../mocks/malware-scanner/README.md)); not started in CI |
 | Payment Provider, NCCPA | Mock servers, built with the tickets that write their clients |
