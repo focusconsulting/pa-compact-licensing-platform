@@ -1,0 +1,31 @@
+{
+  "steps": {
+    "license": "Your license and details",
+    "statements": "Statements and submit"
+  },
+  "required": "A red asterisk (*) indicates a required field.",
+  "start": {
+    "title": "Apply to join the PA Compact",
+    "intro": "Your state of qualifying license reviews your application. You'll get an email when it decides.",
+    "residence": "Primary residence address",
+    "residenceHint": "Where you live. It can be in a different state from your license. Legal papers can be sent to you here by mail.",
+    "sqlHeading": "Your state of qualifying license",
+    "state": "State",
+    "stateHint": "A state in the compact where you hold a full and unrestricted PA license. If there's more than one, choose any of them.",
+    "licenseHeading": "Find your license",
+    "licenseNumber": "License number",
+    "licenseExpires": "License expiration date",
+    "dateOfBirth": "Date of birth",
+    "detailsHeading": "Your details",
+    "otherNames": "Other names you use or have used (optional)",
+    "nccpa": "NCCPA certification number",
+    "continue": "Continue"
+  },
+  "errors": {
+    "heading": "There is a problem",
+    "load": "We couldn't load your application. Try again later.",
+    "save": "We couldn't save your answers. Try again.",
+    "stateNotLive": "That state isn't taking applications. Choose another state.",
+    "otherNameLastName": "Enter a last name for the other name, or leave the other name blank."
+  }
+}
