@@ -68,6 +68,9 @@ LOG_CONFIG = {
     },
     'loggers': {
         'uvicorn': {'handlers': [], 'level': settings.log_level.upper(), 'propagate': False},
+        # httpx logs each request's full URL at INFO, and an FSMB URL holds a practitioner's FID.
+        # Each client logs its own calls without identifiers.
+        'httpx': {'level': 'WARNING'},
     },
     'root': {
         'handlers': ['default'],
