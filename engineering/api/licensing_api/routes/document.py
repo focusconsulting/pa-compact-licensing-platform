@@ -172,6 +172,30 @@ async def upload_my_document(
     return Data(data=await _upload(session, ctx, storage, body, uploaded_in_state=None))
 
 
+@me.get(
+    '/unattached',
+    name='List my unattached documents',
+    description='Documents you uploaded that no application or request holds yet, newest first.',
+)
+async def list_my_unattached_documents(
+    caller: Annotated[User, require(Permission.MANAGE_OWN_RECORD)],
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+) -> Data[list[DocumentOut]]:
+    """The uploads a PA can still send with an application; submit attaches the ones it names."""
+    statement = (
+        select(Document)
+        .where(
+            col(Document.created_by) == caller.id,
+            col(Document.owner_type).is_(None),
+            col(Document.uploaded_in_state).is_(None),
+        )
+        .order_by(col(Document.created_at).desc(), col(Document.id).desc())
+    )
+    return Data(
+        data=[DocumentOut.model_validate(d) for d in (await session.scalars(statement)).all()]
+    )
+
+
 @states.post(
     '',
     status_code=201,
