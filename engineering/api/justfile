@@ -10,7 +10,7 @@ open_cmd := if os() == "macos" { "open" } else { "xdg-open" }
 install:
     uv sync
 
-# Start the local services (Postgres, maildev, RustFS, the malware scanner, Cognito mock), resetting their data
+# Start the local services (Postgres, maildev, RustFS, the malware scanner, Cognito mock, FSMB mock), resetting their data
 infra: infra-down
     docker compose -p pa-compact --profile scanner up -d --wait --build
     docker compose -p pa-compact run --rm rustfs-init >/dev/null

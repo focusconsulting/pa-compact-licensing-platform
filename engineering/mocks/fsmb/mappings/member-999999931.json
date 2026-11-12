@@ -1,0 +1,36 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "GET",
+    "urlPathTemplate": "/v1/rosters/{customerKey}/members/{fid}",
+    "pathParameters": {
+      "fid": {
+        "equalTo": "999999931"
+      }
+    },
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer local-fsmb-token"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "fid": "999999931",
+      "fullName": "Riley Dana Pendington",
+      "birthDate": "1991-11-30",
+      "boardActionStatus": "Unknown",
+      "currentReport": {
+        "reportId": 2447720,
+        "reportGeneratedBy": "apiuser",
+        "reportStatus": "Pending",
+        "isComplete": false,
+        "boardActionStatus": "Unknown"
+      }
+    }
+  }
+}

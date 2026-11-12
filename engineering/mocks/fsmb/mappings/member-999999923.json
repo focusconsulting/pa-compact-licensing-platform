@@ -1,0 +1,37 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "GET",
+    "urlPathTemplate": "/v1/rosters/{customerKey}/members/{fid}",
+    "pathParameters": {
+      "fid": {
+        "equalTo": "999999923"
+      }
+    },
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer local-fsmb-token"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "fid": "999999923",
+      "fullName": "Morgan Ellis Faileson",
+      "birthDate": "1983-04-17",
+      "boardActionStatus": "Unknown",
+      "currentReport": {
+        "reportId": 2447719,
+        "reportDateUtc": "2023-01-18T19:33:07Z",
+        "reportGeneratedBy": "apiuser",
+        "reportStatus": "Failed",
+        "isComplete": true,
+        "boardActionStatus": "Unknown"
+      }
+    }
+  }
+}

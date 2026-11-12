@@ -1,0 +1,37 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "GET",
+    "urlPathTemplate": "/v1/rosters/{customerKey}/members/{fid}",
+    "pathParameters": {
+      "fid": {
+        "equalTo": "999999915"
+      }
+    },
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer local-fsmb-token"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "fid": "999999915",
+      "fullName": "Philip James Testermancho",
+      "birthDate": "1978-08-08",
+      "boardActionStatus": "Alerted",
+      "currentReport": {
+        "reportId": 2447717,
+        "reportDateUtc": "2023-01-18T19:13:07Z",
+        "reportGeneratedBy": "apiuser",
+        "reportStatus": "Succeeded",
+        "isComplete": true,
+        "boardActionStatus": "Alerted"
+      }
+    }
+  }
+}
