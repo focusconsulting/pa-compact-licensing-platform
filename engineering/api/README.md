@@ -110,8 +110,9 @@ This builds the production (`app`) stage and tags the image as `pa-compact-api:l
 
 ## Architecture
 
-FastAPI application served by Uvicorn (development) and Gunicorn
-(containers), targeting Python 3.13. The rules this code follows are in
+FastAPI application served by Uvicorn (development) and Gunicorn over TLS
+(containers, [ADR-0019](../adrs/0019-tls-between-load-balancer-and-api.md)),
+targeting Python 3.13. The rules this code follows are in
 the [engineering constitution](../engineering-constitution.md).
 
 **Request lifecycle:**
@@ -166,6 +167,7 @@ just --list
 | [opentelemetry-instrumentation-asyncpg](https://opentelemetry-python-contrib.readthedocs.io/) | Auto-instrument asyncpg queries  | <https://opentelemetry-python-contrib.readthedocs.io/> |
 | [opentelemetry-exporter-otlp-proto-grpc](https://opentelemetry-python.readthedocs.io/) | Export traces/metrics to ADOT sidecar via gRPC | <https://opentelemetry-python.readthedocs.io/> |
 | [PyJWT[crypto]](https://pyjwt.readthedocs.io/en/stable/)                          | JWT validation (Cognito ID tokens, [ADR-0018](../adrs/0018-pyjwt-for-cognito-token-verification.md)) | <https://pyjwt.readthedocs.io/en/stable/> |
+| [cryptography](https://cryptography.io/en/latest/)                                | The API container's TLS certificate, made at start ([ADR-0019](../adrs/0019-tls-between-load-balancer-and-api.md)) | <https://cryptography.io/en/latest/> |
 | [httpx](https://www.python-httpx.org/)                                            | HTTP client (JWKS fetching)     | <https://www.python-httpx.org/>                                |
 | [Jinja](https://jinja.palletsprojects.com/en/stable/)                             | Email templates ([ADR-0014](../adrs/0014-email-templates-and-smtp.md)) | <https://jinja.palletsprojects.com/en/stable/> |
 | [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)       | Documents bucket: presigned links, scan tags ([ADR-0017](../adrs/0017-s3-client.md)) | <https://boto3.amazonaws.com/v1/documentation/api/latest/index.html> |

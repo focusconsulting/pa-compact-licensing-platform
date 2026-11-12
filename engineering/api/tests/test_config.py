@@ -1,9 +1,13 @@
+import ssl
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 from sqlalchemy.engine import make_url
 from yoyo.connections import parse_uri
 
 from licensing_api.config import Settings, get_settings, settings
+from licensing_api.serve import write_certificate
 
 
 def test_jwks_url_defaults_to_the_cognito_service_for_the_region():
@@ -62,3 +66,30 @@ def test_db_urls_carry_a_password_with_url_special_characters():
 
 def test_get_settings_returns_the_process_settings():
     assert get_settings() is settings
+
+
+def test_db_connections_are_unverified_without_a_ca_file():
+    settings = Settings(db_ca_file='')
+
+    assert settings.db_connect_args == {}
+    assert parse_uri(settings.sync_db_url).args == {}
+
+
+def test_db_connections_verify_the_server_against_the_ca_file(tmp_path: Path):
+    ca_file, _ = write_certificate(tmp_path / 'ca dir')
+    settings = Settings(db_ca_file=str(ca_file), db_password=URL_SPECIAL_PASSWORD)
+
+    context = settings.db_connect_args['ssl']
+    sync_url = parse_uri(settings.sync_db_url)
+
+    assert context.verify_mode is ssl.CERT_REQUIRED
+    assert context.check_hostname
+    assert len(context.get_ca_certs()) == 1
+    assert sync_url.args == {'sslmode': 'verify-full', 'sslrootcert': str(ca_file)}
+    assert sync_url.password == URL_SPECIAL_PASSWORD
+
+
+def test_the_rds_bundle_the_image_ships_loads_as_a_trust_store():
+    bundle = Path(__file__).parent.parent / 'certs' / 'rds-global-bundle.pem'
+
+    assert Settings(db_ca_file=str(bundle)).db_connect_args['ssl'].get_ca_certs()

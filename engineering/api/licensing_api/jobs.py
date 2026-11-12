@@ -98,7 +98,9 @@ async def main(argv: Sequence[str]) -> int:
     commands.add_parser('run', help='Run one job once').add_argument('name', choices=sorted(jobs))
     args = parser.parse_args(argv)
 
-    engine = create_async_engine(settings.db_url, pool_pre_ping=True)
+    engine = create_async_engine(
+        settings.db_url, pool_pre_ping=True, connect_args=settings.db_connect_args
+    )
     try:
         outcome = await run_job(async_sessionmaker(engine, expire_on_commit=False), jobs[args.name])
     finally:
