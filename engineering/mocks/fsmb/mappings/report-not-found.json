@@ -1,11 +1,11 @@
 {
-  "priority": 1,
+  "priority": 5,
   "request": {
     "method": "GET",
-    "urlPathTemplate": "/v1/rosters/{customerKey}/members/{fid}",
+    "urlPathTemplate": "/v1/rosters/{customerKey}/members/{fid}/reports/current/data",
     "pathParameters": {
       "fid": {
-        "equalTo": "999999949"
+        "matches": "^[0-9]{9}$"
       }
     },
     "headers": {
@@ -15,14 +15,14 @@
     }
   },
   "response": {
-    "status": 503,
+    "status": 404,
     "headers": {
       "Content-Type": "application/problem+json"
     },
     "jsonBody": {
-      "type": "https://tools.ietf.org/html/rfc9110#section-15.6.4",
-      "title": "Service Unavailable",
-      "status": 503
+      "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5",
+      "title": "Not Found",
+      "status": 404
     }
   }
 }

@@ -1,0 +1,20 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "GET",
+    "urlPathTemplate": "/v1/rosters/{customerKey}/members/{fid}/reports/current/data",
+    "pathParameters": {
+      "fid": {
+        "equalTo": "999999931"
+      }
+    },
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer local-fsmb-token"
+      }
+    }
+  },
+  "response": {
+    "status": 204
+  }
+}

@@ -2,7 +2,7 @@
   "priority": 6,
   "request": {
     "method": "GET",
-    "urlPathTemplate": "/v1/rosters/{customerKey}/members/{fid}",
+    "urlPathTemplate": "/v1/rosters/{customerKey}/members/{fid}/reports/current/data",
     "headers": {
       "Authorization": {
         "equalTo": "Bearer local-fsmb-token"

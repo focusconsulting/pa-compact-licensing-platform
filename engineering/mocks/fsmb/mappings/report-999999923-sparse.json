@@ -1,0 +1,54 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "GET",
+    "urlPathTemplate": "/v1/rosters/{customerKey}/members/{fid}/reports/current/data",
+    "pathParameters": {
+      "fid": {
+        "equalTo": "999999923"
+      }
+    },
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer local-fsmb-token"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "fid": "999999923",
+      "reportId": 2447719,
+      "asOfDateTimeUtc": "2023-01-18T19:33:07Z",
+      "generatedByUser": null,
+      "boardActionStatus": "Cleared",
+      "boardOrders": null,
+      "names": {
+        "legal": {
+          "firstName": null,
+          "middleName": null,
+          "lastName": "Sparseley",
+          "suffix": null,
+          "reportDate": "2023-01-18T00:00:00"
+        },
+        "other": null
+      },
+      "birthDate": {
+        "month": null,
+        "day": null,
+        "year": "1990",
+        "date": null,
+        "reportDate": "2023-01-18T00:00:00"
+      },
+      "medicalEducation": null,
+      "licenses": null,
+      "npi": null,
+      "abms": null,
+      "aoa": null,
+      "dea": null
+    }
+  }
+}

@@ -7,21 +7,22 @@ never deployed.
 
 It accepts only the local credentials in
 [`engineering/api/.env.example`](../../api/.env.example) and issues the bearer
-token `local-fsmb-token`.
+`local-fsmb-token`.
 
-## Members
+## Reports
 
-Any customer key works, including `me`.
+`GET /v1/rosters/{customerKey}/members/{fid}/reports/current/data`, for any
+customer key, including `me`:
 
 | FID | Response |
 |---|---|
-| `999999907` | Cleared, report succeeded (FSMB's own sample) |
-| `999999915` | Alerted, report succeeded (FSMB's own sample) |
-| `999999923` | Unknown, report failed |
-| `999999931` | Unknown, report pending, no report date |
+| `999999915` | Alerted: FSMB's own sample, plus a board order and a DEA registration |
+| `999999907` | Cleared: one license, an AOA certification, no orders |
+| `999999923` | Cleared, with only what FSMB requires: a legal last name, a birth year, nulls elsewhere |
+| `999999931` | `204`: no report yet |
 | `999999949` | `503` |
 | any other 9 digits | `404` |
 | anything else | `400` |
 
-A request without the token gets `401`. To add a member, copy a
-`member-*.json` file in [`mappings/`](mappings/) and rebuild with `just infra`.
+A request without the bearer gets `401`. To add a report, copy a
+`report-*.json` file in [`mappings/`](mappings/) and rebuild with `just infra`.

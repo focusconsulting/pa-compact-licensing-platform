@@ -99,7 +99,7 @@ No AWS account or credentials are needed.
 | Email (maildev) | <http://localhost:1080> |
 | File storage console (RustFS, `rustfsadmin` / `rustfsadmin`) | <http://localhost:9301> |
 | Malware scanner (tags uploads as GuardDuty would) | `docker compose -p pa-compact logs malware-scanner` |
-| FSMB mock (members in [`engineering/mocks/fsmb`](engineering/mocks/fsmb/README.md)) | <http://localhost:8083> |
+| FSMB mock (reports in [`engineering/mocks/fsmb`](engineering/mocks/fsmb/README.md)) | <http://localhost:8083> |
 | FSMB's API docs (`just fsmb-docs`) | <http://localhost:8084> |
 
 Sign in as any user in
