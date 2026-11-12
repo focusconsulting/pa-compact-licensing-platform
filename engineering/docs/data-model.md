@@ -227,13 +227,13 @@ A PA's application to participate in the compact, decided by their state of qual
 | `eligibility_withdrawn_at`, `eligibility_withdrawal_reason` | | Required for `eligibility_withdrawn` (Rule 3 §3.9(b)) |
 | `superseded_at` | TIMESTAMPTZ | Required for `superseded`: a later `change_sql` application became eligible (Rule 3 §3.6) |
 
-SCRUM-111 adds the sworn statement (Q-06), required outside `draft` and set again on each resubmission:
+The sworn statement (Q-06), set by submit and again by each resubmission. The submit route requires it; there is no CHECK, because rows made before it have none:
 
 | Column | Type | Meaning |
 |---|---|---|
 | `sworn_name` | TEXT | The name the PA typed |
 | `sworn_at` | TIMESTAMPTZ | When the server received it |
-| `sworn_ip` | INET | The address it came from |
+| `sworn_ip` | TEXT | The address the API saw it come from |
 
 The database enforces: `eligible` needs a linked license, `license_verified_at`, and `cbc_completed_on` (FLOW-02); one open application (`draft`, `submitted`, `info_requested`) per practitioner; one `eligible` application per practitioner, so a `change_sql` application that becomes eligible supersedes the old one in the same transaction, and the issuance check "participation still eligible" can only find the current one. The queue index is `(sql_state_code, status)`.
 
