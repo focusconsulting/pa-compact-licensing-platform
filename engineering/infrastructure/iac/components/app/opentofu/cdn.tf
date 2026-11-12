@@ -115,10 +115,11 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
 
   # Default cache behavior — serves the Next.js frontend from S3
   default_cache_behavior {
-    target_origin_id       = "S3-Origin"
-    viewer_protocol_policy = "redirect-to-https"
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
+    target_origin_id           = "S3-Origin"
+    viewer_protocol_policy     = "redirect-to-https"
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
+    allowed_methods            = ["GET", "HEAD"]
+    cached_methods             = ["GET", "HEAD"]
 
     forwarded_values {
       query_string = false
@@ -131,11 +132,12 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
   # Block Swagger/OpenAPI docs at the CDN edge — 403 returned before origin is contacted.
   # Matches /api/docs*, /api/redoc*, /api/openapi.json as forwarded by CloudFront.
   ordered_cache_behavior {
-    path_pattern           = "/api/docs*"
-    target_origin_id       = "ALB-Origin"
-    viewer_protocol_policy = "redirect-to-https"
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
+    path_pattern               = "/api/docs*"
+    target_origin_id           = "ALB-Origin"
+    viewer_protocol_policy     = "redirect-to-https"
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
+    allowed_methods            = ["GET", "HEAD"]
+    cached_methods             = ["GET", "HEAD"]
 
     forwarded_values {
       query_string = false
@@ -149,11 +151,12 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
   }
 
   ordered_cache_behavior {
-    path_pattern           = "/api/redoc*"
-    target_origin_id       = "ALB-Origin"
-    viewer_protocol_policy = "redirect-to-https"
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
+    path_pattern               = "/api/redoc*"
+    target_origin_id           = "ALB-Origin"
+    viewer_protocol_policy     = "redirect-to-https"
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
+    allowed_methods            = ["GET", "HEAD"]
+    cached_methods             = ["GET", "HEAD"]
 
     forwarded_values {
       query_string = false
@@ -167,11 +170,12 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
   }
 
   ordered_cache_behavior {
-    path_pattern           = "/api/openapi.json"
-    target_origin_id       = "ALB-Origin"
-    viewer_protocol_policy = "redirect-to-https"
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
+    path_pattern               = "/api/openapi.json"
+    target_origin_id           = "ALB-Origin"
+    viewer_protocol_policy     = "redirect-to-https"
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
+    allowed_methods            = ["GET", "HEAD"]
+    cached_methods             = ["GET", "HEAD"]
 
     forwarded_values {
       query_string = false
@@ -186,11 +190,12 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
 
   # API cache behavior — forwards all requests to the internal ALB uncached
   ordered_cache_behavior {
-    path_pattern           = "/api/*"
-    target_origin_id       = "ALB-Origin"
-    viewer_protocol_policy = "redirect-to-https"
-    allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
-    cached_methods         = ["GET", "HEAD"]
+    path_pattern               = "/api/*"
+    target_origin_id           = "ALB-Origin"
+    viewer_protocol_policy     = "redirect-to-https"
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
+    allowed_methods            = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods             = ["GET", "HEAD"]
 
     cache_policy_id = data.aws_cloudfront_cache_policy.caching_disabled.id
     # Forwards the viewer's Host header, which is what makes the load balancer's
