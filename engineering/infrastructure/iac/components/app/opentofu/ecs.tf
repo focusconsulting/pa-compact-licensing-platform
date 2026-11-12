@@ -111,15 +111,15 @@ resource "aws_iam_role_policy" "ecs_task_otel" {
         Resource = "*"
       },
       {
-        Sid    = "CloudWatchMetrics"
+        # The collector writes metrics as embedded-metric-format log events (adot-config.yaml).
+        Sid    = "MetricsLogGroup"
         Effect = "Allow"
         Action = [
-          "cloudwatch:PutMetricData",
           "logs:CreateLogStream",
           "logs:PutLogEvents",
           "logs:DescribeLogStreams",
         ]
-        Resource = "*"
+        Resource = "${aws_cloudwatch_log_group.api_metrics.arn}:*"
       },
       {
         Sid      = "AdotConfig"
@@ -156,6 +156,9 @@ resource "aws_ecs_task_definition" "api_task" {
       name      = "${local.application_name}-api"
       image     = "${var.repo_name}:${var.image_tag}"
       essential = true
+      # Nothing in the image can be changed at run time. What must be written (the TLS
+      # certificate, gunicorn's heartbeat files) goes to memory, as does TMPDIR.
+      readonlyRootFilesystem = true
       portMappings = [
         {
           containerPort = 8000
@@ -174,6 +177,7 @@ resource "aws_ecs_task_definition" "api_task" {
         { name = "S3_REGION", value = var.aws_region },
         { name = "S3_DOCUMENTS_BUCKET", value = aws_s3_bucket.documents.id },
         { name = "DB_CA_FILE", value = local.db_ca_file },
+        { name = "TMPDIR", value = "/dev/shm" },
       ]
       secrets = [
         {
@@ -204,7 +208,7 @@ resource "aws_ecs_task_definition" "api_task" {
         # and slow deployments. The ALB /ready check gates traffic separately.
         # The API serves TLS with a certificate it makes at start (ADR-0019,
         # licensing_api/serve.py); the check trusts exactly that certificate.
-        command     = ["CMD-SHELL", "python -c \"import ssl, urllib.request; urllib.request.urlopen('https://localhost:8000/api/health/live', context=ssl.create_default_context(cafile='/tmp/licensing-api-tls/cert.pem'))\""]
+        command     = ["CMD-SHELL", "python -c \"import ssl, urllib.request; urllib.request.urlopen('https://localhost:8000/api/health/live', context=ssl.create_default_context(cafile='/dev/shm/licensing-api-tls/cert.pem'))\""]
         interval    = 30
         timeout     = 5
         retries     = 3
@@ -224,10 +228,11 @@ resource "aws_ecs_task_definition" "api_task" {
     {
       # ADOT sidecar: config injected via AOT_CONFIG_CONTENT env var (ECS fetches SSM value at startup).
       # --config=ssm: scheme is unsupported in v0.43.2; AOT_CONFIG_CONTENT is the documented ECS approach.
-      name      = "adot-collector"
-      image     = "public.ecr.aws/aws-observability/aws-otel-collector:v0.43.2"
-      essential = false
-      secrets   = [{ name = "AOT_CONFIG_CONTENT", valueFrom = aws_ssm_parameter.adot_config.arn }]
+      name                   = "adot-collector"
+      image                  = "public.ecr.aws/aws-observability/aws-otel-collector:v0.43.2"
+      essential              = false
+      readonlyRootFilesystem = true
+      secrets                = [{ name = "AOT_CONFIG_CONTENT", valueFrom = aws_ssm_parameter.adot_config.arn }]
       portMappings = [
         { containerPort = 4317, hostPort = 4317, protocol = "tcp" }, # OTLP gRPC
         { containerPort = 4318, hostPort = 4318, protocol = "tcp" }, # OTLP HTTP
@@ -254,6 +259,14 @@ resource "aws_lb" "api_alb" {
 
   drop_invalid_header_fields = true
   enable_deletion_protection = var.deletion_protection
+
+  access_logs {
+    bucket  = aws_s3_bucket.logs.id
+    prefix  = "alb"
+    enabled = true
+  }
+
+  depends_on = [aws_s3_bucket_policy.logs]
 }
 
 resource "aws_lb_listener" "api_listener" {
