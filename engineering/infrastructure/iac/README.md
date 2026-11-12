@@ -125,14 +125,14 @@ may be left out of the tfvars file when the default is right.
 | `db_username` | The application's database user | `licensing` | required |
 | `db_instance_class` | Aurora instance class | `db.t4g.medium` | `db.t4g.medium` |
 | `instance_count` | Aurora instances | default | `1` |
-| `backup_retention_period` | Days of automated database backups | `1` | `30` |
+| `backup_retention_period` | Days of automated database backups, 7 to 35; `prod` sets 35 | `7` | required |
 | `repo_name` | The `ecr` component's `repository_url` for the API image | the staging repository | required |
 | `image_tag` | The commit SHA whose image runs; `just deploy` passes it, tfvars never set it | per deploy | required |
 | `ecs_max_capacity` | Most API tasks the autoscaler may run | default | `2` |
 | `commission_ops_email` | The Commission's operational mailbox; empty sends nothing | default | empty |
 | `cognito_callback_url`, `cognito_logout_url` | Cognito redirect URLs | default | `https://<dns_name>` |
 | `acm_certificate_arn` | The certificate the load balancer's HTTPS listener presents: it covers `dns_name` and is issued in `aws_region` | the zone's wildcard certificate in `us-east-1` | required |
-| `deletion_protection` | Guards what would block a teardown or lose data in one (the load balancer's deletion protection). `prod` leaves it on | `false`: staging is spun up and torn down | `true` |
+| `deletion_protection` | Guards what would block a teardown or lose data in one: the database's and the load balancer's deletion protection, and the database's final snapshot ([what it does](../../docs/security/infrastructure.md#deletion_protection)). `prod` leaves it on | `false`: staging is spun up and torn down | `true` |
 
 ## Adding an environment
 

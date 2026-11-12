@@ -36,9 +36,13 @@ variable "instance_count" {
 }
 
 variable "backup_retention_period" {
-  description = "RDS backup retention period in days"
+  description = "Days of automated database backups to keep"
   type        = number
-  default     = 30
+
+  validation {
+    condition     = var.backup_retention_period >= 7 && var.backup_retention_period <= 35
+    error_message = "backup_retention_period must be between 7 and 35 days."
+  }
 }
 
 variable "db_username" {

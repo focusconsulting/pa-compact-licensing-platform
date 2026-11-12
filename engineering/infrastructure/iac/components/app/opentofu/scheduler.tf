@@ -41,6 +41,12 @@ resource "aws_iam_role_policy" "scheduler_run_jobs" {
           aws_iam_role.ecs_task_role.arn,
         ]
       },
+      {
+        # Each schedule's target and input are encrypted with the environment's key.
+        Effect   = "Allow"
+        Action   = "kms:Decrypt"
+        Resource = aws_kms_key.data.arn
+      },
     ]
   })
 }
@@ -50,6 +56,7 @@ resource "aws_scheduler_schedule" "job" {
 
   name                = "${var.environment_name}-${local.application_name}-job-${replace(each.key, "_", "-")}"
   schedule_expression = each.value
+  kms_key_arn         = aws_kms_key.data.arn
 
   flexible_time_window {
     mode = "OFF"

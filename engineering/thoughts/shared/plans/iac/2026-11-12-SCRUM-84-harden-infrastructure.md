@@ -344,6 +344,8 @@ One customer-managed key per environment for the database, secrets, logs, and al
 **File**: `engineering/infrastructure/iac/components/app/opentofu/kms.tf` (new)
 **Changes**: `aws_kms_key.data` with rotation and an alias. Its policy lets the account administer it and delegate through IAM, lets CloudWatch Logs use it for this environment's log groups (conditioned on the encryption context), and lets CloudWatch alarms publish to the encrypted topic. The documents bucket keeps its own key from PR #173.
 
+Found while implementing: staging's cluster is encrypted today with the account's AWS-managed `aws/rds` key, not unencrypted; moving to the environment's key still replaces it. The Postgres log group is created here, encrypted with 365-day retention, before the cluster exports to it: RDS would otherwise create it unencrypted and keep it forever. The three query-logging parameters are written out in the parameter group, not in the `locals` map with the rest, because Checkov cannot see inside a dynamic block.
+
 #### 2. What uses it
 
 **File**: `rds.tf`, `secrets.tf`, `ses.tf`, `ecs.tf`, `worker.tf`, `alerting.tf`, `scheduler.tf`, `waf.tf`
@@ -373,7 +375,7 @@ enabled_cloudwatch_logs_exports = ["postgresql"]
 The instance gets `auto_minor_version_upgrade = true`, Performance Insights with the key, and enhanced monitoring at 60 seconds with its role.
 
 **File**: `engineering/infrastructure/iac/components/app/opentofu/main.tf`
-**Changes**: `log_statement = "ddl"`, `log_min_duration_statement = 1000`, and `log_parameter_max_length = 0`, so a logged slow statement never carries bound values, which may be PII.
+**Changes**: `log_statement` leaves the `locals` map; it, `log_min_duration_statement = 1000`, and `log_parameter_max_length = 0` are set in `rds.tf`, so a logged slow statement never carries bound values, which may be PII.
 
 **File**: `variables.tf`, `environments/staging/us-east-1/app.tfvars`, `iac/README.md`
 **Changes**: `backup_retention_period` loses its default and is validated to 7 through 35; staging sets 7. The README table follows, and says prod sets 35.
@@ -381,16 +383,16 @@ The instance gets `auto_minor_version_upgrade = true`, Performance Insights with
 #### 4. Documentation
 
 **File**: `engineering/docs/security/infrastructure.md` (new)
-**Changes**: what the key encrypts, and what `deletion_protection` guards and how an environment that has it on is retired (turn it off in a reviewed PR, apply, then destroy).
+**Changes**: what the key encrypts, what the database logs and keeps, and what `deletion_protection` guards and how an environment that has it on is retired (turn it off in a reviewed PR, apply, then destroy).
 
 ### Success Criteria
 
 #### Automated Verification
 
-- [ ] `cd engineering/infrastructure && just check`
-- [ ] The CI plan succeeds; against a running staging it replaces the cluster and its instance and changes everything else in place
-- [ ] Checkov no longer reports the IDs in the overview
-- [ ] `pre-commit run --files engineering/docs/security/infrastructure.md`
+- [x] `cd engineering/infrastructure && just check`
+- [x] The plan succeeds; against a running staging it replaces the cluster and its instance and changes everything else in place (run locally, 2026-11-12; CI repeats it)
+- [x] Checkov no longer reports the IDs in the overview: 28 OpenTofu findings remain, from 52
+- [x] `pre-commit run --files engineering/docs/security/infrastructure.md`
 
 #### Manual Verification
 
@@ -493,6 +495,7 @@ The remaining findings are fixed or skipped with reasons, Checkov gates pull req
 | CKV_AWS_136 KMS on ECR | repository | The image is built from this public repository and holds no data; AES-256 at rest. |
 | CKV_AWS_145 KMS on S3 | client and logs buckets | The client bucket holds the public site and its origin access identity cannot read SSE-KMS; load balancer logs accept only SSE-S3. |
 | CKV_AWS_18 access logging | logs bucket | It is the log destination. |
+| CKV_AWS_259 HSTS preload | response headers policy | The check wants `preload`. It asks browser vendors to hard-code the domain as HTTPS-only, which is slow to undo and is the Commission's call for its production domain; `max-age` and `includeSubDomains` are set. Found in Phase 4. |
 
 Any check that Checkov still reports after these, and that this plan did not foresee, is fixed if it has a fix and otherwise added to this table in the PR.
 

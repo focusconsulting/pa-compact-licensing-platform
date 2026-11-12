@@ -1,5 +1,6 @@
 resource "aws_secretsmanager_secret" "cognito_config" {
-  name = "${var.environment_name}-cognito-config"
+  name       = "${var.environment_name}-cognito-config"
+  kms_key_id = aws_kms_key.data.arn
 }
 
 # Every secret value here is write-only (secret_string_wo), so the provider
@@ -18,7 +19,8 @@ resource "aws_secretsmanager_secret_version" "cognito_config_version" {
 
 # Create the secret in AWS Secrets Manager
 resource "aws_secretsmanager_secret" "db_credentials" {
-  name = "${var.environment_name}-db-credentials"
+  name       = "${var.environment_name}-db-credentials"
+  kms_key_id = aws_kms_key.data.arn
 }
 
 # The master password is generated here and lives in Secrets Manager (and the

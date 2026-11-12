@@ -242,11 +242,16 @@ resource "aws_cloudwatch_log_group" "waf_cloudfront" {
 
   name              = "aws-waf-logs-${local.waf_name}-cloudfront"
   retention_in_days = 365
+  # A log group can use only a key from its own region, and this one is always in
+  # us-east-1. Elsewhere it holds request metadata, session headers redacted, under
+  # the service's own key.
+  kms_key_id = var.aws_region == "us-east-1" ? aws_kms_key.data.arn : null
 }
 
 resource "aws_cloudwatch_log_group" "waf_cognito" {
   name              = "aws-waf-logs-${local.waf_name}-cognito"
   retention_in_days = 365
+  kms_key_id        = aws_kms_key.data.arn
 }
 
 data "aws_iam_policy_document" "waf_log_delivery" {

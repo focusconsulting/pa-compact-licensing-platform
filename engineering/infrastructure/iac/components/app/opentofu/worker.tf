@@ -33,12 +33,14 @@ locals {
 
 resource "aws_cloudwatch_log_group" "worker_logs" {
   name              = "/ecs/${local.application_name}/${var.environment_name}/worker"
-  retention_in_days = 30
+  retention_in_days = 365
+  kms_key_id        = aws_kms_key.data.arn
 }
 
 resource "aws_cloudwatch_log_group" "jobs_logs" {
   name              = "/ecs/${local.application_name}/${var.environment_name}/jobs"
-  retention_in_days = 30
+  retention_in_days = 365
+  kms_key_id        = aws_kms_key.data.arn
 }
 
 resource "aws_ecs_task_definition" "worker_task" {
