@@ -95,7 +95,7 @@ Staging is not a standing environment: it is spun up and torn down by design. Wh
 
 ## Implementation Approach
 
-Phases 1 to 4 branch from `main` and do not depend on each other's code, but merge in order so each staging deploy changes one thing. Phase 5 needs PR #173 merged (it touches the documents bucket). Phase 6 needs #173 and #181.
+Phases 1 to 4 branch from `main` and do not depend on each other's code, but merge in order so each staging deploy changes one thing. Phase 5 touches the documents bucket from PR #173, which merged on 2026-11-12. Phase 6 needs #181.
 
 PR #181 and Phase 2 meet in `.zap/rules.tsv` and the register. Whichever merges second carries the edit: if #181 is on `main` when Phase 2 is ready, Phase 2 makes it; if not, ask Stephen to swap the two ignores for 10055 in #181 before it merges, since from the day the headers deploy ZAP reports 10055 instead of 10038 and 10020.
 
@@ -117,21 +117,13 @@ HTTPS from CloudFront to the load balancer and from the load balancer to the API
 
 #### 1. ADR: TLS between the load balancer and the API
 
-**File**: `engineering/adrs/NNNN-tls-between-load-balancer-and-api.md` (next free number, via `/create_adr`)
+**File**: `engineering/adrs/0019-tls-between-load-balancer-and-api.md`
 **Changes**: the API serves TLS with a certificate generated at start, because the load balancer does not validate target certificates; `cryptography` is imported directly; SCRUM-192 replaces the certificate for production. Links this plan.
 
 #### 2. The API serves TLS
 
 **File**: `engineering/api/licensing_api/serve.py` (new)
-**Changes**: `main()` writes an EC P-256 key and a self-signed certificate (subject alternative name `localhost`, 365 days) to a directory from `tempfile.mkdtemp`, then `os.execvp`s gunicorn.
-
-```python
-os.execvp('gunicorn', [
-    'gunicorn', '-k', 'uvicorn.workers.UvicornWorker', '--bind', '0.0.0.0:8000',
-    '--certfile', cert, '--keyfile', key, '--worker-tmp-dir', '/dev/shm',
-    'licensing_api.__main__:app',
-])
-```
+**Changes**: `main()` writes an EC P-256 key and a self-signed certificate (subject alternative name `localhost`, 365 days) to `<tmp>/licensing-api-tls/`, then `os.execvp`s gunicorn with `--certfile` and `--keyfile`. The directory is fixed, not from `mkdtemp`, because the container health check in `ecs.tf` has to name the certificate it trusts. `--worker-tmp-dir /dev/shm` waits for Phase 5, which is what makes the root filesystem read-only.
 
 **File**: `engineering/api/Dockerfile`
 **Changes**: the `app` stage's `CMD` becomes `["python", "-m", "licensing_api.serve"]`. The `dev` stage and `just dev` are unchanged.
@@ -181,13 +173,15 @@ os.execvp('gunicorn', [
 #### 6. Security groups
 
 **File**: `engineering/infrastructure/iac/components/app/opentofu/networking.tf`
-**Changes**: every inline rule becomes an `aws_vpc_security_group_ingress_rule` or `_egress_rule` with a description (inline and standalone rules cannot mix, and the API and database groups reference each other).
+**Changes**: each group's allow-all egress is replaced by the ports in use, every rule gets a description, and the CloudFront ingress moves to 443. Rules stay inline.
 
 | Group | Ingress | Egress |
 |---|---|---|
-| Load balancer | 443 from CloudFront's group | 8000 to the tasks' group |
-| Tasks | 8000 from the load balancer; all from the jumpbox, if any | 5432 to the database group; 443 and 587 to anywhere (AWS APIs, Cognito, ECR, SES SMTP) |
-| Database | 5432 from the tasks; 5432 from the jumpbox, if any | none |
+| Load balancer | 443 from CloudFront's group | 8000 to the VPC's CIDR |
+| Tasks | 8000 from the load balancer; all from the jumpbox, if any | 5432 to the VPC's CIDR; 443 and 587 to anywhere (AWS APIs, Cognito, ECR, SES SMTP) |
+| Database | 5432 from the tasks; 5432 from the jumpbox, if any | none (`egress = []`) |
+
+Found while implementing: standalone rule resources, as first planned, do not work on an environment that already exists. A group whose inline blocks are removed from the code keeps its rules in AWS, so the allow-all egress would have survived unseen and the new rules that duplicate old ones would have failed the apply. Inline rules are authoritative: the plan against running staging shows the old egress removed. The cost is that two egress rules name the VPC's CIDR, not the receiving group, because two groups cannot name each other inline; the receiving group's ingress rule still names the sender.
 
 The other scanners see this phase too. Trivy scans the `app` image with its new start command and certificate bundle. CodeQL reads `serve.py`. gitleaks reads the history, so tests generate their key at run time and no key or certificate with a private key is ever committed; the RDS bundle holds public certificates only.
 
@@ -197,18 +191,18 @@ The other scanners see this phase too. Trivy scans the `app` image with its new 
 **Changes**: in the `app` variable table, `acm_certificate_arn`'s row changes from "not yet used" to required, with staging's value, and `deletion_protection` gets a row saying prod leaves it on. "Adding an environment" says to issue a certificate covering `dns_name` in the environment's own region and put its ARN in `app.tfvars`; outside `us-east-1` that is a second certificate beside the one CloudFront needs.
 
 **File**: `engineering/docs/architecture.md`
-**Changes**: the load balancer to API edge is HTTPS.
+**Changes**: none. The container diagram draws CloudFront to the API as one HTTPS edge, which this phase makes true.
 
 ### Success Criteria
 
 #### Automated Verification
 
-- [ ] `cd engineering/api && just infra && just test-coverage` passes at 100%
-- [ ] `cd engineering/api && just lint`
-- [ ] `cd engineering/infrastructure && just check`
-- [ ] The CI plan for `app` succeeds; against a running staging it shows the listener, target group, and security-group rules replaced, the VPC origin updated in place, and nothing else destroyed
-- [ ] `docker build --target app -t licensing-api:tls engineering/api && docker run --rm -d -p 8000:8000 licensing-api:tls`, then `curl -k https://localhost:8000/api/health/live` returns 200
-- [ ] Checkov no longer reports the IDs in the overview
+- [x] `cd engineering/api && just infra && just test-coverage` passes at 100% (429 tests)
+- [x] `cd engineering/api && just lint`
+- [x] `cd engineering/infrastructure && just check`
+- [x] The plan for `app` succeeds against running staging (run locally, 2026-11-12; CI repeats it on the PR): 4 to add, 12 to change, 4 to destroy. The target group and the three task definitions are replaced; the listener, security groups, VPC origin, and distribution change in place
+- [x] `docker build --target app -t licensing-api:tls engineering/api && docker run --rm -d -p 8000:8000 licensing-api:tls`, then `curl -k https://localhost:8000/api/health/live` returns 200; plain HTTP gets no answer, and the health check command from `ecs.tf` passes inside the container
+- [x] Checkov no longer reports the IDs in the overview
 
 #### Manual Verification
 
