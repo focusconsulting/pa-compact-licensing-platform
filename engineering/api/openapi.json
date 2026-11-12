@@ -16,6 +16,52 @@
         "title": "ApplicationStatus",
         "type": "string"
       },
+      "AttestationAppliesTo": {
+        "description": "What an attestation is for: the PA's participation application, the state's eligibility check, or a privilege request.",
+        "enum": [
+          "participation",
+          "eligibility",
+          "privilege"
+        ],
+        "title": "AttestationAppliesTo",
+        "type": "string"
+      },
+      "AttestationOut": {
+        "description": "The current version of an attestation. Accept it by ``code`` and ``version``.",
+        "examples": [
+          {
+            "applies_to": "participation",
+            "code": "nccpa_current",
+            "text": "I hold a current certification from the National Commission on Certification of Physician Assistants (NCCPA).",
+            "version": 1
+          }
+        ],
+        "properties": {
+          "applies_to": {
+            "$ref": "#/components/schemas/AttestationAppliesTo"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "code",
+          "version",
+          "applies_to",
+          "text"
+        ],
+        "title": "AttestationOut",
+        "type": "object"
+      },
       "AuditEntryOut": {
         "description": "One staff read of private data or security event. ``before`` and ``after`` never hold an SSN.",
         "examples": [
@@ -276,6 +322,54 @@
           "data"
         ],
         "title": "Data[DocumentUpload]",
+        "type": "object"
+      },
+      "Data_list_AttestationOut__": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/AttestationOut"
+            },
+            "title": "Data",
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Data[list[AttestationOut]]",
+        "type": "object"
+      },
+      "Data_list_DocumentOut__": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/DocumentOut"
+            },
+            "title": "Data",
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Data[list[DocumentOut]]",
+        "type": "object"
+      },
+      "Data_list_StateOut__": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/StateOut"
+            },
+            "title": "Data",
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Data[list[StateOut]]",
         "type": "object"
       },
       "DocumentDownload": {
@@ -640,6 +734,43 @@
         ],
         "title": "ScanStatus",
         "type": "string"
+      },
+      "StateOut": {
+        "description": "A state, and whether it takes applications: only a live member does.",
+        "examples": [
+          {
+            "code": "KS",
+            "is_live": true,
+            "is_member": true,
+            "name": "Kansas"
+          }
+        ],
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "is_live": {
+            "title": "Is Live",
+            "type": "boolean"
+          },
+          "is_member": {
+            "title": "Is Member",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "is_member",
+          "is_live"
+        ],
+        "title": "StateOut",
+        "type": "object"
       },
       "UploadForm": {
         "description": "POST the ``fields`` and then the file, as ``multipart/form-data`` field ``file``, to ``url``.",
@@ -1140,6 +1271,43 @@
         ]
       }
     },
+    "/api/me/documents/unattached": {
+      "get": {
+        "description": "Documents you uploaded that no application or request holds yet, newest first.",
+        "operationId": "List_my_unattached_documents_api_me_documents_unattached_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_list_DocumentOut__"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List My Unattached Documents",
+        "tags": [
+          "me"
+        ]
+      }
+    },
     "/api/me/documents/{document_id}": {
       "get": {
         "description": "A document's details, including whether its malware scan has finished.",
@@ -1239,6 +1407,80 @@
         "summary": "Download My Document",
         "tags": [
           "me"
+        ]
+      }
+    },
+    "/api/public/attestations": {
+      "get": {
+        "description": "The current version of each attestation that applies in every state, in the order to show them.",
+        "operationId": "List_current_attestations_api_public_attestations_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "applies_to",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AttestationAppliesTo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_list_AttestationOut__"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "List Current Attestations",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/public/states": {
+      "get": {
+        "description": "Every US jurisdiction, by name, with its membership and whether it is live.",
+        "operationId": "List_states_api_public_states_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_list_StateOut__"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "List States",
+        "tags": [
+          "public"
         ]
       }
     },
