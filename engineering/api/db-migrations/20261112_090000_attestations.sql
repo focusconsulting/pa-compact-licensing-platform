@@ -111,7 +111,7 @@ FROM (VALUES
      'I consent to service of process by mail at my primary residence address, and I will report a change of that address to the Commission within 30 days.',
      'Rule 3 §3.4(a)(3); ML §5.A(2)'),
     ('background_check', 'participation', 3,
-     'I will submit to a criminal background check, including fingerprints or other biometric information, through the process my state of qualifying license designates, within 60 days of this application.',
+     'To join the PA Compact, submit to a criminal background check, including fingerprints, through your state of qualifying license''s process within 60 days of applying.',
      'Rule 3 §3.4(a)(4)'),
     ('truthfulness', 'participation', 4,
      'I swear that the information in this application is true and accurate.',
