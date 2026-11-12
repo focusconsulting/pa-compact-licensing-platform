@@ -78,3 +78,21 @@ class PractitionerSsn(AuditColumns, table=True):
     ssn_key_version: int
     ssn_lookup_hash: bytes = Field(unique=True)
     ssn_last4: str = Field(max_length=4)
+
+
+class PractitionerOtherName(AuditColumns, table=True):
+    """A name the PA has used, previously or currently (Rule 4 §4.3(c)(2)); part of the identity group.
+
+    A name the PA stops listing gets ``removed_at`` rather than being deleted, so its history keeps its row.
+    """
+
+    # SQLModel defines __tablename__ as a declared_attr method; assigning a string is its documented way to name a table.
+    __tablename__ = 'practitioner_other_names'  # type: ignore[assignment]
+
+    id: int | None = Field(default=None, primary_key=True)
+    practitioner_id: int = Field(foreign_key='practitioners.id')
+    first_name: str | None = None
+    middle_name: str | None = None
+    last_name: str
+    name_suffix: str | None = None
+    removed_at: datetime | None = Field(default=None, sa_type=TimestampTZ)
