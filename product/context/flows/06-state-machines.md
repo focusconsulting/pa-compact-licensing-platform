@@ -33,12 +33,16 @@ stateDiagram-v2
     submitted --> eligible: SQL decision
     submitted --> denied: SQL decision
     submitted --> withdrawn: 60 days incomplete / PA withdraws
-    info_requested --> withdrawn: 60 days
+    info_requested --> withdrawn: 60 days / PA withdraws
     eligible --> eligibility_withdrawn: SQL withdraws
+    eligible --> superseded: a change_sql application becomes eligible [R3r §3.6]
     denied --> [*]
     withdrawn --> [*]
     eligibility_withdrawn --> [*]
+    superseded --> [*]
 ```
+
+A draft is never withdrawn: the SQL has not received it (R3r §3.7(a)). `tests/test_application_transitions.py` keeps this diagram equal to `APPLICATION_TRANSITIONS`.
 
 ## Privilege request (P-01 / P-03)
 
