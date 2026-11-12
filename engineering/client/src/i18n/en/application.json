@@ -47,6 +47,47 @@
     "save": "We couldn't save your answers. Try again.",
     "stateNotLive": "That state isn't taking applications. Choose another state.",
     "statementsChanged": "A statement changed since you read it. Read the statements again and check each one.",
-    "otherNameLastName": "Enter a last name for the other name, or leave the other name blank."
+    "otherNameLastName": "Enter a last name for the other name, or leave the other name blank.",
+    "withdraw": "We couldn't withdraw your application. Try again."
+  },
+  "intro": {
+    "title": "Join the PA Compact",
+    "howHeading": "How joining works",
+    "step1": "Give your license and details, then sign the statements and submit.",
+    "step2": "Your state of qualifying license checks your license against its records.",
+    "step3": "To join the PA Compact, submit to a criminal background check, including fingerprints, through that state's process within 60 days of applying.",
+    "step4": "If that state confirms you're eligible, PA Compact will email you. Then you can apply for Compact Privileges to practice in other states, and pay their fees.",
+    "haveReady": "Have ready:",
+    "readyResidence": "Your primary residence address",
+    "readyLicense": "Your license number",
+    "readyBirth": "Your date of birth",
+    "readyNccpa": "Your NCCPA certification number",
+    "start": "Start your application"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "applicationHeading": "Your application to join the PA Compact",
+    "stateLicense": "{{state}} · License {{license}}",
+    "sent": "Sent to {{state}} on {{date}}",
+    "reviewChecks": "{{state}} checks your license. If you haven't yet, submit to a criminal background check through {{state}}'s process within 60 days of your application.",
+    "reviewEmail": "PA Compact will email you when {{state}} decides. Once you're eligible, you can apply for Compact Privileges to practice in other states.",
+    "withdraw": "Withdraw application",
+    "withdrawHeading": "Withdraw your application to join the PA Compact?",
+    "withdrawBody": "{{state}} will stop reviewing it. To join later, you'll need to apply again.",
+    "withdrawConfirm": "Yes, withdraw application",
+    "withdrawCancel": "Cancel",
+    "withdrawnHeading": "Application withdrawn",
+    "withdrawnAlert": "You withdrew your application on {{date}}. PA Compact emailed you and {{state}}.",
+    "withdrawnOn": "Withdrawn on {{date}}",
+    "withdrawnText": "{{state}} has stopped reviewing it. To join the PA Compact later, apply again.",
+    "decidedOn": "{{state}} decided on {{date}}",
+    "deniedAppeal": "{{state}} found you not eligible. You can appeal to {{state}} under its law. To find out how and by when, contact {{state}}.",
+    "deniedAgain": "You can apply again through {{state}} or another state where you hold a license.",
+    "licenseHeading": "Your qualifying license",
+    "licenseLine": "{{state}} · License {{license}} · {{status}} · Expires {{date}}",
+    "verified": "Verified by {{state}}, {{date}}",
+    "privilegesHeading": "Your Compact Privileges",
+    "noPrivileges": "You don't have any Compact Privileges yet. A Compact Privilege lets you practice as a PA in another state in the compact, under that state's laws. To get one, you choose the states, meet any requirements they have, and pay their fees.",
+    "applyPrivileges": "Apply for Compact Privileges"
   }
 }
