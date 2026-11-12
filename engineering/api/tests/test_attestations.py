@@ -18,14 +18,8 @@ from licensing_api.repo.attestation import (
 from tests.factories import assert_rejected, make_application, make_practitioner, system_user_id
 
 _PARTICIPATION = [
-    'arc_pa_graduate',
-    'nccpa_current',
-    'no_convictions',
-    'no_controlled_substance_action',
-    'no_current_restriction',
-    'two_year_bar',
-    'no_pending_investigation',
     'service_of_process',
+    'no_pending_investigation',
     'background_check',
     'truthfulness',
 ]
@@ -67,6 +61,19 @@ async def test_the_seed_asks_for_each_participation_attestation_in_order(db_sess
     assert [a.code for a in await _current(db_session)] == _PARTICIPATION
 
 
+async def test_the_seed_lists_the_eligibility_requirements_the_state_checks(db_session):
+    codes = [a.code for a in await _current(db_session, AttestationAppliesTo.ELIGIBILITY)]
+
+    assert codes == [
+        'arc_pa_graduate',
+        'nccpa_current',
+        'no_convictions',
+        'no_controlled_substance_action',
+        'no_current_restriction',
+        'two_year_bar',
+    ]
+
+
 async def test_the_seed_asks_for_supervision_and_prescribing_compliance_on_a_privilege(db_session):
     codes = [a.code for a in await _current(db_session, AttestationAppliesTo.PRIVILEGE)]
 
@@ -83,19 +90,19 @@ async def test_every_seeded_attestation_cites_a_rule_or_model_legislation_clause
 
 
 async def test_a_new_version_becomes_current(db_session):
-    await _add_version(db_session, 'nccpa_current', 2)
+    await _add_version(db_session, 'service_of_process', 2)
 
     current = {a.code: a.version for a in await _current(db_session)}
 
-    assert current['nccpa_current'] == 2
+    assert current['service_of_process'] == 2
 
 
 async def test_a_retired_attestation_is_no_longer_asked_for(db_session):
-    attestation = await db_session.get(Attestation, ('two_year_bar', 1))
+    attestation = await db_session.get(Attestation, ('background_check', 1))
     attestation.retired_at = attestation.created_at
     await db_session.flush()
 
-    assert 'two_year_bar' not in [a.code for a in await _current(db_session)]
+    assert 'background_check' not in [a.code for a in await _current(db_session)]
 
 
 async def test_a_state_s_own_attestation_is_not_asked_of_every_state(db_session):
@@ -175,10 +182,13 @@ async def test_accepting_a_newer_version_keeps_the_older_acceptance(db_session):
     application_id = await _application_id(db_session)
     ctx = await _context(db_session)
     await accept(
-        db_session, ctx, application_id, await db_session.get(Attestation, ('nccpa_current', 1))
+        db_session,
+        ctx,
+        application_id,
+        await db_session.get(Attestation, ('service_of_process', 1)),
     )
     await accept(
-        db_session, ctx, application_id, await _add_version(db_session, 'nccpa_current', 2)
+        db_session, ctx, application_id, await _add_version(db_session, 'service_of_process', 2)
     )
 
     versions = (
@@ -196,7 +206,7 @@ async def test_accepting_a_newer_version_keeps_the_older_acceptance(db_session):
 async def test_accepting_the_same_version_twice_records_it_once(db_session):
     application_id = await _application_id(db_session)
     ctx = await _context(db_session)
-    attestation = await db_session.get(Attestation, ('nccpa_current', 1))
+    attestation = await db_session.get(Attestation, ('service_of_process', 1))
 
     await accept(db_session, ctx, application_id, attestation)
     await accept(db_session, ctx, application_id, attestation)
@@ -234,7 +244,7 @@ async def test_an_acceptance_is_never_changed_or_removed(db_session, statement):
         db_session,
         await _context(db_session),
         application_id,
-        await db_session.get(Attestation, ('nccpa_current', 1)),
+        await db_session.get(Attestation, ('service_of_process', 1)),
     )
 
     await assert_rejected(db_session, statement)

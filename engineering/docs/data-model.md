@@ -239,12 +239,12 @@ The database enforces: `eligible` needs a linked license, `license_verified_at`,
 
 ### `attestations`
 
-The statements a PA accepts to apply: for participation from Rule 3 §3.4(a) and ML §4.A, for a privilege from Rule 3 §3.3(a)(11)–(12). Seeded with drafted texts that Commission legal signs off (Q-06); a state's jurisprudence attestation is added when the state configures one. Tier: public. Owner: epic 6.
+The statements a PA accepts to apply: for participation from Rule 3 §3.4(a), for a privilege from Rule 3 §3.3(a)(11)–(12). It also holds the Rule 3 §3.3(a) eligibility requirements the state checks under §3.4(b)(1), which the PA does not accept. Seeded with drafted texts that Commission legal signs off (Q-06); a state's jurisprudence attestation is added when the state configures one. Tier: public. Owner: epic 6.
 
 | Column | Type | Meaning |
 |---|---|---|
 | `code`, `version` | TEXT, INTEGER | Primary key. A wording change is a new version, so an acceptance always names the text the PA read |
-| `applies_to` | TEXT CHECK | `participation` or `privilege` |
+| `applies_to` | TEXT CHECK | `participation`, `eligibility` (the state's checklist, not accepted by the PA), or `privilege` |
 | `state_code` | FK `states`, NULL | One remote state's own attestation, for a requirement it configures as `attestation`, such as jurisprudence; NULL applies to every state |
 | `sort_order` | SMALLINT | Display order within `applies_to` |
 | `text` | TEXT | What the PA reads |

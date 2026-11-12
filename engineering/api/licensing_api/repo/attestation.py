@@ -21,9 +21,11 @@ if TYPE_CHECKING:
 
 
 class AttestationAppliesTo(StrEnum):
-    """Whether an attestation is part of the participation application or a privilege request."""
+    """What an attestation is for: the PA's participation application, the state's eligibility check, or a privilege request."""
 
     PARTICIPATION = 'participation'
+    # The Rule 3 §3.3(a) requirements the state checks (§3.4(b)(1)); the PA does not accept them.
+    ELIGIBILITY = 'eligibility'
     PRIVILEGE = 'privilege'
 
 
