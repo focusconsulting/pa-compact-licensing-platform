@@ -157,6 +157,18 @@ A PA's uniform data set (Rule 4 §4.3(c)), held by the Commission and written by
 
 Other names (§4.3(c)(2)) and the address and email change log (§4.3(e)(1)–(2)) are reserved for epic 5.
 
+### `practitioner_other_names`
+
+Other names a PA has used, previously or currently (Rule 4 §4.3(c)(2)), covered by the `identity` group. Tier: private. Owner: epic 5.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `practitioner_id` | FK | |
+| `first_name`, `middle_name`, `last_name`, `name_suffix` | TEXT | `last_name` is required |
+| `removed_at` | TIMESTAMPTZ, NULL | The PA stopped listing it. Rows are never deleted, so their history keeps pointing at them |
+
+Changes are kept in `practitioner_other_names_history`. `PATCH /me/profile` replaces the list: a name no longer listed is removed, a new one added, and one listed again left alone.
+
 ### `practitioner_ssn`
 
 One SSN per practitioner, encrypted by the application (ADR-0007). Tier: restricted. No history table: changes are audited without the value.
