@@ -21,11 +21,32 @@
     "nccpa": "NCCPA certification number",
     "continue": "Continue"
   },
+  "statements": {
+    "title": "Statements and submit",
+    "heading": "Statements",
+    "backgroundHeading": "Background check",
+    "backgroundCheck": "To join the PA Compact, submit to a criminal background check, including fingerprints, through {{state}}'s process within 60 days of applying.",
+    "understand": "I understand",
+    "swornHeading": "Sworn statement",
+    "swornName": "Type your full legal name",
+    "submit": "Submit application",
+    "back": "Back"
+  },
+  "received": {
+    "heading": "Application received",
+    "applied": "You applied on {{date}}. {{state}} will review it next.",
+    "nextHeading": "What happens next",
+    "next1": "{{state}} checks your license against its records.",
+    "next2": "To join the PA Compact, submit to a criminal background check, including fingerprints, through {{state}}'s process within 60 days of applying.",
+    "next3": "If {{state}} needs more information, {{state}} will contact you.",
+    "next4": "If {{state}} confirms you're eligible, PA Compact will email you. Then you can apply for Compact Privileges to practice in other states, and pay their fees."
+  },
   "errors": {
     "heading": "There is a problem",
     "load": "We couldn't load your application. Try again later.",
     "save": "We couldn't save your answers. Try again.",
     "stateNotLive": "That state isn't taking applications. Choose another state.",
+    "statementsChanged": "A statement changed since you read it. Read the statements again and check each one.",
     "otherNameLastName": "Enter a last name for the other name, or leave the other name blank."
   }
 }
