@@ -9,6 +9,7 @@ locals {
     "${local.log_group_arn_prefix}:/ecs/${local.application_name}/${var.environment_name}/*",
     "${local.log_group_arn_prefix}:/aws/rds/cluster/${local.cluster_identifier}/*",
     "${local.log_group_arn_prefix}:aws-waf-logs-${local.waf_name}-*",
+    "${local.log_group_arn_prefix}:/aws/cloudtrail/${local.trail_name}",
   ]
 }
 
@@ -46,6 +47,16 @@ resource "aws_kms_key" "data" {
         Resource  = "*"
         Condition = {
           StringEquals = { "aws:SourceAccount" = data.aws_caller_identity.current.account_id }
+        }
+      },
+      {
+        Sid       = "CloudTrailEncryptsThisTrailsLogs"
+        Effect    = "Allow"
+        Principal = { Service = "cloudtrail.amazonaws.com" }
+        Action    = ["kms:GenerateDataKey*", "kms:DescribeKey"]
+        Resource  = "*"
+        Condition = {
+          StringEquals = { "aws:SourceArn" = local.trail_arn }
         }
       },
     ]
