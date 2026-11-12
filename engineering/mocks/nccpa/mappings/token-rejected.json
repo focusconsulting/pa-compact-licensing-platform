@@ -1,0 +1,16 @@
+{
+  "priority": 10,
+  "request": {
+    "method": "POST",
+    "urlPath": "/oauth/token"
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "Content-Type": "application/json;charset=UTF-8"
+    },
+    "jsonBody": {
+      "error": "invalid_client"
+    }
+  }
+}

@@ -52,6 +52,12 @@ class Settings(BaseSettings):
     fsmb_client_secret: str = ''
     fsmb_customer_key: str = 'me'
 
+    # NCCPA's Board Certification Status API (docs/nccpa.md): the mock locally; NCCPA's sandbox and
+    # production URLs once NCCPA issues them.
+    nccpa_api_url: str = 'http://localhost:8082'
+    nccpa_client_id: str = ''
+    nccpa_client_secret: str = ''
+
     @property
     def db_url(self) -> str:
         """The asyncpg URL the app's database engine connects with."""
