@@ -7,6 +7,10 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 10
+    cooldown:
+      # Matches minimum-release-age in .npmrc, so Dependabot never proposes
+      # a version pnpm refuses to install. Security updates skip it.
+      default-days: 14
     groups:
       # Majors stay out of the group, so one breaking upgrade can't hold back
       # the safe ones; each opens its own PR.
@@ -32,6 +36,10 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 10
+    cooldown:
+      # uv has no install-time release-age check, so this is the API's only
+      # wait. Security updates skip it.
+      default-days: 14
     groups:
       pip-all:
         patterns: ["*"]
@@ -69,6 +77,19 @@ updates:
       actions-all:
         patterns: ["*"]
 
+  # API base images (engineering/api/Dockerfile)
+  - package-ecosystem: docker
+    directory: /engineering/api
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    ignore:
+      # Moving to Python 3.14 is its own change, made with the uv image's
+      # python3.13 tag and the workflows' python-version.
+      - dependency-name: python
+        update-types: ["version-update:semver-minor"]
+
   # cognito-local image (engineering/mocks/cognito/, local tooling)
   - package-ecosystem: docker
     directory: /engineering/mocks/cognito
@@ -84,6 +105,10 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    cooldown:
+      # Matches minimum-release-age in .npmrc, so Dependabot never proposes
+      # a version pnpm refuses to install. Security updates skip it.
+      default-days: 14
     groups:
       e2e-all:
         patterns: ["*"]

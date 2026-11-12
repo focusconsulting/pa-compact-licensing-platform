@@ -6,6 +6,9 @@ on:
   push:
     tags: ["v*"]
 
+permissions:
+  contents: read
+
 jobs:
   target:
     runs-on: ubuntu-latest
@@ -21,6 +24,11 @@ jobs:
 
   deploy:
     needs: target
+    # A called workflow gets no more than its caller grants; deploy.yml assumes
+    # its AWS role through OIDC.
+    permissions:
+      id-token: write
+      contents: read
     uses: ./.github/workflows/deploy.yml
     with:
       environment: ${{ needs.target.outputs.environment }}
