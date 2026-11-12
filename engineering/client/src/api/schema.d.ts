@@ -312,6 +312,30 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/me/profile": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get My Profile
+     * @description Your profile, as the application shows it.
+     */
+    get: operations["Get_my_profile_api_me_profile_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Save My Profile
+     * @description Changes your date of birth, residence address, NCCPA certification number, or other names. A change keeps your state's verification and is shown to it in your history.
+     */
+    patch: operations["Save_my_profile_api_me_profile_patch"];
+    trace?: never;
+  };
   "/api/public/attestations": {
     parameters: {
       query?: never;
@@ -693,6 +717,10 @@ export interface components {
     Data_DocumentUpload_: {
       data: components["schemas"]["DocumentUpload"];
     };
+    /** Data[ProfileOut] */
+    Data_ProfileOut_: {
+      data: components["schemas"]["ProfileOut"];
+    };
     /** Data[list[ApplicationOut]] */
     Data_list_ApplicationOut__: {
       /** Data */
@@ -874,6 +902,20 @@ export interface components {
       status: string;
     };
     /**
+     * OtherName
+     * @description A name the PA uses or has used. ``last_name`` is required.
+     */
+    OtherName: {
+      /** First Name */
+      first_name?: string | null;
+      /** Last Name */
+      last_name: string;
+      /** Middle Name */
+      middle_name?: string | null;
+      /** Name Suffix */
+      name_suffix?: string | null;
+    };
+    /**
      * Page
      * @description Where a page sits in a list: its 1-based ``number``, its ``size``, and the ``total`` count across all pages.
      * @example {
@@ -927,6 +969,66 @@ export interface components {
     PrivilegeRequestStatus:
       "pending_payment" | "submitted" | "issued" | "denied" | "withdrawn";
     /**
+     * ProfileOut
+     * @description The profile fields the application's first step shows. ``residence`` is null until the PA enters one.
+     * @example {
+     *       "date_of_birth": "1988-03-14",
+     *       "legal_first_name": "Jordan",
+     *       "legal_last_name": "Sample",
+     *       "nccpa_certification_number": "1234567",
+     *       "other_names": [],
+     *       "residence": {
+     *         "city": "Sample City",
+     *         "country_code": "US",
+     *         "line1": "100 Sample Street",
+     *         "postal_code": "66601",
+     *         "region": "KS"
+     *       }
+     *     }
+     */
+    ProfileOut: {
+      /** Date Of Birth */
+      date_of_birth: string | null;
+      /** Legal First Name */
+      legal_first_name: string | null;
+      /** Legal Last Name */
+      legal_last_name: string | null;
+      /** Nccpa Certification Number */
+      nccpa_certification_number: string | null;
+      /** Other Names */
+      other_names: components["schemas"]["OtherName"][];
+      residence: components["schemas"]["Residence"] | null;
+    };
+    /**
+     * ProfileUpdate
+     * @description Fields to change. Omitted fields keep their value; ``other_names`` replaces the whole list.
+     * @example {
+     *       "date_of_birth": "1988-03-14",
+     *       "nccpa_certification_number": "1234567",
+     *       "other_names": [
+     *         {
+     *           "last_name": "Smith"
+     *         }
+     *       ],
+     *       "residence": {
+     *         "city": "Sample City",
+     *         "country_code": "US",
+     *         "line1": "100 Sample Street",
+     *         "postal_code": "66601",
+     *         "region": "KS"
+     *       }
+     *     }
+     */
+    ProfileUpdate: {
+      /** Date Of Birth */
+      date_of_birth?: string | null;
+      /** Nccpa Certification Number */
+      nccpa_certification_number?: string | null;
+      /** Other Names */
+      other_names?: components["schemas"]["OtherName"][] | null;
+      residence?: components["schemas"]["Residence"] | null;
+    };
+    /**
      * ReadyResp
      * @description The readiness response: whether the database answered.
      * @example {
@@ -936,6 +1038,24 @@ export interface components {
     ReadyResp: {
       /** Db */
       db: boolean;
+    };
+    /**
+     * Residence
+     * @description The PA's primary residence, where legal papers can be served by mail (Rule 3 §3.4(a)(3)).
+     */
+    Residence: {
+      /** City */
+      city: string;
+      /** Country Code */
+      country_code: string;
+      /** Line1 */
+      line1: string;
+      /** Line2 */
+      line2?: string | null;
+      /** Postal Code */
+      postal_code?: string | null;
+      /** Region */
+      region?: string | null;
     };
     /**
      * ScanStatus
@@ -1537,6 +1657,68 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["Data_DocumentDownload_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Get_my_profile_api_me_profile_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_ProfileOut_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Save_my_profile_api_me_profile_patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ProfileUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_ProfileOut_"];
         };
       };
       /** @description Unprocessable Content */
