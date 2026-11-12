@@ -19,7 +19,7 @@ from licensing_api.repo.base import TimestampTZ, entity_ref, utc_now
 from licensing_api.repo.document import Document
 from licensing_api.repo.fee import Fee
 from licensing_api.repo.participation_application import ParticipationApplication
-from licensing_api.repo.practitioner import Practitioner
+from licensing_api.repo.practitioner import Practitioner, PractitionerOtherName
 from licensing_api.repo.privilege import Privilege
 from licensing_api.repo.privilege_request import PrivilegeRequest
 from licensing_api.repo.qualifying_license import QualifyingLicense
@@ -58,6 +58,15 @@ class PractitionerHistory(HistoryRecord, table=True):
     __tablename__ = 'practitioners_history'  # type: ignore[assignment]
 
     entity_id: int = Field(foreign_key='practitioners.id')
+
+
+class PractitionerOtherNameHistory(HistoryRecord, table=True):
+    """Every name a PA added to or removed from their other names."""
+
+    # SQLModel defines __tablename__ as a declared_attr method; assigning a string is its documented way to name a table.
+    __tablename__ = 'practitioner_other_names_history'  # type: ignore[assignment]
+
+    entity_id: int = Field(foreign_key='practitioner_other_names.id')
 
 
 class QualifyingLicenseHistory(HistoryRecord, table=True):
@@ -152,6 +161,7 @@ class DocumentHistory(HistoryRecord, table=True):
 
 _HISTORY_TABLES: Mapping[type[SQLModel], type[HistoryRecord]] = {
     Practitioner: PractitionerHistory,
+    PractitionerOtherName: PractitionerOtherNameHistory,
     QualifyingLicense: QualifyingLicenseHistory,
     ParticipationApplication: ParticipationApplicationHistory,
     PrivilegeRequest: PrivilegeRequestHistory,

@@ -653,6 +653,18 @@
         "title": "Data[DocumentUpload]",
         "type": "object"
       },
+      "Data_ProfileOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ProfileOut"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Data[ProfileOut]",
+        "type": "object"
+      },
       "Data_list_ApplicationOut__": {
         "properties": {
           "data": {
@@ -966,6 +978,62 @@
         "title": "LiveResp",
         "type": "object"
       },
+      "OtherName": {
+        "additionalProperties": false,
+        "description": "A name the PA uses or has used. ``last_name`` is required.",
+        "properties": {
+          "first_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Name"
+          },
+          "last_name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Last Name",
+            "type": "string"
+          },
+          "middle_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Middle Name"
+          },
+          "name_suffix": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name Suffix"
+          }
+        },
+        "required": [
+          "last_name"
+        ],
+        "title": "OtherName",
+        "type": "object"
+      },
       "Page": {
         "description": "Where a page sits in a list: its 1-based ``number``, its ``size``, and the ``total`` count across all pages.",
         "examples": [
@@ -1055,6 +1123,174 @@
         "title": "PrivilegeRequestStatus",
         "type": "string"
       },
+      "ProfileOut": {
+        "description": "The profile fields the application's first step shows. ``residence`` is null until the PA enters one.",
+        "examples": [
+          {
+            "date_of_birth": "1988-03-14",
+            "legal_first_name": "Jordan",
+            "legal_last_name": "Sample",
+            "nccpa_certification_number": "1234567",
+            "other_names": [],
+            "residence": {
+              "city": "Sample City",
+              "country_code": "US",
+              "line1": "100 Sample Street",
+              "postal_code": "66601",
+              "region": "KS"
+            }
+          }
+        ],
+        "properties": {
+          "date_of_birth": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date Of Birth"
+          },
+          "legal_first_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Legal First Name"
+          },
+          "legal_last_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Legal Last Name"
+          },
+          "nccpa_certification_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nccpa Certification Number"
+          },
+          "other_names": {
+            "items": {
+              "$ref": "#/components/schemas/OtherName"
+            },
+            "title": "Other Names",
+            "type": "array"
+          },
+          "residence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Residence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "legal_first_name",
+          "legal_last_name",
+          "date_of_birth",
+          "residence",
+          "nccpa_certification_number",
+          "other_names"
+        ],
+        "title": "ProfileOut",
+        "type": "object"
+      },
+      "ProfileUpdate": {
+        "additionalProperties": false,
+        "description": "Fields to change. Omitted fields keep their value; ``other_names`` replaces the whole list.",
+        "examples": [
+          {
+            "date_of_birth": "1988-03-14",
+            "nccpa_certification_number": "1234567",
+            "other_names": [
+              {
+                "last_name": "Smith"
+              }
+            ],
+            "residence": {
+              "city": "Sample City",
+              "country_code": "US",
+              "line1": "100 Sample Street",
+              "postal_code": "66601",
+              "region": "KS"
+            }
+          }
+        ],
+        "properties": {
+          "date_of_birth": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date Of Birth"
+          },
+          "nccpa_certification_number": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nccpa Certification Number"
+          },
+          "other_names": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/OtherName"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Other Names"
+          },
+          "residence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Residence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "ProfileUpdate",
+        "type": "object"
+      },
       "ReadyResp": {
         "description": "The readiness response: whether the database answered.",
         "examples": [
@@ -1072,6 +1308,75 @@
           "db"
         ],
         "title": "ReadyResp",
+        "type": "object"
+      },
+      "Residence": {
+        "additionalProperties": false,
+        "description": "The PA's primary residence, where legal papers can be served by mail (Rule 3 \u00a73.4(a)(3)).",
+        "properties": {
+          "city": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "City",
+            "type": "string"
+          },
+          "country_code": {
+            "pattern": "^[A-Z]{2}$",
+            "title": "Country Code",
+            "type": "string"
+          },
+          "line1": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Line1",
+            "type": "string"
+          },
+          "line2": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line2"
+          },
+          "postal_code": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postal Code"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
+          }
+        },
+        "required": [
+          "line1",
+          "city",
+          "country_code"
+        ],
+        "title": "Residence",
         "type": "object"
       },
       "ScanStatus": {
@@ -2120,6 +2425,88 @@
           }
         ],
         "summary": "Download My Document",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/me/profile": {
+      "get": {
+        "description": "Your profile, as the application shows it.",
+        "operationId": "Get_my_profile_api_me_profile_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_ProfileOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get My Profile",
+        "tags": [
+          "me"
+        ]
+      },
+      "patch": {
+        "description": "Changes your date of birth, residence address, NCCPA certification number, or other names. A change keeps your state's verification and is shown to it in your history.",
+        "operationId": "Save_my_profile_api_me_profile_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_ProfileOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Save My Profile",
         "tags": [
           "me"
         ]
