@@ -111,6 +111,7 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
 
   enabled             = true
   default_root_object = "index.html"
+  web_acl_id          = aws_wafv2_web_acl.cloudfront.arn
   aliases             = [var.dns_name]
 
   # Default cache behavior — serves the Next.js frontend from S3
