@@ -300,12 +300,13 @@ A CloudFront web ACL and a regional one on the Cognito user pool, both logging. 
 
 | Web ACL | Scope | Rules, in order |
 |---|---|---|
-| `cloudfront` (provider `aws.us_east_1`) | `CLOUDFRONT` | Rate: 300 per 5 minutes per IP on `/api/public/`. Rate: 2,000 per 5 minutes per IP on `/api/`. Managed: `AmazonIpReputationList`, `CommonRuleSet`, `KnownBadInputsRuleSet`, `SQLiRuleSet` |
+| `cloudfront` (provider `aws.us_east_1`) | `CLOUDFRONT` | Rate: 300 per 5 minutes per IP on `/api/public/`. Rate: 2,000 per 5 minutes per IP on `/api/`. Managed: `AmazonIpReputationList`, `CommonRuleSet`, `SQLiRuleSet`, `KnownBadInputsRuleSet`; `AnonymousIpList` in count mode |
 | `cognito` | `REGIONAL` | Rate: 200 per 5 minutes per IP. Managed: `AmazonIpReputationList`, `KnownBadInputsRuleSet` |
 
+- `AnonymousIpList` was not in the first plan. Checkov's CKV2_AWS_47 requires it by name beside `KnownBadInputsRuleSet`. It matches VPNs, proxies, Tor, and hosting providers, so blocking with it would shut out a PA on a consumer VPN, a state office behind a cloud-hosted gateway, and the ZAP scan's GitHub runner. It is attached with its action overridden to count: it blocks nothing and its metric shows how much real traffic it would. Whether to block is SCRUM-143's decision, with that number. Both groups are written out as rules, not generated, because Checkov cannot see inside a dynamic block.
 - Default action allow. Rate limits are `locals`, with a comment that SCRUM-139 tunes the public one against the verification page.
 - `aws_wafv2_web_acl_association` to `aws_cognito_user_pool.main`; `web_acl_id` on the distribution.
-- One `aws-waf-logs-*` log group per ACL (the CloudFront one in `us-east-1`), 365 days, with `redacted_fields` for the `authorization` and `cookie` headers.
+- One `aws-waf-logs-*` log group per ACL (the CloudFront one in `us-east-1`), 365 days, with `redacted_fields` for the `authorization` and `cookie` headers, and a log resource policy each that lets WAF's log delivery write to it. The two log groups add CKV_AWS_158 (no KMS key) until Phase 4.
 - An alarm per ACL on its rate rules' `BlockedRequests` (100 in 5 minutes) to `aws_sns_topic.api_alerts`. CloudFront's metrics exist only in `us-east-1`, so that alarm is created only when the environment's region is `us-east-1`; the comment says so.
 
 **File**: `engineering/infrastructure/iac/components/app/opentofu/cdn.tf`
@@ -315,9 +316,9 @@ A CloudFront web ACL and a regional one on the Cognito user pool, both logging. 
 
 #### Automated Verification
 
-- [ ] `cd engineering/infrastructure && just check`
-- [ ] The CI plan adds two ACLs, one association, two log groups, and the alarms, and updates the distribution in place
-- [ ] Checkov reports no `CKV_AWS_68`, `CKV2_AWS_47`, `CKV_AWS_192`, or `CKV2_AWS_31`
+- [x] `cd engineering/infrastructure && just check`
+- [x] The plan adds two ACLs, one association, two log groups with their resource policies and logging configurations, and three alarms, and updates the distribution in place (run locally against staging, 2026-11-12; CI repeats it)
+- [x] Checkov reports no `CKV_AWS_68`, `CKV2_AWS_47`, `CKV_AWS_192`, or `CKV2_AWS_31`
 
 #### Manual Verification
 
@@ -349,7 +350,7 @@ One customer-managed key per environment for the database, secrets, logs, and al
 **Changes**:
 
 - The three secrets: `kms_key_id`. The execution role gains `kms:Decrypt` on the key.
-- The four ECS log groups and the regional WAF log group: `kms_key_id`, `retention_in_days = 365`.
+- The four ECS log groups and the Cognito web ACL's log group: `kms_key_id`, `retention_in_days = 365`. The CloudFront web ACL's log group is in `us-east-1` whatever the environment's region, and a log group can use only a key from its own region: it uses `aws_kms_key.data` when the environment is in `us-east-1`, and otherwise is skipped for CKV_AWS_158 with that reason (it holds request metadata, with session headers redacted).
 - `aws_sns_topic.api_alerts`: `kms_master_key_id`.
 - `aws_ssm_parameter.adot_config`: `SecureString` with `key_id`.
 - `aws_scheduler_schedule.job`: `kms_key_arn`; the scheduler role gains `kms:Decrypt`.
