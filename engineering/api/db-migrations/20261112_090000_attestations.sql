@@ -3,6 +3,8 @@
 -- Backlog: L-03; Rule 3 §3.3(a), §3.4(a), §3.4(c)
 
 -- A wording change is a new version, so an acceptance always names the text the PA read.
+-- participation: what Rule 3 §3.4(a) has the PA accept. eligibility: the Rule 3 §3.3(a)
+-- requirements the state checks under §3.4(b)(1); the PA does not accept them unless legal asks.
 CREATE TABLE attestations (
     code        TEXT        NOT NULL,
     version     INTEGER     NOT NULL,
@@ -19,7 +21,7 @@ CREATE TABLE attestations (
     updated_at  TIMESTAMPTZ NOT NULL,
     updated_by  BIGINT      NOT NULL,
     PRIMARY KEY (code, version),
-    CONSTRAINT chk_attestations_applies_to CHECK (applies_to IN ('participation', 'privilege')),
+    CONSTRAINT chk_attestations_applies_to CHECK (applies_to IN ('participation', 'eligibility', 'privilege')),
     CONSTRAINT chk_attestations_version CHECK (version >= 1),
     CONSTRAINT chk_attestations_state_is_remote CHECK (state_code IS NULL OR applies_to = 'privilege'),
     CONSTRAINT chk_attestations_source CHECK (source <> ''),
@@ -84,34 +86,34 @@ CREATE TRIGGER trg_participation_application_attestations_append_only
 INSERT INTO attestations (code, version, applies_to, sort_order, text, source, created_by)
 SELECT a.code, 1, a.applies_to, a.sort_order, a.text, a.source, u.id
 FROM (VALUES
-    ('arc_pa_graduate', 'participation', 1,
+    ('arc_pa_graduate', 'eligibility', 1,
      'I graduated from a PA program accredited by the Accreditation Review Commission on Education for the Physician Assistant, Inc.',
      'Rule 3 §3.3(a)(1); ML §4.A(1)'),
-    ('nccpa_current', 'participation', 2,
+    ('nccpa_current', 'eligibility', 2,
      'I hold a current certification from the National Commission on Certification of Physician Assistants (NCCPA).',
      'Rule 3 §3.3(a)(2); ML §4.A(2)'),
-    ('no_convictions', 'participation', 3,
+    ('no_convictions', 'eligibility', 3,
      'I have never been found guilty by a court of a felony or misdemeanor offense, including through a plea of guilty or no contest.',
      'Rule 3 §3.3(a)(3); ML §4.A(3)'),
-    ('no_controlled_substance_action', 'participation', 4,
+    ('no_controlled_substance_action', 'eligibility', 4,
      'I have never had a controlled substance license, permit, or registration suspended or revoked by a state or by the United States Drug Enforcement Administration.',
      'Rule 3 §3.3(a)(4); ML §4.A(4)'),
-    ('no_current_restriction', 'participation', 5,
+    ('no_current_restriction', 'eligibility', 5,
      'No license I hold has been revoked, limited, or restricted because of an adverse action.',
      'Rule 3 §3.3(a)(7); ML §4.A(7)'),
-    ('two_year_bar', 'participation', 6,
+    ('two_year_bar', 'eligibility', 6,
      'If a license or compact privilege of mine was limited or restricted because of an adverse action, at least two years have passed since it was no longer limited or restricted.',
      'Rule 3 §3.3(a)(7)(i); ML §4.A(8)'),
-    ('no_pending_investigation', 'participation', 7,
+    ('no_pending_investigation', 'participation', 2,
      'I am not aware of any pending investigation of my license in my state of qualifying license.',
      'Rule 3 §3.4(a)(5)'),
-    ('service_of_process', 'participation', 8,
+    ('service_of_process', 'participation', 1,
      'I consent to service of process by mail at my primary residence address, and I will report a change of that address to the Commission within 30 days.',
      'Rule 3 §3.4(a)(3); ML §5.A(2)'),
-    ('background_check', 'participation', 9,
+    ('background_check', 'participation', 3,
      'I will submit to a criminal background check, including fingerprints or other biometric information, through the process my state of qualifying license designates, within 60 days of this application.',
      'Rule 3 §3.4(a)(4)'),
-    ('truthfulness', 'participation', 10,
+    ('truthfulness', 'participation', 4,
      'I swear that the information in this application is true and accurate.',
      'Rule 3 §3.4(a)(1)'),
     ('supervision_compliance', 'privilege', 1,
