@@ -77,14 +77,15 @@ class Storage:
         return PresignedUpload(url=post['url'], fields=post['fields'])
 
     def presign_download(
-        self, key: str, *, file_name: str, content_type: str, expires: timedelta
+        self, key: str, *, file_name: str, content_type: str, version_id: str, expires: timedelta
     ) -> str:
-        """A GET link that makes the browser save the file rather than open it."""
+        """A GET link to one version that makes the browser save the file rather than open it."""
         return self._client.generate_presigned_url(
             'get_object',
             Params={
                 'Bucket': self._bucket,
                 'Key': key,
+                'VersionId': version_id,
                 'ResponseContentDisposition': _attachment(file_name),
                 'ResponseContentType': content_type,
             },
