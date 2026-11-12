@@ -73,21 +73,57 @@ midnight with no zone (`2010-07-01T00:00:00`), so they arrive as naive
 (constitution Principle XIII). `as_of_date_time_utc` is an instant, so a value
 without a zone is taken as UTC.
 
-### Where FSMB's own sample disagrees with its document
+### The document is the starting point, real reports the final word
 
-The client follows the OpenAPI document. FSMB's
+The models follow FSMB's OpenAPI document because it is all we have until
+FSMB issues demo credentials. Real reports may differ from it, and when they
+do, the models change to fit what FSMB actually sends.
+
+Two differences are already likely: FSMB's
 [sample report](https://github.com/fsmb/pdc-api/blob/main/docs/members-v1/get-current-report-data.md)
-would fail it twice:
+breaks its own document twice.
 
 - `licenses[].issuerName` has `maxLength: 5`, but the sample sends state
   names such as `"NEW HAMPSHIRE"`. The mock sends two-letter codes.
 - ABMS certifications require `meetsMocRequirements`, `certificateDuration`,
   and `occurrenceType`, which the sample leaves out.
 
-If real reports look like the sample, lookups raise `FsmbError` naming the
-field. Raise it with FSMB (`pdc@fsmb.org`) before relaxing the model.
+The models stay strict until a real report shows the difference. Relaxing them
+early would hide other differences.
 
-### When FSMB changes the document
+#### Finding a difference
+
+A report that doesn't fit raises `FsmbError` and logs `FSMB body rejected`
+with `rejected_fields`: each field's path and the reason, never its value.
+
+```text
+licenses.0.issuerName (string_too_long), abms.certifications.0.occurrenceType (missing)
+```
+
+To check a member by hand, point `FSMB_API_URL` and the credentials in a
+local env file at FSMB's demo server, then:
+
+```bash
+cd engineering/api
+just fsmb-check 999999915 .env.fsmb-demo   # says whether the report fits; prints no report data
+```
+
+#### Recording a difference
+
+For each rejected field:
+
+1. Change the field in [`fsmb.py`](../api/licensing_api/fsmb.py) to what FSMB
+   sends: a longer length, a nullable or optional field, or a new field.
+2. Add it to `DEVIATIONS` in
+   [`test_fsmb_openapi.py`](../api/tests/test_fsmb_openapi.py), keyed by
+   schema and property, with the evidence: which environment, which FID, what
+   FSMB sent, and the date. The test frees only that property; every other
+   field stays held to the document.
+3. Make the mock's reports send the real shape, so local runs and CI see it.
+4. Tell FSMB (`pdc@fsmb.org`) that their document is wrong there. If they fix
+   it, `just fsmb-openapi` brings the fix in, and the entry can be removed.
+
+#### When FSMB changes the document
 
 ```bash
 cd engineering/api
@@ -95,7 +131,7 @@ just fsmb-openapi                    # refresh tests/fsmb_openapi.json
 just test tests/test_fsmb_openapi.py # fails on each field, constraint, or response that changed
 ```
 
-The same test checks that every report the mock serves follows the document.
+The same test checks that every report the mock serves fits the models.
 
 ## Environments
 
@@ -190,7 +226,9 @@ await fsmb.aclose()
   report contents are never logged. `httpx`'s request log includes URLs, so it
   is raised to `WARNING`. A rejected body raises an error that names the
   fields, not their values, and drops the Pydantic error that would carry them.
-- **What could go wrong.** FSMB adds a field, and lookups fail until the model
-  gains it: the cost of rejecting unknown fields (Principle VII). A report for
+- **What could go wrong.** Real reports differ from FSMB's document, or FSMB
+  adds a field, and lookups fail until the model follows: the cost of
+  rejecting unknown fields (Principle VII). `FSMB body rejected` says which
+  fields, so the fix is quick (above). A report for
   the wrong person is avoided because the FID addresses the member directly;
   matching an applicant to an FID is the caller's job.

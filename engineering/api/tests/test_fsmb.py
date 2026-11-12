@@ -289,7 +289,7 @@ async def test_a_report_time_without_a_zone_is_utc():
 async def test_null_where_the_document_allows_only_absence_is_rejected():
     fsmb = _Fsmb(_grant('first'), accepted={'first'}, report={**_REPORT, 'medicalEducation': None})
 
-    with pytest.raises(FsmbError, match='rejects: medicalEducation.'):
+    with pytest.raises(FsmbError, match=r'rejects: medicalEducation \(value_error\)\.'):
         await _stubbed(fsmb).get_current_report(_ALERTED)
 
 
@@ -297,7 +297,7 @@ async def test_a_string_over_its_documented_length_is_rejected():
     legal = {'lastName': 'x' * 51, 'reportDate': '2022-07-25T00:00:00'}
     fsmb = _Fsmb(_grant('first'), accepted={'first'}, report={**_REPORT, 'names': {'legal': legal}})
 
-    with pytest.raises(FsmbError, match='names.legal.lastName'):
+    with pytest.raises(FsmbError, match=r'names\.legal\.lastName \(string_too_long\)'):
         await _stubbed(fsmb).get_current_report(_ALERTED)
 
 
@@ -311,14 +311,20 @@ async def test_a_connection_failure_raises_and_is_logged(caplog):
     assert caplog.records[-1].__dict__['outcome'] == 'failed'
 
 
-async def test_a_report_with_an_unknown_field_raises_without_its_values():
-    fsmb = _Fsmb(_grant('first'), accepted={'first'}, report={**_REPORT, 'ssn': '123-45-6789'})
+async def test_a_rejected_report_names_each_field_and_why_but_no_values(caplog):
+    legal = {'lastName': 'Testermancho', 'reportDate': '2022-07-25T00:00:00', 'ssn': '123-45-6789'}
+    report = {**_REPORT, 'names': {'legal': legal}, 'reportId': 'not-a-number'}
+    fsmb = _Fsmb(_grant('first'), accepted={'first'}, report=report)
 
     with pytest.raises(FsmbError) as raised:
         await _stubbed(fsmb).get_current_report(_ALERTED)
 
-    assert str(raised.value) == 'FSMB sent a FsmbReport the client rejects: ssn.'
+    rejected = ['reportId (int_parsing)', 'names.legal.ssn (extra_forbidden)']
+    assert str(raised.value) == f'FSMB sent a FsmbReport the client rejects: {", ".join(rejected)}.'
     assert raised.value.__cause__ is None and raised.value.__suppress_context__
+    (log,) = [r for r in caplog.records if r.getMessage() == 'FSMB body rejected']
+    assert (log.__dict__['model'], log.__dict__['rejected_fields']) == ('FsmbReport', rejected)
+    assert '123-45-6789' not in caplog.text and 'Testermancho' not in caplog.text
 
 
 async def test_a_malformed_grant_raises():

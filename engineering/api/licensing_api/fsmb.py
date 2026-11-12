@@ -436,10 +436,18 @@ def _parse[M: BaseModel](model: type[M], response: httpx.Response) -> M:
     try:
         return model.model_validate_json(response.content)
     except ValidationError as error:
-        # Name the fields, not their values, and drop the cause: a ValidationError carries the
-        # input, which here is a physician's identity and disciplinary record or a bearer.
-        fields = ', '.join('.'.join(str(part) for part in e['loc']) for e in error.errors())
-        raise FsmbError(f'FSMB sent a {model.__name__} the client rejects: {fields}.') from None
+        # Name each field and why, never its value, and drop the cause: a ValidationError carries
+        # the input, which here is a physician's identity and disciplinary record or a bearer.
+        # Where real reports differ from FSMB's document, these lines say how (docs/fsmb.md).
+        rejected = [
+            f'{".".join(str(part) for part in e["loc"])} ({e["type"]})' for e in error.errors()
+        ]
+        logger.warning(
+            'FSMB body rejected', extra={'model': model.__name__, 'rejected_fields': rejected}
+        )
+        raise FsmbError(
+            f'FSMB sent a {model.__name__} the client rejects: {", ".join(rejected)}.'
+        ) from None
 
 
 def create_fsmb_client(settings: Settings) -> FsmbClient:

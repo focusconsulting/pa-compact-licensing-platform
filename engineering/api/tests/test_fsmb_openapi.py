@@ -1,6 +1,7 @@
 """The report models against FSMB's OpenAPI document, vendored in fsmb_openapi.json.
 
-`just fsmb-openapi` refreshes the document; a failure here then says what FSMB changed.
+`just fsmb-openapi` refreshes the document; a failure here then says what FSMB changed. Where real
+reports differ from the document, the model follows the reports and DEVIATIONS records why.
 """
 
 import json
@@ -35,6 +36,15 @@ def _refs(prop: dict) -> list[str]:
 
 
 _OBJECTS = [n for n in _reachable('Report', []) if 'properties' in _SCHEMAS[n]]
+
+# (schema, property) -> the evidence that real FSMB reports differ from the document there, such
+# as "demo report for FID n, 2026-12-01: issuerName is the state's name". Each entry frees only
+# that property from the checks below. docs/fsmb.md says when and how to add one.
+DEVIATIONS: dict[tuple[str, str], str] = {}
+
+
+def _deviating(schema: str) -> set[str]:
+    return {prop for name, prop in DEVIATIONS if name == schema}
 
 
 def _model(schema: str) -> type[BaseModel]:
@@ -75,6 +85,10 @@ def _spec_nullable(prop: dict) -> bool:
     return 'null' in types or any(p.get('type') == 'null' for p in prop.get('oneOf', []))
 
 
+def test_every_deviation_names_a_report_schema_and_its_evidence():
+    assert all(name in _OBJECTS and evidence.strip() for (name, _), evidence in DEVIATIONS.items())
+
+
 def test_every_report_schema_has_a_model():
     missing = [name for name in _OBJECTS if not hasattr(fsmb, f'Fsmb{name}')]
 
@@ -86,10 +100,11 @@ def test_every_report_schema_has_a_model():
 def test_a_model_has_exactly_the_documented_fields_and_required_fields(schema):
     model = _model(schema)
     spec = _SCHEMAS[schema]
+    free = _deviating(schema)
 
-    assert {f.alias for f in model.model_fields.values()} == set(spec['properties'])
+    assert {f.alias for f in model.model_fields.values()} - free == set(spec['properties']) - free
     required = {f.alias for f in model.model_fields.values() if f.is_required()}
-    assert required == set(spec.get('required', []))
+    assert required - free == set(spec.get('required', [])) - free
 
 
 @pytest.mark.parametrize('schema', _OBJECTS)
@@ -98,6 +113,8 @@ def test_a_model_takes_null_exactly_where_the_document_does(schema):
     spec = _SCHEMAS[schema]['properties']
 
     for field in model.model_fields.values():
+        if field.alias in _deviating(schema):
+            continue
         takes_null = NoneType in get_args(field.annotation) and fsmb._NOT_NULL not in field.metadata
         assert takes_null == _spec_nullable(spec[field.alias]), field.alias
 
@@ -109,6 +126,8 @@ def test_a_model_has_the_documented_types_and_constraints(schema):
     properties = model.model_json_schema(by_alias=True)['properties']
 
     for alias, prop in spec.items():
+        if alias in _deviating(schema):
+            continue
         assert _model_shape(properties[alias]) == _spec_shape(prop), alias
 
 

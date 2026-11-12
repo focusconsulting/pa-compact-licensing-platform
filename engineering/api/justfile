@@ -57,6 +57,10 @@ fsmb-openapi:
         | python3 -c 'import json, sys; print(json.dumps(json.load(sys.stdin), indent=2, sort_keys=True))' \
         > tests/fsmb_openapi.json
 
+# Fetch one FSMB report and say whether it fits the models, showing no report data (`just fsmb-check 999999915`)
+fsmb-check fid env-file=".env":
+    uv run --env-file {{ env-file }} python -m scripts.fsmb_check {{ fid }}
+
 # Run tests (pass additional args with: just test -k test_name)
 test env-file=".env" *args:
     uv run --env-file {{ env-file }} pytest {{ args }}
