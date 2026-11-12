@@ -21,7 +21,7 @@ PAs and state staff upload documents straight to a private bucket through short-
 | 1 | Upload by presigned POST straight to the bucket; download by presigned GET issued after the permission check | No |
 | 2 | SCRUM-81 provisions the GuardDuty Malware Protection for S3 plan | Yes: it was left to epic 3 |
 | 3 | The Worker loop polls the `GuardDutyMalwareScanStatus` tag on pending documents; still pending after 15 minutes → `error` | Yes: it was a once-a-minute job |
-| 4 | Locally, a ClamAV container plus a small tagger in `engineering/mocks/malware-scanner/` writes the same tag; not started in CI | ClamAV as before; CI exclusion is new |
+| 4 | Locally, a small tagger in `engineering/mocks/malware-scanner/` writes the same tag: `THREATS_FOUND` for a file containing the EICAR test string, `NO_THREATS_FOUND` otherwise; not started in CI | Dropped ClamAV in review: nothing automated used it, and its first start stalled `just infra` for minutes; only the tag matters to the API |
 | 5 | Allowed types: PDF, JPEG, PNG, CSV, DOCX; at most 20 MiB | Yes: CSV and DOCX added |
 | 6 | Download scope per owner type as in [Scope](#scope) | Detailed here for the first time |
 | 7 | `document.uploaded` and `document.scanned` join FLOW-07, with no consumer at pilot | New |
@@ -38,7 +38,7 @@ PAs and state staff upload documents straight to a private bucket through short-
 - **VIII.** Every S3 call logs `duration_ms` and `outcome`; the scan step logs `Document scanned` with the result. A CloudWatch metric filter and alarm on `outcome=infected` routes to the Slack topic.
 - **IX.** Scope cites Rule 4 §4.5 once in `repo/document.py`; retention cites Rule 4 §4.3(e)(4) where it already does.
 - **XI.** New `engineering/docs/documents.md` (behavior, events, permissions); `platform-contract.md` `.6`; `architecture.md` (GuardDuty, scanner); `data-model.md`. The PR adding `boto3` names it for Commission consent (SOW §7.5).
-- **XII.** New settings already in `.env.example`; README lists ClamAV and the scanner; Compose and both justfiles start them.
+- **XII.** New settings already in `.env.example`; README lists the scanner; Compose and both justfiles start it.
 - **XIII.** The 15-minute scan timeout and link lifetimes are instants, not calendar days; no day arithmetic.
 - **XIV.** One additive migration (two nullable columns, a history table, a partial index on an empty table).
 - **XV.** Six PRs, each under 600 production lines.
@@ -95,7 +95,7 @@ Branches stack, each PR targeting the one below, as GitHub native stacked drafts
 |---|---|---|
 | 1 | `feature/SCRUM-81-storage` | ADR-0017, `boto3`, settings, `storage.py`, RustFS versioning and CORS, this plan |
 | 2 | `feature/SCRUM-81-upload` | Migration, history, events, type limits, upload and metadata routes, `attach()` |
-| 3 | `feature/SCRUM-81-scan` | Worker scan step, timeout, ClamAV and the tagger |
+| 3 | `feature/SCRUM-81-scan` | Worker scan loop, timeout, and the tagger |
 | 4 | `feature/SCRUM-81-download` | Scoped download routes, audit, `NOT_FOUND` |
 | 5 | `feature/SCRUM-81-infra` | Bucket, KMS key, GuardDuty plan, task role, settings in the task definitions, alarm |
 | 6 | `feature/SCRUM-81-client` | `FilePickerField` uploads and polls; story |
@@ -144,9 +144,9 @@ Every API PR regenerates `openapi.json` and the client's `schema.d.ts` with `jus
   - No tag and created 15 minutes ago → `error`; otherwise stamp `scan_checked_at` and move on.
   - Tags and bytes are read from the object's current version, and a result also stores that `VersionId` in `documents.scanned_version_id` (new migration). An upload link lasts five minutes and can be reused, so a later POST makes a new, unscanned version; only the stored version is ever served (security review, 2026-11-05).
   - A result sets `scanned_at`, writes history, emits `document.scanned`, logs `Document scanned` with `outcome`. An S3 error logs and stamps `scan_checked_at`. Returns the number of results recorded.
-- **`worker.py`**: builds `Storage`; `run_worker(..., storage, ...)` runs the step after `send_pending` and counts it toward the idle check.
-- **`engineering/mocks/malware-scanner/`**: `Dockerfile` (`python:3.13-slim`, pinned `boto3`), `scanner.py` (lists the bucket, streams each untagged object to `clamd` with `INSTREAM`, tags it `NO_THREATS_FOUND`/`THREATS_FOUND`/`FAILED`), `README.md`.
-- **Compose**: `clamav` (`clamav/clamav-debian:1.5.1`, which ships arm64 where `clamav/clamav` does not, healthcheck `clamdcheck.sh`, signatures bind-mounted from `engineering/api/.clamav/` so `infra-down -v` keeps them) and `malware-scanner`, both in profile `scanner`. Root `just services` and API `just infra` pass `--profile scanner`; `api.yml` and `e2e.yml` don't.
+- **`worker.py`**: builds `Storage`; `run_worker(..., storage, ...)` runs the scan step in its own loop (an asyncio task beside delivery and email, each with its own idle wait), so neither waits on the other; changed in review from running it after `send_pending`.
+- **`engineering/mocks/malware-scanner/`**: `Dockerfile` (`python:3.13-slim`, pinned `boto3`), `scanner.py` (lists the bucket, tags each untagged object `THREATS_FOUND` if it contains the EICAR test string, else `NO_THREATS_FOUND`), `README.md`.
+- **Compose**: `malware-scanner`, in profile `scanner`. Root `just services` and API `just infra` pass `--profile scanner`; `api.yml` and `e2e.yml` don't.
 - **Docs**: README services table; `architecture.md` local-substitution row.
 - **Tests** `tests/test_document_scans.py` (tags written by the test): each tag maps to its status; a mismatched signature → `error`; timeout → `error`; a fresh untagged document is untouched; two concurrent calls record once; history and event; `test_worker.py` covers the new step.
 

@@ -1,4 +1,4 @@
-"""The Worker: delivers outbox events to their handlers and sends queued email (D2, D7, D8, ADR-0012).
+"""The Worker: delivers outbox events, sends queued email, and records malware scans (D2, D7, D8, D9).
 
 ``python -m licensing_api.worker`` runs it until SIGTERM or SIGINT; ``just worker`` runs it locally.
 """
@@ -8,6 +8,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import signal
+from collections.abc import Awaitable, Callable
 from contextlib import suppress
 from datetime import timedelta
 
@@ -23,6 +24,8 @@ from licensing_api.handlers import HANDLERS
 from licensing_api.logging_config import configure_logging
 from licensing_api.notifications.sender import send_pending
 from licensing_api.repo.domain_event import DomainEvent, DomainEventDelivery, EventType
+from licensing_api.scans import check_document_scans
+from licensing_api.storage import Storage, create_storage
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +55,7 @@ async def main() -> None:
             async_sessionmaker(engine, expire_on_commit=False),
             HandlerRegistry(HANDLERS),
             settings,
+            create_storage(settings),
             stop,
         )
     finally:
@@ -64,24 +68,42 @@ async def run_worker(
     session_factory: async_sessionmaker[AsyncSession],
     registry: HandlerRegistry,
     settings: Settings,
+    storage: Storage,
     stop: asyncio.Event,
     *,
     idle_poll_interval: timedelta = IDLE_POLL_INTERVAL,
 ) -> None:
-    """Deliver events and send email until ``stop`` is set, waiting ``idle_poll_interval`` whenever neither is due.
+    """Deliver events, send email, and record scans until ``stop`` is set.
 
-    ``stop`` is checked between batches, so a delivery in progress always finishes and
-    commits; ECS waits 30 seconds after SIGTERM before it kills the task.
+    Scans run in their own loop, so a user waiting on a scan never waits behind a batch of
+    deliveries, and a slow S3 never holds up events or email. Each loop waits
+    ``idle_poll_interval`` whenever it finds nothing due, and checks ``stop`` between batches,
+    so a delivery in progress always finishes and commits; ECS waits 30 seconds after SIGTERM
+    before it kills the task.
     """
-    logger.info('Worker started')
-    while not stop.is_set():
+
+    async def deliver() -> int:
         attempted = await dispatch_events(session_factory, registry)
         # After dispatch, so email a handler has just queued goes out in the same pass.
-        sent = await send_pending(session_factory, settings)
-        if attempted == 0 and sent == 0:
+        return attempted + await send_pending(session_factory, settings)
+
+    async def scan() -> int:
+        return await check_document_scans(session_factory, storage)
+
+    logger.info('Worker started')
+    async with asyncio.TaskGroup() as loops:
+        loops.create_task(_until_stopped(deliver, stop, idle_poll_interval))
+        loops.create_task(_until_stopped(scan, stop, idle_poll_interval))
+    logger.info('Worker stopped')
+
+
+async def _until_stopped(
+    step: Callable[[], Awaitable[int]], stop: asyncio.Event, idle_poll_interval: timedelta
+) -> None:
+    while not stop.is_set():
+        if await step() == 0:
             with suppress(TimeoutError):
                 await asyncio.wait_for(stop.wait(), idle_poll_interval.total_seconds())
-    logger.info('Worker stopped')
 
 
 async def dispatch_events(
