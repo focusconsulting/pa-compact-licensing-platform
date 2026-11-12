@@ -232,6 +232,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/me/dashboard": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get My Dashboard
+     * @description Your license, applications, privileges, and what you can do next.
+     */
+    get: operations["Get_my_dashboard_api_me_dashboard_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/me/documents": {
     parameters: {
       query?: never;
@@ -461,6 +481,23 @@ export interface components {
       version: number;
     };
     /**
+     * Action
+     * @description The primary action, and when it is unavailable, every reason why.
+     */
+    Action: {
+      /** Available */
+      available: boolean;
+      kind: components["schemas"]["ActionKind"];
+      /** Reasons */
+      reasons: components["schemas"]["UnavailableReason"][];
+    };
+    /**
+     * ActionKind
+     * @description The one thing the dashboard offers next.
+     * @enum {string}
+     */
+    ActionKind: "apply_for_participation" | "apply_for_privileges";
+    /**
      * ApplicationCreate
      * @description The state the PA designates as their state of qualifying license (Rule 3 §3.4(a)(2)).
      * @example {
@@ -473,6 +510,20 @@ export interface components {
        * @description Two-letter state code
        */
       sql_state_code: string;
+    };
+    /**
+     * ApplicationEvent
+     * @description One step in an application's history. ``note`` is the state's request when it asked for information.
+     */
+    ApplicationEvent: {
+      /**
+       * At
+       * Format: date-time
+       */
+      at: string;
+      /** Note */
+      note?: string | null;
+      status: components["schemas"]["ApplicationStatus"];
     };
     /**
      * ApplicationKind
@@ -558,6 +609,35 @@ export interface components {
       sworn: true;
       /** Sworn Name */
       sworn_name: string;
+    };
+    /**
+     * ApplicationSummary
+     * @description An application, its decision, and its timeline, oldest first.
+     */
+    ApplicationSummary: {
+      /** Claimed License Number */
+      claimed_license_number: string | null;
+      /** Decided At */
+      decided_at: string | null;
+      /** Denial Reason */
+      denial_reason: string | null;
+      /** Denial Reason Detail */
+      denial_reason_detail: string | null;
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      kind: components["schemas"]["ApplicationKind"];
+      /** Opened At */
+      opened_at: string | null;
+      /** Sql State Code */
+      sql_state_code: string;
+      status: components["schemas"]["ApplicationStatus"];
+      /** Timeline */
+      timeline: components["schemas"]["ApplicationEvent"][];
+      /** Withdrawn At */
+      withdrawn_at: string | null;
     };
     /**
      * ApplicationUpdate
@@ -697,6 +777,49 @@ export interface components {
        */
       user_id: string;
     };
+    /**
+     * Dashboard
+     * @description Everything the PA's dashboard shows, read from the database on each request.
+     * @example {
+     *       "applications": [
+     *         {
+     *           "claimed_license_number": "PA-000123",
+     *           "id": "3d7e2a91-6b0c-4f58-a2e4-9c1b8f0d5e36",
+     *           "kind": "initial",
+     *           "opened_at": "2026-10-14T15:00:00Z",
+     *           "sql_state_code": "KS",
+     *           "status": "submitted",
+     *           "timeline": [
+     *             {
+     *               "at": "2026-10-14T15:00:00Z",
+     *               "status": "submitted"
+     *             }
+     *           ]
+     *         }
+     *       ],
+     *       "primary_action": {
+     *         "available": false,
+     *         "kind": "apply_for_privileges",
+     *         "reasons": [
+     *           "application_in_review"
+     *         ]
+     *       },
+     *       "privileges": [],
+     *       "qualifying_license": null
+     *     }
+     */
+    Dashboard: {
+      /**
+       * Applications
+       * @description Newest first
+       */
+      applications: components["schemas"]["ApplicationSummary"][];
+      primary_action: components["schemas"]["Action"];
+      /** Privileges */
+      privileges: components["schemas"]["PrivilegeSummary"][];
+      qualifying_license:
+        components["schemas"]["QualifyingLicenseSummary"] | null;
+    };
     /** Data[ApplicationOut] */
     Data_ApplicationOut_: {
       data: components["schemas"]["ApplicationOut"];
@@ -704,6 +827,10 @@ export interface components {
     /** Data[CurrentUser] */
     Data_CurrentUser_: {
       data: components["schemas"]["CurrentUser"];
+    };
+    /** Data[Dashboard] */
+    Data_Dashboard_: {
+      data: components["schemas"]["Dashboard"];
     };
     /** Data[DocumentDownload] */
     Data_DocumentDownload_: {
@@ -960,6 +1087,21 @@ export interface components {
      */
     PrivilegeComputedStatus: "inactive" | "expired" | "encumbered" | "active";
     /**
+     * PrivilegeEvent
+     * @description One change to a privilege: its issue, or a change of administrator status.
+     */
+    PrivilegeEvent: {
+      /** Administrator Status */
+      administrator_status: string;
+      /**
+       * At
+       * Format: date-time
+       */
+      at: string;
+      /** Reason */
+      reason?: string | null;
+    };
+    /**
      * PrivilegeRequestStatus
      * @description A privilege request's states (FLOW-06).
      *
@@ -969,6 +1111,37 @@ export interface components {
      */
     PrivilegeRequestStatus:
       "pending_payment" | "submitted" | "issued" | "denied" | "withdrawn";
+    /**
+     * PrivilegeSummary
+     * @description A privilege as its holder sees it. ``expires_in_days`` counts from today in the compact's time zone.
+     */
+    PrivilegeSummary: {
+      /** Expires In Days */
+      expires_in_days: number;
+      /**
+       * Expires On
+       * Format: date
+       */
+      expires_on: string;
+      /** History */
+      history: components["schemas"]["PrivilegeEvent"][];
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /**
+       * Issued At
+       * Format: date-time
+       */
+      issued_at: string;
+      /** Privilege Number */
+      privilege_number: string;
+      /** Remote State Code */
+      remote_state_code: string;
+      /** Status */
+      status: string;
+    };
     /**
      * ProfileOut
      * @description The profile fields the application's first step shows. ``residence`` is null until the PA enters one.
@@ -1037,6 +1210,24 @@ export interface components {
       residence?: components["schemas"]["Residence"] | null;
     };
     /**
+     * QualifyingLicenseSummary
+     * @description The license the PA's eligibility rests on, and when its state verified it.
+     */
+    QualifyingLicenseSummary: {
+      /** Expires On */
+      expires_on: string | null;
+      /** License Number */
+      license_number: string;
+      /** State Code */
+      state_code: string;
+      /** Status */
+      status: string;
+      /** Verified At */
+      verified_at: string | null;
+      /** Verified By State */
+      verified_by_state: string | null;
+    };
+    /**
      * ReadyResp
      * @description The readiness response: whether the database answered.
      * @example {
@@ -1091,6 +1282,17 @@ export interface components {
       /** Name */
       name: string;
     };
+    /**
+     * UnavailableReason
+     * @description Why the PA cannot apply for privileges yet.
+     * @enum {string}
+     */
+    UnavailableReason:
+      | "application_in_review"
+      | "information_requested"
+      | "not_yet_eligible"
+      | "two_year_bar"
+      | "eligibility_withdrawn";
     /**
      * UploadForm
      * @description POST the ``fields`` and then the file, as ``multipart/form-data`` field ``file``, to ``url``.
@@ -1539,6 +1741,35 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["Data_ApplicationOut_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Get_my_dashboard_api_me_dashboard_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_Dashboard_"];
         };
       };
       /** @description Unprocessable Content */

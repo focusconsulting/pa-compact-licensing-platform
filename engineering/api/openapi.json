@@ -33,6 +33,41 @@
         "title": "AcceptedAttestation",
         "type": "object"
       },
+      "Action": {
+        "description": "The primary action, and when it is unavailable, every reason why.",
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ActionKind"
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/UnavailableReason"
+            },
+            "title": "Reasons",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kind",
+          "available",
+          "reasons"
+        ],
+        "title": "Action",
+        "type": "object"
+      },
+      "ActionKind": {
+        "description": "The one thing the dashboard offers next.",
+        "enum": [
+          "apply_for_participation",
+          "apply_for_privileges"
+        ],
+        "title": "ActionKind",
+        "type": "string"
+      },
       "ApplicationCreate": {
         "additionalProperties": false,
         "description": "The state the PA designates as their state of qualifying license (Rule 3 \u00a73.4(a)(2)).",
@@ -53,6 +88,36 @@
           "sql_state_code"
         ],
         "title": "ApplicationCreate",
+        "type": "object"
+      },
+      "ApplicationEvent": {
+        "description": "One step in an application's history. ``note`` is the state's request when it asked for information.",
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ApplicationStatus"
+          }
+        },
+        "required": [
+          "status",
+          "at"
+        ],
+        "title": "ApplicationEvent",
         "type": "object"
       },
       "ApplicationKind": {
@@ -252,6 +317,117 @@
           "sworn_name"
         ],
         "title": "ApplicationSubmit",
+        "type": "object"
+      },
+      "ApplicationSummary": {
+        "description": "An application, its decision, and its timeline, oldest first.",
+        "properties": {
+          "claimed_license_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claimed License Number"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "denial_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Denial Reason"
+          },
+          "denial_reason_detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Denial Reason Detail"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ApplicationKind"
+          },
+          "opened_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opened At"
+          },
+          "sql_state_code": {
+            "title": "Sql State Code",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ApplicationStatus"
+          },
+          "timeline": {
+            "items": {
+              "$ref": "#/components/schemas/ApplicationEvent"
+            },
+            "title": "Timeline",
+            "type": "array"
+          },
+          "withdrawn_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Withdrawn At"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "sql_state_code",
+          "claimed_license_number",
+          "opened_at",
+          "decided_at",
+          "withdrawn_at",
+          "denial_reason",
+          "denial_reason_detail",
+          "timeline"
+        ],
+        "title": "ApplicationSummary",
         "type": "object"
       },
       "ApplicationUpdate": {
@@ -593,6 +769,76 @@
         "title": "CurrentUser",
         "type": "object"
       },
+      "Dashboard": {
+        "description": "Everything the PA's dashboard shows, read from the database on each request.",
+        "examples": [
+          {
+            "applications": [
+              {
+                "claimed_license_number": "PA-000123",
+                "id": "3d7e2a91-6b0c-4f58-a2e4-9c1b8f0d5e36",
+                "kind": "initial",
+                "opened_at": "2026-10-14T15:00:00Z",
+                "sql_state_code": "KS",
+                "status": "submitted",
+                "timeline": [
+                  {
+                    "at": "2026-10-14T15:00:00Z",
+                    "status": "submitted"
+                  }
+                ]
+              }
+            ],
+            "primary_action": {
+              "available": false,
+              "kind": "apply_for_privileges",
+              "reasons": [
+                "application_in_review"
+              ]
+            },
+            "privileges": [],
+            "qualifying_license": null
+          }
+        ],
+        "properties": {
+          "applications": {
+            "description": "Newest first",
+            "items": {
+              "$ref": "#/components/schemas/ApplicationSummary"
+            },
+            "title": "Applications",
+            "type": "array"
+          },
+          "primary_action": {
+            "$ref": "#/components/schemas/Action"
+          },
+          "privileges": {
+            "items": {
+              "$ref": "#/components/schemas/PrivilegeSummary"
+            },
+            "title": "Privileges",
+            "type": "array"
+          },
+          "qualifying_license": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QualifyingLicenseSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "qualifying_license",
+          "applications",
+          "privileges",
+          "primary_action"
+        ],
+        "title": "Dashboard",
+        "type": "object"
+      },
       "Data_ApplicationOut_": {
         "properties": {
           "data": {
@@ -615,6 +861,18 @@
           "data"
         ],
         "title": "Data[CurrentUser]",
+        "type": "object"
+      },
+      "Data_Dashboard_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Dashboard"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Data[Dashboard]",
         "type": "object"
       },
       "Data_DocumentDownload_": {
@@ -1112,6 +1370,37 @@
         "title": "PrivilegeComputedStatus",
         "type": "string"
       },
+      "PrivilegeEvent": {
+        "description": "One change to a privilege: its issue, or a change of administrator status.",
+        "properties": {
+          "administrator_status": {
+            "title": "Administrator Status",
+            "type": "string"
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "required": [
+          "administrator_status",
+          "at"
+        ],
+        "title": "PrivilegeEvent",
+        "type": "object"
+      },
       "PrivilegeRequestStatus": {
         "description": "A privilege request's states (FLOW-06).\n\n``withdrawn`` replaces FLOW-06's ``abandoned``: Rule 3 \u00a73.7(b)(1) says an\nincomplete request is \"deemed incomplete and to have been withdrawn\".",
         "enum": [
@@ -1123,6 +1412,61 @@
         ],
         "title": "PrivilegeRequestStatus",
         "type": "string"
+      },
+      "PrivilegeSummary": {
+        "description": "A privilege as its holder sees it. ``expires_in_days`` counts from today in the compact's time zone.",
+        "properties": {
+          "expires_in_days": {
+            "title": "Expires In Days",
+            "type": "integer"
+          },
+          "expires_on": {
+            "format": "date",
+            "title": "Expires On",
+            "type": "string"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/PrivilegeEvent"
+            },
+            "title": "History",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "issued_at": {
+            "format": "date-time",
+            "title": "Issued At",
+            "type": "string"
+          },
+          "privilege_number": {
+            "title": "Privilege Number",
+            "type": "string"
+          },
+          "remote_state_code": {
+            "title": "Remote State Code",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "remote_state_code",
+          "privilege_number",
+          "status",
+          "issued_at",
+          "expires_on",
+          "expires_in_days",
+          "history"
+        ],
+        "title": "PrivilegeSummary",
+        "type": "object"
       },
       "ProfileOut": {
         "description": "The profile fields the application's first step shows. ``residence`` is null until the PA enters one.",
@@ -1305,6 +1649,68 @@
         "title": "ProfileUpdate",
         "type": "object"
       },
+      "QualifyingLicenseSummary": {
+        "description": "The license the PA's eligibility rests on, and when its state verified it.",
+        "properties": {
+          "expires_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires On"
+          },
+          "license_number": {
+            "title": "License Number",
+            "type": "string"
+          },
+          "state_code": {
+            "title": "State Code",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "verified_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified At"
+          },
+          "verified_by_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified By State"
+          }
+        },
+        "required": [
+          "state_code",
+          "license_number",
+          "expires_on",
+          "status",
+          "verified_by_state",
+          "verified_at"
+        ],
+        "title": "QualifyingLicenseSummary",
+        "type": "object"
+      },
       "ReadyResp": {
         "description": "The readiness response: whether the database answered.",
         "examples": [
@@ -1440,6 +1846,18 @@
         ],
         "title": "StateOut",
         "type": "object"
+      },
+      "UnavailableReason": {
+        "description": "Why the PA cannot apply for privileges yet.",
+        "enum": [
+          "application_in_review",
+          "information_requested",
+          "not_yet_eligible",
+          "two_year_bar",
+          "eligibility_withdrawn"
+        ],
+        "title": "UnavailableReason",
+        "type": "string"
       },
       "UploadForm": {
         "description": "POST the ``fields`` and then the file, as ``multipart/form-data`` field ``file``, to ``url``.",
@@ -2253,6 +2671,43 @@
           }
         ],
         "summary": "Withdraw My Application",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/me/dashboard": {
+      "get": {
+        "description": "Your license, applications, privileges, and what you can do next.",
+        "operationId": "Get_my_dashboard_api_me_dashboard_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_Dashboard_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get My Dashboard",
         "tags": [
           "me"
         ]
