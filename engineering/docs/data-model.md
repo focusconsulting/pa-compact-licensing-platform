@@ -227,7 +227,42 @@ A PA's application to participate in the compact, decided by their state of qual
 | `eligibility_withdrawn_at`, `eligibility_withdrawal_reason` | | Required for `eligibility_withdrawn` (Rule 3 §3.9(b)) |
 | `superseded_at` | TIMESTAMPTZ | Required for `superseded`: a later `change_sql` application became eligible (Rule 3 §3.6) |
 
+SCRUM-111 adds the sworn statement (Q-06), required outside `draft` and set again on each resubmission:
+
+| Column | Type | Meaning |
+|---|---|---|
+| `sworn_name` | TEXT | The name the PA typed |
+| `sworn_at` | TIMESTAMPTZ | When the server received it |
+| `sworn_ip` | INET | The address it came from |
+
 The database enforces: `eligible` needs a linked license, `license_verified_at`, and `cbc_completed_on` (FLOW-02); one open application (`draft`, `submitted`, `info_requested`) per practitioner; one `eligible` application per practitioner, so a `change_sql` application that becomes eligible supersedes the old one in the same transaction, and the issuance check "participation still eligible" can only find the current one. The queue index is `(sql_state_code, status)`.
+
+### `attestations`
+
+The statements a PA accepts to apply: for participation from Rule 3 §3.4(a) and ML §4.A, for a privilege from Rule 3 §3.4(c). Created by SCRUM-110 and seeded with the texts. Tier: public. Owner: epic 6.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `code`, `version` | TEXT, INTEGER | Primary key. A wording change is a new version, so an acceptance always names the text the PA read |
+| `applies_to` | TEXT CHECK | `participation` or `privilege` |
+| `state_code` | FK `states`, NULL | One remote state's own attestation, for a requirement it configures as `attestation`, such as jurisprudence; NULL applies to every state |
+| `text` | TEXT | What the PA reads |
+| `source` | TEXT | The clause it carries out, e.g. `Rule 3 §3.4(a)(5)` |
+| `retired_at` | TIMESTAMPTZ, NULL | No longer asked for |
+
+A row changes only to set `retired_at`. The current version of a code is its highest unretired one.
+
+### `participation_application_attestations`
+
+What a PA accepted on an application. Created by SCRUM-110; epic 8 adds `privilege_request_attestations` with the same shape. Tier: private. Owner: epic 6.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `participation_application_id` | FK | |
+| `attestation_code`, `attestation_version` | FK `attestations` | |
+| `accepted_at` | TIMESTAMPTZ | |
+
+The primary key is `(participation_application_id, attestation_code, attestation_version)`. Rows are never changed or deleted: accepting a newer version adds a row, and the latest per code counts. That keeps the submitted record (Rule 5 §5.3) without a history table.
 
 ### `fees`
 
