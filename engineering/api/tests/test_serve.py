@@ -67,6 +67,8 @@ def test_main_hands_the_process_to_gunicorn_with_the_new_certificate(
     assert file == 'gunicorn'
     assert args[-1] == 'licensing_api.__main__:app'
     assert args[args.index('--bind') + 1] == '0.0.0.0:8000'
+    assert args[args.index('--worker-tmp-dir') + 1] == '/dev/shm'
+    assert '--no-control-socket' in args
     cert_path = Path(args[args.index('--certfile') + 1])
     key_path = Path(args[args.index('--keyfile') + 1])
     ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER).load_cert_chain(cert_path, key_path)

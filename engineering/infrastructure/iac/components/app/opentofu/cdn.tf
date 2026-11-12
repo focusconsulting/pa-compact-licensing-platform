@@ -58,6 +58,39 @@ resource "aws_s3_bucket_public_access_block" "client_assets" {
   restrict_public_buckets = true
 }
 
+# A deploy replaces every file (`aws s3 sync --delete`); the previous deploy's versions
+# are kept for 30 days, then expire.
+resource "aws_s3_bucket_versioning" "client_assets" {
+  bucket = aws_s3_bucket.client_assets.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "client_assets" {
+  bucket = aws_s3_bucket.client_assets.id
+
+  rule {
+    id     = "expire-previous-deploys"
+    status = "Enabled"
+    filter {}
+
+    noncurrent_version_expiration {
+      noncurrent_days = 30
+    }
+
+    expiration {
+      expired_object_delete_marker = true
+    }
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+
+  depends_on = [aws_s3_bucket_versioning.client_assets]
+}
+
 resource "aws_cloudfront_origin_access_identity" "frontend_oai" {
   comment = "OAI for accessing S3 bucket for client assets"
 }
@@ -112,7 +145,12 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
   enabled             = true
   default_root_object = "index.html"
   web_acl_id          = aws_wafv2_web_acl.cloudfront.arn
-  aliases             = [var.dns_name]
+
+  logging_config {
+    bucket = aws_s3_bucket.logs.bucket_domain_name
+    prefix = "cloudfront/"
+  }
+  aliases = [var.dns_name]
 
   # Default cache behavior — serves the Next.js frontend from S3
   default_cache_behavior {

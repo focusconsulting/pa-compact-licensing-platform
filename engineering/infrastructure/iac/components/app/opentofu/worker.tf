@@ -13,6 +13,8 @@ locals {
     { name = "ENVIRONMENT", value = upper(var.environment_name) },
     { name = "LOG_LEVEL", value = var.log_level },
     { name = "DB_CA_FILE", value = local.db_ca_file },
+    # The root filesystem is read-only; anything temporary goes to memory.
+    { name = "TMPDIR", value = "/dev/shm" },
     { name = "SMTP_HOST", value = "email-smtp.${var.aws_region}.amazonaws.com" },
     { name = "SMTP_PORT", value = "587" },
     { name = "SMTP_STARTTLS", value = "true" },
@@ -54,12 +56,13 @@ resource "aws_ecs_task_definition" "worker_task" {
 
   container_definitions = jsonencode([
     {
-      name        = local.worker_container_name
-      image       = "${var.repo_name}:${var.image_tag}"
-      essential   = true
-      command     = ["python", "-m", "licensing_api.worker"]
-      environment = local.worker_environment
-      secrets     = local.worker_secrets
+      name                   = local.worker_container_name
+      image                  = "${var.repo_name}:${var.image_tag}"
+      essential              = true
+      command                = ["python", "-m", "licensing_api.worker"]
+      readonlyRootFilesystem = true
+      environment            = local.worker_environment
+      secrets                = local.worker_secrets
       # ECS sends SIGTERM, then SIGKILL after this; the Worker finishes the delivery in hand first.
       stopTimeout = 60
       logConfiguration = {
@@ -85,9 +88,10 @@ resource "aws_ecs_task_definition" "jobs_task" {
 
   container_definitions = jsonencode([
     {
-      name      = local.jobs_container_name
-      image     = "${var.repo_name}:${var.image_tag}"
-      essential = true
+      name                   = local.jobs_container_name
+      image                  = "${var.repo_name}:${var.image_tag}"
+      essential              = true
+      readonlyRootFilesystem = true
       # Each schedule overrides the command with `run <job>`; on its own this lists the jobs.
       command     = ["python", "-m", "licensing_api.jobs", "--help"]
       environment = local.worker_environment

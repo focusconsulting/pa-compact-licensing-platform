@@ -132,7 +132,8 @@ may be left out of the tfvars file when the default is right.
 | `commission_ops_email` | The Commission's operational mailbox; empty sends nothing | default | empty |
 | `cognito_callback_url`, `cognito_logout_url` | Cognito redirect URLs | default | `https://<dns_name>` |
 | `acm_certificate_arn` | The certificate the load balancer's HTTPS listener presents: it covers `dns_name` and is issued in `aws_region` | the zone's wildcard certificate in `us-east-1` | required |
-| `deletion_protection` | Guards what would block a teardown or lose data in one: the database's and the load balancer's deletion protection, and the database's final snapshot ([what it does](../../docs/security/infrastructure.md#deletion_protection)). `prod` leaves it on | `false`: staging is spun up and torn down | `true` |
+| `cloudtrail_management_events` | Whether the environment's trail records management events; off where another trail in the account already does, since a second copy is charged per event ([what to check](../../docs/security/infrastructure.md#logs-and-the-audit-trail)) | `false`: Focus's baseline trail records them | required |
+| `deletion_protection` | Guards what would block a teardown or lose data in one: the database's and the load balancer's deletion protection, the database's final snapshot, and the logs bucket's contents ([what it does](../../docs/security/infrastructure.md#deletion_protection)). `prod` leaves it on | `false`: staging is spun up and torn down | `true` |
 
 ## Adding an environment
 

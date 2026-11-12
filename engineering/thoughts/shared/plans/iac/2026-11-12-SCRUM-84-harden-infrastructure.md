@@ -428,23 +428,27 @@ Access logs, CloudTrail, bucket lifecycles, a narrower task role, and read-only 
 **Changes**: `aws_cloudtrail.account`: multi-region, global service events, log file validation, encrypted with `aws_kms_key.data` (the key policy gains CloudTrail's statement), delivered to the logs bucket and a CloudWatch log group. A data event selector records reads and writes of the documents bucket, so access to uploaded documents is audited outside the application too (Rule 4 §4.5).
 
 **File**: `variables.tf`, `app.tfvars`, `iac/README.md`
-**Changes**: `cloudtrail_management_events` (bool, required). Before this PR, run `aws cloudtrail describe-trails --profile dev-pacompact`: staging sets `false` if a Focus organization trail already records the account's management events, `true` otherwise. The README row says how to decide.
+**Changes**: `cloudtrail_management_events` (bool, required). Checked on 2026-11-12: the staging account has a Focus baseline trail, `focus-baseline-dev-pacompact`, which is not an organization trail. It records management writes only, in `us-east-1` only, to a central Focus bucket. Staging sets `false`, so its own trail adds document reads and writes without paying for a second copy of management events. What the baseline trail leaves out (reads, other regions) is written down in `engineering/docs/security/infrastructure.md` for whoever sets this for `prod`.
 
 #### 3. Least privilege
 
 **File**: `engineering/infrastructure/iac/components/app/opentofu/ecs.tf`
-**Changes**: in `ecs_task_otel`, log writes are scoped to the metrics log group and `cloudwatch:PutMetricData` is conditioned on the ADOT namespace. X-Ray's actions take no resource and keep `*`.
+**Changes**: in `ecs_task_otel`, log writes are scoped to the metrics log group. `cloudwatch:PutMetricData` is removed, not conditioned: the collector writes metrics as embedded-metric-format log events, and nothing calls it. X-Ray's actions take no resource and keep `*`.
 
 **File**: `ecs.tf`, `worker.tf`
-**Changes**: `readonlyRootFilesystem = true` on the API, Worker, jobs, and ADOT containers, with a task-scoped volume mounted at `/tmp` for the API's certificate.
+**Changes**: `readonlyRootFilesystem = true` on the API, Worker, jobs, and ADOT containers, and `TMPDIR=/dev/shm` on ours. There is no volume: a Fargate volume is owned by root, and the containers run as an unprivileged user. `licensing_api/serve.py` moves the certificate to `/dev/shm/licensing-api-tls/` (so the private key never reaches a disk), sends gunicorn's heartbeat files there too, and turns off gunicorn's control socket, which wanted a writable home directory.
+
+Tested on 2026-11-12 with `docker run --read-only`: the API becomes ready and passes its health check, a job runs, the Worker runs, and the ADOT collector starts, none logging an error. Fargate also provides `/dev/shm`; the staging deploy is what confirms it there.
 
 ### Success Criteria
 
 #### Automated Verification
 
-- [ ] `cd engineering/infrastructure && just check`
-- [ ] The CI plan succeeds; against a running staging it adds the bucket, trail, and log group, and replaces nothing
-- [ ] Checkov no longer reports the IDs in the overview
+- [x] `cd engineering/infrastructure && just check`
+- [x] The plan succeeds; against a running staging it adds the bucket, trail, and log group, and replaces nothing beyond what earlier phases replace (run locally, 2026-11-12; CI repeats it)
+- [x] Checkov no longer reports the IDs in the overview: 21 OpenTofu findings remain, all of them Phase 6's
+- [x] `cd engineering/api && just check`: 462 tests at 100%
+- [x] The API, a job, the Worker, and the ADOT collector run under `docker run --read-only`
 
 #### Manual Verification
 
@@ -453,7 +457,7 @@ Access logs, CloudTrail, bucket lifecycles, a narrower task role, and read-only 
 - [ ] Downloading a document produces a `GetObject` data event in the trail
 - [ ] `aws cloudtrail validate-logs` passes for the trail
 
-**Implementation Note**: if the ADOT image cannot run read-only, drop the flag from that one container, skip `CKV_AWS_336` on its task definition with the reason, and add the register row. Pause for confirmation before Phase 6.
+**Implementation Note**: if a container cannot write to `/dev/shm` on Fargate, give that task a volume and say so in the PR. Pause for confirmation before Phase 6.
 
 ---
 
@@ -495,6 +499,8 @@ The remaining findings are fixed or skipped with reasons, Checkov gates pull req
 | CKV_AWS_136 KMS on ECR | repository | The image is built from this public repository and holds no data; AES-256 at rest. |
 | CKV_AWS_145 KMS on S3 | client and logs buckets | The client bucket holds the public site and its origin access identity cannot read SSE-KMS; load balancer logs accept only SSE-S3. |
 | CKV_AWS_18 access logging | logs bucket | It is the log destination. |
+| CKV2_AWS_65 ACLs disabled | logs bucket | CloudFront delivers its access logs by ACL grant; every other bucket has ACLs off. Found in Phase 5. |
+| CKV_AWS_252 SNS topic | trail | It would notify on every log file delivered, and nothing consumes that. Found in Phase 5. |
 | CKV_AWS_259 HSTS preload | response headers policy | The check wants `preload`. It asks browser vendors to hard-code the domain as HTTPS-only, which is slow to undo and is the Commission's call for its production domain; `max-age` and `includeSubDomains` are set. Found in Phase 4. |
 
 Any check that Checkov still reports after these, and that this plan did not foresee, is fixed if it has a fix and otherwise added to this table in the PR.

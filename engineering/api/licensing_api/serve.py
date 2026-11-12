@@ -6,7 +6,6 @@ runs uvicorn over HTTP (``just dev``) and never comes through here.
 """
 
 import os
-import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -15,8 +14,9 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.x509.oid import NameOID
 
-# The container's health check (ecs.tf) verifies against the certificate at this path.
-TLS_DIR = Path(tempfile.gettempdir()) / 'licensing-api-tls'
+# In memory: the container's root filesystem is read-only (ecs.tf), and the private key
+# never reaches a disk. The container's health check verifies against the certificate here.
+TLS_DIR = Path('/dev/shm/licensing-api-tls')
 
 # A task is replaced by the next deploy long before this; nothing checks it either way.
 CERTIFICATE_LIFETIME = timedelta(days=365)
@@ -89,6 +89,13 @@ def main() -> None:
             str(cert_path),
             '--keyfile',
             str(key_path),
+            # gunicorn's heartbeat files go to memory too, which is also what its
+            # documentation advises in containers.
+            '--worker-tmp-dir',
+            '/dev/shm',
+            # Nothing uses gunicorn's control interface, and its socket would need a
+            # writable home directory.
+            '--no-control-socket',
             'licensing_api.__main__:app',
         ],
     )
