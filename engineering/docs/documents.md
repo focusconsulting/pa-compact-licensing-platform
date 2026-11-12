@@ -1,7 +1,7 @@
 # Documents
 
 Proofs, orders, and verification documents that PAs and states upload (backlog
-D9, F-12; [plan](../thoughts/shared/plans/cross-cutting/2026-11-05-SCRUM-81-documents.md)).
+D9, F-12; [SCRUM-81](https://focusdigital.atlassian.net/browse/SCRUM-81)).
 The rules require PAs and states to submit them and the system to keep every
 one a state submits (Rule 4 §4.3(e)(4)). A document is never deleted.
 
