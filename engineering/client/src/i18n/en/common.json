@@ -38,5 +38,14 @@
     "viewDetails": "View details",
     "actions": "Actions",
     "about": "for {{record}}"
+  },
+  "filePicker": {
+    "uploading": "Uploading {{name}}…",
+    "scanning": "Checking {{name}} for viruses…",
+    "uploaded": "{{name}} uploaded.",
+    "tooLarge": "{{name}} is larger than 20 MB. Choose a smaller file.",
+    "wrongType": "{{name}} is not a PDF, PNG, JPEG, CSV, or Word (.docx) file. Choose another file.",
+    "rejected": "{{name}} was rejected because it may contain a virus. Choose another file.",
+    "failed": "{{name}} could not be uploaded. Try again, or choose another file."
   }
 }
