@@ -97,3 +97,9 @@ services:
     build: ../mocks/fsmb
     ports:
       - "${FSMB_PORT:-8083}:8080"
+
+  # NCCPA's Board Certification Status API: WireMock with the PAs in engineering/mocks/nccpa
+  nccpa-mock:
+    build: ../mocks/nccpa
+    ports:
+      - "${NCCPA_PORT:-8082}:8080"

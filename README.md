@@ -101,6 +101,8 @@ No AWS account or credentials are needed.
 | Malware scanner (tags uploads as GuardDuty would) | `docker compose -p pa-compact logs malware-scanner` |
 | FSMB mock (reports in [`engineering/mocks/fsmb`](engineering/mocks/fsmb/README.md)) | <http://localhost:8083> |
 | FSMB's API docs (`just fsmb-docs`) | <http://localhost:8084> |
+| NCCPA mock (PAs in [`engineering/mocks/nccpa`](engineering/mocks/nccpa/README.md)) | <http://localhost:8082> |
+| NCCPA's API docs (`just nccpa-docs`) | <http://localhost:8085> |
 
 Sign in as any user in
 [`engineering/mocks/cognito/db/local_licensing.json`](engineering/mocks/cognito/db/local_licensing.json)

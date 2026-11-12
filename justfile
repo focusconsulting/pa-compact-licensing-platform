@@ -20,7 +20,7 @@ install:
     cd engineering/api && uv sync
     cd engineering/client && pnpm install
 
-# Start the local services in the background (Postgres, maildev, RustFS, the malware scanner, Cognito mock, FSMB mock) and wait until ready
+# Start the local services in the background (Postgres, maildev, RustFS, the malware scanner, Cognito mock, FSMB mock, NCCPA mock) and wait until ready
 services:
     {{ compose }} --profile scanner up -d --wait --build
     {{ compose }} run --rm rustfs-init >/dev/null
@@ -50,6 +50,13 @@ mock-api:
 fsmb-docs port="8084":
     docker run --rm --init -p {{port}}:8080 \
         -e URL=https://services-pdc-demo.fsmb.org/swagger/v1/swagger.json \
+        swaggerapi/swagger-ui:v5.17.14
+
+# Browse NCCPA's API in Swagger UI on localhost:8085, from the vendored document (engineering/docs/nccpa.md)
+nccpa-docs port="8085":
+    docker run --rm --init -p {{port}}:8080 \
+        -e SWAGGER_JSON=/spec/nccpa_openapi.json \
+        -v "$PWD/engineering/api/tests:/spec:ro" \
         swaggerapi/swagger-ui:v5.17.14
 
 # Run the end-to-end tests against the running system (start it with `just up` first)
