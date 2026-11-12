@@ -49,4 +49,5 @@ COPY --chown=python:python . .
 USER 1000
 
 ENV PATH="/app/.venv/bin:$PATH"
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "licensing_api.__main__:app"]
+# gunicorn behind TLS, with a certificate made at start (ADR-0019)
+CMD ["python", "-m", "licensing_api.serve"]
