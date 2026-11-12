@@ -227,7 +227,7 @@ A PA's application to participate in the compact, decided by their state of qual
 | `eligibility_withdrawn_at`, `eligibility_withdrawal_reason` | | Required for `eligibility_withdrawn` (Rule 3 §3.9(b)) |
 | `superseded_at` | TIMESTAMPTZ | Required for `superseded`: a later `change_sql` application became eligible (Rule 3 §3.6) |
 
-SCRUM-111 adds the sworn statement (Q-06), required outside `draft` and set again on each resubmission:
+The sworn statement (Q-06), set by submit and again by each resubmission. The submit route requires it; there is no CHECK, because rows made before it have none:
 
 | Column | Type | Meaning |
 |---|---|---|
