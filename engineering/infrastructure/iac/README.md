@@ -131,7 +131,8 @@ may be left out of the tfvars file when the default is right.
 | `ecs_max_capacity` | Most API tasks the autoscaler may run | default | `2` |
 | `commission_ops_email` | The Commission's operational mailbox; empty sends nothing | default | empty |
 | `cognito_callback_url`, `cognito_logout_url` | Cognito redirect URLs | default | `https://<dns_name>` |
-| `acm_certificate_arn` | Declared for an HTTPS listener on the load balancer; not yet used (SCRUM-84) | default | none |
+| `acm_certificate_arn` | The certificate the load balancer's HTTPS listener presents: it covers `dns_name` and is issued in `aws_region` | the zone's wildcard certificate in `us-east-1` | required |
+| `deletion_protection` | Guards what would block a teardown or lose data in one (the load balancer's deletion protection). `prod` leaves it on | `false`: staging is spun up and torn down | `true` |
 
 ## Adding an environment
 
@@ -148,7 +149,12 @@ may be left out of the tfvars file when the default is right.
      uses `fck-nat`, a single low-cost NAT instance. **Production must use
      `aws-gateway`**, the AWS managed NAT Gateway.
    - A public Route 53 hosted zone for the parent of `dns_name`, and an issued
-     wildcard ACM certificate for it in `us-east-1`.
+     wildcard ACM certificate for it in `us-east-1`, which CloudFront uses and
+     the module looks up.
+   - A certificate covering `dns_name` in the environment's own region, for the
+     load balancer; its ARN is `acm_certificate_arn`. In `us-east-1` it is the
+     same wildcard certificate. Anywhere else it is a second one, since a load
+     balancer can use only a certificate from its own region.
    - The Secrets Manager secret `<env>-slack-tfvar` (keys `slack_team_id`,
      `slack_channel_id`). A jumpbox, if wanted, is the bootstrap repo's
      `create_jumpbox`; the module reads its security group from the network

@@ -20,13 +20,21 @@ resource "aws_cloudfront_vpc_origin" "alb_origin" {
     arn                    = aws_lb.api_alb.arn
     http_port              = 80
     https_port             = 443
-    origin_protocol_policy = "http-only"
+    origin_protocol_policy = "https-only"
 
     origin_ssl_protocols {
       items    = ["TLSv1.2"]
       quantity = 1
     }
   }
+}
+
+data "aws_cloudfront_cache_policy" "caching_disabled" {
+  name = "Managed-CachingDisabled"
+}
+
+data "aws_cloudfront_origin_request_policy" "all_viewer" {
+  name = "Managed-AllViewer"
 }
 
 # CloudFront VPC Origins automatically creates and manages a security group in the account.
@@ -184,18 +192,11 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
     allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods         = ["GET", "HEAD"]
 
-    forwarded_values {
-      query_string = true
-      headers      = ["Authorization", "Accept", "Content-Type"]
-      cookies {
-        forward = "all"
-      }
-    }
-
-    # Disable caching for API responses
-    min_ttl     = 0
-    default_ttl = 0
-    max_ttl     = 0
+    cache_policy_id = data.aws_cloudfront_cache_policy.caching_disabled.id
+    # Forwards the viewer's Host header, which is what makes the load balancer's
+    # certificate (for dns_name) match: CloudFront checks an origin's certificate
+    # against the origin domain or the forwarded Host.
+    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer.id
   }
 
   # Return index.html for 404s so Next.js client-side routing works on direct URL navigation

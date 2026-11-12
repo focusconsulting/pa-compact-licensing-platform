@@ -12,6 +12,7 @@ locals {
     { name = "DB_NAME", value = local.db_name },
     { name = "ENVIRONMENT", value = upper(var.environment_name) },
     { name = "LOG_LEVEL", value = var.log_level },
+    { name = "DB_CA_FILE", value = local.db_ca_file },
     { name = "SMTP_HOST", value = "email-smtp.${var.aws_region}.amazonaws.com" },
     { name = "SMTP_PORT", value = "587" },
     { name = "SMTP_STARTTLS", value = "true" },
