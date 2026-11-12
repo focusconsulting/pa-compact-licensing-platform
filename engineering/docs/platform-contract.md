@@ -193,6 +193,20 @@ The server records `sworn_at` and `sworn_ip`; the client sends only the name. Su
 
 While an application is `draft` or `info_requested`, the PA saves steps (`PATCH`; the state only in a draft) and accepts attestations; any other status is `409 INVALID_TRANSITION`. Accepting a version that is not the current one is `409 ATTESTATIONS_OUT_OF_DATE`. `GET /public/attestations?applies_to=participation` lists the current versions in display order, and `GET /public/states` says which states are live.
 
+### The PA's dashboard
+
+`GET /me/dashboard` (`routes/dashboard.py`) reads the PA's license, applications, and privileges on each request; timelines come from history rows, never from events. Its `primary_action` is `apply_for_participation` until the PA has an application that could make them eligible, then `apply_for_privileges`. That action is unavailable, with every reason listed, while:
+
+| Reason | When |
+|---|---|
+| `not_yet_eligible` | No eligible application; always listed with one of the next three |
+| `application_in_review` | An application is `submitted` |
+| `information_requested` | An application is `info_requested` |
+| `eligibility_withdrawn` | The newest application is `eligibility_withdrawn` |
+| `two_year_bar` | `v_compact_eligibility` says the PA is barred (ML §4.A(8)) |
+
+A pending `change_sql` application does not block privileges: the PA stays eligible through their current state (Rule 3 §3.6).
+
 ## Signatures the tracks implement
 
 These are fixed here so the tracks build in parallel. Each becomes code, with tests, in the track named. Each track's plan links this page.
