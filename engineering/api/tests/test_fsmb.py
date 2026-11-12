@@ -2,7 +2,7 @@
 
 import logging
 from collections.abc import AsyncGenerator, Callable
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 
 import httpx
 import pytest
@@ -46,13 +46,13 @@ async def test_a_report_carries_identity_education_licenses_and_npi(fsmb):
     assert report.as_of_date_time_utc == datetime(2023, 1, 18, 19, 13, 7, 30000, tzinfo=UTC)
     assert report.names.legal.last_name == 'Testermancho'
     assert [n.last_name for n in report.names.other or []] == ['Testman']
-    assert report.birth_date is not None and report.birth_date.full_date == date(1978, 8, 8)
+    assert report.birth_date is not None and report.birth_date.date == datetime(1978, 8, 8)
     education = report.medical_education
     assert education is not None and education.school is not None
     assert education.school.cibis_code == '049030'
     assert [(lic.issuer_name, lic.status, lic.expiration_date) for lic in report.licenses or []][
         :2
-    ] == [('ALABAMA', 'Active', date(2030, 6, 30)), ('ALASKA', 'Expired', date(2012, 6, 30))]
+    ] == [('AL', 'Active', datetime(2030, 6, 30)), ('AK', 'Expired', datetime(2012, 6, 30))]
     assert [n.npi_number for n in report.npi or []] == ['1435537299']
 
 
@@ -61,11 +61,12 @@ async def test_an_alerted_report_carries_its_board_orders(fsmb):
 
     assert report.board_action_status is BoardActionStatus.ALERTED
     (order,) = report.board_orders or []
-    assert order.issue_date == date(2019, 3, 14)
+    assert order.issue_date == datetime(2019, 3, 14)
     assert order.disciplinary_entity.name == 'ARIZONA'
     (action,) = order.actions or []
     assert (action.action_code, action.is_prejudicial, action.term_years) == ('PROB', True, 2)
-    assert action.expiration_date == date(2021, 3, 31)
+    assert action.expiration_date == datetime(2021, 3, 31)
+    assert action.action_stayed is None
 
 
 async def test_certifications_keep_partial_dates_in_part(fsmb):
@@ -74,9 +75,9 @@ async def test_certifications_keep_partial_dates_in_part(fsmb):
     assert report.abms is not None
     general, _ = report.abms.certifications or []
     assert general.effective_date is not None
-    assert general.effective_date.full_date == date(2008, 7, 1)
+    assert general.effective_date.date == datetime(2008, 7, 1)
     assert general.expiration_date is not None
-    assert (general.expiration_date.year, general.expiration_date.full_date) == ('2028', None)
+    assert (general.expiration_date.year, general.expiration_date.date) == ('2028', None)
     assert report.dea is not None
     assert [c.dea_number for c in report.dea.certifications or []] == ['AT1234563']
 
@@ -97,7 +98,7 @@ async def test_a_report_with_only_what_fsmb_requires_is_accepted(fsmb):
 
     assert report.names.legal.last_name == 'Sparseley'
     assert report.birth_date is not None
-    assert (report.birth_date.year, report.birth_date.full_date) == ('1990', None)
+    assert (report.birth_date.year, report.birth_date.date) == ('1990', None)
     assert (
         report.medical_education is None and report.licenses is None and report.board_orders is None
     )
@@ -285,22 +286,19 @@ async def test_a_report_time_without_a_zone_is_utc():
     assert report.as_of_date_time_utc == datetime(2023, 1, 18, 19, 13, 7, tzinfo=UTC)
 
 
-async def test_a_calendar_date_with_a_time_of_day_is_rejected():
-    legal = {'lastName': 'Testermancho', 'reportDate': '2022-07-25T13:45:00'}
-    fsmb = _Fsmb(_grant('first'), accepted={'first'}, report={**_REPORT, 'names': {'legal': legal}})
+async def test_null_where_the_document_allows_only_absence_is_rejected():
+    fsmb = _Fsmb(_grant('first'), accepted={'first'}, report={**_REPORT, 'medicalEducation': None})
 
-    with pytest.raises(FsmbError, match='names.legal.reportDate'):
+    with pytest.raises(FsmbError, match='rejects: medicalEducation.'):
         await _stubbed(fsmb).get_current_report(_ALERTED)
 
 
-async def test_a_plain_calendar_date_is_accepted():
-    legal = {'lastName': 'Testermancho', 'reportDate': '2022-07-25'}
+async def test_a_string_over_its_documented_length_is_rejected():
+    legal = {'lastName': 'x' * 51, 'reportDate': '2022-07-25T00:00:00'}
     fsmb = _Fsmb(_grant('first'), accepted={'first'}, report={**_REPORT, 'names': {'legal': legal}})
 
-    report = await _stubbed(fsmb).get_current_report(_ALERTED)
-
-    assert isinstance(report, FsmbReport)
-    assert report.names.legal.report_date == date(2022, 7, 25)
+    with pytest.raises(FsmbError, match='names.legal.lastName'):
+        await _stubbed(fsmb).get_current_report(_ALERTED)
 
 
 async def test_a_connection_failure_raises_and_is_logged(caplog):

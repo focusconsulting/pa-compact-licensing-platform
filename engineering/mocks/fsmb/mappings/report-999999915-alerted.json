@@ -52,7 +52,6 @@
               "termYears": 2,
               "termMonths": null,
               "termDays": null,
-              "actionStayed": null,
               "comments": "Test record: two years of probation with practice monitoring."
             }
           ],
@@ -121,7 +120,7 @@
         {
           "reportDate": "2011-11-11T00:00:00",
           "licenseType": "Administrative",
-          "issuerName": "ALABAMA",
+          "issuerName": "AL",
           "issuerDescription": "Alabama State Board of Medical Examiners",
           "status": "Active",
           "licenseNumber": "TEST1111",
@@ -131,7 +130,7 @@
         {
           "reportDate": "2011-11-11T00:00:00",
           "licenseType": "Teaching",
-          "issuerName": "ALASKA",
+          "issuerName": "AK",
           "issuerDescription": "Alaska State Medical Board",
           "status": "Expired",
           "licenseNumber": "TEST2222",
@@ -141,7 +140,7 @@
         {
           "reportDate": "2011-11-11T00:00:00",
           "licenseType": "Full",
-          "issuerName": "ARIZONA",
+          "issuerName": "AZ",
           "issuerDescription": "Arizona Medical Board",
           "status": "Active",
           "licenseNumber": "TEST3333",
@@ -151,7 +150,7 @@
         {
           "reportDate": "2011-11-11T00:00:00",
           "licenseType": "Full",
-          "issuerName": "NEW HAMPSHIRE",
+          "issuerName": "NH",
           "issuerDescription": "New Hampshire Board of Medicine",
           "status": "Active",
           "licenseNumber": "TEST555",

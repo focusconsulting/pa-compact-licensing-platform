@@ -43,8 +43,14 @@ Authorization: Bearer {access_token}
 
 ### The report
 
-`FsmbReport` models every section FSMB documents. A section FSMB leaves out
-is `None`.
+`FsmbReport` and its 22 nested models mirror FSMB's
+[OpenAPI document](https://services-pdc-demo.fsmb.org/swagger/v1/swagger.json)
+exactly. Each model is named after its schema (`ReportLicense` is
+`FsmbReportLicense`), with the same fields, required fields, nullability,
+types, lengths, and patterns, and it rejects any field the document doesn't
+name. A field FSMB leaves out is `None`. Where the document allows a field to
+be left out but not to be `null` (for example `medicalEducation`), a `null` is
+rejected.
 
 | Field | Holds | Rule it informs |
 |---|---|---|
@@ -52,7 +58,7 @@ is `None`.
 | `board_action_status` | `Cleared` (no board actions) or `Alerted` (one or more) | ML §4.A.7–8 |
 | `board_orders` | Each disciplinary order: the board, its dates, and its actions (code, prejudicial, term, stayed, comments) and bases | ML §4.A.7–8 |
 | `names.legal`, `names.other` | Legal name and other names | Rule 4 §4.3(c)(1)–(2) |
-| `birth_date` | Month, day, and year, any of which may be missing; `full_date` only when all three are known | §4.3(c)(4) |
+| `birth_date` | Month, day, and year, any of which may be missing; `date` only when all three are known | §4.3(c)(4) |
 | `medical_education` | School (with CIBIS code), graduation year, and degree, each with whether FSMB verified it | §4.3(c)(9) |
 | `licenses` | Each license: issuing board, type, status, number, issue and expiration dates | §4.3(c)(11), ML §4.A.6 |
 | `npi` | NPI numbers | |
@@ -61,10 +67,35 @@ is `None`.
 
 Every report section carries the `report_date` on which FSMB received it.
 
-FSMB sends calendar dates as midnight date-times (`2010-07-01T00:00:00`). The
-client turns them into `date` and rejects one with any other time of day
-(constitution Principle XIII). `as_of_date_time_utc` is an instant; a value
+The document types every date as `date-time`, and FSMB sends calendar dates as
+midnight with no zone (`2010-07-01T00:00:00`), so they arrive as naive
+`datetime`. Code that stores one takes `.date()`: a calendar date is a `DATE`
+(constitution Principle XIII). `as_of_date_time_utc` is an instant, so a value
 without a zone is taken as UTC.
+
+### Where FSMB's own sample disagrees with its document
+
+The client follows the OpenAPI document. FSMB's
+[sample report](https://github.com/fsmb/pdc-api/blob/main/docs/members-v1/get-current-report-data.md)
+would fail it twice:
+
+- `licenses[].issuerName` has `maxLength: 5`, but the sample sends state
+  names such as `"NEW HAMPSHIRE"`. The mock sends two-letter codes.
+- ABMS certifications require `meetsMocRequirements`, `certificateDuration`,
+  and `occurrenceType`, which the sample leaves out.
+
+If real reports look like the sample, lookups raise `FsmbError` naming the
+field. Raise it with FSMB (`pdc@fsmb.org`) before relaxing the model.
+
+### When FSMB changes the document
+
+```bash
+cd engineering/api
+just fsmb-openapi                    # refresh tests/fsmb_openapi.json
+just test tests/test_fsmb_openapi.py # fails on each field, constraint, or response that changed
+```
+
+The same test checks that every report the mock serves follows the document.
 
 ## Environments
 

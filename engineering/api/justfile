@@ -51,6 +51,12 @@ job name env-file=".env":
 email-preview *args:
     uv run --env-file .env python -m licensing_api.notifications.preview {{ args }}
 
+# Refresh FSMB's OpenAPI document that tests/test_fsmb_openapi.py holds the FSMB models to (docs/fsmb.md)
+fsmb-openapi:
+    curl -fsS https://services-pdc-demo.fsmb.org/swagger/v1/swagger.json \
+        | python3 -c 'import json, sys; print(json.dumps(json.load(sys.stdin), indent=2, sort_keys=True))' \
+        > tests/fsmb_openapi.json
+
 # Run tests (pass additional args with: just test -k test_name)
 test env-file=".env" *args:
     uv run --env-file {{ env-file }} pytest {{ args }}

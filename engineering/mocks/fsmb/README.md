@@ -16,7 +16,7 @@ customer key, including `me`:
 
 | FID | Response |
 |---|---|
-| `999999915` | Alerted: FSMB's own sample, plus a board order and a DEA registration |
+| `999999915` | Alerted: FSMB's own sample, plus a board order and a DEA registration, with `issuerName` as state codes to fit the OpenAPI document |
 | `999999907` | Cleared: one license, an AOA certification, no orders |
 | `999999923` | Cleared, with only what FSMB requires: a legal last name, a birth year, nulls elsewhere |
 | `999999931` | `204`: no report yet |
@@ -26,3 +26,5 @@ customer key, including `me`:
 
 A request without the bearer gets `401`. To add a report, copy a
 `report-*.json` file in [`mappings/`](mappings/) and rebuild with `just infra`.
+Every report must follow FSMB's OpenAPI document;
+[`test_fsmb_openapi.py`](../../api/tests/test_fsmb_openapi.py) checks it.

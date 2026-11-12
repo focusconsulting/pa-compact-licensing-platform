@@ -28,7 +28,7 @@ FSMB's OpenAPI document has no examples and does not describe `/connect/token`.
 
 ## Decision
 
-1. **A hand-written client over `httpx`** (`licensing_api/fsmb.py`), already a dependency. It caches the bearer, fetches it again before expiry or once after a `401`, and validates every body with Pydantic models of the whole report that reject unknown fields (Principle VII). It tells a `204` (`REPORT_NOT_READY`: ask again later) apart from a `404` (`None`: not on the roster).
+1. **A hand-written client over `httpx`** (`licensing_api/fsmb.py`), already a dependency. It caches the bearer, fetches it again before expiry or once after a `401`, and validates every body with Pydantic models that mirror FSMB's OpenAPI document exactly: its fields, required fields, nullability, types, lengths, and patterns, rejecting any field it doesn't name (Principle VII). The document is vendored in `tests/fsmb_openapi.json`, and `tests/test_fsmb_openapi.py` fails when a model, or a report the mock serves, departs from it. It tells a `204` (`REPORT_NOT_READY`: ask again later) apart from a `404` (`None`: not on the roster).
 2. **[WireMock](https://wiremock.org/docs/) as the local FSMB**, built from the pinned `wiremock/wiremock:3.13.2` image with JSON stubs in `engineering/mocks/fsmb/mappings/`. Docker Compose runs it as `fsmb-mock`, so `just infra`, `just up`, and CI start it.
 3. **Settings decide which FSMB the client reaches**: `FSMB_API_URL` is the mock locally and in CI, FSMB's demo server in staging, and production in prod. The client ID and secret come from Secrets Manager in AWS.
 4. **The Worker and jobs get the settings, and the API does not.** Principle VI keeps calls to other services out of requests.
@@ -66,6 +66,6 @@ FSMB's OpenAPI document has no examples and does not describe `/connect/token`.
 - New local tooling: `wiremock/wiremock:3.13.2`, pinned by digest in `engineering/mocks/fsmb/Dockerfile`. No new Python dependency.
 - `just fsmb-docs` runs `swaggerapi/swagger-ui:v5.17.14` against FSMB's live document, so it shows what FSMB publishes now.
 - Every FSMB call logs `FSMB call` with `operation`, `status_code`, `outcome` (`ok`, `missing`, `failed`), and `duration_ms` (Principle VIII). FIDs and report contents are never logged, and `httpx`'s own request logging is raised to `WARNING` because it logs URLs.
-- A body with a field the models don't know fails the call. The report has 20 nested models, and FSMB's markdown and OpenAPI definitions already differ in places, so this is likely to bite: if FSMB adds a field, lookups fail until the model gains it. This is the price of Principle VII's gate.
-- Calendar dates, which FSMB sends as midnight date-times, become `date`; one with another time of day is rejected (Principle XIII).
+- The OpenAPI document governs where FSMB's own sample report disagrees with it: `licenses[].issuerName` is at most 5 characters, though the sample sends state names, and ABMS certifications require three fields the sample leaves out. If real reports look like the sample, lookups fail with `FsmbError` until FSMB is asked or the model is relaxed. A field FSMB adds fails lookups the same way, until `just fsmb-openapi` brings the change in and the models follow.
+- Dates stay the document's `date-time` in the models; code that stores a calendar date takes `.date()` (Principle XIII).
 - Staging needs FSMB's demo credentials in `staging-fsmb-credentials` before a lookup can succeed. Until then the secret holds empty values, so the Worker still starts.
