@@ -65,7 +65,7 @@ describe("the application received page", () => {
     ).toEqual([
       "Kansas checks your license against its records.",
       "To join the PA Compact, submit to a criminal background check, including fingerprints, through Kansas' process within 60 days of applying.",
-      "If Kansas needs more information, Kansas will contact you.",
+      "If Kansas needs more information, PA Compact will email you.",
       "If Kansas confirms you're eligible, PA Compact will email you. Then you can apply for Compact Privileges to practice in other states, and pay their fees.",
     ]);
     await expectNoAxeViolations(container);
@@ -80,6 +80,39 @@ describe("the application received page", () => {
     expect(
       await screen.findByText(/through Oklahoma's process within 60 days/),
     ).toBeInTheDocument();
+  });
+
+  it("says when the PA resubmitted, and that the state reviews it again", async () => {
+    answers({
+      "GET /api/me/applications": ok([
+        {
+          ...SUBMITTED,
+          request_note: "Upload your NCCPA certificate.",
+          sworn_at: "2026-10-21T15:00:00Z",
+        },
+      ]),
+    });
+    render(<Page />);
+
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Application resubmitted",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "You resubmitted it on Oct 21, 2026. Kansas will review it again.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("listitem").map((item) => item.textContent),
+    ).toEqual([
+      "Kansas reviews your application again.",
+      "If you haven't yet, submit to a criminal background check through Kansas' process within 60 days of your application.",
+      "If Kansas needs more information, PA Compact will email you.",
+      "If Kansas confirms you're eligible, PA Compact will email you. Then you can apply for Compact Privileges to practice in other states, and pay their fees.",
+    ]);
   });
 
   it("says the application cannot be loaded when its state is not listed", async () => {
