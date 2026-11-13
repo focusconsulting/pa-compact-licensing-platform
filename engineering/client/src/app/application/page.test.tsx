@@ -267,6 +267,82 @@ describe("the application's first step", () => {
     );
   });
 
+  it("sends an eligible PA to their dashboard", async () => {
+    answers({
+      "GET /api/me/applications": ok([application({ status: "eligible" })]),
+    });
+    render(<Page />);
+
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
+    expect(
+      screen.queryByRole("button", { name: "Continue" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows what the state verified as text, and doesn't send it", async () => {
+    const spy = answers({
+      "GET /api/me/applications": ok([
+        application({
+          claimed_license_number: "PA-9",
+          claimed_license_expires_on: "2027-01-31",
+        }),
+      ]),
+      "GET /api/me/profile": ok(
+        profile({
+          date_of_birth: "1988-03-14",
+          residence: {
+            line1: "1 Main Street",
+            line2: null,
+            city: "Topeka",
+            region: "KS",
+            postal_code: "66601",
+            country_code: "US",
+          },
+          nccpa_certification_number: "1234567",
+          other_names: [
+            {
+              first_name: "Jo",
+              middle_name: null,
+              last_name: "Smith",
+              name_suffix: null,
+            },
+          ],
+          verified_fields: [
+            "date_of_birth",
+            "other_names",
+            "nccpa_certification_number",
+          ],
+        }),
+      ),
+    });
+    render(<Page />);
+
+    expect(await screen.findByText("Mar 14, 1988")).toBeInTheDocument();
+    expect(screen.getByText("Jo Smith")).toBeInTheDocument();
+    expect(screen.getByText("1234567")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("textbox", { name: /NCCPA/ }),
+    ).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+
+    await waitFor(() => expect(push).toHaveBeenCalled());
+    const [saved] = await bodies(spy, "PATCH /api/me/profile");
+    expect(Object.keys(saved)).toEqual(["residence"]);
+  });
+
+  it("leaves out verified other names when there are none", async () => {
+    answers({
+      "GET /api/me/applications": ok([application()]),
+      "GET /api/me/profile": ok(profile({ verified_fields: ["other_names"] })),
+    });
+    render(<Page />);
+
+    await screen.findByRole("button", { name: "Continue" });
+    expect(
+      screen.queryByText("Other names you use or have used (optional)"),
+    ).not.toBeInTheDocument();
+  });
+
   it("asks for a last name when another name has only a first name", async () => {
     const spy = answers();
     render(<Page />);
