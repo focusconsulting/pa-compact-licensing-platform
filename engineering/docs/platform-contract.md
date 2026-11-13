@@ -146,6 +146,48 @@ Every `/api` route outside `/api/health` returns `Data`, `Paged`, or no body; `t
 | `add_days(day, days)`, `days_between(start, end)` | Calendar days; `days_between` is 0 for the same day |
 | `is_business_day(day)`, `add_business_days(day, days)` | Counting starts the day after `day`, which need not be a business day |
 
+## Participation applications
+
+What epic 6 (the PA's side) and epic 7 (the SQL's review) build against. Statuses are `ApplicationStatus` and the moves are `APPLICATION_TRANSITIONS` (`repo/participation_application.py`), kept equal to FLOW-06 by `tests/test_application_transitions.py`.
+
+### Transitions
+
+Every move is one transaction: the row, a history row, and the event, as in [Recording a change](#recording-a-change). The event's aggregate is the application and its payload is empty: handlers read the application. A move `APPLICATION_TRANSITIONS` does not allow is `409 INVALID_TRANSITION`.
+
+| From | To | Who | Sets | Event |
+|---|---|---|---|---|
+| | `draft` | PA (`/me`) | `sql_state_code`, `kind`. One open application per practitioner, so a PA continues their draft rather than starting another | |
+| `draft` | `submitted` | PA | `opened_at`, the sworn statement | `application.submitted` |
+| `submitted` | `info_requested` | SQL (`write`) | `request_note` | `application.info_requested` |
+| `info_requested` | `submitted` | PA | The sworn statement again. `opened_at` and `request_note` stay; history keeps each request and resubmission | `application.resubmitted` |
+| `submitted` | `eligible` | SQL | `qualifying_license_id`, `license_verified_*`, `cbc_completed_on`, `decided_*`. A `change_sql` application also moves the PA's eligible one to `superseded` | `application.eligible` |
+| `submitted` | `denied` | SQL | `denial_reason_code` (an `eligibility` reason), `denial_reason_detail`, `decided_*` | `application.denied` |
+| `submitted`, `info_requested` | `withdrawn` | PA, or the L-06 job 60 days after `opened_at` (Rule 3 §3.7(a)) | `withdrawn_at` | `application.withdrawn` |
+| `eligible` | `eligibility_withdrawn` | SQL | `eligibility_withdrawn_at`, `eligibility_withdrawal_reason` (Rule 3 §3.9(b)) | `application.eligibility_withdrawn` |
+| `eligible` | `superseded` | The `change_sql` decision above, in its transaction | `superseded_at` | None: the new application's `application.eligible` covers it |
+
+A draft is never withdrawn: the SQL has not received it (Rule 3 §3.7(a)).
+
+### Attestations
+
+The catalogue is `attestations`, keyed `(code, version)` ([data model](data-model.md#attestations)). A wording change is a new version, never an edit. The current set for a participation application is the highest unretired version of each `applies_to = 'participation'` code. A privilege request's adds `applies_to = 'privilege'` codes with no `state_code` or the remote state's own.
+
+The API shows an attestation as `{code, version, applies_to, state_code, text}` and an acceptance as `{code, version, accepted_at}`. Accepting writes a `participation_application_attestations` row; rows are never changed or deleted, so accepting a newer version adds a row and the latest per code counts.
+
+### Submit and resubmit
+
+Both run the same checks, in this order, then the transition above:
+
+| Check | Failure |
+|---|---|
+| The caller is the application's practitioner | `404 NOT_FOUND` |
+| The status allows the move | `409 INVALID_TRANSITION` |
+| `sql_state_code` is a member state that `is_live` | `409 STATE_NOT_LIVE` |
+| Every current participation attestation is accepted at its current version | `409 ATTESTATIONS_OUT_OF_DATE`, with the missing or stale codes in `details` |
+| A sworn statement: the checkbox, and a typed name that is not blank (Q-06). The name is not compared with the profile | `422 VALIDATION_ERROR` |
+
+The server records `sworn_at` and `sworn_ip`; the client sends only the name. No document is required (Q-07's default). The three error codes are added to `ErrorCode` by the ticket that first returns them.
+
 ## Signatures the tracks implement
 
 These are fixed here so the tracks build in parallel. Each becomes code, with tests, in the track named. Each track's plan links this page.
