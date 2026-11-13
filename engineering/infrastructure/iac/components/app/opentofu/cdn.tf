@@ -11,21 +11,43 @@ resource "aws_cloudfront_function" "block_403" {
   EOF
 }
 
+locals {
+  alb_origin_endpoint = {
+    http_port              = 80
+    https_port             = 443
+    origin_protocol_policy = "https-only"
+    ssl_protocols          = ["TLSv1.2"]
+  }
+}
+
+# CloudFront refuses to update a VPC origin a distribution uses (409
+# CannotUpdateEntityWhileInUse), so a change to its settings replaces it instead:
+# the new origin, named from its settings, is created, the distribution moves to it,
+# and then the old one is deleted.
+resource "terraform_data" "alb_origin_endpoint" {
+  input = local.alb_origin_endpoint
+}
+
 # CloudFront VPC Origin — wraps the internal ALB so CloudFront can reach it
 # without making the ALB internet-facing. CloudFront injects ENIs into the VPC;
 # traffic arrives from within the VPC CIDR, which the ALB SG already allows.
 resource "aws_cloudfront_vpc_origin" "alb_origin" {
   vpc_origin_endpoint_config {
-    name                   = "${var.environment_name}-${local.application_name}-alb-origin"
+    name                   = "${var.environment_name}-${local.application_name}-alb-origin-${substr(sha1(jsonencode(local.alb_origin_endpoint)), 0, 8)}"
     arn                    = aws_lb.api_alb.arn
-    http_port              = 80
-    https_port             = 443
-    origin_protocol_policy = "https-only"
+    http_port              = local.alb_origin_endpoint.http_port
+    https_port             = local.alb_origin_endpoint.https_port
+    origin_protocol_policy = local.alb_origin_endpoint.origin_protocol_policy
 
     origin_ssl_protocols {
-      items    = ["TLSv1.2"]
-      quantity = 1
+      items    = local.alb_origin_endpoint.ssl_protocols
+      quantity = length(local.alb_origin_endpoint.ssl_protocols)
     }
+  }
+
+  lifecycle {
+    create_before_destroy = true
+    replace_triggered_by  = [terraform_data.alb_origin_endpoint.output]
   }
 }
 
