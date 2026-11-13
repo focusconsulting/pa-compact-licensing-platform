@@ -7,6 +7,7 @@ import React, { FormEventHandler } from "react";
 export interface SelectFieldProps {
   id?: string;
   label?: string;
+  hint?: string;
   options?: string[][];
   inputRef?: React.RefObject<HTMLSelectElement | null>;
   onChange?: FormEventHandler;
@@ -17,12 +18,13 @@ export interface SelectFieldProps {
 }
 
 /**
- * A labelled USWDS select of `[value, label]` options. Registers with the
+ * A labelled USWDS select of `[value, label]` options, with an optional hint. Registers with the
  * surrounding form unless given its own `onChange` or `inputRef`.
  */
 export function SelectField({
   id,
   label,
+  hint,
   options,
   inputRef,
   onChange,
@@ -51,8 +53,14 @@ export function SelectField({
           {label}
         </Label>
       )}
+      {hint && (
+        <span className="usa-hint" id={`${id}Hint`}>
+          {hint}
+        </span>
+      )}
       <Select
         id={id ?? ""}
+        aria-describedby={hint ? `${id}Hint` : undefined}
         defaultValue={defaultValue ?? ""}
         name={selectReg?.name ?? id ?? ""}
         required={required}
