@@ -36,7 +36,7 @@ type Missing = "statements" | "backgroundCheck" | "sworn" | "swornName";
 /** What to fix for each missing answer (B6e). */
 const MESSAGES = {
   statements: "fix.statements",
-  backgroundCheck: "fix.statement",
+  backgroundCheck: "fix.understand",
   sworn: "fix.statement",
   swornName: "fix.swornName",
 } as const;
