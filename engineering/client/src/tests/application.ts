@@ -1,4 +1,9 @@
-import type { Application, Profile, State } from "src/lib/application";
+import type {
+  Application,
+  Attestation,
+  Profile,
+  State,
+} from "src/lib/application";
 
 export const APPLICATION_ID = "3d7e2a91-6b0c-4f58-a2e4-9c1b8f0d5e36";
 
@@ -39,6 +44,27 @@ export const STATES: State[] = [
   { code: "KS", name: "Kansas", is_member: true, is_live: true },
   { code: "OK", name: "Oklahoma", is_member: true, is_live: true },
   { code: "TX", name: "Texas", is_member: false, is_live: false },
+];
+
+export const ATTESTATIONS: Attestation[] = [
+  {
+    code: "nccpa_current",
+    version: 1,
+    applies_to: "participation",
+    text: "I hold a current NCCPA certification.",
+  },
+  {
+    code: "background_check",
+    version: 1,
+    applies_to: "participation",
+    text: "I will submit to a criminal background check within 60 days.",
+  },
+  {
+    code: "truthfulness",
+    version: 2,
+    applies_to: "participation",
+    text: "I swear that the information in this application is true and accurate.",
+  },
 ];
 
 /** `{ data }`, as every API success answers. */

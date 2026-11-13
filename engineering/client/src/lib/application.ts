@@ -2,6 +2,7 @@ import type { components } from "src/api/schema";
 import { api } from "src/lib/api";
 
 export type Application = components["schemas"]["ApplicationOut"];
+export type Attestation = components["schemas"]["AttestationOut"];
 export type Profile = components["schemas"]["ProfileOut"];
 export type ProfileUpdate = components["schemas"]["ProfileUpdate"];
 export type ApplicationUpdate = components["schemas"]["ApplicationUpdate"];
@@ -55,6 +56,14 @@ export const saveProfile = (body: ProfileUpdate) =>
 /** Every state, with whether it takes applications. */
 export const loadStates = () => unwrap(api.GET("/api/public/states"));
 
+/** The current participation attestations, in the order to show them. */
+export const loadAttestations = () =>
+  unwrap(
+    api.GET("/api/public/attestations", {
+      params: { query: { applies_to: "participation" } },
+    }),
+  );
+
 /** Starts a draft in a live state. */
 export const startApplication = (sqlStateCode: string) =>
   unwrap(
@@ -71,3 +80,28 @@ export const saveApplication = (id: string, body: ApplicationUpdate) =>
       body,
     }),
   );
+
+/** Records that the PA accepted this version of an attestation. */
+export const acceptAttestation = (id: string, code: string, version: number) =>
+  unwrap(
+    api.POST("/api/me/applications/{application_id}/attestations", {
+      params: { path: { application_id: id } },
+      body: { code, version },
+    }),
+  );
+
+/** Submits the application, or resubmits it, with the sworn statement. */
+export const submitApplication = (id: string, swornName: string) =>
+  unwrap(
+    api.POST("/api/me/applications/{application_id}/submit", {
+      params: { path: { application_id: id } },
+      body: { sworn: true, sworn_name: swornName },
+    }),
+  );
+
+/** Whether the application accepted this attestation at its current version. */
+export function accepted(application: Application, attestation: Attestation) {
+  return application.attestations.some(
+    (a) => a.code === attestation.code && a.version === attestation.version,
+  );
+}
