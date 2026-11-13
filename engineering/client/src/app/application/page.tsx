@@ -26,6 +26,7 @@ import {
   saveProfile,
   startApplication,
 } from "src/lib/application";
+import { formatDate } from "src/lib/dates";
 
 interface StartValues {
   residenceLine1: string;
@@ -72,6 +73,16 @@ function defaults({ application, profile }: Loaded): StartValues {
   };
 }
 
+/** A detail the state verified: shown, not editable (PR1). */
+function Fixed({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="margin-top-3">
+      <p className="text-bold margin-bottom-05">{label}</p>
+      <p className="margin-top-0">{value}</p>
+    </div>
+  );
+}
+
 /** Step 1 of the application (B2): where the PA lives, their state of qualifying license, their license, and details. */
 function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
   const { t } = useTranslation(["application", "address", "basic", "status"]);
@@ -81,6 +92,7 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
   const { application, profile, states } = loaded;
   const live = states.filter((s) => s.is_live);
   const draft = !application || application.status === "draft";
+  const fixed = new Set(profile.verified_fields);
 
   async function save(values: StartValues) {
     setError(null);
@@ -89,13 +101,16 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
       middle_name: blankToNull(values.otherMiddleName),
       last_name: blankToNull(values.otherLastName),
     };
-    if (!other.last_name && (other.first_name || other.middle_name)) {
+    if (
+      !fixed.has("other_names") &&
+      !other.last_name &&
+      (other.first_name || other.middle_name)
+    ) {
       setError("otherNameLastName");
       return;
     }
     try {
       await saveProfile({
-        date_of_birth: values.dateOfBirth,
         residence: {
           line1: values.residenceLine1,
           line2: blankToNull(values.residenceLine2),
@@ -104,13 +119,22 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
           postal_code: values.residenceZip,
           country_code: "US",
         },
-        nccpa_certification_number: values.nccpa,
-        other_names: [
-          ...(other.last_name
-            ? [{ ...other, last_name: other.last_name }]
-            : []),
-          ...profile.other_names.slice(1),
-        ],
+        ...(fixed.has("date_of_birth")
+          ? {}
+          : { date_of_birth: values.dateOfBirth }),
+        ...(fixed.has("nccpa_certification_number")
+          ? {}
+          : { nccpa_certification_number: values.nccpa }),
+        ...(fixed.has("other_names")
+          ? {}
+          : {
+              other_names: [
+                ...(other.last_name
+                  ? [{ ...other, last_name: other.last_name }]
+                  : []),
+                ...profile.other_names.slice(1),
+              ],
+            }),
       });
       const current =
         application ?? (await startApplication(values.sqlStateCode as string));
@@ -189,28 +213,57 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
         <Fieldset legend={t("start.licenseExpires")}>
           <DateFields id="licenseExpires" name="" />
         </Fieldset>
-        <Fieldset legend={t("start.dateOfBirth")}>
-          <DateFields id="dateOfBirth" name="" />
-        </Fieldset>
+        {fixed.has("date_of_birth") ? (
+          <Fixed
+            label={t("start.dateOfBirth")}
+            value={formatDate(String(profile.date_of_birth))}
+          />
+        ) : (
+          <Fieldset legend={t("start.dateOfBirth")}>
+            <DateFields id="dateOfBirth" name="" />
+          </Fieldset>
+        )}
         <h2>{t("start.detailsHeading")}</h2>
-        <Fieldset legend={t("start.otherNames")}>
-          <TextField
-            id="otherFirstName"
-            label={t("basic:fields.name.firstNameTitle")}
-            optional
+        {fixed.has("other_names") ? (
+          profile.other_names.length > 0 && (
+            <Fixed
+              label={t("start.otherNames")}
+              value={profile.other_names
+                .map((n) =>
+                  [n.first_name, n.middle_name, n.last_name, n.name_suffix]
+                    .filter(Boolean)
+                    .join(" "),
+                )
+                .join(", ")}
+            />
+          )
+        ) : (
+          <Fieldset legend={t("start.otherNames")}>
+            <TextField
+              id="otherFirstName"
+              label={t("basic:fields.name.firstNameTitle")}
+              optional
+            />
+            <TextField
+              id="otherMiddleName"
+              label={t("basic:fields.name.middleNameTitle")}
+              optional
+            />
+            <TextField
+              id="otherLastName"
+              label={t("basic:fields.name.lastNameTitle")}
+              optional
+            />
+          </Fieldset>
+        )}
+        {fixed.has("nccpa_certification_number") ? (
+          <Fixed
+            label={t("start.nccpa")}
+            value={String(profile.nccpa_certification_number)}
           />
-          <TextField
-            id="otherMiddleName"
-            label={t("basic:fields.name.middleNameTitle")}
-            optional
-          />
-          <TextField
-            id="otherLastName"
-            label={t("basic:fields.name.lastNameTitle")}
-            optional
-          />
-        </Fieldset>
-        <TextField id="nccpa" label={t("start.nccpa")} />
+        ) : (
+          <TextField id="nccpa" label={t("start.nccpa")} />
+        )}
         <Button type="submit" className="margin-top-4">
           {t("start.continue")}
         </Button>
@@ -229,6 +282,10 @@ function StartPage() {
     let current = true;
     Promise.all([loadApplications(), loadProfile(), loadStates()])
       .then(([applications, profile, states]) => {
+        if (applications.some((a) => a.status === "eligible")) {
+          router.replace("/");
+          return;
+        }
         const application = openApplication(applications);
         if (
           !application &&

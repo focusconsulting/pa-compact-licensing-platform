@@ -30,6 +30,7 @@ export function profile(overrides: Partial<Profile> = {}): Profile {
     residence: null,
     nccpa_certification_number: null,
     other_names: [],
+    verified_fields: [],
     ...overrides,
   };
 }
