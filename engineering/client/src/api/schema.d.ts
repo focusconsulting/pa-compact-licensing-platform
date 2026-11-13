@@ -139,7 +139,7 @@ export interface paths {
     put?: never;
     /**
      * Start My Application
-     * @description Starts a draft with the state of qualifying license, which must be live. A PA has one open application at a time: `409 APPLICATION_OPEN` while another is a draft, submitted, or waiting on information. With an eligible application already, the new one changes the state of qualifying license.
+     * @description Starts a draft with the state of qualifying license, which must be live. A PA has one open application at a time: `409 APPLICATION_OPEN` while another is a draft, submitted, or waiting on information. An eligible PA gets `409 ALREADY_ELIGIBLE`: changing the state of qualifying license is not in v1 (Rule 3 §3.6).
      */
     post: operations["Start_my_application_api_me_applications_post"];
     delete?: never;
@@ -834,6 +834,7 @@ export interface components {
       | "NOT_FOUND"
       | "DOCUMENT_NOT_CLEAN"
       | "APPLICATION_OPEN"
+      | "ALREADY_ELIGIBLE"
       | "INVALID_TRANSITION"
       | "STATE_NOT_LIVE"
       | "ATTESTATIONS_OUT_OF_DATE"

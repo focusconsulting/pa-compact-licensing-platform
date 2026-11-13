@@ -158,7 +158,7 @@ History starts when the SQL receives the application. Starting and saving a draf
 
 | From | To | Who | Sets | Event |
 |---|---|---|---|---|
-| | `draft` | PA | `sql_state_code` (a live state), and `kind`: `change_sql` when the PA already has an eligible application. A PA with an open application gets `409 APPLICATION_OPEN` | |
+| | `draft` | PA | `sql_state_code` (a live state); `kind` is `initial`. A PA with an open application gets `409 APPLICATION_OPEN`, and an eligible PA `409 ALREADY_ELIGIBLE`: changing the state of qualifying license (`change_sql`) is not in v1, because approving one ends the PA's privileges (Rule 3 §3.6(d)) | |
 | `draft` | `submitted` | PA | `opened_at`, the sworn statement | `application.submitted` |
 | `submitted` | `info_requested` | SQL (`write`) | `request_note` | `application.info_requested` |
 | `info_requested` | `submitted` | PA | The sworn statement again. `opened_at` and `request_note` stay; history keeps each request and resubmission | `application.resubmitted` |

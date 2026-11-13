@@ -16,6 +16,7 @@ class ErrorCode(StrEnum):
     NotFound = 'NOT_FOUND'
     DocumentNotClean = 'DOCUMENT_NOT_CLEAN'
     ApplicationOpen = 'APPLICATION_OPEN'
+    AlreadyEligible = 'ALREADY_ELIGIBLE'
     InvalidTransition = 'INVALID_TRANSITION'
     StateNotLive = 'STATE_NOT_LIVE'
     AttestationsOutOfDate = 'ATTESTATIONS_OUT_OF_DATE'
