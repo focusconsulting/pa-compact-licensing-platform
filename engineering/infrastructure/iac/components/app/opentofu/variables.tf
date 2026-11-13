@@ -84,6 +84,11 @@ variable "acm_certificate_arn" {
   }
 }
 
+variable "cloudtrail_management_events" {
+  type        = bool
+  description = "Whether this environment's trail records management events. False where another trail in the account already does: a second copy is charged per event. Reads and writes of uploaded documents are recorded either way."
+}
+
 variable "deletion_protection" {
   type        = bool
   description = "Guards everything that would block or lose data in a teardown. Leave on wherever data must survive; an environment that is spun up and torn down turns it off."
