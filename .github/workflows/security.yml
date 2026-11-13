@@ -1,0 +1,161 @@
+name: Security
+
+# Fails a pull request on any medium, high, or critical finding (SCRUM-75). No path
+# filter: a new advisory can fail an unchanged dependency, so this runs on every PR,
+# on main, and daily. The scans other than CodeQL are recipes in the root justfile,
+# so `just security` checks locally what this checks. Accepted findings are listed in
+# engineering/docs/security/false-positives.md.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 9 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  codeql:
+    name: CodeQL (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, javascript-typescript, actions]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+          queries: security-extended
+
+      # A pull request from a fork gets a read-only token, so its results stay in the run.
+      - uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          category: /language:${{ matrix.language }}
+          output: sarif-results
+          upload: ${{ github.event.pull_request.head.repo.fork && 'never' || 'always' }}
+
+      # Code scanning's own check fails only on high and above by default.
+      - name: Fail on medium or worse
+        run: python3 scripts/security/findings-gate.py sarif sarif-results/*.sarif
+
+  dependencies:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read tool versions
+        id: versions
+        run: echo "just=$(awk '$1 == "just" {print $2}' .tool-versions)" >> "$GITHUB_OUTPUT"
+
+      - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
+        with:
+          just-version: ${{ steps.versions.outputs.just }}
+
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          package_json_file: engineering/client/package.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+
+      - name: API (pip-audit)
+        run: just audit-api
+
+      - name: Client and end-to-end specs (pnpm audit)
+        run: just audit-client
+
+  image:
+    name: Image scan and SBOM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read tool versions
+        id: versions
+        run: echo "just=$(awk '$1 == "just" {print $2}' .tool-versions)" >> "$GITHUB_OUTPUT"
+
+      - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
+        with:
+          just-version: ${{ steps.versions.outputs.just }}
+
+      - name: Scan the API image (Trivy)
+        run: just scan-image
+
+      # The client's packages carry their licences, which the SBOM reads.
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          package_json_file: engineering/client/package.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: engineering/client/pnpm-lock.yaml
+
+      - name: Install the client's dependencies
+        working-directory: engineering/client
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: "true"
+        run: pnpm install --frozen-lockfile --prod
+
+      - name: SBOMs and third-party register
+        if: success() || failure()
+        run: just sbom
+
+      - uses: actions/upload-artifact@v7
+        if: success() || failure()
+        with:
+          name: sbom-and-third-party-register
+          path: security-reports/
+
+  secrets:
+    name: Secrets (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      # The pre-commit hook scans only staged changes, which in CI is nothing; this
+      # scans every commit.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Read tool versions
+        id: versions
+        run: echo "just=$(awk '$1 == "just" {print $2}' .tool-versions)" >> "$GITHUB_OUTPUT"
+
+      - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
+        with:
+          just-version: ${{ steps.versions.outputs.just }}
+
+      - run: just scan-secrets
+
+  iac:
+    name: Infrastructure (Checkov, report only)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read tool versions
+        id: versions
+        run: echo "just=$(awk '$1 == "just" {print $2}' .tool-versions)" >> "$GITHUB_OUTPUT"
+
+      - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
+        with:
+          just-version: ${{ steps.versions.outputs.just }}
+
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+
+      - name: Checkov
+        run: just scan-iac >> "$GITHUB_STEP_SUMMARY"
