@@ -98,6 +98,9 @@
             "title": "At",
             "type": "string"
           },
+          "kind": {
+            "$ref": "#/components/schemas/EventKind"
+          },
           "note": {
             "anyOf": [
               {
@@ -114,6 +117,7 @@
           }
         },
         "required": [
+          "kind",
           "status",
           "at"
         ],
@@ -387,6 +391,19 @@
             ],
             "title": "Opened At"
           },
+          "resubmit_by": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "While information is requested, the last day the state must have it",
+            "title": "Resubmit By"
+          },
           "sql_state_code": {
             "title": "Sql State Code",
             "type": "string"
@@ -425,6 +442,7 @@
           "withdrawn_at",
           "denial_reason",
           "denial_reason_detail",
+          "resubmit_by",
           "timeline"
         ],
         "title": "ApplicationSummary",
@@ -784,6 +802,7 @@
                 "timeline": [
                   {
                     "at": "2026-10-14T15:00:00Z",
+                    "kind": "applied",
                     "status": "submitted"
                   }
                 ]
@@ -1204,6 +1223,23 @@
         ],
         "title": "ErrorResponse",
         "type": "object"
+      },
+      "EventKind": {
+        "description": "What a step was, for the PA to read: worked out from history, never stored.",
+        "enum": [
+          "applied",
+          "applied_again",
+          "resubmitted",
+          "info_requested",
+          "withdrawn_by_pa",
+          "withdrawn_by_deadline",
+          "eligible",
+          "denied",
+          "eligibility_withdrawn",
+          "superseded"
+        ],
+        "title": "EventKind",
+        "type": "string"
       },
       "LicenseComputedStatus": {
         "description": "The statuses ``QualifyingLicenseStatus`` reports: the state's reported statuses, plus ``encumbered``.",

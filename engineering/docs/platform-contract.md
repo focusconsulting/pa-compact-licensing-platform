@@ -207,6 +207,8 @@ While an application is `draft` or `info_requested`, the PA saves steps (`PATCH`
 
 A pending `change_sql` application does not block privileges: the PA stays eligible through their current state (Rule 3 §3.6).
 
+Each timeline step has a `kind` for the PA to read, worked out from history rather than stored. A submit is `applied`, `applied_again` when an earlier application was submitted, or `resubmitted` after an information request. A withdrawal is `withdrawn_by_pa`, or `withdrawn_by_deadline` when the system user made it. Every other step's `kind` is its status. While an application is `info_requested`, `resubmit_by` is 60 days after the day it was submitted, in the compact's time zone (Rule 3 §3.7(a)(1)).
+
 ## Signatures the tracks implement
 
 These are fixed here so the tracks build in parallel. Each becomes code, with tests, in the track named. Each track's plan links this page.

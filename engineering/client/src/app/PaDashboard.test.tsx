@@ -44,6 +44,7 @@ function summary(overrides: Partial<Summary> = {}): Summary {
     withdrawn_at: null,
     denial_reason: null,
     denial_reason_detail: null,
+    resubmit_by: null,
     timeline: [],
     ...overrides,
   };
@@ -337,7 +338,6 @@ describe("the PA dashboard", () => {
   it.each([
     ["no application", []],
     ["a draft", [summary({ status: "draft" })]],
-    ["an information request", [summary({ status: "info_requested" })]],
   ])("sends a PA with %s to the application", async (_, applications) => {
     answers(dashboard({ applications }));
     render(<PaDashboard />);
@@ -345,6 +345,120 @@ describe("the PA dashboard", () => {
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/application"));
     expect(
       screen.queryByRole("heading", { name: "Dashboard" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows what the state asked for, by when, and the ways to answer it", async () => {
+    answers(
+      dashboard({
+        applications: [
+          summary({
+            status: "info_requested",
+            resubmit_by: "2026-12-13",
+            timeline: [
+              {
+                kind: "applied",
+                status: "submitted",
+                at: "2026-10-14T15:00:00Z",
+              },
+              {
+                kind: "info_requested",
+                status: "info_requested",
+                at: "2026-10-19T15:00:00Z",
+                note: "Upload your NCCPA certificate.",
+              },
+            ],
+          }),
+        ],
+      }),
+    );
+    const { container } = render(<PaDashboard />);
+
+    expect(
+      await screen.findByText(/Kansas asked on Oct 19, 2026/),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Information requested")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Kansas needs more information. Update your application and resubmit it by Dec 13, 2026. If Kansas doesn't have it by then, your application is withdrawn.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Kansas's note" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Upload your NCCPA certificate."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Update your application" }),
+    ).toHaveAttribute("href", "/application");
+    expect(
+      screen.getByRole("button", { name: "Withdraw application" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Kansas asked for more information."),
+    ).toBeInTheDocument();
+    expect(replace).not.toHaveBeenCalled();
+    await expectNoAxeViolations(container);
+  });
+
+  it("lists every step of every application, newest first", async () => {
+    answers(
+      dashboard({
+        applications: [
+          summary({
+            id: "a2",
+            timeline: [
+              {
+                kind: "applied_again",
+                status: "submitted",
+                at: "2026-10-19T15:00:00Z",
+              },
+            ],
+          }),
+          summary({
+            id: "a1",
+            status: "withdrawn",
+            withdrawn_at: "2026-10-16T15:00:00Z",
+            timeline: [
+              {
+                kind: "applied",
+                status: "submitted",
+                at: "2026-10-14T15:00:00Z",
+              },
+              {
+                kind: "withdrawn_by_pa",
+                status: "withdrawn",
+                at: "2026-10-16T15:00:00Z",
+              },
+            ],
+          }),
+        ],
+      }),
+    );
+    render(<PaDashboard />);
+
+    expect(
+      await screen.findByRole("heading", { name: "History" }),
+    ).toBeInTheDocument();
+    const rows = screen
+      .getAllByRole("row")
+      .slice(1)
+      .map((row) => row.textContent);
+    expect(rows).toEqual([
+      "Oct 19, 2026You applied again.",
+      "Oct 16, 2026You withdrew your application.",
+      "Oct 14, 2026You applied.",
+    ]);
+  });
+
+  it("has no history before the state has an application", async () => {
+    answers(dashboard());
+    render(<PaDashboard />);
+
+    expect(await screen.findByText("Under review")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "History" }),
     ).not.toBeInTheDocument();
   });
 
