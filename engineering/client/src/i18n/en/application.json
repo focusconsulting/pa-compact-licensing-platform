@@ -125,5 +125,22 @@
     "upload": "Upload a document",
     "uploadHint": "Only if {{state}}'s note asks for one. One file: PDF, Word, PNG or JPEG.",
     "anotherState": "To apply through another state, withdraw this application and apply again."
+  },
+  "fix": {
+    "count_one": "{{count}} answer needs fixing",
+    "count_other": "{{count}} answers need fixing",
+    "residenceLine1": "Enter your address line 1",
+    "residenceCity": "Enter your city or town",
+    "residenceRegion": "Select your state",
+    "residenceZip": "Enter your ZIP code",
+    "sqlStateCode": "Select your state",
+    "licenseNumber": "Enter your license number",
+    "licenseExpires": "Enter your license expiration date",
+    "dateOfBirth": "Enter your date of birth",
+    "nccpa": "Enter your NCCPA certification number",
+    "statementsGroup": "Agree to the statements",
+    "statements": "Tick the statements to agree to them",
+    "statement": "Tick the statement to agree to it",
+    "swornName": "Type your full name to sign"
   }
 }
