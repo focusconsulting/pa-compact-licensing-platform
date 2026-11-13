@@ -144,6 +144,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/me/documents/unattached": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List My Unattached Documents
+     * @description Documents you uploaded that no application or request holds yet, newest first.
+     */
+    get: operations["List_my_unattached_documents_api_me_documents_unattached_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/me/documents/{document_id}": {
     parameters: {
       query?: never;
@@ -176,6 +196,46 @@ export interface paths {
      * @description A link, valid for one minute, that downloads the document as a file. Only a document whose malware scan found it clean can be downloaded; `409 DOCUMENT_NOT_CLEAN` otherwise.
      */
     get: operations["Download_my_document_api_me_documents__document_id__download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/public/attestations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Current Attestations
+     * @description The current version of each attestation that applies in every state, in the order to show them.
+     */
+    get: operations["List_current_attestations_api_public_attestations_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/public/states": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List States
+     * @description Every US jurisdiction, by name, with its membership and whether it is live.
+     */
+    get: operations["List_states_api_public_states_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -262,6 +322,31 @@ export interface components {
       | "withdrawn"
       | "eligibility_withdrawn"
       | "superseded";
+    /**
+     * AttestationAppliesTo
+     * @description What an attestation is for: the PA's participation application, the state's eligibility check, or a privilege request.
+     * @enum {string}
+     */
+    AttestationAppliesTo: "participation" | "eligibility" | "privilege";
+    /**
+     * AttestationOut
+     * @description The current version of an attestation. Accept it by ``code`` and ``version``.
+     * @example {
+     *       "applies_to": "participation",
+     *       "code": "nccpa_current",
+     *       "text": "I hold a current certification from the National Commission on Certification of Physician Assistants (NCCPA).",
+     *       "version": 1
+     *     }
+     */
+    AttestationOut: {
+      applies_to: components["schemas"]["AttestationAppliesTo"];
+      /** Code */
+      code: string;
+      /** Text */
+      text: string;
+      /** Version */
+      version: number;
+    };
     /**
      * AuditEntryOut
      * @description One staff read of private data or security event. ``before`` and ``after`` never hold an SSN.
@@ -360,6 +445,21 @@ export interface components {
     /** Data[DocumentUpload] */
     Data_DocumentUpload_: {
       data: components["schemas"]["DocumentUpload"];
+    };
+    /** Data[list[AttestationOut]] */
+    Data_list_AttestationOut__: {
+      /** Data */
+      data: components["schemas"]["AttestationOut"][];
+    };
+    /** Data[list[DocumentOut]] */
+    Data_list_DocumentOut__: {
+      /** Data */
+      data: components["schemas"]["DocumentOut"][];
+    };
+    /** Data[list[StateOut]] */
+    Data_list_StateOut__: {
+      /** Data */
+      data: components["schemas"]["StateOut"][];
     };
     /**
      * DocumentDownload
@@ -586,6 +686,26 @@ export interface components {
      * @enum {string}
      */
     ScanStatus: "pending" | "clean" | "infected" | "error";
+    /**
+     * StateOut
+     * @description A state, and whether it takes applications: only a live member does.
+     * @example {
+     *       "code": "KS",
+     *       "is_live": true,
+     *       "is_member": true,
+     *       "name": "Kansas"
+     *     }
+     */
+    StateOut: {
+      /** Code */
+      code: string;
+      /** Is Live */
+      is_live: boolean;
+      /** Is Member */
+      is_member: boolean;
+      /** Name */
+      name: string;
+    };
     /**
      * UploadForm
      * @description POST the ``fields`` and then the file, as ``multipart/form-data`` field ``file``, to ``url``.
@@ -846,6 +966,35 @@ export interface operations {
       };
     };
   };
+  List_my_unattached_documents_api_me_documents_unattached_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_list_DocumentOut__"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
   Get_my_document_api_me_documents__document_id__get: {
     parameters: {
       query?: never;
@@ -897,6 +1046,66 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["Data_DocumentDownload_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  List_current_attestations_api_public_attestations_get: {
+    parameters: {
+      query: {
+        applies_to: components["schemas"]["AttestationAppliesTo"];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_list_AttestationOut__"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  List_states_api_public_states_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_list_StateOut__"];
         };
       };
       /** @description Unprocessable Content */

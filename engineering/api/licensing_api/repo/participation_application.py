@@ -92,3 +92,7 @@ class ParticipationApplication(AuditColumns, table=True):
     eligibility_withdrawn_at: datetime | None = Field(default=None, sa_type=TimestampTZ)
     eligibility_withdrawal_reason: str | None = None
     superseded_at: datetime | None = Field(default=None, sa_type=TimestampTZ)
+    # The sworn statement (Rule 3 §3.4(a)(1), Q-06), set by submit and by each resubmission.
+    sworn_name: str | None = None
+    sworn_at: datetime | None = Field(default=None, sa_type=TimestampTZ)
+    sworn_ip: str | None = None
