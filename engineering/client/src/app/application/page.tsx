@@ -11,7 +11,7 @@ import {
   Textarea,
 } from "@trussworks/react-uswds";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -64,6 +64,20 @@ interface StartValues {
 
 type ErrorKey = "load" | "save" | "stateNotLive" | "otherNameLastName";
 
+/** The answers step 1 requires, each with what to fix when it is missing (B2e). */
+const REQUIRED = [
+  "residenceLine1",
+  "residenceCity",
+  "residenceRegion",
+  "residenceZip",
+  "sqlStateCode",
+  "licenseNumber",
+  "licenseExpires",
+  "dateOfBirth",
+  "nccpa",
+] as const;
+type Required = (typeof REQUIRED)[number];
+
 interface Loaded {
   application?: Application;
   profile: Profile;
@@ -106,6 +120,33 @@ function Fixed({ label, value }: { label: string; value: string }) {
   );
 }
 
+/** A month, day, and year question, with what to fix under its legend. */
+function DateQuestion({
+  id,
+  legend,
+  error,
+}: {
+  id: string;
+  legend: string;
+  error?: string;
+}) {
+  const question = (
+    <Fieldset legend={legend} className="margin-top-3">
+      {error && (
+        <span className="usa-error-message" id={`${id}Error`}>
+          {error}
+        </span>
+      )}
+      <DateFields id={id} name="" error={Boolean(error)} />
+    </Fieldset>
+  );
+  return error ? (
+    <div className="usa-form-group usa-form-group--error">{question}</div>
+  ) : (
+    question
+  );
+}
+
 /** What the state asked for, when, and by when to resubmit (B14). */
 function Request({
   application,
@@ -140,6 +181,10 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
   const asked = application?.status === "info_requested";
   const fixed = new Set(profile.verified_fields);
   const reply = form.register("responseNote");
+  const [missing, setMissing] = useState<Required[]>([]);
+  const fix = (field: Required) =>
+    missing.includes(field) ? t(`fix.${field}`) : undefined;
+
   // The loader checked an application's state is listed; a new one has none yet.
   const state = application
     ? nameOfState(states, application.sql_state_code)
@@ -198,16 +243,33 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
     }
   }
 
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    const values = form.getValues();
+    const asks = REQUIRED.filter(
+      (field) =>
+        (field !== "sqlStateCode" || draft) &&
+        (field !== "nccpa" || !fixed.has("nccpa_certification_number")),
+    );
+    const found = asks.filter((field) => !String(values[field] ?? "").trim());
+    setMissing(found);
+    if (found.length === 0) void save(values);
+  };
+
   return (
     <FormProvider {...form}>
-      <Form onSubmit={form.handleSubmit(save)} large>
+      <Form onSubmit={submit} large noValidate>
+        <PageHeading title={t(asked ? "update.title" : "start.title")} />
+        {missing.length > 0 && (
+          <AlertBanner
+            type="error"
+            heading={t("fix.count", { count: missing.length })}
+          />
+        )}
         {asked ? (
-          <>
-            <PageHeading title={t("update.title")} />
-            <Request application={application} state={state} />
-          </>
+          <Request application={application} state={state} />
         ) : (
-          <PageHeading title={t("start.title")} intro={t("start.intro")} />
+          <p className="usa-intro margin-top-0">{t("start.intro")}</p>
         )}
         {error && (
           <AlertBanner type="error" heading={t("errors.heading")}>
@@ -249,6 +311,7 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
           <TextField
             id="residenceLine1"
             label={t("address:fields.address.address1Title")}
+            error={fix("residenceLine1")}
           />
           <TextField
             id="residenceLine2"
@@ -258,16 +321,19 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
           <TextField
             id="residenceCity"
             label={t("address:fields.address.cityTitle")}
+            error={fix("residenceCity")}
           />
           <SelectField
             id="residenceRegion"
             label={t("address:fields.address.stateTitle")}
             options={states.map((s) => [s.code, s.name])}
             required
+            error={fix("residenceRegion")}
           />
           <TextField
             id="residenceZip"
             label={t("address:fields.address.zipTitle")}
+            error={fix("residenceZip")}
           />
         </Fieldset>
         <h2>{t("start.sqlHeading")}</h2>
@@ -278,6 +344,7 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
             hint={t("start.stateHint")}
             options={live.map((s) => [s.code, s.name])}
             required
+            error={fix("sqlStateCode")}
           />
         ) : (
           <>
@@ -286,13 +353,21 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
           </>
         )}
         <h2>{t("start.licenseHeading")}</h2>
-        <TextField id="licenseNumber" label={t("start.licenseNumber")} />
-        <Fieldset legend={t("start.licenseExpires")} className="margin-top-3">
-          <DateFields id="licenseExpires" name="" />
-        </Fieldset>
-        <Fieldset legend={t("start.dateOfBirth")} className="margin-top-3">
-          <DateFields id="dateOfBirth" name="" />
-        </Fieldset>
+        <TextField
+          id="licenseNumber"
+          label={t("start.licenseNumber")}
+          error={fix("licenseNumber")}
+        />
+        <DateQuestion
+          id="licenseExpires"
+          legend={t("start.licenseExpires")}
+          error={fix("licenseExpires")}
+        />
+        <DateQuestion
+          id="dateOfBirth"
+          legend={t("start.dateOfBirth")}
+          error={fix("dateOfBirth")}
+        />
         <h2>{t("start.detailsHeading")}</h2>
         <Fieldset legend={t("start.otherNames")}>
           <TextField
@@ -323,7 +398,7 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
             value={String(profile.nccpa_certification_number)}
           />
         ) : (
-          <TextField id="nccpa" label={t("start.nccpa")} />
+          <TextField id="nccpa" label={t("start.nccpa")} error={fix("nccpa")} />
         )}
         <Button type="submit" className="margin-top-4">
           {t("start.continue")}
