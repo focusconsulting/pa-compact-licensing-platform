@@ -177,8 +177,11 @@ function ApplicationSection({
       </>
     );
   }
+  const last = application.timeline.at(-1);
   let when: string;
-  if (application.status === "submitted") {
+  if (last?.kind === "resubmitted") {
+    when = t("dashboard.resubmittedOn", { date: date(last.at) });
+  } else if (application.status === "submitted") {
     when = t("dashboard.sent", { state, date: date(application.opened_at) });
   } else if (application.status === "withdrawn") {
     when = t("dashboard.withdrawnOn", { date: date(application.withdrawn_at) });
