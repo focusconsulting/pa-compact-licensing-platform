@@ -103,9 +103,49 @@ describe("the application's statements and submit step", () => {
       ]),
     );
     expect(await bodies(spy, SUBMIT)).toEqual([
-      { sworn: true, sworn_name: "Jordan Alex Sample" },
+      { sworn: true, sworn_name: "Jordan Alex Sample", document_ids: [] },
     ]);
     await expectNoAxeViolations(container);
+  });
+
+  it("asks for every statement again to resubmit, and sends the PA's upload", async () => {
+    const spy = answers({
+      "GET /api/me/applications": ok([
+        application({
+          status: "info_requested",
+          requested_at: "2026-10-19T15:00:00Z",
+          attestations: ATTESTATIONS.map((a) => ({
+            code: a.code,
+            version: a.version,
+            accepted_at: "2026-10-14T15:00:00Z",
+          })),
+        }),
+      ]),
+      "GET /api/me/documents/unattached": ok([{ id: "d1" }]),
+    });
+    const { container } = render(<Page />);
+
+    expect(
+      await screen.findByText(
+        "You're resubmitting, so agree to the statements and sign again.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("checkbox", { name: "I understand" }),
+    ).not.toBeChecked();
+    await expectNoAxeViolations(container);
+    await agreeToEverything();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Resubmit application" }),
+    );
+
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith("/application/received"),
+    );
+    expect(await bodies(spy, ACCEPT)).toHaveLength(ATTESTATIONS.length);
+    expect(await bodies(spy, SUBMIT)).toEqual([
+      { sworn: true, sworn_name: "Jordan Alex Sample", document_ids: ["d1"] },
+    ]);
   });
 
   it("checks what the PA already accepted, and accepts only what is new", async () => {

@@ -30,7 +30,9 @@
     "swornHeading": "Sworn statement",
     "swornName": "Type your full legal name",
     "submit": "Submit application",
-    "back": "Back"
+    "back": "Back",
+    "resubmitIntro": "You're resubmitting, so agree to the statements and sign again.",
+    "resubmit": "Resubmit application"
   },
   "received": {
     "heading": "Application received",
@@ -38,8 +40,12 @@
     "nextHeading": "What happens next",
     "next1": "{{state}} checks your license against its records.",
     "next2": "To join the PA Compact, submit to a criminal background check, including fingerprints, through {{state}}'s process within 60 days of applying.",
-    "next3": "If {{state}} needs more information, {{state}} will contact you.",
-    "next4": "If {{state}} confirms you're eligible, PA Compact will email you. Then you can apply for Compact Privileges to practice in other states, and pay their fees."
+    "next3": "If {{state}} needs more information, PA Compact will email you.",
+    "next4": "If {{state}} confirms you're eligible, PA Compact will email you. Then you can apply for Compact Privileges to practice in other states, and pay their fees.",
+    "resubmittedHeading": "Application resubmitted",
+    "resubmitted": "You resubmitted it on {{date}}. {{state}} will review it again.",
+    "again1": "{{state}} reviews your application again.",
+    "again2": "If you haven't yet, submit to a criminal background check through {{state}}'s process within 60 days of your application."
   },
   "errors": {
     "heading": "There is a problem",
@@ -107,6 +113,17 @@
       "denied": "{{state}} decided you're not eligible.",
       "eligibility_withdrawn": "{{state}} withdrew your eligibility.",
       "superseded": "A new state of qualifying license replaced this application."
-    }
+    },
+    "resubmittedOn": "Resubmitted on {{date}}"
+  },
+  "update": {
+    "title": "Update your application",
+    "alertHeading": "{{state}} needs more information",
+    "askedOn": "Asked on {{asked}}. Resubmit by {{due}}.",
+    "reply": "Your reply to {{state}}",
+    "replyHint": "Answer {{state}}'s note here, upload a document, or both.",
+    "upload": "Upload a document",
+    "uploadHint": "Only if {{state}}'s note asks for one. One file: PDF, Word, PNG or JPEG.",
+    "anotherState": "To apply through another state, withdraw this application and apply again."
   }
 }

@@ -452,6 +452,42 @@ describe("the PA dashboard", () => {
     ]);
   });
 
+  it("says when the PA resubmitted (B-n1r)", async () => {
+    answers(
+      dashboard({
+        applications: [
+          summary({
+            timeline: [
+              {
+                kind: "applied",
+                status: "submitted",
+                at: "2026-10-14T15:00:00Z",
+              },
+              {
+                kind: "info_requested",
+                status: "info_requested",
+                at: "2026-10-19T15:00:00Z",
+              },
+              {
+                kind: "resubmitted",
+                status: "submitted",
+                at: "2026-10-21T15:00:00Z",
+              },
+            ],
+          }),
+        ],
+      }),
+    );
+    render(<PaDashboard />);
+
+    expect(
+      await screen.findByText(/Resubmitted on Oct 21, 2026/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("You resubmitted your application."),
+    ).toBeInTheDocument();
+  });
+
   it("has no history before the state has an application", async () => {
     answers(dashboard());
     render(<PaDashboard />);
