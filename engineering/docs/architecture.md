@@ -23,6 +23,7 @@ flowchart TD
   ses["Amazon SES"]
   payments["Payment Provider"]
   nccpa["NCCPA"]
+  fsmb["FSMB Physician Data Center"]
   boards["State licensing systems"]
 
   pa paToCds@-- "Apply for privileges<br/>Pay fees<br/>Manage profile" --> cds
@@ -34,13 +35,14 @@ flowchart TD
   cds cdsToSes@-- "Send notification emails" --> ses
   cds cdsToPayments@-- "Collect payments" --> payments
   cds cdsToNccpa@-- "Query PA national certifications" --> nccpa
+  cds cdsToFsmb@-- "Read physician reports by FID" --> fsmb
 
   classDef person fill:#08427b,stroke:#073b6f,color:#fff
   classDef system fill:#1168bd,stroke:#0b4884,color:#fff
   classDef external fill:#999999,stroke:#8a8a8a,color:#fff
   class pa,state,commission,public person
   class cds system
-  class cognito,ses,payments,nccpa,boards external
+  class cognito,ses,payments,nccpa,fsmb,boards external
 ```
 
 ## Containers
@@ -72,6 +74,7 @@ flowchart LR
   ses["<b>Amazon SES</b><br/>Email"]
   payments["<b>Payment Provider</b><br/>Collect payments"]
   nccpa["<b>NCCPA</b><br/>Certification"]
+  fsmb["<b>FSMB</b><br/>Physician Data Center"]
   observability["<b>CloudWatch</b><br/>Logs, metrics, alarms"]
   scheduler["<b>EventBridge Scheduler</b><br/>Starts jobs"]
   guardduty["<b>GuardDuty Malware Protection</b><br/>Scans each upload"]
@@ -88,6 +91,7 @@ flowchart LR
   worker -- "<b>Reads scan tags</b><br/><i>[HTTPS]</i>" --> files
   worker -- "<b>Reads and writes</b><br/><i>[SQL / TLS]</i>" --> db
   worker -- "<b>Sends email</b><br/><i>[SMTP / STARTTLS]</i>" --> ses
+  worker -- "<b>Reads physician reports</b><br/><i>[OAuth2 / HTTPS]</i>" --> fsmb
   worker -- "<b>Logs</b><br/><i>[awslogs]</i>" --> observability
   scheduler -- "<b>Runs</b><br/><i>[ECS RunTask]</i>" --> jobs
   jobs -- "<b>Reads and writes</b><br/><i>[SQL / TLS]</i>" --> db
@@ -101,7 +105,7 @@ flowchart LR
   classDef external fill:#999999,stroke:#8a8a8a,color:#fff
   class user person
   class cdn,client,api,worker,jobs,db,files container
-  class cognito,ses,payments,nccpa,observability,scheduler,guardduty external
+  class cognito,ses,payments,nccpa,fsmb,observability,scheduler,guardduty external
 ```
 
 ## Locally
@@ -119,4 +123,5 @@ and [`engineering/api/.env.example`](../api/.env.example).
 | EventBridge Scheduler | None: run a job by hand with `just job <name>` |
 | S3 | RustFS |
 | GuardDuty Malware Protection | A tagger that writes the same tag, `THREATS_FOUND` for the EICAR test file ([`engineering/mocks/malware-scanner`](../mocks/malware-scanner/README.md)); not started in CI |
+| FSMB Physician Data Center | WireMock with fixed reports ([`engineering/mocks/fsmb`](../mocks/fsmb/README.md)); FSMB's demo server in staging ([`fsmb.md`](fsmb.md)) |
 | Payment Provider, NCCPA | Mock servers, built with the tickets that write their clients |

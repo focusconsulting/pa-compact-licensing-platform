@@ -20,7 +20,7 @@ install:
     cd engineering/api && uv sync
     cd engineering/client && pnpm install
 
-# Start the local services in the background (Postgres, maildev, RustFS, the malware scanner, Cognito mock) and wait until ready
+# Start the local services in the background (Postgres, maildev, RustFS, the malware scanner, Cognito mock, FSMB mock) and wait until ready
 services:
     {{ compose }} --profile scanner up -d --wait --build
     {{ compose }} run --rm rustfs-init >/dev/null
@@ -45,6 +45,12 @@ mock-api:
     docker run --rm --init --platform linux/amd64 -p 4010:4010 \
         -v "$PWD/engineering/api/openapi.json:/openapi.json:ro" \
         stoplight/prism:5.15.10 mock -m false -h 0.0.0.0 /openapi.json
+
+# Browse FSMB's PDC API in Swagger UI on localhost:8084, its document read live from FSMB (engineering/docs/fsmb.md)
+fsmb-docs port="8084":
+    docker run --rm --init -p {{port}}:8080 \
+        -e URL=https://services-pdc-demo.fsmb.org/swagger/v1/swagger.json \
+        swaggerapi/swagger-ui:v5.17.14
 
 # Run the end-to-end tests against the running system (start it with `just up` first)
 e2e:

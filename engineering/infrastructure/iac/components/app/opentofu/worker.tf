@@ -21,6 +21,7 @@ locals {
     { name = "COMMISSION_OPS_EMAIL", value = var.commission_ops_email },
     { name = "S3_REGION", value = var.aws_region },
     { name = "S3_DOCUMENTS_BUCKET", value = aws_s3_bucket.documents.id },
+    { name = "FSMB_API_URL", value = var.fsmb_api_url },
   ]
 
   worker_secrets = [
@@ -28,6 +29,8 @@ locals {
     { name = "DB_PASSWORD", valueFrom = "${aws_secretsmanager_secret.db_credentials.arn}:password::" },
     { name = "SMTP_USERNAME", valueFrom = "${aws_secretsmanager_secret.ses_smtp.arn}:username::" },
     { name = "SMTP_PASSWORD", valueFrom = "${aws_secretsmanager_secret.ses_smtp.arn}:password::" },
+    { name = "FSMB_CLIENT_ID", valueFrom = "${aws_secretsmanager_secret.fsmb_credentials.arn}:client_id::" },
+    { name = "FSMB_CLIENT_SECRET", valueFrom = "${aws_secretsmanager_secret.fsmb_credentials.arn}:client_secret::" },
   ]
 }
 

@@ -49,6 +49,13 @@ class Settings(BaseSettings):
     s3_region: str = 'us-east-1'
     s3_documents_bucket: str = 'documents'
 
+    # FSMB's Physician Data Center (docs/fsmb.md): the mock locally, FSMB's demo server in
+    # staging, production in prod. `me` is the roster the client credentials belong to.
+    fsmb_api_url: str = 'http://localhost:8083'
+    fsmb_client_id: str = ''
+    fsmb_client_secret: str = ''
+    fsmb_customer_key: str = 'me'
+
     @property
     def db_url(self) -> str:
         """The asyncpg URL the app's database engine connects with."""

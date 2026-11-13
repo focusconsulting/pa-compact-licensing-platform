@@ -42,3 +42,18 @@ resource "aws_secretsmanager_secret_version" "db_credentials_version" {
     password = random_password.db_master.result
   })
 }
+
+# FSMB issues the PDC client ID and secret; they are never in OpenTofu or its state. This version
+# holds empty values so the Worker starts before they arrive. Set the real ones with
+#   aws secretsmanager put-secret-value --secret-id <environment>-fsmb-credentials \
+#     --secret-string '{"client_id":"...","client_secret":"..."}'
+# then force a new Worker deployment. OpenTofu never compares a write-only value, so it keeps them.
+resource "aws_secretsmanager_secret" "fsmb_credentials" {
+  name = "${var.environment_name}-fsmb-credentials"
+}
+
+resource "aws_secretsmanager_secret_version" "fsmb_credentials_placeholder" {
+  secret_id                = aws_secretsmanager_secret.fsmb_credentials.id
+  secret_string_wo_version = 1
+  secret_string_wo         = jsonencode({ client_id = "", client_secret = "" })
+}

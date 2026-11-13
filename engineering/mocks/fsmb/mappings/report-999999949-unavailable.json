@@ -1,0 +1,28 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "GET",
+    "urlPathTemplate": "/v1/rosters/{customerKey}/members/{fid}/reports/current/data",
+    "pathParameters": {
+      "fid": {
+        "equalTo": "999999949"
+      }
+    },
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer local-fsmb-token"
+      }
+    }
+  },
+  "response": {
+    "status": 503,
+    "headers": {
+      "Content-Type": "application/problem+json"
+    },
+    "jsonBody": {
+      "type": "https://tools.ietf.org/html/rfc9110#section-15.6.4",
+      "title": "Service Unavailable",
+      "status": 503
+    }
+  }
+}

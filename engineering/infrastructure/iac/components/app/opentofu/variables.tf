@@ -110,6 +110,16 @@ variable "commission_ops_email" {
   default     = ""
 }
 
+variable "fsmb_api_url" {
+  description = "FSMB's Physician Data Center: the demo server in staging, production in prod (engineering/docs/fsmb.md)"
+  type        = string
+
+  validation {
+    condition     = contains(["https://services-pdc-demo.fsmb.org", "https://services-pdc.fsmb.org"], var.fsmb_api_url)
+    error_message = "fsmb_api_url must be FSMB's demo or production PDC URL."
+  }
+}
+
 variable "log_level" {
   description = "Log level for the API, the Worker, and scheduled jobs"
   type        = string
