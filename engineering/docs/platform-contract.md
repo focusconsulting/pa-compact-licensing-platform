@@ -185,13 +185,13 @@ Both run the same checks, in this order, then the transition above:
 | The caller is the application's practitioner | `404 NOT_FOUND` |
 | The status allows the move | `409 INVALID_TRANSITION` |
 | `sql_state_code` is a member state that `is_live` | `409 STATE_NOT_LIVE` |
-| Every current participation attestation is accepted at its current version | `409 ATTESTATIONS_OUT_OF_DATE`, with the missing or stale codes in `details` |
+| Every current participation attestation is accepted at its current version, and for a resubmission accepted again since the SQL's latest request | `409 ATTESTATIONS_OUT_OF_DATE`, with the missing or stale codes in `details` |
 | A sworn statement: the checkbox, and a typed name that is not blank (Q-06). The name is not compared with the profile | `422 VALIDATION_ERROR` |
 | Each of `document_ids` is the caller's own upload that nothing holds yet (`GET /me/documents/unattached`) | `404 NOT_FOUND` |
 
 The server records `sworn_at` and `sworn_ip`; the client sends only the name. Submit attaches the named documents in the same transaction, since a document is attached once and never moves. No document is required (Q-07's default).
 
-While an application is `draft` or `info_requested`, the PA saves steps (`PATCH`; the state only in a draft) and accepts attestations; any other status is `409 INVALID_TRANSITION`. Accepting a version that is not the current one is `409 ATTESTATIONS_OUT_OF_DATE`. `GET /public/attestations?applies_to=participation` lists the current versions in display order, and `GET /public/states` says which states are live.
+While an application is `draft` or `info_requested`, the PA saves steps (`PATCH`; the state only in a draft, and `response_note`, the reply to the SQL, only while `info_requested`) and accepts attestations; any other status is `409 INVALID_TRANSITION`. While `info_requested`, the application also has `requested_at`, when the SQL last asked (read from history), and `resubmit_by`; the information-requested email gives the same date. Accepting a version that is not the current one is `409 ATTESTATIONS_OUT_OF_DATE`. `GET /public/attestations?applies_to=participation` lists the current versions in display order, and `GET /public/states` says which states are live.
 
 ### The PA's dashboard
 

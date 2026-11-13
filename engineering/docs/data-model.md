@@ -231,6 +231,7 @@ A PA's application to participate in the compact, decided by their state of qual
 | `status` | TEXT CHECK | `draft`, `submitted`, `info_requested`, `eligible`, `denied`, `withdrawn`, `eligibility_withdrawn` (FLOW-06), and `superseded` |
 | `opened_at` | TIMESTAMPTZ | Received by the SQL; starts the 60-day clock (Rule 3 §3.7(a)). Required once out of `draft` |
 | `request_note` | TEXT | The SQL's request for information (D15) |
+| `response_note` | TEXT, at most 4000 characters | The PA's reply, sent with the resubmission; history keeps each one |
 | `license_verified_at`, `license_verified_by` | | Set together |
 | `cbc_completed_on` | DATE | The background check's completion date; never a result (Rule 4 §4.2) |
 | `decided_at`, `decided_by` | | Required for `eligible`, `denied`, `eligibility_withdrawn`, `superseded` |
@@ -275,7 +276,7 @@ What a PA accepted on an application, written with `accept` and checked with `ou
 | `attestation_code`, `attestation_version` | FK `attestations` | |
 | `accepted_at` | TIMESTAMPTZ | |
 
-The primary key is `(participation_application_id, attestation_code, attestation_version)`. A trigger refuses any update or delete outside an expungement (ADR-0008): accepting a newer version adds a row, and the latest per code counts. That keeps the submitted record (Rule 5 §5.3) without a history table.
+The primary key is `(participation_application_id, attestation_code, attestation_version, accepted_at)`. A trigger refuses any update or delete outside an expungement (ADR-0008): accepting a newer version adds a row, and so does accepting the same version again after the SQL asks for information, since a resubmission accepts every statement again. The latest per code counts. That keeps the submitted record (Rule 5 §5.3) without a history table.
 
 ### `fees`
 
