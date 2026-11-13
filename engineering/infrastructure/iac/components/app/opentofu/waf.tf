@@ -1,7 +1,9 @@
 # Web firewalls (SCRUM-84). Two, because there are two front doors: CloudFront, for the
 # client and the API, and the Cognito user pool, which the browser signs in against
-# directly and so never passes through CloudFront. Each allows by default, limits how
-# fast one address may call, and applies AWS's managed rule groups.
+# directly and so never passes through CloudFront. Each allows by default and limits
+# how fast one address may call; CloudFront's also applies AWS's managed rule groups.
+# The user pool's has none: Cognito validates its own requests and locks out repeated
+# failures, and the account-takeover group cannot be attached to a user pool.
 
 locals {
   waf_name = "${var.environment_name}-${local.application_name}"
@@ -21,12 +23,11 @@ locals {
     "AWSManagedRulesCommonRuleSet",
     "AWSManagedRulesSQLiRuleSet",
   ]
-  # The user pool's API takes JSON bodies Cognito validates itself; the account-takeover
-  # group cannot be attached to a user pool.
-  waf_cognito_managed_groups = [
-    "AWSManagedRulesAmazonIpReputationList",
-    "AWSManagedRulesKnownBadInputsRuleSet",
-  ]
+  # Rules inside a managed group that count instead of block. The common rule set's body
+  # limit is 8 KB, which real API requests exceed.
+  waf_counted_rules = {
+    AWSManagedRulesCommonRuleSet = ["SizeRestrictions_BODY"]
+  }
 
   # WAF logs carry every request header, so the ones that hold a session are blanked.
   waf_redacted_headers = ["authorization", "cookie"]
@@ -99,6 +100,17 @@ resource "aws_wafv2_web_acl" "cloudfront" {
         managed_rule_group_statement {
           name        = rule.value
           vendor_name = "AWS"
+
+          dynamic "rule_action_override" {
+            for_each = lookup(local.waf_counted_rules, rule.value, [])
+            content {
+              name = rule_action_override.value
+
+              action_to_use {
+                count {}
+              }
+            }
+          }
         }
       }
 
@@ -110,8 +122,8 @@ resource "aws_wafv2_web_acl" "cloudfront" {
     }
   }
 
-  # The next two are written out, not in the list above: Checkov's check on a CloudFront
-  # web ACL (CKV2_AWS_47) looks for both groups by name and cannot see inside a dynamic block.
+  # Written out, not in the list above: Checkov's Log4j checks look for the group by
+  # name and cannot see inside a dynamic block.
   rule {
     name     = "AWSManagedRulesKnownBadInputsRuleSet"
     priority = 20
@@ -134,32 +146,6 @@ resource "aws_wafv2_web_acl" "cloudfront" {
     }
   }
 
-  # Counted, not blocked. The group matches VPNs, proxies, Tor, and hosting providers,
-  # which would shut out a PA on a consumer VPN, a state office behind a cloud-hosted
-  # gateway, and the ZAP scan's GitHub runner. Its metric shows how much real traffic
-  # that is, which is what a decision to block needs.
-  rule {
-    name     = "AWSManagedRulesAnonymousIpList"
-    priority = 21
-
-    override_action {
-      count {}
-    }
-
-    statement {
-      managed_rule_group_statement {
-        name        = "AWSManagedRulesAnonymousIpList"
-        vendor_name = "AWS"
-      }
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = true
-      metric_name                = "${local.waf_name}-cloudfront-AWSManagedRulesAnonymousIpList"
-      sampled_requests_enabled   = true
-    }
-  }
-
   visibility_config {
     cloudwatch_metrics_enabled = true
     metric_name                = "${local.waf_name}-cloudfront"
@@ -168,6 +154,7 @@ resource "aws_wafv2_web_acl" "cloudfront" {
 }
 
 resource "aws_wafv2_web_acl" "cognito" {
+  #checkov:skip=CKV_AWS_192:The Log4j group guards the server behind the firewall, and here that is Cognito's own API, which AWS runs.
   name  = "${local.waf_name}-cognito"
   scope = "REGIONAL"
 
@@ -195,31 +182,6 @@ resource "aws_wafv2_web_acl" "cognito" {
       cloudwatch_metrics_enabled = true
       metric_name                = "${local.waf_name}-cognito-rate-sign-in"
       sampled_requests_enabled   = true
-    }
-  }
-
-  dynamic "rule" {
-    for_each = local.waf_cognito_managed_groups
-    content {
-      name     = rule.value
-      priority = 10 + rule.key
-
-      override_action {
-        none {}
-      }
-
-      statement {
-        managed_rule_group_statement {
-          name        = rule.value
-          vendor_name = "AWS"
-        }
-      }
-
-      visibility_config {
-        cloudwatch_metrics_enabled = true
-        metric_name                = "${local.waf_name}-cognito-${rule.value}"
-        sampled_requests_enabled   = true
-      }
     }
   }
 
