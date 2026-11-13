@@ -20,6 +20,8 @@ export interface TextFieldProps {
   inputRef?: React.RefObject<HTMLInputElement>;
   onChange?: ChangeEventHandler;
   value?: string;
+  /** What to fix, shown under the label with the field marked in error. */
+  error?: string;
 }
 
 // TODO: forward
@@ -42,23 +44,34 @@ export function TextField({
   inputRef,
   onChange,
   value,
+  error,
 }: TextFieldProps) {
   const { t } = useTranslation("common");
   const register = useFormContext()?.register;
 
+  const describedBy = [hint && `${id}Hint`, error && `${id}Error`]
+    .filter(Boolean)
+    .join(" ");
+
   // TODO: forward input props instead of drilling
-  return (
+  const field = (
     <>
       <Label
         htmlFor={id}
         hint={optional ? t("optionalText") : null}
         requiredMarker={!optional}
+        error={Boolean(error)}
       >
         {label}
       </Label>
       {hint && (
         <span className="usa-hint" id={`${id}Hint`}>
           {hint}
+        </span>
+      )}
+      {error && (
+        <span className="usa-error-message" id={`${id}Error`}>
+          {error}
         </span>
       )}
       <TextInput
@@ -74,11 +87,18 @@ export function TextField({
         required={!optional}
         disabled={disabled}
         value={value}
+        validationStatus={error ? "error" : undefined}
+        aria-describedby={describedBy || undefined}
         {...(!inputRef && !onChange && register
           ? register(id, { required: !optional })
           : { name: id, inputRef, onChange })}
       />
     </>
+  );
+  return error ? (
+    <div className="usa-form-group usa-form-group--error">{field}</div>
+  ) : (
+    field
   );
 }
 

@@ -12,6 +12,8 @@ export interface DateFieldsProps {
   optionalDay?: boolean;
   optionalMonth?: boolean;
   optionalYear?: boolean;
+  /** Marks each part in error; the fieldset around it shows the message. */
+  error?: boolean;
 }
 
 /** Month, day, and year inputs, stored in the form as one YYYY-MM-DD value. */
@@ -21,6 +23,7 @@ export function DateFields({
   optionalDay = false,
   optionalMonth = false,
   optionalYear = false,
+  error = false,
 }: DateFieldsProps) {
   const { t } = useTranslation("date");
   const options = t("options", { returnObjects: true });
@@ -89,6 +92,7 @@ export function DateFields({
           options={options}
           required={!optionalMonth}
           showValuesInLabels
+          error={error ? "" : undefined}
           onChange={(e: ChangeEvent<HTMLInputElement>) =>
             updateValue({ month: e.target.value })
           }
@@ -99,6 +103,7 @@ export function DateFields({
         id={`${id}Day`}
         label={[name, t("day")].join(" ")}
         unit="day"
+        validationStatus={error ? "error" : undefined}
         maxLength={2}
         minLength={1}
         // @ts-expect-error requiredMarker is not in the type definition but is used by USWDS DateInput
@@ -113,6 +118,7 @@ export function DateFields({
         id={`${id}Year`}
         label={[name, t("year")].join(" ")}
         unit="year"
+        validationStatus={error ? "error" : undefined}
         maxLength={4}
         minLength={4}
         // @ts-expect-error requiredMarker is not in the type definition but is used by USWDS DateInput

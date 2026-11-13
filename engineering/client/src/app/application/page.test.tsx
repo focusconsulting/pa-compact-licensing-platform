@@ -421,6 +421,105 @@ describe("the application's first step", () => {
     ]);
   });
 
+  it("says which answers need fixing, and saves nothing (B2e)", async () => {
+    const spy = answers({
+      "GET /api/me/applications": ok([application()]),
+      "GET /api/me/profile": ok(
+        profile({
+          residence: {
+            line1: "1 Main Street",
+            line2: null,
+            city: "Topeka",
+            region: "KS",
+            postal_code: "66601",
+            country_code: "US",
+          },
+          nccpa_certification_number: "1234567",
+        }),
+      ),
+    });
+    const { container } = render(<Page />);
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Continue" }),
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "3 answers need fixing" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Enter your license number")).toBeInTheDocument();
+    expect(
+      screen.getByText("Enter your license expiration date"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Enter your date of birth")).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: "License number *" }),
+    ).toHaveAccessibleDescription("Enter your license number");
+    expect(await bodies(spy, "PATCH /api/me/profile")).toEqual([]);
+    await expectNoAxeViolations(container);
+  });
+
+  it("asks for every required answer on a blank first step", async () => {
+    answers();
+    render(<Page />);
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Start your application" }),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+
+    expect(
+      await screen.findByRole("heading", { name: "9 answers need fixing" }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("Select your state")).toHaveLength(2);
+    expect(screen.getByText("Enter your address line 1")).toBeInTheDocument();
+    expect(screen.getByText("Enter your city or town")).toBeInTheDocument();
+    expect(screen.getByText("Enter your ZIP code")).toBeInTheDocument();
+    expect(
+      screen.getByText("Enter your NCCPA certification number"),
+    ).toBeInTheDocument();
+  });
+
+  it("asks only for what a resubmission still lets the PA change", async () => {
+    answers({
+      "GET /api/me/applications": ok([
+        application({
+          status: "info_requested",
+          request_note: "Upload your NCCPA certificate.",
+          requested_at: "2026-10-19T15:00:00Z",
+          resubmit_by: "2026-12-13",
+          claimed_license_number: "PA-9",
+          claimed_license_expires_on: "2027-01-31",
+        }),
+      ]),
+      "GET /api/me/documents/unattached": ok([]),
+      "GET /api/me/profile": ok(
+        profile({
+          residence: {
+            line1: "1 Main Street",
+            line2: null,
+            city: "Topeka",
+            region: "KS",
+            postal_code: "66601",
+            country_code: "US",
+          },
+          nccpa_certification_number: "1234567",
+          verified_fields: ["nccpa_certification_number"],
+        }),
+      ),
+    });
+    render(<Page />);
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Continue" }),
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "1 answer needs fixing" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Enter your date of birth")).toBeInTheDocument();
+  });
+
   it("asks for a last name when another name has only a first name", async () => {
     const spy = answers();
     render(<Page />);

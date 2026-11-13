@@ -1,9 +1,9 @@
 "use client";
 
-import { Button, Checkbox, Form } from "@trussworks/react-uswds";
+import { Button, Checkbox, Fieldset, Form } from "@trussworks/react-uswds";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { FormEvent, ReactNode, useCallback, useEffect, useState } from "react";
 import { FormProvider, UseFormReturn, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -31,6 +31,15 @@ const SWORN = "truthfulness";
 
 type Values = Record<string, boolean | string>;
 type ErrorKey = "save" | "stateNotLive" | "statementsChanged";
+type Missing = "statements" | "backgroundCheck" | "sworn" | "swornName";
+
+/** What to fix for each missing answer (B6e). */
+const MESSAGES = {
+  statements: "fix.statements",
+  backgroundCheck: "fix.understand",
+  sworn: "fix.statement",
+  swornName: "fix.swornName",
+} as const;
 
 interface StatementProps {
   attestation: Attestation;
@@ -40,9 +49,7 @@ interface StatementProps {
 
 /** One required checkbox, accepting an attestation. */
 function Statement({ attestation, form, label }: StatementProps) {
-  const { ref, name, onChange, onBlur } = form.register(attestation.code, {
-    required: true,
-  });
+  const { ref, name, onChange, onBlur } = form.register(attestation.code);
   return (
     <Checkbox
       id={`statement-${attestation.code}`}
@@ -52,6 +59,35 @@ function Statement({ attestation, form, label }: StatementProps) {
       onChange={onChange}
       onBlur={onBlur}
     />
+  );
+}
+
+/** Checkboxes with what to fix above them (B6e); the statements also get their group's label. */
+function Boxes({
+  id,
+  error,
+  legend,
+  children,
+}: {
+  id: string;
+  error?: string;
+  legend?: string;
+  children: ReactNode;
+}) {
+  if (!error) return children;
+  return (
+    <div className="usa-form-group usa-form-group--error">
+      <Fieldset
+        legend={legend}
+        legendStyle="default"
+        aria-describedby={`${id}Error`}
+      >
+        <span className="usa-error-message" id={`${id}Error`}>
+          {error}
+        </span>
+        {children}
+      </Fieldset>
+    </div>
   );
 }
 
@@ -72,9 +108,12 @@ function StatementsForm({
   const { t } = useTranslation("application");
   const router = useRouter();
   const form = useForm<Values>({
-    defaultValues: Object.fromEntries(
-      attestations.map((a) => [a.code, accepted(application, a)]),
-    ),
+    defaultValues: {
+      ...Object.fromEntries(
+        attestations.map((a) => [a.code, accepted(application, a)]),
+      ),
+      swornName: "",
+    },
   });
   const [error, setError] = useState<ErrorKey | null>(null);
   const statements = attestations.filter(
@@ -83,6 +122,7 @@ function StatementsForm({
   const backgroundCheck = attestations.find((a) => a.code === BACKGROUND_CHECK);
   const sworn = attestations.find((a) => a.code === SWORN);
   const resubmitting = application.status === "info_requested";
+  const [missing, setMissing] = useState<Missing[]>([]);
 
   async function submit(values: Values) {
     setError(null);
@@ -116,10 +156,32 @@ function StatementsForm({
     }
   }
 
+  const fix = (key: Missing) =>
+    missing.includes(key) ? t(MESSAGES[key]) : undefined;
+
+  const check = (event: FormEvent) => {
+    event.preventDefault();
+    const values = form.getValues();
+    const ticked = (a?: Attestation) => !a || values[a.code] === true;
+    const found: Missing[] = [];
+    if (!statements.every(ticked)) found.push("statements");
+    if (!ticked(backgroundCheck)) found.push("backgroundCheck");
+    if (!ticked(sworn)) found.push("sworn");
+    if (!String(values.swornName).trim()) found.push("swornName");
+    setMissing(found);
+    if (found.length === 0) void submit(values);
+  };
+
   return (
     <FormProvider {...form}>
-      <Form onSubmit={form.handleSubmit(submit)} large>
+      <Form onSubmit={check} large noValidate>
         <PageHeading title={t("statements.title")} />
+        {missing.length > 0 && (
+          <AlertBanner
+            type="error"
+            heading={t("fix.count", { count: missing.length })}
+          />
+        )}
         {resubmitting && <p>{t("statements.resubmitIntro")}</p>}
         {error && (
           <AlertBanner type="error" heading={t("errors.heading")}>
@@ -128,33 +190,47 @@ function StatementsForm({
         )}
         <p className="text-base">{t("required")}</p>
         <h2>{t("statements.heading")}</h2>
-        {statements.map((attestation) => (
-          <Statement
-            key={attestation.code}
-            attestation={attestation}
-            form={form}
-          />
-        ))}
+        <Boxes
+          id="statements"
+          legend={`${t("fix.statementsGroup")} *`}
+          error={fix("statements")}
+        >
+          {statements.map((attestation) => (
+            <Statement
+              key={attestation.code}
+              attestation={attestation}
+              form={form}
+            />
+          ))}
+        </Boxes>
         {backgroundCheck && (
           <>
             <h2>{t("statements.backgroundHeading")}</h2>
             <p className="usa-intro">
               {t("statements.backgroundCheck", { state: stateName })}
             </p>
-            <Statement
-              attestation={backgroundCheck}
-              form={form}
-              label={t("statements.understand")}
-            />
+            <Boxes id="backgroundCheck" error={fix("backgroundCheck")}>
+              <Statement
+                attestation={backgroundCheck}
+                form={form}
+                label={t("statements.understand")}
+              />
+            </Boxes>
           </>
         )}
         {sworn && (
           <>
             <h2>{t("statements.swornHeading")}</h2>
-            <Statement attestation={sworn} form={form} />
+            <Boxes id="sworn" error={fix("sworn")}>
+              <Statement attestation={sworn} form={form} />
+            </Boxes>
           </>
         )}
-        <TextField id="swornName" label={t("statements.swornName")} />
+        <TextField
+          id="swornName"
+          label={t("statements.swornName")}
+          error={fix("swornName")}
+        />
         <div className="margin-top-4 display-flex flex-align-center">
           <Button type="submit">
             {t(resubmitting ? "statements.resubmit" : "statements.submit")}

@@ -148,6 +148,54 @@ describe("the application's statements and submit step", () => {
     ]);
   });
 
+  it("says which answers need fixing, and accepts nothing (B6e)", async () => {
+    const spy = answers();
+    const { container } = render(<Page />);
+
+    await check("I understand");
+    await check(
+      "I swear that the information in this application is true and accurate.",
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Submit application" }),
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "2 answers need fixing" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("group", { name: "Agree to the statements *" }),
+    ).toHaveAccessibleDescription("Tick the statements to agree to them");
+    expect(screen.getByText("Type your full name to sign")).toBeInTheDocument();
+    expect(await bodies(spy, ACCEPT)).toEqual([]);
+    expect(await bodies(spy, SUBMIT)).toEqual([]);
+    await expectNoAxeViolations(container);
+  });
+
+  it("asks for the background check and the sworn statement on their own", async () => {
+    answers();
+    render(<Page />);
+
+    await check("I hold a current NCCPA certification.");
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Type your full legal name *" }),
+      "Jordan Alex Sample",
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Submit application" }),
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "2 answers need fixing" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Tick the box to confirm you understand"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Tick the statement to agree to it"),
+    ).toBeInTheDocument();
+  });
+
   it("checks what the PA already accepted, and accepts only what is new", async () => {
     const spy = answers({
       "GET /api/me/applications": ok([
