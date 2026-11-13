@@ -1,3 +1,5 @@
 {% extends 'pa.txt' %}
 {% block subject %}{{ state_name }} needs more information for your application{% endblock %}
-{% block message %}{{ state_name }} needs more information before it can decide on your application for compact eligibility. Sign in to see what it asked for, update your application, and resubmit it.{% endblock %}
+{% block message %}{{ state_name }} needs more information before it can decide on your application for compact eligibility. Sign in to see what it asked for, update your application, and resubmit it.
+
+Resubmit it by {{ resubmit_by | long_date }}. If {{ state_name }} doesn't have it by then, your application is withdrawn.{% endblock %}
