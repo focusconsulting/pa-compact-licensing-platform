@@ -152,11 +152,13 @@ What epic 6 (the PA's side) and epic 7 (the SQL's review) build against. Statuse
 
 ### Transitions
 
-Every move is one transaction: the row, a history row, and the event, as in [Recording a change](#recording-a-change). The event's aggregate is the application and its payload is empty: handlers read the application. A move `APPLICATION_TRANSITIONS` does not allow is `409 INVALID_TRANSITION`.
+Every move is one transaction: the row, a history row, and the event, as in [Recording a change](#recording-a-change), made with `move` (`repo/application_transition.py`). The event's aggregate is the application and its payload is empty: handlers read the application. A move `APPLICATION_TRANSITIONS` does not allow raises `InvalidTransitionError`, which a route returns as `409 INVALID_TRANSITION`.
+
+History starts when the SQL receives the application. Starting and saving a draft, and the PA's edits while `info_requested`, write no history and no event. Submit and resubmit each write one history row holding the whole application as sent, so history keeps every version the SQL saw. The PA's routes are under `/me/applications`.
 
 | From | To | Who | Sets | Event |
 |---|---|---|---|---|
-| | `draft` | PA (`/me`) | `sql_state_code`, `kind`. One open application per practitioner, so a PA continues their draft rather than starting another | |
+| | `draft` | PA | `sql_state_code` (a live state); `kind` is `initial`. A PA with an open application gets `409 APPLICATION_OPEN`, and an eligible PA `409 ALREADY_ELIGIBLE`: changing the state of qualifying license (`change_sql`) is not in v1, because approving one ends the PA's privileges (Rule 3 §3.6(d)) | |
 | `draft` | `submitted` | PA | `opened_at`, the sworn statement | `application.submitted` |
 | `submitted` | `info_requested` | SQL (`write`) | `request_note` | `application.info_requested` |
 | `info_requested` | `submitted` | PA | The sworn statement again. `opened_at` and `request_note` stay; history keeps each request and resubmission | `application.resubmitted` |
@@ -185,8 +187,11 @@ Both run the same checks, in this order, then the transition above:
 | `sql_state_code` is a member state that `is_live` | `409 STATE_NOT_LIVE` |
 | Every current participation attestation is accepted at its current version | `409 ATTESTATIONS_OUT_OF_DATE`, with the missing or stale codes in `details` |
 | A sworn statement: the checkbox, and a typed name that is not blank (Q-06). The name is not compared with the profile | `422 VALIDATION_ERROR` |
+| Each of `document_ids` is the caller's own upload that nothing holds yet (`GET /me/documents/unattached`) | `404 NOT_FOUND` |
 
-The server records `sworn_at` and `sworn_ip`; the client sends only the name. No document is required (Q-07's default). The three error codes are added to `ErrorCode` by the ticket that first returns them.
+The server records `sworn_at` and `sworn_ip`; the client sends only the name. Submit attaches the named documents in the same transaction, since a document is attached once and never moves. No document is required (Q-07's default).
+
+While an application is `draft` or `info_requested`, the PA saves steps (`PATCH`; the state only in a draft) and accepts attestations; any other status is `409 INVALID_TRANSITION`. Accepting a version that is not the current one is `409 ATTESTATIONS_OUT_OF_DATE`. `GET /public/attestations?applies_to=participation` lists the current versions in display order, and `GET /public/states` says which states are live.
 
 ## Signatures the tracks implement
 

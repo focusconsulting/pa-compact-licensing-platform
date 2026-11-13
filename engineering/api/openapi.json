@@ -1,6 +1,205 @@
 {
   "components": {
     "schemas": {
+      "AcceptedAttestation": {
+        "description": "The version of an attestation the PA last accepted on this application.",
+        "examples": [
+          {
+            "accepted_at": "2026-11-12T15:04:05Z",
+            "code": "nccpa_current",
+            "version": 1
+          }
+        ],
+        "properties": {
+          "accepted_at": {
+            "format": "date-time",
+            "title": "Accepted At",
+            "type": "string"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "code",
+          "version",
+          "accepted_at"
+        ],
+        "title": "AcceptedAttestation",
+        "type": "object"
+      },
+      "ApplicationCreate": {
+        "additionalProperties": false,
+        "description": "The state the PA designates as their state of qualifying license (Rule 3 \u00a73.4(a)(2)).",
+        "examples": [
+          {
+            "sql_state_code": "KS"
+          }
+        ],
+        "properties": {
+          "sql_state_code": {
+            "description": "Two-letter state code",
+            "pattern": "^[A-Z]{2}$",
+            "title": "Sql State Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sql_state_code"
+        ],
+        "title": "ApplicationCreate",
+        "type": "object"
+      },
+      "ApplicationKind": {
+        "description": "Why a participation application was made: a first application, or a change of state of qualifying license.",
+        "enum": [
+          "initial",
+          "change_sql"
+        ],
+        "title": "ApplicationKind",
+        "type": "string"
+      },
+      "ApplicationOut": {
+        "description": "A participation application as its PA sees it. ``request_note`` is the SQL's latest request for information.",
+        "examples": [
+          {
+            "attestations": [],
+            "claimed_license_expires_on": "2027-12-31",
+            "claimed_license_number": "PA-12345",
+            "documents": [],
+            "id": "3d7e2a91-6b0c-4f58-a2e4-9c1b8f0d5e36",
+            "kind": "initial",
+            "opened_at": null,
+            "request_note": null,
+            "sql_state_code": "KS",
+            "status": "draft",
+            "sworn_at": null,
+            "withdrawn_at": null
+          }
+        ],
+        "properties": {
+          "attestations": {
+            "items": {
+              "$ref": "#/components/schemas/AcceptedAttestation"
+            },
+            "title": "Attestations",
+            "type": "array"
+          },
+          "claimed_license_expires_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claimed License Expires On"
+          },
+          "claimed_license_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claimed License Number"
+          },
+          "documents": {
+            "items": {
+              "$ref": "#/components/schemas/DocumentOut"
+            },
+            "title": "Documents",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ApplicationKind"
+          },
+          "opened_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opened At"
+          },
+          "request_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Note"
+          },
+          "sql_state_code": {
+            "title": "Sql State Code",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ApplicationStatus"
+          },
+          "sworn_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sworn At"
+          },
+          "withdrawn_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Withdrawn At"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "sql_state_code",
+          "claimed_license_number",
+          "claimed_license_expires_on",
+          "opened_at",
+          "request_note",
+          "withdrawn_at",
+          "sworn_at",
+          "attestations",
+          "documents"
+        ],
+        "title": "ApplicationOut",
+        "type": "object"
+      },
       "ApplicationStatus": {
         "description": "The participation application's states (FLOW-06).",
         "enum": [
@@ -15,6 +214,124 @@
         ],
         "title": "ApplicationStatus",
         "type": "string"
+      },
+      "ApplicationSubmit": {
+        "additionalProperties": false,
+        "description": "The sworn statement (Q-06), and the PA's unattached uploads to send with the application.",
+        "examples": [
+          {
+            "document_ids": [],
+            "sworn": true,
+            "sworn_name": "Pat Morgan"
+          }
+        ],
+        "properties": {
+          "document_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Document Ids",
+            "type": "array"
+          },
+          "sworn": {
+            "const": true,
+            "title": "Sworn",
+            "type": "boolean"
+          },
+          "sworn_name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Sworn Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sworn",
+          "sworn_name"
+        ],
+        "title": "ApplicationSubmit",
+        "type": "object"
+      },
+      "ApplicationUpdate": {
+        "additionalProperties": false,
+        "description": "The fields a wizard step saves. Omitted fields keep their value; ``sql_state_code`` changes only in a draft.",
+        "examples": [
+          {
+            "claimed_license_expires_on": "2027-12-31",
+            "claimed_license_number": "PA-12345"
+          }
+        ],
+        "properties": {
+          "claimed_license_expires_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claimed License Expires On"
+          },
+          "claimed_license_number": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claimed License Number"
+          },
+          "sql_state_code": {
+            "anyOf": [
+              {
+                "description": "Two-letter state code",
+                "pattern": "^[A-Z]{2}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sql State Code"
+          }
+        },
+        "title": "ApplicationUpdate",
+        "type": "object"
+      },
+      "AttestationAccept": {
+        "additionalProperties": false,
+        "description": "The attestation, and the version of its text, the PA accepted.",
+        "examples": [
+          {
+            "code": "nccpa_current",
+            "version": 1
+          }
+        ],
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1.0,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "code",
+          "version"
+        ],
+        "title": "AttestationAccept",
+        "type": "object"
       },
       "AttestationAppliesTo": {
         "description": "What an attestation is for: the PA's participation application, the state's eligibility check, or a privilege request.",
@@ -276,6 +593,18 @@
         "title": "CurrentUser",
         "type": "object"
       },
+      "Data_ApplicationOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ApplicationOut"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Data[ApplicationOut]",
+        "type": "object"
+      },
       "Data_CurrentUser_": {
         "properties": {
           "data": {
@@ -322,6 +651,22 @@
           "data"
         ],
         "title": "Data[DocumentUpload]",
+        "type": "object"
+      },
+      "Data_list_ApplicationOut__": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ApplicationOut"
+            },
+            "title": "Data",
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Data[list[ApplicationOut]]",
         "type": "object"
       },
       "Data_list_AttestationOut__": {
@@ -556,6 +901,11 @@
           "FORBIDDEN",
           "NOT_FOUND",
           "DOCUMENT_NOT_CLEAN",
+          "APPLICATION_OPEN",
+          "ALREADY_ELIGIBLE",
+          "INVALID_TRANSITION",
+          "STATE_NOT_LIVE",
+          "ATTESTATIONS_OUT_OF_DATE",
           "VALIDATION_ERROR",
           "HTTP_ERROR",
           "INTERNAL_ERROR"
@@ -1219,6 +1569,371 @@
           }
         ],
         "summary": "Get Current User",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/me/applications": {
+      "get": {
+        "description": "Your participation applications, newest first.",
+        "operationId": "List_my_applications_api_me_applications_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_list_ApplicationOut__"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List My Applications",
+        "tags": [
+          "me"
+        ]
+      },
+      "post": {
+        "description": "Starts a draft with the state of qualifying license, which must be live. A PA has one open application at a time: `409 APPLICATION_OPEN` while another is a draft, submitted, or waiting on information. An eligible PA gets `409 ALREADY_ELIGIBLE`: changing the state of qualifying license is not in v1 (Rule 3 \u00a73.6).",
+        "operationId": "Start_my_application_api_me_applications_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_ApplicationOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Start My Application",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/me/applications/{application_id}": {
+      "get": {
+        "description": "One of your applications.",
+        "operationId": "Get_my_application_api_me_applications__application_id__get",
+        "parameters": [
+          {
+            "description": "The application's ID",
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "description": "The application's ID",
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_ApplicationOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get My Application",
+        "tags": [
+          "me"
+        ]
+      },
+      "patch": {
+        "description": "Saves a wizard step's answers while the application is a draft or waiting on information. `409 INVALID_TRANSITION` otherwise, or when changing the state after submitting.",
+        "operationId": "Save_my_application_api_me_applications__application_id__patch",
+        "parameters": [
+          {
+            "description": "The application's ID",
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "description": "The application's ID",
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_ApplicationOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Save My Application",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/me/applications/{application_id}/attestations": {
+      "post": {
+        "description": "Records that you accepted this version of an attestation. `409 ATTESTATIONS_OUT_OF_DATE` when a newer version exists: read it and accept that one.",
+        "operationId": "Accept_an_attestation_api_me_applications__application_id__attestations_post",
+        "parameters": [
+          {
+            "description": "The application's ID",
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "description": "The application's ID",
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttestationAccept"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_ApplicationOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Accept An Attestation",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/me/applications/{application_id}/submit": {
+      "post": {
+        "description": "Sends a draft to the state of qualifying license, or resubmits one waiting on information, in one transaction. Refused with `409 INVALID_TRANSITION`, `409 STATE_NOT_LIVE`, or `409 ATTESTATIONS_OUT_OF_DATE` (the codes to accept are in `details`), and `404` for a document that is not your unattached upload.",
+        "operationId": "Submit_my_application_api_me_applications__application_id__submit_post",
+        "parameters": [
+          {
+            "description": "The application's ID",
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "description": "The application's ID",
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationSubmit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_ApplicationOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Submit My Application",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/me/applications/{application_id}/withdraw": {
+      "post": {
+        "description": "Withdraws an application the SQL has received and not decided (Rule 3 \u00a73.7). A draft is never withdrawn: `409 INVALID_TRANSITION`.",
+        "operationId": "Withdraw_my_application_api_me_applications__application_id__withdraw_post",
+        "parameters": [
+          {
+            "description": "The application's ID",
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "description": "The application's ID",
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_ApplicationOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Withdraw My Application",
         "tags": [
           "me"
         ]

@@ -124,6 +124,114 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/me/applications": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List My Applications
+     * @description Your participation applications, newest first.
+     */
+    get: operations["List_my_applications_api_me_applications_get"];
+    put?: never;
+    /**
+     * Start My Application
+     * @description Starts a draft with the state of qualifying license, which must be live. A PA has one open application at a time: `409 APPLICATION_OPEN` while another is a draft, submitted, or waiting on information. An eligible PA gets `409 ALREADY_ELIGIBLE`: changing the state of qualifying license is not in v1 (Rule 3 §3.6).
+     */
+    post: operations["Start_my_application_api_me_applications_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/me/applications/{application_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get My Application
+     * @description One of your applications.
+     */
+    get: operations["Get_my_application_api_me_applications__application_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Save My Application
+     * @description Saves a wizard step's answers while the application is a draft or waiting on information. `409 INVALID_TRANSITION` otherwise, or when changing the state after submitting.
+     */
+    patch: operations["Save_my_application_api_me_applications__application_id__patch"];
+    trace?: never;
+  };
+  "/api/me/applications/{application_id}/attestations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Accept An Attestation
+     * @description Records that you accepted this version of an attestation. `409 ATTESTATIONS_OUT_OF_DATE` when a newer version exists: read it and accept that one.
+     */
+    post: operations["Accept_an_attestation_api_me_applications__application_id__attestations_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/me/applications/{application_id}/submit": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Submit My Application
+     * @description Sends a draft to the state of qualifying license, or resubmits one waiting on information, in one transaction. Refused with `409 INVALID_TRANSITION`, `409 STATE_NOT_LIVE`, or `409 ATTESTATIONS_OUT_OF_DATE` (the codes to accept are in `details`), and `404` for a document that is not your unattached upload.
+     */
+    post: operations["Submit_my_application_api_me_applications__application_id__submit_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/me/applications/{application_id}/withdraw": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Withdraw My Application
+     * @description Withdraws an application the SQL has received and not decided (Rule 3 §3.7). A draft is never withdrawn: `409 INVALID_TRANSITION`.
+     */
+    post: operations["Withdraw_my_application_api_me_applications__application_id__withdraw_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/me/documents": {
     parameters: {
       query?: never;
@@ -309,6 +417,91 @@ export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
     /**
+     * AcceptedAttestation
+     * @description The version of an attestation the PA last accepted on this application.
+     * @example {
+     *       "accepted_at": "2026-11-12T15:04:05Z",
+     *       "code": "nccpa_current",
+     *       "version": 1
+     *     }
+     */
+    AcceptedAttestation: {
+      /**
+       * Accepted At
+       * Format: date-time
+       */
+      accepted_at: string;
+      /** Code */
+      code: string;
+      /** Version */
+      version: number;
+    };
+    /**
+     * ApplicationCreate
+     * @description The state the PA designates as their state of qualifying license (Rule 3 §3.4(a)(2)).
+     * @example {
+     *       "sql_state_code": "KS"
+     *     }
+     */
+    ApplicationCreate: {
+      /**
+       * Sql State Code
+       * @description Two-letter state code
+       */
+      sql_state_code: string;
+    };
+    /**
+     * ApplicationKind
+     * @description Why a participation application was made: a first application, or a change of state of qualifying license.
+     * @enum {string}
+     */
+    ApplicationKind: "initial" | "change_sql";
+    /**
+     * ApplicationOut
+     * @description A participation application as its PA sees it. ``request_note`` is the SQL's latest request for information.
+     * @example {
+     *       "attestations": [],
+     *       "claimed_license_expires_on": "2027-12-31",
+     *       "claimed_license_number": "PA-12345",
+     *       "documents": [],
+     *       "id": "3d7e2a91-6b0c-4f58-a2e4-9c1b8f0d5e36",
+     *       "kind": "initial",
+     *       "opened_at": null,
+     *       "request_note": null,
+     *       "sql_state_code": "KS",
+     *       "status": "draft",
+     *       "sworn_at": null,
+     *       "withdrawn_at": null
+     *     }
+     */
+    ApplicationOut: {
+      /** Attestations */
+      attestations: components["schemas"]["AcceptedAttestation"][];
+      /** Claimed License Expires On */
+      claimed_license_expires_on: string | null;
+      /** Claimed License Number */
+      claimed_license_number: string | null;
+      /** Documents */
+      documents: components["schemas"]["DocumentOut"][];
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      kind: components["schemas"]["ApplicationKind"];
+      /** Opened At */
+      opened_at: string | null;
+      /** Request Note */
+      request_note: string | null;
+      /** Sql State Code */
+      sql_state_code: string;
+      status: components["schemas"]["ApplicationStatus"];
+      /** Sworn At */
+      sworn_at: string | null;
+      /** Withdrawn At */
+      withdrawn_at: string | null;
+    };
+    /**
      * ApplicationStatus
      * @description The participation application's states (FLOW-06).
      * @enum {string}
@@ -322,6 +515,56 @@ export interface components {
       | "withdrawn"
       | "eligibility_withdrawn"
       | "superseded";
+    /**
+     * ApplicationSubmit
+     * @description The sworn statement (Q-06), and the PA's unattached uploads to send with the application.
+     * @example {
+     *       "document_ids": [],
+     *       "sworn": true,
+     *       "sworn_name": "Pat Morgan"
+     *     }
+     */
+    ApplicationSubmit: {
+      /** Document Ids */
+      document_ids?: string[];
+      /**
+       * Sworn
+       * @constant
+       */
+      sworn: true;
+      /** Sworn Name */
+      sworn_name: string;
+    };
+    /**
+     * ApplicationUpdate
+     * @description The fields a wizard step saves. Omitted fields keep their value; ``sql_state_code`` changes only in a draft.
+     * @example {
+     *       "claimed_license_expires_on": "2027-12-31",
+     *       "claimed_license_number": "PA-12345"
+     *     }
+     */
+    ApplicationUpdate: {
+      /** Claimed License Expires On */
+      claimed_license_expires_on?: string | null;
+      /** Claimed License Number */
+      claimed_license_number?: string | null;
+      /** Sql State Code */
+      sql_state_code?: string | null;
+    };
+    /**
+     * AttestationAccept
+     * @description The attestation, and the version of its text, the PA accepted.
+     * @example {
+     *       "code": "nccpa_current",
+     *       "version": 1
+     *     }
+     */
+    AttestationAccept: {
+      /** Code */
+      code: string;
+      /** Version */
+      version: number;
+    };
     /**
      * AttestationAppliesTo
      * @description What an attestation is for: the PA's participation application, the state's eligibility check, or a privilege request.
@@ -430,6 +673,10 @@ export interface components {
        */
       user_id: string;
     };
+    /** Data[ApplicationOut] */
+    Data_ApplicationOut_: {
+      data: components["schemas"]["ApplicationOut"];
+    };
     /** Data[CurrentUser] */
     Data_CurrentUser_: {
       data: components["schemas"]["CurrentUser"];
@@ -445,6 +692,11 @@ export interface components {
     /** Data[DocumentUpload] */
     Data_DocumentUpload_: {
       data: components["schemas"]["DocumentUpload"];
+    };
+    /** Data[list[ApplicationOut]] */
+    Data_list_ApplicationOut__: {
+      /** Data */
+      data: components["schemas"]["ApplicationOut"][];
     };
     /** Data[list[AttestationOut]] */
     Data_list_AttestationOut__: {
@@ -581,6 +833,11 @@ export interface components {
       | "FORBIDDEN"
       | "NOT_FOUND"
       | "DOCUMENT_NOT_CLEAN"
+      | "APPLICATION_OPEN"
+      | "ALREADY_ELIGIBLE"
+      | "INVALID_TRANSITION"
+      | "STATE_NOT_LIVE"
+      | "ATTESTATIONS_OUT_OF_DATE"
       | "VALIDATION_ERROR"
       | "HTTP_ERROR"
       | "INTERNAL_ERROR";
@@ -920,6 +1177,240 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["Data_CurrentUser_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  List_my_applications_api_me_applications_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_list_ApplicationOut__"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Start_my_application_api_me_applications_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ApplicationCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_ApplicationOut_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Get_my_application_api_me_applications__application_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The application's ID */
+        application_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_ApplicationOut_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Save_my_application_api_me_applications__application_id__patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The application's ID */
+        application_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ApplicationUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_ApplicationOut_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Accept_an_attestation_api_me_applications__application_id__attestations_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The application's ID */
+        application_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AttestationAccept"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_ApplicationOut_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Submit_my_application_api_me_applications__application_id__submit_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The application's ID */
+        application_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ApplicationSubmit"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_ApplicationOut_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Withdraw_my_application_api_me_applications__application_id__withdraw_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The application's ID */
+        application_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_ApplicationOut_"];
         };
       };
       /** @description Unprocessable Content */
