@@ -1,5 +1,5 @@
 # The security headers CloudFront adds to every response, from the client bucket and the
-# API alike (SCRUM-84).
+# API alike (SCRUM-84). The API's policy also forbids storing its responses.
 
 locals {
   # Presigned upload and download links name the bucket's regional host, except in
@@ -27,8 +27,18 @@ locals {
   ])
 }
 
+moved {
+  from = aws_cloudfront_response_headers_policy.security
+  to   = aws_cloudfront_response_headers_policy.security["client"]
+}
+
 resource "aws_cloudfront_response_headers_policy" "security" {
-  name = "${var.environment_name}-${local.application_name}-security-headers"
+  for_each = {
+    client = "security-headers"
+    api    = "api-security-headers"
+  }
+
+  name = "${var.environment_name}-${local.application_name}-${each.value}"
 
   security_headers_config {
     strict_transport_security {
@@ -74,6 +84,18 @@ resource "aws_cloudfront_response_headers_policy" "security" {
       header   = "Cross-Origin-Resource-Policy"
       value    = "same-origin"
       override = true
+    }
+
+    # Caching is off at CloudFront already; this keeps browsers and proxies from
+    # storing API responses, which carry personal data.
+    dynamic "items" {
+      for_each = each.key == "api" ? ["no-store"] : []
+
+      content {
+        header   = "Cache-Control"
+        value    = items.value
+        override = true
+      }
     }
   }
 
