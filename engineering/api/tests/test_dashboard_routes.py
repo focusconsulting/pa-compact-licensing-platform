@@ -211,9 +211,92 @@ def test_the_timeline_comes_from_history_with_the_state_s_note(
     _call(client, _make)
 
     [application] = _dashboard(client, auth_header, email)['applications']
-    assert [(e['status'], e['note']) for e in application['timeline']] == [
-        ('submitted', None),
-        ('info_requested', 'Upload your NCCPA certificate.'),
+    assert [(e['kind'], e['status'], e['note']) for e in application['timeline']] == [
+        ('applied', 'submitted', None),
+        ('info_requested', 'info_requested', 'Upload your NCCPA certificate.'),
+    ]
+    # Midnight UTC on Oct 1 is Sep 30 in the compact's time zone; 60 days on (Rule 3 §3.7(a)(1)).
+    assert application['resubmit_by'] == '2026-11-29'
+
+
+async def _step(session, application, to, event, user_id=None, **fields):
+    ctx = ChangeContext(user_id or await system_user_id(session), 'req-dash')
+    await move(session, ctx, application, to, event, **fields)
+
+
+def test_a_resubmit_and_the_pa_s_withdrawal_are_told_apart(
+    client, auth_header, route_db_session, pa
+):
+    email, practitioner = pa
+
+    async def _make():
+        application = await _sent(route_db_session, practitioner)
+        await _step(
+            route_db_session,
+            application,
+            ApplicationStatus.INFO_REQUESTED,
+            EventType.APPLICATION_INFO_REQUESTED,
+            request_note='Upload your NCCPA certificate.',
+        )
+        await _step(
+            route_db_session,
+            application,
+            ApplicationStatus.SUBMITTED,
+            EventType.APPLICATION_RESUBMITTED,
+            user_id=practitioner.user_id,
+        )
+        await _step(
+            route_db_session,
+            application,
+            ApplicationStatus.WITHDRAWN,
+            EventType.APPLICATION_WITHDRAWN,
+            user_id=practitioner.user_id,
+            withdrawn_at=_OPENED,
+        )
+
+    _call(client, _make)
+
+    [application] = _dashboard(client, auth_header, email)['applications']
+    assert [e['kind'] for e in application['timeline']] == [
+        'applied',
+        'info_requested',
+        'resubmitted',
+        'withdrawn_by_pa',
+    ]
+    assert application['resubmit_by'] is None
+
+
+def test_a_later_application_is_applied_again_and_the_deadline_withdraws(
+    client, auth_header, route_db_session, pa
+):
+    email, practitioner = pa
+
+    async def _make():
+        first = await _sent(route_db_session, practitioner)
+        await _step(
+            route_db_session,
+            first,
+            ApplicationStatus.INFO_REQUESTED,
+            EventType.APPLICATION_INFO_REQUESTED,
+            request_note='Upload your NCCPA certificate.',
+        )
+        await _step(
+            route_db_session,
+            first,
+            ApplicationStatus.WITHDRAWN,
+            EventType.APPLICATION_WITHDRAWN,
+            withdrawn_at=_OPENED,
+        )
+        await _sent(route_db_session, practitioner)
+
+    _call(client, _make)
+
+    latest, first = _dashboard(client, auth_header, email)['applications']
+    assert [e['kind'] for e in latest['timeline']] == ['applied_again']
+    assert [e['kind'] for e in first['timeline']] == [
+        'applied',
+        'info_requested',
+        'withdrawn_by_deadline',
     ]
 
 
