@@ -16,8 +16,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col, select
 
 from licensing_api.context import ChangeContext, change_context
+from licensing_api.days import reference_time_zone
 from licensing_api.dependencies import get_db_session
 from licensing_api.errors import AppError, ErrorCode
+from licensing_api.information_request import requested_at, resubmit_by
 from licensing_api.permissions import Permission, require
 from licensing_api.repo.application_transition import InvalidTransitionError, move
 from licensing_api.repo.attestation import (
@@ -68,7 +70,12 @@ class AcceptedAttestation(BaseModel):
 
 
 class ApplicationOut(BaseModel):
-    """A participation application as its PA sees it. ``request_note`` is the SQL's latest request for information."""
+    """A participation application as its PA sees it.
+
+    ``request_note`` is the SQL's latest request for information, and ``response_note`` the PA's reply.
+    While the application waits on information, ``requested_at`` says when the SQL asked and
+    ``resubmit_by`` the last day it must have the answer (Rule 3 §3.7(a)(1)).
+    """
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -82,6 +89,9 @@ class ApplicationOut(BaseModel):
             claimed_license_expires_on=date(2027, 12, 31),
             opened_at=None,
             request_note=None,
+            response_note=None,
+            requested_at=None,
+            resubmit_by=None,
             withdrawn_at=None,
             sworn_at=None,
             attestations=[],
@@ -97,6 +107,9 @@ class ApplicationOut(BaseModel):
     claimed_license_expires_on: date | None
     opened_at: datetime | None
     request_note: str | None
+    response_note: str | None
+    requested_at: datetime | None
+    resubmit_by: date | None
     withdrawn_at: datetime | None
     sworn_at: datetime | None
     attestations: list[AcceptedAttestation]
@@ -112,7 +125,10 @@ class ApplicationCreate(BaseModel):
 
 
 class ApplicationUpdate(BaseModel):
-    """The fields a wizard step saves. Omitted fields keep their value; ``sql_state_code`` changes only in a draft."""
+    """The fields a wizard step saves. Omitted fields keep their value.
+
+    ``sql_state_code`` changes only in a draft, and ``response_note`` only while waiting on information.
+    """
 
     model_config = ConfigDict(
         extra='forbid',
@@ -126,6 +142,9 @@ class ApplicationUpdate(BaseModel):
         Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=50)] | None
     ) = None
     claimed_license_expires_on: date | None = None
+    response_note: (
+        Annotated[str, StringConstraints(strip_whitespace=True, max_length=4000)] | None
+    ) = None
 
 
 class AttestationAccept(BaseModel):
@@ -229,7 +248,8 @@ async def get_my_application(
     name='Save my application',
     description=(
         "Saves a wizard step's answers while the application is a draft or waiting on information. "
-        '`409 INVALID_TRANSITION` otherwise, or when changing the state after submitting.'
+        '`409 INVALID_TRANSITION` otherwise, when changing the state after submitting, or when replying '
+        'to a request the SQL has not made.'
     ),
 )
 async def save_my_application(
@@ -251,6 +271,12 @@ async def save_my_application(
                 ['The state cannot change once the SQL has the application'],
             )
         await _require_live(session, changes['sql_state_code'])
+    if 'response_note' in changes:
+        if application.status != ApplicationStatus.INFO_REQUESTED:
+            raise AppError(
+                409, ErrorCode.InvalidTransition, ['Only a request for information takes a reply']
+            )
+        changes['response_note'] = changes['response_note'] or None
     for name, value in changes.items():
         setattr(application, name, value)
     application.updated_by = ctx.user_id
@@ -264,7 +290,8 @@ async def save_my_application(
     name='Accept an attestation',
     description=(
         'Records that you accepted this version of an attestation. `409 ATTESTATIONS_OUT_OF_DATE` when a newer '
-        'version exists: read it and accept that one.'
+        'version exists: read it and accept that one. After a request for information, accept each one '
+        'again to resubmit.'
     ),
 )
 async def accept_attestation(
@@ -288,7 +315,9 @@ async def accept_attestation(
     )
     if latest != body.version:
         raise AppError(409, ErrorCode.AttestationsOutOfDate, [body.code])
-    await accept(session, ctx, _id(application), attestation)
+    await accept(
+        session, ctx, _id(application), attestation, since=await _since(session, application)
+    )
     await session.commit()
     return Data(data=await _out(session, application))
 
@@ -299,8 +328,8 @@ async def accept_attestation(
     description=(
         'Sends a draft to the state of qualifying license, or resubmits one waiting on information, in one '
         'transaction. Refused with `409 INVALID_TRANSITION`, `409 STATE_NOT_LIVE`, or '
-        '`409 ATTESTATIONS_OUT_OF_DATE` (the codes to accept are in `details`), and `404` for a document '
-        'that is not your unattached upload.'
+        '`409 ATTESTATIONS_OUT_OF_DATE` (the codes to accept are in `details`; a resubmission needs each '
+        'accepted since the request), and `404` for a document that is not your unattached upload.'
     ),
 )
 async def submit_my_application(
@@ -321,7 +350,9 @@ async def submit_my_application(
             [f'An application that is {application.status} cannot be submitted'],
         )
     await _require_live(session, application.sql_state_code)
-    stale = await out_of_date_codes(session, _id(application))
+    stale = await out_of_date_codes(
+        session, _id(application), since=await _since(session, application)
+    )
     if stale:
         raise AppError(409, ErrorCode.AttestationsOutOfDate, list(stale))
     documents = await _unattached_uploads(session, caller, body.document_ids)
@@ -414,6 +445,13 @@ async def _find(
     return application
 
 
+async def _since(session: AsyncSession, application: ParticipationApplication) -> datetime | None:
+    """Acceptances before the SQL's latest request don't count toward resubmitting."""
+    if application.status != ApplicationStatus.INFO_REQUESTED:
+        return None
+    return await requested_at(session, _id(application))
+
+
 def _require_editable(application: ParticipationApplication) -> None:
     if application.status not in _EDITABLE:
         raise AppError(
@@ -471,9 +509,14 @@ async def _out(session: AsyncSession, application: ParticipationApplication) -> 
             .order_by(col(Document.created_at), col(Document.id))
         )
     ).all()
+    waiting = application.status == ApplicationStatus.INFO_REQUESTED
     return ApplicationOut.model_validate(
         {
             **application.model_dump(),
+            'requested_at': await _since(session, application),
+            'resubmit_by': resubmit_by(application.opened_at, await reference_time_zone(session))
+            if waiting and application.opened_at
+            else None,
             'attestations': [
                 AcceptedAttestation(
                     code=row.attestation_code,

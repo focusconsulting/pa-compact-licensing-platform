@@ -134,7 +134,7 @@
         "type": "string"
       },
       "ApplicationOut": {
-        "description": "A participation application as its PA sees it. ``request_note`` is the SQL's latest request for information.",
+        "description": "A participation application as its PA sees it.\n\n``request_note`` is the SQL's latest request for information, and ``response_note`` the PA's reply.\nWhile the application waits on information, ``requested_at`` says when the SQL asked and\n``resubmit_by`` the last day it must have the answer (Rule 3 \u00a73.7(a)(1)).",
         "examples": [
           {
             "attestations": [],
@@ -145,6 +145,9 @@
             "kind": "initial",
             "opened_at": null,
             "request_note": null,
+            "requested_at": null,
+            "response_note": null,
+            "resubmit_by": null,
             "sql_state_code": "KS",
             "status": "draft",
             "sworn_at": null,
@@ -220,6 +223,41 @@
             ],
             "title": "Request Note"
           },
+          "requested_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested At"
+          },
+          "response_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Response Note"
+          },
+          "resubmit_by": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resubmit By"
+          },
           "sql_state_code": {
             "title": "Sql State Code",
             "type": "string"
@@ -261,6 +299,9 @@
           "claimed_license_expires_on",
           "opened_at",
           "request_note",
+          "response_note",
+          "requested_at",
+          "resubmit_by",
           "withdrawn_at",
           "sworn_at",
           "attestations",
@@ -450,7 +491,7 @@
       },
       "ApplicationUpdate": {
         "additionalProperties": false,
-        "description": "The fields a wizard step saves. Omitted fields keep their value; ``sql_state_code`` changes only in a draft.",
+        "description": "The fields a wizard step saves. Omitted fields keep their value.\n\n``sql_state_code`` changes only in a draft, and ``response_note`` only while waiting on information.",
         "examples": [
           {
             "claimed_license_expires_on": "2027-12-31",
@@ -482,6 +523,18 @@
               }
             ],
             "title": "Claimed License Number"
+          },
+          "response_note": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Response Note"
           },
           "sql_state_code": {
             "anyOf": [
@@ -2480,7 +2533,7 @@
         ]
       },
       "patch": {
-        "description": "Saves a wizard step's answers while the application is a draft or waiting on information. `409 INVALID_TRANSITION` otherwise, or when changing the state after submitting.",
+        "description": "Saves a wizard step's answers while the application is a draft or waiting on information. `409 INVALID_TRANSITION` otherwise, when changing the state after submitting, or when replying to a request the SQL has not made.",
         "operationId": "Save_my_application_api_me_applications__application_id__patch",
         "parameters": [
           {
@@ -2541,7 +2594,7 @@
     },
     "/api/me/applications/{application_id}/attestations": {
       "post": {
-        "description": "Records that you accepted this version of an attestation. `409 ATTESTATIONS_OUT_OF_DATE` when a newer version exists: read it and accept that one.",
+        "description": "Records that you accepted this version of an attestation. `409 ATTESTATIONS_OUT_OF_DATE` when a newer version exists: read it and accept that one. After a request for information, accept each one again to resubmit.",
         "operationId": "Accept_an_attestation_api_me_applications__application_id__attestations_post",
         "parameters": [
           {
@@ -2602,7 +2655,7 @@
     },
     "/api/me/applications/{application_id}/submit": {
       "post": {
-        "description": "Sends a draft to the state of qualifying license, or resubmits one waiting on information, in one transaction. Refused with `409 INVALID_TRANSITION`, `409 STATE_NOT_LIVE`, or `409 ATTESTATIONS_OUT_OF_DATE` (the codes to accept are in `details`), and `404` for a document that is not your unattached upload.",
+        "description": "Sends a draft to the state of qualifying license, or resubmits one waiting on information, in one transaction. Refused with `409 INVALID_TRANSITION`, `409 STATE_NOT_LIVE`, or `409 ATTESTATIONS_OUT_OF_DATE` (the codes to accept are in `details`; a resubmission needs each accepted since the request), and `404` for a document that is not your unattached upload.",
         "operationId": "Submit_my_application_api_me_applications__application_id__submit_post",
         "parameters": [
           {

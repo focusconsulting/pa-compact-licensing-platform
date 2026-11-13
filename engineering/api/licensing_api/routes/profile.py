@@ -43,10 +43,9 @@ _GROUPS = {
     'certification': ('nccpa_certification_number',),
 }
 
-# Once a state stamps these groups, only it changes them; the PA keeps changing their address
-# (Rule 4 §4.3(c) is the state's to verify and submit, §4.3(e) has the PA report address changes).
+# Once a state verifies the NCCPA number, only it changes it (Rule 4 §4.3(c)). The PA keeps
+# changing their address (§4.3(e)), and their date of birth and other names, which B2 asks again.
 _FIXED_ONCE_VERIFIED = {
-    'identity': ('date_of_birth', 'other_names'),
     'certification': ('nccpa_certification_number',),
 }
 
@@ -156,7 +155,7 @@ async def save_my_profile(
 ) -> Data[ProfileOut]:
     """One history row for the practitioner and one per added or removed name, and one event if anything changed."""
     practitioner = await _practitioner(session, caller, for_update=True)
-    fixed = await _changes_to_verified(session, practitioner, body)
+    fixed = _changes_to_verified(practitioner, body)
     if fixed:
         raise AppError(409, ErrorCode.VerifiedByState, fixed)
     before = history.snapshot(practitioner)
@@ -191,25 +190,13 @@ def _verified_fields(practitioner: Practitioner) -> list[str]:
     ]
 
 
-async def _changes_to_verified(
-    session: AsyncSession, practitioner: Practitioner, body: ProfileUpdate
-) -> list[str]:
+def _changes_to_verified(practitioner: Practitioner, body: ProfileUpdate) -> list[str]:
     """The verified fields ``body`` would change. Sending a verified field's current value is not a change."""
-    current = {
-        'date_of_birth': practitioner.date_of_birth,
-        'nccpa_certification_number': practitioner.nccpa_certification_number,
-    }
-    changed = []
-    for field in _verified_fields(practitioner):
-        if field not in body.model_fields_set:
-            continue
-        if field == 'other_names':
-            kept = {_key(n) for n in await _current_names(session, practitioner.id)}
-            if {_key(n) for n in body.other_names or []} != kept:
-                changed.append(field)
-        elif getattr(body, field) != current[field]:
-            changed.append(field)
-    return changed
+    return [
+        field
+        for field in _verified_fields(practitioner)
+        if field in body.model_fields_set and getattr(body, field) != getattr(practitioner, field)
+    ]
 
 
 async def _practitioner(

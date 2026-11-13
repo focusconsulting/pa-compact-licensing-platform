@@ -7,11 +7,16 @@ import pytest
 from sqlalchemy import update
 from sqlmodel import col, select
 
-from licensing_api.repo.attestation import Attestation
+from licensing_api.context import ChangeContext
+from licensing_api.repo.application_transition import move
+from licensing_api.repo.attestation import Attestation, ParticipationApplicationAttestation
 from licensing_api.repo.document import Document, DocumentOwnerType
 from licensing_api.repo.domain_event import DomainEvent, EventType
 from licensing_api.repo.history import ParticipationApplicationHistory
-from licensing_api.repo.participation_application import ParticipationApplication
+from licensing_api.repo.participation_application import (
+    ApplicationStatus,
+    ParticipationApplication,
+)
 from licensing_api.repo.practitioner import Practitioner
 from licensing_api.repo.state import State
 from licensing_api.repo.user import User
@@ -153,6 +158,9 @@ def test_a_pa_starts_a_draft_that_writes_no_history_or_event(
         'claimed_license_expires_on': None,
         'opened_at': None,
         'request_note': None,
+        'response_note': None,
+        'requested_at': None,
+        'resubmit_by': None,
         'withdrawn_at': None,
         'sworn_at': None,
         'attestations': [],
@@ -552,6 +560,112 @@ def test_resubmitting_keeps_the_clock_and_the_note(client, auth_header, route_db
     assert _events(client, route_db_session, application['id']) == [
         EventType.APPLICATION_RESUBMITTED
     ]
+
+
+def _asked(client, auth_header, route_db_session, email) -> dict:
+    """An application the PA submitted on Oct 14 that the state then asked about, as epic 7 will."""
+    application = _ready(client, auth_header, email)
+    response = client.post(
+        f'{_ME}/{application["id"]}/submit', json=_SWORN, headers=auth_header(email)
+    )
+    assert response.status_code == 200, response.json()
+    _set(
+        client,
+        route_db_session,
+        application['id'],
+        opened_at=datetime(2026, 10, 14, 15, tzinfo=timezone.utc),
+    )
+
+    async def _ask():
+        row = await _row(route_db_session, application['id'])
+        ctx = ChangeContext(await system_user_id(route_db_session), 'req-ask')
+        await move(
+            route_db_session,
+            ctx,
+            row,
+            ApplicationStatus.INFO_REQUESTED,
+            EventType.APPLICATION_INFO_REQUESTED,
+            request_note='Upload your NCCPA certificate.',
+        )
+        await route_db_session.commit()
+
+    _db(client, _ask)
+    return application
+
+
+def test_a_request_shows_when_the_state_asked_and_the_last_day_to_resubmit(
+    client, auth_header, route_db_session, pa
+):
+    email, _ = pa
+    application = _asked(client, auth_header, route_db_session, email)
+
+    data = client.get(f'{_ME}/{application["id"]}', headers=auth_header(email)).json()['data']
+
+    assert data['requested_at'] is not None
+    # 60 days from Oct 14 (Rule 3 §3.7(a)(1)), as B-n4 and B12 show.
+    assert data['resubmit_by'] == '2026-12-13'
+
+
+def test_resubmitting_needs_every_statement_accepted_again(
+    client, auth_header, route_db_session, pa
+):
+    email, _ = pa
+    application = _asked(client, auth_header, route_db_session, email)
+    url = f'{_ME}/{application["id"]}/submit'
+
+    refused = client.post(url, json=_SWORN, headers=auth_header(email))
+    _accept_all(client, auth_header, email, application['id'])
+    _accept_all(client, auth_header, email, application['id'])
+    resubmitted = client.post(url, json=_SWORN, headers=auth_header(email))
+
+    assert (refused.status_code, refused.json()['code']) == (409, 'ATTESTATIONS_OUT_OF_DATE')
+    assert len(refused.json()['details']) == 4
+    assert resubmitted.json()['data']['status'] == 'submitted'
+    assert resubmitted.json()['data']['requested_at'] is None
+
+    async def _acceptances():
+        row = await _row(route_db_session, application['id'])
+        statement = select(ParticipationApplicationAttestation).where(
+            col(ParticipationApplicationAttestation.participation_application_id) == row.id
+        )
+        return len((await route_db_session.scalars(statement)).all())
+
+    # Each statement once to submit and once to resubmit; accepting twice in a row adds nothing.
+    assert _db(client, _acceptances) == 8
+
+
+def test_a_pa_replies_to_the_state_s_request_and_history_keeps_the_reply(
+    client, auth_header, route_db_session, pa
+):
+    email, _ = pa
+    application = _asked(client, auth_header, route_db_session, email)
+    url = f'{_ME}/{application["id"]}'
+
+    cleared = client.patch(url, json={'response_note': '  '}, headers=auth_header(email))
+    replied = client.patch(
+        url, json={'response_note': ' Attached my certificate. '}, headers=auth_header(email)
+    )
+    _accept_all(client, auth_header, email, application['id'])
+    client.post(f'{url}/submit', json=_SWORN, headers=auth_header(email))
+
+    assert cleared.json()['data']['response_note'] is None
+    assert replied.json()['data']['response_note'] == 'Attached my certificate.'
+    assert _histories(client, route_db_session, application['id'])[-1].updated['response_note'] == (
+        'Attached my certificate.'
+    )
+
+
+def test_only_a_request_takes_a_reply(client, auth_header, pa):
+    email, _ = pa
+    application = _start(client, auth_header, email)
+
+    response = client.patch(
+        f'{_ME}/{application["id"]}',
+        json={'response_note': 'Hello.'},
+        headers=auth_header(email),
+    )
+
+    assert (response.status_code, response.json()['code']) == (409, 'INVALID_TRANSITION')
 
 
 def test_a_submitted_application_cannot_be_submitted_again(

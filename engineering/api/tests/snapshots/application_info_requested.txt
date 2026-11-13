@@ -4,6 +4,8 @@ Hello Avery,
 
 Kansas needs more information before it can decide on your application for compact eligibility. Sign in to see what it asked for, update your application, and resubmit it.
 
+Resubmit it by December 13, 2026. If Kansas doesn't have it by then, your application is withdrawn.
+
 Sign in to see the details: http://localhost:3000
 
 --
