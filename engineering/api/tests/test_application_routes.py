@@ -181,13 +181,13 @@ def test_only_a_live_state_can_be_designated(client, auth_header, pa):
     assert response.json()['code'] == 'STATE_NOT_LIVE'
 
 
-def test_an_eligible_pa_s_new_application_changes_their_sql(
-    client, auth_header, route_db_session, pa
-):
+def test_an_eligible_pa_cannot_start_another_application(client, auth_header, route_db_session, pa):
     email, practitioner = pa
     _db(client, lambda: make_eligible_application(route_db_session, practitioner))
 
-    assert _start(client, auth_header, email, 'OK')['kind'] == 'change_sql'
+    response = client.post(_ME, json={'sql_state_code': 'OK'}, headers=auth_header(email))
+
+    assert (response.status_code, response.json()['code']) == (409, 'ALREADY_ELIGIBLE')
 
 
 def test_a_user_with_no_practitioner_record_has_no_applications(
@@ -208,8 +208,13 @@ def test_a_pa_lists_only_their_own_applications_newest_first(
     async def _make():
         other = await make_practitioner(route_db_session)
         await make_application(route_db_session, other)
-        await make_eligible_application(
-            route_db_session, practitioner, created_at=datetime(2026, 1, 1, tzinfo=timezone.utc)
+        await make_application(
+            route_db_session,
+            practitioner,
+            status='withdrawn',
+            opened_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+            withdrawn_at=datetime(2026, 1, 2, tzinfo=timezone.utc),
+            created_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
         )
 
     _db(client, _make)
@@ -220,7 +225,7 @@ def test_a_pa_lists_only_their_own_applications_newest_first(
     ]
 
     assert statuses[0] == (draft['id'], 'draft')
-    assert [s for _, s in statuses] == ['draft', 'eligible']
+    assert [s for _, s in statuses] == ['draft', 'withdrawn']
 
 
 def test_another_pa_s_application_is_not_found(client, auth_header, route_db_session, pa):

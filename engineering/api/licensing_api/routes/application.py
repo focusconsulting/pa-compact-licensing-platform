@@ -181,7 +181,8 @@ async def list_my_applications(
     description=(
         'Starts a draft with the state of qualifying license, which must be live. A PA has one open '
         'application at a time: `409 APPLICATION_OPEN` while another is a draft, submitted, or waiting on '
-        'information. With an eligible application already, the new one changes the state of qualifying license.'
+        'information. An eligible PA gets `409 ALREADY_ELIGIBLE`: changing the state of qualifying license '
+        'is not in v1 (Rule 3 §3.6).'
     ),
 )
 async def start_my_application(
@@ -197,11 +198,13 @@ async def start_my_application(
         raise AppError(
             409, ErrorCode.ApplicationOpen, ['Continue the application you already started']
         )
+    if ApplicationStatus.ELIGIBLE in statuses:
+        # Approving a new state would end the PA's privileges (Rule 3 §3.6(d)), which v1 doesn't do.
+        raise AppError(409, ErrorCode.AlreadyEligible, ['Contact PA Compact to change your state'])
     await _require_live(session, body.sql_state_code)
-    eligible = ApplicationStatus.ELIGIBLE in statuses
     application = ParticipationApplication(
         practitioner_id=practitioner_id,
-        kind=ApplicationKind.CHANGE_SQL if eligible else ApplicationKind.INITIAL,
+        kind=ApplicationKind.INITIAL,
         sql_state_code=body.sql_state_code,
         created_by=ctx.user_id,
     )
