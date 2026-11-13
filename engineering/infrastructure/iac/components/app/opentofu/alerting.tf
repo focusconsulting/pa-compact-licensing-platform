@@ -1,6 +1,7 @@
 # SNS topic that aggregates all API operational alerts
 resource "aws_sns_topic" "api_alerts" {
-  name = "${var.environment_name}-${local.application_name}-api-alerts"
+  name              = "${var.environment_name}-${local.application_name}-api-alerts"
+  kms_master_key_id = aws_kms_key.data.arn
 }
 
 # CloudWatch Metric Math alarm: (target 4xx + target 5xx + elb 5xx) / total requests > 1%

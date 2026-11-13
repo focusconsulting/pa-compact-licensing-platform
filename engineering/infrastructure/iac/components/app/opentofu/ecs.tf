@@ -11,13 +11,15 @@ resource "aws_ecs_cluster" "app_cluster" {
 # CloudWatch Log Group for API container logs
 resource "aws_cloudwatch_log_group" "api_logs" {
   name              = "/ecs/${local.application_name}/${var.environment_name}/api"
-  retention_in_days = 30
+  retention_in_days = 365
+  kms_key_id        = aws_kms_key.data.arn
 }
 
 # CloudWatch Log Group for ADOT EMF metrics (explicit retention; avoids auto-created group with no expiry)
 resource "aws_cloudwatch_log_group" "api_metrics" {
   name              = "/ecs/${local.application_name}/${var.environment_name}/api/metrics"
-  retention_in_days = 30
+  retention_in_days = 365
+  kms_key_id        = aws_kms_key.data.arn
 }
 
 # IAM Role for ECS
@@ -60,7 +62,13 @@ resource "aws_iam_policy" "ecs_secrets_policy" {
         Effect   = "Allow"
         Action   = "ssm:GetParameters"
         Resource = aws_ssm_parameter.adot_config.arn
-      }
+      },
+      {
+        # The secrets and the parameter are encrypted with the environment's key.
+        Effect   = "Allow"
+        Action   = "kms:Decrypt"
+        Resource = aws_kms_key.data.arn
+      },
     ]
   })
 }
@@ -125,8 +133,9 @@ resource "aws_iam_role_policy" "ecs_task_otel" {
 
 # ADOT collector config stored in SSM; loaded at container startup via --config=ssm:<name>
 resource "aws_ssm_parameter" "adot_config" {
-  name = "/${var.environment_name}/${local.application_name}/adot-config"
-  type = "String"
+  name   = "/${var.environment_name}/${local.application_name}/adot-config"
+  type   = "SecureString"
+  key_id = aws_kms_key.data.arn
   value = templatefile("${path.module}/adot-config.yaml", {
     environment = var.environment_name
   })

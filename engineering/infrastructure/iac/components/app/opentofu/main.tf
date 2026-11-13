@@ -82,7 +82,6 @@ locals {
     log_disconnections          = { value = 1 }
     log_lock_waits              = { value = 1 }
     log_temp_files              = { value = 0 }
-    log_statement               = { value = "none" }
     log_error_verbosity         = { value = "terse" }
     log_min_error_statement     = { value = "log" }
     log_rotation_age            = { value = 1440 }
