@@ -28,7 +28,7 @@ SAMPLE_CONTEXTS: dict[str, dict[str, object]] = {
     'welcome': {'first_name': 'Avery'},
     'application_submitted': _PA,
     'application_submitted_state': {'state_name': 'Kansas'},
-    'application_info_requested': _PA,
+    'application_info_requested': _PA | {'resubmit_by': '2026-12-13'},
     'application_resubmitted_state': {'state_name': 'Kansas'},
     'application_eligible': _PA,
     'application_denied': _PA | {'denial_reason': 'Does not hold current NCCPA certification'},
