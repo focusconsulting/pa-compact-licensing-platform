@@ -331,7 +331,7 @@ export interface paths {
     head?: never;
     /**
      * Save My Profile
-     * @description Changes your date of birth, residence address, NCCPA certification number, or other names. A change keeps your state's verification and is shown to it in your history.
+     * @description Changes your date of birth, residence address, NCCPA certification number, or other names. Once your state has verified a field it is listed in `verified_fields`, and only the state changes it: `409 VERIFIED_BY_STATE`. Your address stays yours to change.
      */
     patch: operations["Save_my_profile_api_me_profile_patch"];
     trace?: never;
@@ -863,6 +863,7 @@ export interface components {
       | "DOCUMENT_NOT_CLEAN"
       | "APPLICATION_OPEN"
       | "ALREADY_ELIGIBLE"
+      | "VERIFIED_BY_STATE"
       | "INVALID_TRANSITION"
       | "STATE_NOT_LIVE"
       | "ATTESTATIONS_OUT_OF_DATE"
@@ -983,7 +984,12 @@ export interface components {
      *         "line1": "100 Sample Street",
      *         "postal_code": "66601",
      *         "region": "KS"
-     *       }
+     *       },
+     *       "verified_fields": [
+     *         "date_of_birth",
+     *         "other_names",
+     *         "nccpa_certification_number"
+     *       ]
      *     }
      */
     ProfileOut: {
@@ -998,6 +1004,8 @@ export interface components {
       /** Other Names */
       other_names: components["schemas"]["OtherName"][];
       residence: components["schemas"]["Residence"] | null;
+      /** Verified Fields */
+      verified_fields: string[];
     };
     /**
      * ProfileUpdate
