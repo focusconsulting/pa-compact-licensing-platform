@@ -17,6 +17,7 @@ class ErrorCode(StrEnum):
     DocumentNotClean = 'DOCUMENT_NOT_CLEAN'
     ApplicationOpen = 'APPLICATION_OPEN'
     AlreadyEligible = 'ALREADY_ELIGIBLE'
+    VerifiedByState = 'VERIFIED_BY_STATE'
     InvalidTransition = 'INVALID_TRANSITION'
     StateNotLive = 'STATE_NOT_LIVE'
     AttestationsOutOfDate = 'ATTESTATIONS_OUT_OF_DATE'

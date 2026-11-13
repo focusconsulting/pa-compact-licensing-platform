@@ -72,6 +72,7 @@ def test_a_new_pa_s_profile_has_only_their_registered_name(client, auth_header, 
         'residence': None,
         'nccpa_certification_number': None,
         'other_names': [],
+        'verified_fields': [],
     }
 
 
@@ -219,3 +220,88 @@ def test_a_user_with_no_practitioner_record_has_no_profile(client, auth_header, 
     email = _read(client, lambda: make_user(route_db_session, role='licensee')).email
 
     assert client.get(_ME, headers=auth_header(email)).status_code == 404
+
+
+@pytest.fixture
+def verified_pa(client, route_db_session):
+    """A PA whose state has verified their identity and certification."""
+
+    async def _make():
+        verified = datetime(2026, 10, 20, tzinfo=timezone.utc)
+        practitioner = await make_practitioner(
+            route_db_session,
+            date_of_birth=date(1988, 3, 14),
+            nccpa_certification_number='1234567',
+            identity_verified_by_state='KS',
+            identity_verified_at=verified,
+            certification_verified_by_state='KS',
+            certification_verified_at=verified,
+        )
+        route_db_session.add(
+            PractitionerOtherName(
+                practitioner_id=practitioner.id,
+                last_name='Smith',
+                created_by=practitioner.created_by,
+            )
+        )
+        await route_db_session.flush()
+        return (await route_db_session.get(User, practitioner.user_id)).email, practitioner
+
+    return client.portal.call(_make)
+
+
+def test_the_profile_lists_what_the_state_verified(client, auth_header, verified_pa):
+    email, _ = verified_pa
+
+    response = client.get(_ME, headers=auth_header(email))
+
+    assert response.json()['data']['verified_fields'] == [
+        'date_of_birth',
+        'other_names',
+        'nccpa_certification_number',
+    ]
+
+
+@pytest.mark.parametrize(
+    ('body', 'field'),
+    [
+        ({'date_of_birth': '1988-03-15'}, 'date_of_birth'),
+        ({'nccpa_certification_number': '7654321'}, 'nccpa_certification_number'),
+        ({'other_names': [{'last_name': 'Jones'}]}, 'other_names'),
+        ({'other_names': []}, 'other_names'),
+    ],
+)
+def test_only_the_state_changes_what_it_verified(
+    client, auth_header, route_db_session, verified_pa, body, field
+):
+    email, practitioner = verified_pa
+
+    response = client.patch(_ME, json=body, headers=auth_header(email))
+
+    assert (response.status_code, response.json()) == (
+        409,
+        {'code': 'VERIFIED_BY_STATE', 'details': [field]},
+    )
+    assert _events(client, route_db_session, practitioner.id) == []
+
+
+def test_sending_what_the_state_verified_unchanged_is_fine(
+    client, auth_header, route_db_session, verified_pa
+):
+    email, practitioner = verified_pa
+
+    response = client.patch(
+        _ME,
+        json={
+            'date_of_birth': '1988-03-14',
+            'nccpa_certification_number': '1234567',
+            'other_names': [{'last_name': 'Smith'}],
+            'residence': _RESIDENCE,
+        },
+        headers=auth_header(email),
+    )
+
+    assert response.status_code == 200
+    assert _events(client, route_db_session, practitioner.id) == [
+        EventType.PRACTITIONER_PROFILE_CHANGED
+    ]
