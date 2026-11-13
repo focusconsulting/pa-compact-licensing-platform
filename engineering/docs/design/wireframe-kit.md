@@ -1,6 +1,6 @@
 # Wireframe kit
 
-The page templates every screen starts from, and one exemplar screen per portal. Each template is drawn in the [PA Compact Parts Library](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library) on the "Demo: happy path" page; the frame IDs below open it there. [`claude-design-prompt.md`](claude-design-prompt.md) turns a wireframe into a screen.
+The page templates every screen starts from, and one exemplar screen per portal. Each template is drawn in the [PA Compact Parts Library](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library) on the "Board: screens to build from" page; the frame IDs below open it there. [`claude-design-prompt.md`](claude-design-prompt.md) turns a wireframe into a screen.
 
 Every frame is the same three parts: Header, the content in the grid's main column, and Footer and identifier. There is no federal government banner. Regions are listed in page order; anything in `{braces}` is a placeholder.
 
