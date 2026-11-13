@@ -73,6 +73,9 @@ async function fillDate(
 }
 
 async function fillEverything() {
+  await userEvent.click(
+    await screen.findByRole("button", { name: "Start your application" }),
+  );
   await userEvent.type(
     await screen.findByRole("textbox", { name: "Address Line 1 *" }),
     "100 Sample Street",
@@ -141,6 +144,25 @@ describe("the application's first step", () => {
         sql_state_code: "OK",
       },
     ]);
+    await expectNoAxeViolations(container);
+  });
+
+  it("explains how joining works before the first step", async () => {
+    answers();
+    const { container } = render(<Page />);
+
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Join the PA Compact",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Your NCCPA certification number"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Continue" }),
+    ).not.toBeInTheDocument();
     await expectNoAxeViolations(container);
   });
 

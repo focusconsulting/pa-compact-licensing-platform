@@ -7,6 +7,7 @@ export type Profile = components["schemas"]["ProfileOut"];
 export type ProfileUpdate = components["schemas"]["ProfileUpdate"];
 export type ApplicationUpdate = components["schemas"]["ApplicationUpdate"];
 export type State = components["schemas"]["StateOut"];
+export type Dashboard = components["schemas"]["Dashboard"];
 
 /** A failed call, with the API's error `code`, or the HTTP status when the body has none. */
 export class ApplicationError extends Error {
@@ -105,3 +106,14 @@ export function accepted(application: Application, attestation: Attestation) {
     (a) => a.code === attestation.code && a.version === attestation.version,
   );
 }
+
+/** The signed-in PA's license, applications, privileges, and next step. */
+export const loadDashboard = () => unwrap(api.GET("/api/me/dashboard"));
+
+/** Withdraws an application the state has received and not decided. */
+export const withdrawApplication = (id: string) =>
+  unwrap(
+    api.POST("/api/me/applications/{application_id}/withdraw", {
+      params: { path: { application_id: id } },
+    }),
+  );
