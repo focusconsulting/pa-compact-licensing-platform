@@ -117,7 +117,7 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
   default_cache_behavior {
     target_origin_id           = "S3-Origin"
     viewer_protocol_policy     = "redirect-to-https"
-    response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security["client"].id
     allowed_methods            = ["GET", "HEAD"]
     cached_methods             = ["GET", "HEAD"]
 
@@ -135,7 +135,7 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
     path_pattern               = "/api/docs*"
     target_origin_id           = "ALB-Origin"
     viewer_protocol_policy     = "redirect-to-https"
-    response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security["api"].id
     allowed_methods            = ["GET", "HEAD"]
     cached_methods             = ["GET", "HEAD"]
 
@@ -154,7 +154,7 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
     path_pattern               = "/api/redoc*"
     target_origin_id           = "ALB-Origin"
     viewer_protocol_policy     = "redirect-to-https"
-    response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security["api"].id
     allowed_methods            = ["GET", "HEAD"]
     cached_methods             = ["GET", "HEAD"]
 
@@ -173,7 +173,7 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
     path_pattern               = "/api/openapi.json"
     target_origin_id           = "ALB-Origin"
     viewer_protocol_policy     = "redirect-to-https"
-    response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security["api"].id
     allowed_methods            = ["GET", "HEAD"]
     cached_methods             = ["GET", "HEAD"]
 
@@ -193,7 +193,7 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
     path_pattern               = "/api/*"
     target_origin_id           = "ALB-Origin"
     viewer_protocol_policy     = "redirect-to-https"
-    response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security["api"].id
     allowed_methods            = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods             = ["GET", "HEAD"]
 
