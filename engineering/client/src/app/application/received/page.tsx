@@ -19,7 +19,7 @@ interface Received {
   stateName: string;
 }
 
-/** After submitting (B9): the receipt, and what the state of qualifying license does next. */
+/** After submitting (B9) or resubmitting (B9r): the receipt, and what the state of qualifying license does next. */
 function ReceivedPage() {
   const { t } = useTranslation("application");
   const router = useRouter();
@@ -51,7 +51,11 @@ function ReceivedPage() {
     };
   }, [router]);
 
-  const steps = ["next1", "next2", "next3", "next4"] as const;
+  // A submitted application with a request on it was resubmitted: the request stays (D15).
+  const again = received?.application.request_note != null;
+  const steps = again
+    ? (["again1", "again2", "next3", "next4"] as const)
+    : (["next1", "next2", "next3", "next4"] as const);
 
   return (
     <div className="usa-section">
@@ -67,13 +71,22 @@ function ReceivedPage() {
               <>
                 <AlertBanner
                   type="success"
-                  heading={t("received.heading")}
+                  heading={t(
+                    again ? "received.resubmittedHeading" : "received.heading",
+                  )}
                   headingLevel="h1"
                 >
-                  {t("received.applied", {
-                    date: formatDate(String(received.application.opened_at)),
-                    state: received.stateName,
-                  })}
+                  {again
+                    ? t("received.resubmitted", {
+                        date: formatDate(String(received.application.sworn_at)),
+                        state: received.stateName,
+                      })
+                    : t("received.applied", {
+                        date: formatDate(
+                          String(received.application.opened_at),
+                        ),
+                        state: received.stateName,
+                      })}
                 </AlertBanner>
                 <h2>{t("received.nextHeading")}</h2>
                 <ProcessList>
