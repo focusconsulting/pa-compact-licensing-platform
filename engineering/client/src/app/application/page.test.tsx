@@ -234,16 +234,20 @@ describe("the application's first step", () => {
     ]);
   });
 
-  it("shows the state's request and leaves its state as it is", async () => {
+  it("shows the state's request, takes a reply, and leaves its state as it is", async () => {
     const spy = answers({
       "GET /api/me/applications": ok([
         application({
           status: "info_requested",
+          opened_at: "2026-10-14T15:00:00Z",
           request_note: "Upload your NCCPA certificate.",
+          requested_at: "2026-10-19T15:00:00Z",
+          resubmit_by: "2026-12-13",
           claimed_license_number: "PA-9",
           claimed_license_expires_on: "2027-01-31",
         }),
       ]),
+      "GET /api/me/documents/unattached": ok([]),
       "GET /api/me/profile": ok(
         profile({
           date_of_birth: "1988-03-14",
@@ -259,14 +263,42 @@ describe("the application's first step", () => {
         }),
       ),
     });
-    render(<Page />);
+    const { container } = render(<Page />);
 
     expect(
-      await screen.findByText("Upload your NCCPA certificate."),
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Update your application",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Kansas needs more information" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Upload your NCCPA certificate."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Asked on Oct 19, 2026. Resubmit by Dec 13, 2026."),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("combobox", { name: "State *" }),
     ).not.toBeInTheDocument();
+    expect(screen.getByText("Kansas", { selector: "p" })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "To apply through another state, withdraw this application and apply again.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Only if Kansas's note asks for one. One file: PDF, Word, PNG or JPEG.",
+      ),
+    ).toBeInTheDocument();
+    await expectNoAxeViolations(container);
+    await userEvent.type(
+      screen.getByRole("textbox", { name: /^Your reply to Kansas/ }),
+      "Attached my certificate.",
+    );
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
 
     await waitFor(() => expect(push).toHaveBeenCalled());
@@ -274,8 +306,44 @@ describe("the application's first step", () => {
       {
         claimed_license_number: "PA-9",
         claimed_license_expires_on: "2027-01-31",
+        response_note: "Attached my certificate.",
       },
     ]);
+  });
+
+  it("shows the upload the PA already chose for the state", async () => {
+    answers({
+      "GET /api/me/applications": ok([
+        application({
+          status: "info_requested",
+          request_note: "Upload your NCCPA certificate.",
+          requested_at: "2026-10-19T15:00:00Z",
+          resubmit_by: "2026-12-13",
+          sql_state_code: "ZZ",
+          response_note: "Here it is.",
+        }),
+      ]),
+      "GET /api/me/documents/unattached": ok([
+        {
+          id: "d1",
+          kind: "information_response",
+          file_name: "nccpa.pdf",
+          content_type: "application/pdf",
+          size_bytes: 10,
+          scan_status: "clean",
+          created_at: "2026-10-20T15:00:00Z",
+        },
+      ]),
+    });
+    render(<Page />);
+
+    expect((await screen.findAllByText(/nccpa\.pdf/)).length).toBeGreaterThan(
+      0,
+    );
+    expect(screen.getByText("ZZ")).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: /^Your reply to ZZ/ }),
+    ).toHaveValue("Here it is.");
   });
 
   it("sends a PA whose application is with the state to its receipt", async () => {
@@ -329,40 +397,28 @@ describe("the application's first step", () => {
               name_suffix: null,
             },
           ],
-          verified_fields: [
-            "date_of_birth",
-            "other_names",
-            "nccpa_certification_number",
-          ],
+          verified_fields: ["nccpa_certification_number"],
         }),
       ),
     });
     render(<Page />);
 
-    expect(await screen.findByText("Mar 14, 1988")).toBeInTheDocument();
-    expect(screen.getByText("Jo Smith")).toBeInTheDocument();
-    expect(screen.getByText("1234567")).toBeInTheDocument();
+    expect(await screen.findByText("1234567")).toBeInTheDocument();
     expect(
       screen.queryByRole("textbox", { name: /NCCPA/ }),
     ).not.toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: /^Last name/ })).toHaveValue(
+      "Smith",
+    );
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
 
     await waitFor(() => expect(push).toHaveBeenCalled());
     const [saved] = await bodies(spy, "PATCH /api/me/profile");
-    expect(Object.keys(saved)).toEqual(["residence"]);
-  });
-
-  it("leaves out verified other names when there are none", async () => {
-    answers({
-      "GET /api/me/applications": ok([application()]),
-      "GET /api/me/profile": ok(profile({ verified_fields: ["other_names"] })),
-    });
-    render(<Page />);
-
-    await screen.findByRole("button", { name: "Continue" });
-    expect(
-      screen.queryByText("Other names you use or have used (optional)"),
-    ).not.toBeInTheDocument();
+    expect(Object.keys(saved).sort()).toEqual([
+      "date_of_birth",
+      "other_names",
+      "residence",
+    ]);
   });
 
   it("asks for a last name when another name has only a first name", async () => {

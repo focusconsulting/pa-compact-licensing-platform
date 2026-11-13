@@ -92,18 +92,30 @@ export const acceptAttestation = (id: string, code: string, version: number) =>
   );
 
 /** Submits the application, or resubmits it, with the sworn statement. */
-export const submitApplication = (id: string, swornName: string) =>
+export const submitApplication = (
+  id: string,
+  swornName: string,
+  documentIds: string[] = [],
+) =>
   unwrap(
     api.POST("/api/me/applications/{application_id}/submit", {
       params: { path: { application_id: id } },
-      body: { sworn: true, sworn_name: swornName },
+      body: { sworn: true, sworn_name: swornName, document_ids: documentIds },
     }),
   );
 
-/** Whether the application accepted this attestation at its current version. */
+/** The PA's uploads that no application holds yet: what a resubmission sends. */
+export const loadUnattached = () =>
+  unwrap(api.GET("/api/me/documents/unattached"));
+
+/** Whether the application accepted this attestation at its current version, since the state last asked for information. */
 export function accepted(application: Application, attestation: Attestation) {
+  const since = application.requested_at;
   return application.attestations.some(
-    (a) => a.code === attestation.code && a.version === attestation.version,
+    (a) =>
+      a.code === attestation.code &&
+      a.version === attestation.version &&
+      (!since || new Date(a.accepted_at) > new Date(since)),
   );
 }
 
