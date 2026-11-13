@@ -20,7 +20,7 @@ Put the security controls the contract and the constitution require around the r
   - Checkov is report-only until this ticket, which is named as the owner of its findings in `scan-iac`, `SECURITY.md`, and the register.
   - ZAP's two mediums (10038, 10020) are ignored until this ticket.
   - Accepted findings live in `engineering/docs/security/false-positives.md`, one row each, with a reason and an end date.
-- Jira: SCRUM-84, under SCRUM-69. Blocks SCRUM-139 and SCRUM-143. Follow-ups: SCRUM-192 (one certificate on every hop), SCRUM-193 (SES API), SCRUM-194 (a USWDS not-found page).
+- Jira: SCRUM-84, under SCRUM-69. Blocks SCRUM-139 and SCRUM-143. Follow-ups: SCRUM-192 (one certificate on every hop), SCRUM-193 (SES API).
 - ADRs: [ADR-0015](../../../../adrs/0015-opentofu-for-infrastructure.md), [ADR-0014](../../../../adrs/0014-email-templates-and-smtp.md), [ADR-0018](../../../../adrs/0018-pyjwt-for-cognito-token-verification.md); a new ADR in Phase 1
 - **Area**: iac, with a small API change (Phase 1) and CI and docs (Phase 6)
 
@@ -243,14 +243,12 @@ One CloudFront response headers policy on every behavior. Clears CKV2_AWS_32 and
 ```text
 default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self';
 img-src 'self' data:; font-src 'self';
-connect-src 'self' https://cognito-idp.<region>.amazonaws.com <documents bucket hosts>;
-form-action 'self' <documents bucket hosts>;
+connect-src 'self' https://cognito-idp.<region>.amazonaws.com https://<documents bucket>.s3.<region>.amazonaws.com;
+form-action 'self' https://<documents bucket>.s3.<region>.amazonaws.com;
 frame-ancestors 'none'; base-uri 'self'; object-src 'none'
 ```
 
-The documents bucket has two hosts in the policy: `<bucket>.s3.amazonaws.com` and `<bucket>.s3.<region>.amazonaws.com`. Found while implementing: boto3 signs presigned links for the global host in `us-east-1` and the regional host everywhere else, so naming only the regional one, as first planned, would have blocked every upload in staging. The client posts uploads with `fetch`, which `connect-src` governs. A comment on `script-src` says why `'unsafe-inline'` is there.
-
-Tested on 2026-11-12 by serving a build of the client behind this exact policy and loading it in headless Chromium: `/` and `/login` log no violation. Next's built-in not-found page does: it styles itself with an inline `<style>` element and `style` attributes, which `style-src 'self'` drops, so it shows its text unstyled. That page is replaced by a USWDS one in SCRUM-194; `style-src` stays `'self'`.
+The bucket host is built from the same name PR #173 uses (`${env}-licensing-documents`), so this phase does not wait for it. A comment on `script-src` says why `'unsafe-inline'` is there.
 
 **File**: `engineering/infrastructure/iac/components/app/opentofu/cdn.tf`
 **Changes**: `response_headers_policy_id` on the default behavior and all four ordered behaviors.
@@ -258,7 +256,7 @@ Tested on 2026-11-12 by serving a build of the client behind this exact policy a
 #### 2. ZAP
 
 **File**: `.zap/rules.tsv`, `engineering/docs/security/false-positives.md` (from PR #181)
-**Changes**: not in this phase's PR. PR #181 was not on `main` when it was written, so these files did not exist; by the rule under Implementation Approach, the edit goes into #181 before it merges, or into Phase 6.
+**Changes**:
 
 - Remove the 10038 and 10020 ignores and their rows.
 - Add 10055, accepted permanently: `script-src 'unsafe-inline'`, because a static export has no server to issue nonces and hashing at deploy was declined on 2026-11-12. The gate ignores by plugin, and 10055 is every CSP-quality alert, so the row says the ignore would also hide a wildcard directive and that the policy in `headers.tf` is the thing to review.
@@ -268,10 +266,8 @@ Tested on 2026-11-12 by serving a build of the client behind this exact policy a
 
 #### Automated Verification
 
-- [x] `cd engineering/infrastructure && just check`
-- [x] The plan shows one policy added and the distribution updated in place (run locally against staging, 2026-11-12; CI repeats it)
-- [x] Checkov no longer reports CKV2_AWS_32
-- [x] A build of the client behind the policy logs no violation on `/` or `/login` in headless Chromium
+- [ ] `cd engineering/infrastructure && just check`
+- [ ] The CI plan shows one policy added and the distribution updated in place
 - [ ] On a deployed staging, `curl -sI https://site.dev-pacompact.aws.focusconsulting.io/` shows all eight headers and no `Server`
 - [ ] With staging up, a manual run of `zap.yml` passes with the two ignores removed (needs #181 on `main`)
 
@@ -281,7 +277,7 @@ Tested on 2026-11-12 by serving a build of the client behind this exact policy a
 - [ ] With the browser console open: sign in, load each persona's pages, and upload and download a document (once SCRUM-81 is deployed). No CSP violation is logged
 - [ ] The Playwright suite passes against staging
 
-**Implementation Note**: if `style-src 'self'` logs a violation from USWDS on a deployed staging, add `'unsafe-inline'` to `style-src` only, and add its ZAP row to the register. The not-found page's violations are expected until SCRUM-194. Pause for confirmation before Phase 3.
+**Implementation Note**: if `style-src 'self'` logs a violation from USWDS, add `'unsafe-inline'` to `style-src` only, and add its ZAP row to the register in the same PR. Pause for confirmation before Phase 3.
 
 ---
 
