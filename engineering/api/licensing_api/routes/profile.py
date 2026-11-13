@@ -43,6 +43,13 @@ _GROUPS = {
     'certification': ('nccpa_certification_number',),
 }
 
+# Once a state stamps these groups, only it changes them; the PA keeps changing their address
+# (Rule 4 §4.3(c) is the state's to verify and submit, §4.3(e) has the PA report address changes).
+_FIXED_ONCE_VERIFIED = {
+    'identity': ('date_of_birth', 'other_names'),
+    'certification': ('nccpa_certification_number',),
+}
+
 
 class Residence(BaseModel):
     """The PA's primary residence, where legal papers can be served by mail (Rule 3 §3.4(a)(3))."""
@@ -89,6 +96,7 @@ class ProfileOut(BaseModel):
             residence=_RESIDENCE_EXAMPLE,
             nccpa_certification_number='1234567',
             other_names=[],
+            verified_fields=['date_of_birth', 'other_names', 'nccpa_certification_number'],
         )
     )
 
@@ -98,6 +106,8 @@ class ProfileOut(BaseModel):
     residence: Residence | None
     nccpa_certification_number: str | None
     other_names: list[OtherName]
+    # Fields a state has verified; changing one is `409 VERIFIED_BY_STATE`.
+    verified_fields: list[str]
 
 
 class ProfileUpdate(BaseModel):
@@ -133,8 +143,9 @@ async def get_my_profile(
     '',
     name='Save my profile',
     description=(
-        'Changes your date of birth, residence address, NCCPA certification number, or other names. A '
-        "change keeps your state's verification and is shown to it in your history."
+        'Changes your date of birth, residence address, NCCPA certification number, or other names. '
+        'Once your state has verified a field it is listed in `verified_fields`, and only the state '
+        'changes it: `409 VERIFIED_BY_STATE`. Your address stays yours to change.'
     ),
 )
 async def save_my_profile(
@@ -145,6 +156,9 @@ async def save_my_profile(
 ) -> Data[ProfileOut]:
     """One history row for the practitioner and one per added or removed name, and one event if anything changed."""
     practitioner = await _practitioner(session, caller, for_update=True)
+    fixed = await _changes_to_verified(session, practitioner, body)
+    if fixed:
+        raise AppError(409, ErrorCode.VerifiedByState, fixed)
     before = history.snapshot(practitioner)
     changes = body.model_dump(exclude_unset=True, exclude={'residence', 'other_names'})
     if body.residence is not None:
@@ -166,6 +180,36 @@ async def save_my_profile(
         await emit(session, ctx, EventType.PRACTITIONER_PROFILE_CHANGED, practitioner)
     await session.commit()
     return Data(data=await _out(session, practitioner))
+
+
+def _verified_fields(practitioner: Practitioner) -> list[str]:
+    return [
+        field
+        for group, fields in _FIXED_ONCE_VERIFIED.items()
+        if getattr(practitioner, f'{group}_verified_at') is not None
+        for field in fields
+    ]
+
+
+async def _changes_to_verified(
+    session: AsyncSession, practitioner: Practitioner, body: ProfileUpdate
+) -> list[str]:
+    """The verified fields ``body`` would change. Sending a verified field's current value is not a change."""
+    current = {
+        'date_of_birth': practitioner.date_of_birth,
+        'nccpa_certification_number': practitioner.nccpa_certification_number,
+    }
+    changed = []
+    for field in _verified_fields(practitioner):
+        if field not in body.model_fields_set:
+            continue
+        if field == 'other_names':
+            kept = {_key(n) for n in await _current_names(session, practitioner.id)}
+            if {_key(n) for n in body.other_names or []} != kept:
+                changed.append(field)
+        elif getattr(body, field) != current[field]:
+            changed.append(field)
+    return changed
 
 
 async def _practitioner(
@@ -247,4 +291,5 @@ async def _out(session: AsyncSession, practitioner: Practitioner) -> ProfileOut:
         residence=residence,
         nccpa_certification_number=practitioner.nccpa_certification_number,
         other_names=[OtherName.model_validate(n, from_attributes=True) for n in names],
+        verified_fields=_verified_fields(practitioner),
     )
