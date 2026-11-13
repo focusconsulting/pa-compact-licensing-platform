@@ -167,7 +167,7 @@ export interface paths {
     head?: never;
     /**
      * Save My Application
-     * @description Saves a wizard step's answers while the application is a draft or waiting on information. `409 INVALID_TRANSITION` otherwise, or when changing the state after submitting.
+     * @description Saves a wizard step's answers while the application is a draft or waiting on information. `409 INVALID_TRANSITION` otherwise, when changing the state after submitting, or when replying to a request the SQL has not made.
      */
     patch: operations["Save_my_application_api_me_applications__application_id__patch"];
     trace?: never;
@@ -183,7 +183,7 @@ export interface paths {
     put?: never;
     /**
      * Accept An Attestation
-     * @description Records that you accepted this version of an attestation. `409 ATTESTATIONS_OUT_OF_DATE` when a newer version exists: read it and accept that one.
+     * @description Records that you accepted this version of an attestation. `409 ATTESTATIONS_OUT_OF_DATE` when a newer version exists: read it and accept that one. After a request for information, accept each one again to resubmit.
      */
     post: operations["Accept_an_attestation_api_me_applications__application_id__attestations_post"];
     delete?: never;
@@ -203,7 +203,7 @@ export interface paths {
     put?: never;
     /**
      * Submit My Application
-     * @description Sends a draft to the state of qualifying license, or resubmits one waiting on information, in one transaction. Refused with `409 INVALID_TRANSITION`, `409 STATE_NOT_LIVE`, or `409 ATTESTATIONS_OUT_OF_DATE` (the codes to accept are in `details`), and `404` for a document that is not your unattached upload.
+     * @description Sends a draft to the state of qualifying license, or resubmits one waiting on information, in one transaction. Refused with `409 INVALID_TRANSITION`, `409 STATE_NOT_LIVE`, or `409 ATTESTATIONS_OUT_OF_DATE` (the codes to accept are in `details`; a resubmission needs each accepted since the request), and `404` for a document that is not your unattached upload.
      */
     post: operations["Submit_my_application_api_me_applications__application_id__submit_post"];
     delete?: never;
@@ -534,7 +534,11 @@ export interface components {
     ApplicationKind: "initial" | "change_sql";
     /**
      * ApplicationOut
-     * @description A participation application as its PA sees it. ``request_note`` is the SQL's latest request for information.
+     * @description A participation application as its PA sees it.
+     *
+     *     ``request_note`` is the SQL's latest request for information, and ``response_note`` the PA's reply.
+     *     While the application waits on information, ``requested_at`` says when the SQL asked and
+     *     ``resubmit_by`` the last day it must have the answer (Rule 3 §3.7(a)(1)).
      * @example {
      *       "attestations": [],
      *       "claimed_license_expires_on": "2027-12-31",
@@ -544,6 +548,9 @@ export interface components {
      *       "kind": "initial",
      *       "opened_at": null,
      *       "request_note": null,
+     *       "requested_at": null,
+     *       "response_note": null,
+     *       "resubmit_by": null,
      *       "sql_state_code": "KS",
      *       "status": "draft",
      *       "sworn_at": null,
@@ -569,6 +576,12 @@ export interface components {
       opened_at: string | null;
       /** Request Note */
       request_note: string | null;
+      /** Requested At */
+      requested_at: string | null;
+      /** Response Note */
+      response_note: string | null;
+      /** Resubmit By */
+      resubmit_by: string | null;
       /** Sql State Code */
       sql_state_code: string;
       status: components["schemas"]["ApplicationStatus"];
@@ -647,7 +660,9 @@ export interface components {
     };
     /**
      * ApplicationUpdate
-     * @description The fields a wizard step saves. Omitted fields keep their value; ``sql_state_code`` changes only in a draft.
+     * @description The fields a wizard step saves. Omitted fields keep their value.
+     *
+     *     ``sql_state_code`` changes only in a draft, and ``response_note`` only while waiting on information.
      * @example {
      *       "claimed_license_expires_on": "2027-12-31",
      *       "claimed_license_number": "PA-12345"
@@ -658,6 +673,8 @@ export interface components {
       claimed_license_expires_on?: string | null;
       /** Claimed License Number */
       claimed_license_number?: string | null;
+      /** Response Note */
+      response_note?: string | null;
       /** Sql State Code */
       sql_state_code?: string | null;
     };

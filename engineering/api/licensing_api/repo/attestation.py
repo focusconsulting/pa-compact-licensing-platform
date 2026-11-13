@@ -62,7 +62,8 @@ class ParticipationApplicationAttestation(AuditColumns, table=True):
     )
     attestation_code: str = Field(primary_key=True)
     attestation_version: int = Field(primary_key=True)
-    accepted_at: datetime = Field(default_factory=utc_now, sa_type=TimestampTZ)
+    # In the key: a resubmission accepts the same version again (Rule 3 §3.7(a)(1)).
+    accepted_at: datetime = Field(default_factory=utc_now, sa_type=TimestampTZ, primary_key=True)
 
 
 def current_attestations(applies_to: AttestationAppliesTo) -> SelectOfScalar[Attestation]:
@@ -89,11 +90,21 @@ def current_attestations(applies_to: AttestationAppliesTo) -> SelectOfScalar[Att
 
 
 async def accept(
-    session: AsyncSession, ctx: ChangeContext, application_id: int, attestation: Attestation
+    session: AsyncSession,
+    ctx: ChangeContext,
+    application_id: int,
+    attestation: Attestation,
+    since: datetime | None = None,
 ) -> None:
-    """Record that the PA accepted this version on their application. Accepting the same version again is a no-op."""
+    """Record that the PA accepted this version on their application.
+
+    Accepting it again is a no-op, unless every acceptance came before ``since``: the state's
+    latest request for information, after which the PA accepts each statement again.
+    """
     if attestation.applies_to != AttestationAppliesTo.PARTICIPATION:
         raise ValueError(f'{attestation.code} is not a participation attestation')
+    if (attestation.code, attestation.version) in await _accepted(session, application_id, since):
+        return
     statement = (
         insert(ParticipationApplicationAttestation)
         .values(
@@ -108,23 +119,27 @@ async def accept(
     await session.execute(statement)
 
 
-async def out_of_date_codes(session: AsyncSession, application_id: int) -> Sequence[str]:
-    """Current participation attestations the application has not accepted at their current version.
+async def out_of_date_codes(
+    session: AsyncSession, application_id: int, since: datetime | None = None
+) -> Sequence[str]:
+    """Current participation attestations the application has not accepted at their current version since ``since``.
 
     Submit and resubmit refuse while any are left: ``409 ATTESTATIONS_OUT_OF_DATE`` (platform contract).
     """
     current = (
         await session.scalars(current_attestations(AttestationAppliesTo.PARTICIPATION))
     ).all()
-    accepted = set(
-        await session.execute(
-            select(
-                ParticipationApplicationAttestation.attestation_code,
-                ParticipationApplicationAttestation.attestation_version,
-            ).where(
-                col(ParticipationApplicationAttestation.participation_application_id)
-                == application_id
-            )
-        )
-    )
+    accepted = await _accepted(session, application_id, since)
     return [a.code for a in current if (a.code, a.version) not in accepted]
+
+
+async def _accepted(
+    session: AsyncSession, application_id: int, since: datetime | None
+) -> set[tuple[str, int]]:
+    statement = select(
+        ParticipationApplicationAttestation.attestation_code,
+        ParticipationApplicationAttestation.attestation_version,
+    ).where(col(ParticipationApplicationAttestation.participation_application_id) == application_id)
+    if since is not None:
+        statement = statement.where(col(ParticipationApplicationAttestation.accepted_at) > since)
+    return {(code, version) for code, version in await session.execute(statement)}

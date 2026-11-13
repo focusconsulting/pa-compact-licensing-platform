@@ -81,6 +81,8 @@ class ParticipationApplication(AuditColumns, table=True):
     status: str = ApplicationStatus.DRAFT
     opened_at: datetime | None = Field(default=None, sa_type=TimestampTZ)
     request_note: str | None = None
+    # The PA's reply to request_note, sent with the resubmission.
+    response_note: str | None = None
     license_verified_at: datetime | None = Field(default=None, sa_type=TimestampTZ)
     license_verified_by: int | None = Field(default=None, foreign_key='users.id')
     cbc_completed_on: date | None = None
