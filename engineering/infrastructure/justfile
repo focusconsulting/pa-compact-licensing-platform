@@ -49,6 +49,24 @@ deploy env:
     aws s3 sync {{ justfile_directory() }}/../client/out/ "s3://$(out client_assets_bucket)/" --delete
     aws cloudfront create-invalidation --distribution-id "$(out cloudfront_distribution_id)" --paths "/*" >/dev/null
 
+# Pause an environment: keep its data and address, and run no database instance, tasks, or jobs (`resume` undoes it)
+pause env: (set-paused env "true")
+
+# Resume a paused environment on the image it was running; the database instance takes about ten minutes
+resume env: (set-paused env "false")
+
+# Write the environment's paused parameter, then apply app with the image already running.
+# The outputs read here exist once a deploy has applied this version of app.
+[private]
+set-paused env paused: (init "app" env)
+    #!/usr/bin/env bash
+    set -euo pipefail
+    out() { (cd {{ iac }}/components/app/opentofu && tofu output -raw "$1"); }
+    tag=$(out image_tag)
+    repo=$(out repo_name)
+    aws ssm put-parameter --overwrite --type String --name "$(out paused_parameter)" --value {{ paused }} >/dev/null
+    just apply app {{ env }} -auto-approve -var image_tag="$tag" -var repo_name="$repo"
+
 # Format every .tf file
 fmt:
     tofu fmt -recursive {{ iac }}
