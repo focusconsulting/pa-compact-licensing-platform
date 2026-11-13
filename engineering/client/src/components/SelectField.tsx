@@ -15,6 +15,8 @@ export interface SelectFieldProps {
   placeholder?: string;
   required?: boolean;
   showValuesInLabels?: boolean;
+  /** What to fix, shown under the label; an empty string marks the field in error without a message. */
+  error?: string;
 }
 
 /**
@@ -32,6 +34,7 @@ export function SelectField({
   placeholder = "- Select -",
   required = false,
   showValuesInLabels = false,
+  error,
 }: SelectFieldProps) {
   const valueFilter = (val: string) => (val === "" ? null : val);
   const register = useFormContext()?.register;
@@ -46,10 +49,18 @@ export function SelectField({
     </option>
   ));
 
-  return (
+  const describedBy = [hint && `${id}Hint`, error && `${id}Error`]
+    .filter(Boolean)
+    .join(" ");
+
+  const field = (
     <>
       {label && (
-        <Label htmlFor={id ?? ""} requiredMarker={required}>
+        <Label
+          htmlFor={id ?? ""}
+          requiredMarker={required}
+          error={Boolean(error)}
+        >
           {label}
         </Label>
       )}
@@ -58,9 +69,15 @@ export function SelectField({
           {hint}
         </span>
       )}
+      {error && (
+        <span className="usa-error-message" id={`${id}Error`}>
+          {error}
+        </span>
+      )}
       <Select
         id={id ?? ""}
-        aria-describedby={hint ? `${id}Hint` : undefined}
+        validationStatus={error !== undefined ? "error" : undefined}
+        aria-describedby={describedBy || undefined}
         defaultValue={defaultValue ?? ""}
         name={selectReg?.name ?? id ?? ""}
         required={required}
@@ -78,6 +95,11 @@ export function SelectField({
         {optionElements}
       </Select>
     </>
+  );
+  return error ? (
+    <div className="usa-form-group usa-form-group--error">{field}</div>
+  ) : (
+    field
   );
 }
 
