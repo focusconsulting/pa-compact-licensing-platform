@@ -300,10 +300,11 @@ A CloudFront web ACL and a regional one on the Cognito user pool, both logging. 
 
 | Web ACL | Scope | Rules, in order |
 |---|---|---|
-| `cloudfront` (provider `aws.us_east_1`) | `CLOUDFRONT` | Rate: 300 per 5 minutes per IP on `/api/public/`. Rate: 2,000 per 5 minutes per IP on `/api/`. Managed: `AmazonIpReputationList`, `CommonRuleSet`, `SQLiRuleSet`, `KnownBadInputsRuleSet`; `AnonymousIpList` in count mode |
-| `cognito` | `REGIONAL` | Rate: 200 per 5 minutes per IP. Managed: `AmazonIpReputationList`, `KnownBadInputsRuleSet` |
+| `cloudfront` (provider `aws.us_east_1`) | `CLOUDFRONT` | Rate: 300 per 5 minutes per IP on `/api/public/`. Rate: 2,000 per 5 minutes per IP on `/api/`. Managed: `AmazonIpReputationList`, `CommonRuleSet`, `SQLiRuleSet`, `KnownBadInputsRuleSet`. `CommonRuleSet`'s `SizeRestrictions_BODY` counts instead of blocking |
+| `cognito` | `REGIONAL` | Rate: 200 per 5 minutes per IP. No managed groups (decided 2026-11-13): Cognito validates its own requests, so `CKV_AWS_192` is skipped inline on this ACL and needs a register row in Phase 6 |
 
-- `AnonymousIpList` was not in the first plan. Checkov's CKV2_AWS_47 requires it by name beside `KnownBadInputsRuleSet`. It matches VPNs, proxies, Tor, and hosting providers, so blocking with it would shut out a PA on a consumer VPN, a state office behind a cloud-hosted gateway, and the ZAP scan's GitHub runner. It is attached with its action overridden to count: it blocks nothing and its metric shows how much real traffic it would. Whether to block is SCRUM-143's decision, with that number. Both groups are written out as rules, not generated, because Checkov cannot see inside a dynamic block.
+- `AnonymousIpList` is not attached (decided 2026-11-13, Michael Kalish). Checkov's CKV2_AWS_47 requires it by name beside `KnownBadInputsRuleSet`, but it matches VPNs, proxies, Tor, and hosting providers: a PA on a consumer VPN, a state office behind a cloud-hosted gateway, and the ZAP scan's GitHub runner. CKV2_AWS_47 is skipped inline on the distribution with that reason and needs a register row in Phase 6. `KnownBadInputsRuleSet` is written out as a rule, not generated, because Checkov cannot see inside a dynamic block.
+- `SizeRestrictions_BODY` in `CommonRuleSet` blocks any body over 8 KB, which is too low for the API, so it is overridden to count (decided 2026-11-13). No firewall rule caps body size now.
 - Default action allow. Rate limits are `locals`, with a comment that SCRUM-139 tunes the public one against the verification page.
 - `aws_wafv2_web_acl_association` to `aws_cognito_user_pool.main`; `web_acl_id` on the distribution.
 - One `aws-waf-logs-*` log group per ACL (the CloudFront one in `us-east-1`), 365 days, with `redacted_fields` for the `authorization` and `cookie` headers, and a log resource policy each that lets WAF's log delivery write to it. The two log groups add CKV_AWS_158 (no KMS key) until Phase 4.
@@ -318,7 +319,7 @@ A CloudFront web ACL and a regional one on the Cognito user pool, both logging. 
 
 - [x] `cd engineering/infrastructure && just check`
 - [x] The plan adds two ACLs, one association, two log groups with their resource policies and logging configurations, and three alarms, and updates the distribution in place (run locally against staging, 2026-11-12; CI repeats it)
-- [x] Checkov reports no `CKV_AWS_68`, `CKV2_AWS_47`, `CKV_AWS_192`, or `CKV2_AWS_31`
+- [x] Checkov reports no `CKV_AWS_68` or `CKV2_AWS_31`, and `CKV2_AWS_47` and `CKV_AWS_192` (Cognito ACL) only as skipped
 
 #### Manual Verification
 
