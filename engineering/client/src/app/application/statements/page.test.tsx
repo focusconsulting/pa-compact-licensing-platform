@@ -189,8 +189,11 @@ describe("the application's statements and submit step", () => {
       await screen.findByRole("heading", { name: "2 answers need fixing" }),
     ).toBeInTheDocument();
     expect(
-      screen.getAllByText("Tick the statement to agree to it"),
-    ).toHaveLength(2);
+      screen.getByText("Tick the box to confirm you understand"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Tick the statement to agree to it"),
+    ).toBeInTheDocument();
   });
 
   it("checks what the PA already accepted, and accepts only what is new", async () => {
