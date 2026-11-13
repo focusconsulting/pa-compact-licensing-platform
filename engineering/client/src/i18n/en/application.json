@@ -88,6 +88,25 @@
     "verified": "Verified by {{state}}, {{date}}",
     "privilegesHeading": "Your Compact Privileges",
     "noPrivileges": "You don't have any Compact Privileges yet. A Compact Privilege lets you practice as a PA in another state in the compact, under that state's laws. To get one, you choose the states, meet any requirements they have, and pay their fees.",
-    "applyPrivileges": "Apply for Compact Privileges"
+    "applyPrivileges": "Apply for Compact Privileges",
+    "askedOn": "{{state}} asked on {{date}}",
+    "resubmitBy": "{{state}} needs more information. Update your application and resubmit it by {{date}}. If {{state}} doesn't have it by then, your application is withdrawn.",
+    "noteHeading": "{{state}}'s note",
+    "update": "Update your application",
+    "historyHeading": "History",
+    "historyDate": "Date",
+    "historyWhat": "What happened",
+    "history": {
+      "applied": "You applied.",
+      "applied_again": "You applied again.",
+      "resubmitted": "You resubmitted your application.",
+      "info_requested": "{{state}} asked for more information.",
+      "withdrawn_by_pa": "You withdrew your application.",
+      "withdrawn_by_deadline": "PA Compact withdrew your application after 60 days.",
+      "eligible": "{{state}} confirmed you're eligible.",
+      "denied": "{{state}} decided you're not eligible.",
+      "eligibility_withdrawn": "{{state}} withdrew your eligibility.",
+      "superseded": "A new state of qualifying license replaced this application."
+    }
   }
 }
