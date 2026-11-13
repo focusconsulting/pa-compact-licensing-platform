@@ -4,9 +4,11 @@ import {
   Button,
   Fieldset,
   Form,
+  Label,
   ProcessList,
   ProcessListHeading,
   ProcessListItem,
+  Textarea,
 } from "@trussworks/react-uswds";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -15,6 +17,10 @@ import { useTranslation } from "react-i18next";
 
 import AlertBanner from "src/components/AlertBanner";
 import { DateFields } from "src/components/DateFields";
+import {
+  FilePickerField,
+  UploadedDocument,
+} from "src/components/FilePickerField";
 import PageHeading from "src/components/PageHeading";
 import ProtectedRoute from "src/components/ProtectedRoute";
 import { SelectField } from "src/components/SelectField";
@@ -28,11 +34,13 @@ import {
   loadApplications,
   loadProfile,
   loadStates,
+  loadUnattached,
   openApplication,
   saveApplication,
   saveProfile,
   startApplication,
 } from "src/lib/application";
+import { formatDate } from "src/lib/dates";
 
 interface StartValues {
   residenceLine1: string;
@@ -49,6 +57,8 @@ interface StartValues {
   otherLastName: string;
   otherSuffix: string;
   nccpa: string;
+  responseNote: string;
+  document?: UploadedDocument;
 }
 
 type ErrorKey = "load" | "save" | "stateNotLive" | "otherNameLastName";
@@ -57,11 +67,13 @@ interface Loaded {
   application?: Application;
   profile: Profile;
   states: State[];
+  /** While the state waits on information: the upload the PA already chose, if any. */
+  upload?: UploadedDocument;
 }
 
 const blankToNull = (value: string) => value.trim() || null;
 
-function defaults({ application, profile }: Loaded): StartValues {
+function defaults({ application, profile, upload }: Loaded): StartValues {
   const [other] = profile.other_names;
   return {
     residenceLine1: profile.residence?.line1 ?? "",
@@ -78,10 +90,12 @@ function defaults({ application, profile }: Loaded): StartValues {
     otherLastName: other?.last_name ?? "",
     otherSuffix: other?.name_suffix ?? "",
     nccpa: profile.nccpa_certification_number ?? "",
+    responseNote: application?.response_note ?? "",
+    document: upload,
   };
 }
 
-/** The NCCPA number the state verified: shown, not editable (PR1). */
+/** A detail shown, not editable: the NCCPA number the state verified, or the state of an application it has. */
 function Fixed({ label, value }: { label: string; value: string }) {
   return (
     <div className="margin-top-3">
@@ -91,16 +105,43 @@ function Fixed({ label, value }: { label: string; value: string }) {
   );
 }
 
-/** Step 1 of the application (B2): where the PA lives, their state of qualifying license, their license, and details. */
+/** What the state asked for, when, and by when to resubmit (B14). */
+function Request({
+  application,
+  state,
+}: {
+  application: Application;
+  state: string;
+}) {
+  const { t } = useTranslation("application");
+  return (
+    <AlertBanner type="info" heading={t("update.alertHeading", { state })}>
+      <span className="display-block">{application.request_note}</span>
+      <span className="display-block margin-top-2">
+        {t("update.askedOn", {
+          asked: formatDate(String(application.requested_at)),
+          due: formatDate(String(application.resubmit_by)),
+        })}
+      </span>
+    </AlertBanner>
+  );
+}
+
+/** Step 1 of the application: B2 for a draft, B14 when the state asked for more. */
 function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
-  const { t } = useTranslation(["application", "address", "basic", "status"]);
+  const { t } = useTranslation(["application", "address", "basic", "common"]);
   const router = useRouter();
   const form = useForm<StartValues>({ defaultValues: defaults(loaded) });
   const [error, setError] = useState<ErrorKey | null>(null);
   const { application, profile, states } = loaded;
   const live = states.filter((s) => s.is_live);
   const draft = !application || application.status === "draft";
+  const asked = application?.status === "info_requested";
   const fixed = new Set(profile.verified_fields);
+  const reply = form.register("responseNote");
+  const state =
+    states.find((s) => s.code === application?.sql_state_code)?.name ??
+    String(application?.sql_state_code);
 
   async function save(values: StartValues) {
     setError(null);
@@ -145,6 +186,7 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
         claimed_license_number: values.licenseNumber,
         claimed_license_expires_on: values.licenseExpires,
         ...(moved ? { sql_state_code: values.sqlStateCode } : {}),
+        ...(asked ? { response_note: values.responseNote } : {}),
       });
       router.push("/application/statements");
     } catch (e) {
@@ -157,14 +199,13 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
   return (
     <FormProvider {...form}>
       <Form onSubmit={form.handleSubmit(save)} large>
-        <PageHeading title={t("start.title")} intro={t("start.intro")} />
-        {application?.status === "info_requested" && (
-          <AlertBanner
-            type="warning"
-            heading={t("status:application.info_requested")}
-          >
-            {application.request_note}
-          </AlertBanner>
+        {asked ? (
+          <>
+            <PageHeading title={t("update.title")} />
+            <Request application={application} state={state} />
+          </>
+        ) : (
+          <PageHeading title={t("start.title")} intro={t("start.intro")} />
         )}
         {error && (
           <AlertBanner type="error" heading={t("errors.heading")}>
@@ -172,6 +213,32 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
           </AlertBanner>
         )}
         <p className="text-base">{t("required")}</p>
+        {asked && (
+          <>
+            <Label htmlFor="responseNote" hint={t("common:optionalText")}>
+              {t("update.reply", { state })}
+            </Label>
+            <div className="usa-hint" id="responseNoteHint">
+              {t("update.replyHint", { state })}
+            </div>
+            <Textarea
+              id="responseNote"
+              aria-describedby="responseNoteHint"
+              maxLength={4000}
+              inputRef={reply.ref}
+              name={reply.name}
+              onChange={reply.onChange}
+              onBlur={reply.onBlur}
+            />
+            <FilePickerField
+              id="document"
+              label={t("update.upload")}
+              kind="information_response"
+              hint={t("update.uploadHint", { state })}
+              optional
+            />
+          </>
+        )}
         <Fieldset
           legend={t("start.residence")}
           className="legend-lg margin-top-3"
@@ -201,16 +268,19 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
             label={t("address:fields.address.zipTitle")}
           />
         </Fieldset>
-        {draft && (
+        <h2>{t("start.sqlHeading")}</h2>
+        {draft ? (
+          <SelectField
+            id="sqlStateCode"
+            label={t("start.state")}
+            hint={t("start.stateHint")}
+            options={live.map((s) => [s.code, s.name])}
+            required
+          />
+        ) : (
           <>
-            <h2>{t("start.sqlHeading")}</h2>
-            <SelectField
-              id="sqlStateCode"
-              label={t("start.state")}
-              hint={t("start.stateHint")}
-              options={live.map((s) => [s.code, s.name])}
-              required
-            />
+            <p>{state}</p>
+            <p>{t("update.anotherState")}</p>
           </>
         )}
         <h2>{t("start.licenseHeading")}</h2>
@@ -307,7 +377,7 @@ function StartPage() {
   useEffect(() => {
     let current = true;
     Promise.all([loadApplications(), loadProfile(), loadStates()])
-      .then(([applications, profile, states]) => {
+      .then(async ([applications, profile, states]) => {
         if (applications.some((a) => a.status === "eligible")) {
           router.replace("/");
           return;
@@ -320,7 +390,18 @@ function StartPage() {
           router.replace("/application/received");
           return;
         }
-        if (current) setLoaded({ application, profile, states });
+        const [upload] =
+          application?.status === "info_requested"
+            ? await loadUnattached()
+            : [];
+        if (current) {
+          setLoaded({
+            application,
+            profile,
+            states,
+            upload: upload && { id: upload.id, fileName: upload.file_name },
+          });
+        }
       })
       .catch(() => {
         if (current) setFailed(true);
