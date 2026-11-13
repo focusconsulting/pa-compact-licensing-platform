@@ -85,6 +85,7 @@ resource "aws_s3_bucket_policy" "client_assets_policy" {
 # - Default origin: S3 (Next.js static export)
 # - /api/* origin: internal ALB (Python FastAPI)
 resource "aws_cloudfront_distribution" "frontend_distribution" {
+  #checkov:skip=CKV2_AWS_47:The web ACL has the known-bad-inputs group, which covers Log4j. The check also wants the anonymous IP list, which matches the VPNs and hosted gateways real users arrive through.
   # S3 origin for static frontend assets
   origin {
     domain_name = aws_s3_bucket.client_assets.bucket_regional_domain_name
@@ -111,6 +112,7 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
 
   enabled             = true
   default_root_object = "index.html"
+  web_acl_id          = aws_wafv2_web_acl.cloudfront.arn
   aliases             = [var.dns_name]
 
   # Default cache behavior — serves the Next.js frontend from S3
