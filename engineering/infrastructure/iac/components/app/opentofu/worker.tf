@@ -108,11 +108,14 @@ resource "aws_ecs_service" "worker_service" {
   task_definition = aws_ecs_task_definition.worker_task.arn
   launch_type     = "FARGATE"
   # Two Workers are safe (SKIP LOCKED); one carries the pilot's volume with room to spare.
-  desired_count = 1
+  desired_count = local.paused ? 0 : 1
 
   network_configuration {
     subnets          = data.terraform_remote_state.network.outputs.private_subnet_ids
     security_groups  = [aws_security_group.ecs_sg.id]
     assign_public_ip = false
   }
+
+  # Starts after the database instance on resume, and stops before it on pause.
+  depends_on = [aws_rds_cluster_instance.cluster_instances]
 }

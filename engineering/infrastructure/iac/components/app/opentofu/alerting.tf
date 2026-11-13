@@ -182,8 +182,10 @@ resource "aws_cloudwatch_metric_alarm" "worker_not_running" {
   threshold           = 1
   # Container Insights reports nothing for a service with no tasks.
   treat_missing_data = "breaching"
-  alarm_actions      = [aws_sns_topic.api_alerts.arn]
-  ok_actions         = [aws_sns_topic.api_alerts.arn]
+  # A paused environment reports nothing, which this alarm treats as breaching.
+  actions_enabled = !local.paused
+  alarm_actions   = [aws_sns_topic.api_alerts.arn]
+  ok_actions      = [aws_sns_topic.api_alerts.arn]
 }
 
 resource "aws_cloudwatch_log_metric_filter" "heartbeat" {
@@ -209,6 +211,8 @@ resource "aws_cloudwatch_metric_alarm" "jobs_not_running" {
   comparison_operator = "LessThanThreshold"
   threshold           = 1
   treat_missing_data  = "breaching"
-  alarm_actions       = [aws_sns_topic.api_alerts.arn]
-  ok_actions          = [aws_sns_topic.api_alerts.arn]
+  # A paused environment reports nothing, which this alarm treats as breaching.
+  actions_enabled = !local.paused
+  alarm_actions   = [aws_sns_topic.api_alerts.arn]
+  ok_actions      = [aws_sns_topic.api_alerts.arn]
 }

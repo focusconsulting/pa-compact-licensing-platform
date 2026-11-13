@@ -314,11 +314,15 @@ resource "aws_ecs_service" "api_service" {
 
 # Registers the ECS service as a scalable target
 resource "aws_appautoscaling_target" "api_service" {
-  max_capacity       = var.ecs_max_capacity
-  min_capacity       = 1
+  # A range of 0 to 0 is how a paused API stops: the autoscaler, not desired_count, owns the count.
+  max_capacity       = local.paused ? 0 : var.ecs_max_capacity
+  min_capacity       = local.paused ? 0 : 1
   resource_id        = "service/${aws_ecs_cluster.app_cluster.name}/${aws_ecs_service.api_service.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
+
+  # On resume the API starts once the database instance is back; on pause it stops first.
+  depends_on = [aws_rds_cluster_instance.cluster_instances]
 }
 
 # Target-tracking policy: scale out when average CPU > 70%, scale in automatically

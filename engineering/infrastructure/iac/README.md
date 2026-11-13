@@ -98,6 +98,29 @@ a time. From a laptop, with the environment's credentials, `just deploy staging`
 does the same thing. Until `prod` has environment files, a tag
 stops at the Environment's review and, if approved, fails at `just init`.
 
+## Pausing an environment
+
+A paused environment keeps its database, users, documents, and address, and
+runs nothing billed by the hour: no Aurora instance, no API or Worker tasks,
+and no scheduled jobs. Staging paused costs the load balancer and storage,
+about $20 a month against about $150 running.
+
+Run the `Pause or resume` workflow (Actions, Run workflow), or from a laptop:
+
+```bash
+just pause staging    # stops it within a few minutes
+just resume staging   # back on the same image and data in about ten minutes
+```
+
+Both write the SSM parameter `/<env>/licensing/paused` and apply `app` with the
+image already running. The module reads the parameter on every apply and never
+sets it, so a deploy to a paused environment updates it and leaves it paused.
+They need the `image_tag` and `repo_name` outputs, so an environment last
+deployed before they existed needs one deploy first.
+
+While paused, the site loads but its API calls fail, and the two alarms that
+watch for a stopped Worker or scheduler send nothing.
+
 ## What differs between environments
 
 Everything an environment chooses is a variable set in its tfvars files;

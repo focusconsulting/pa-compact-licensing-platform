@@ -50,6 +50,7 @@ resource "aws_scheduler_schedule" "job" {
 
   name                = "${var.environment_name}-${local.application_name}-job-${replace(each.key, "_", "-")}"
   schedule_expression = each.value
+  state               = local.paused ? "DISABLED" : "ENABLED"
 
   flexible_time_window {
     mode = "OFF"

@@ -1,0 +1,61 @@
+name: Pause or resume
+
+# `just pause <env>` or `just resume <env>` (engineering/infrastructure/justfile), through
+# the environment's GitHub Environment and its apply role, as deploy.yml does. It shares
+# deploy.yml's concurrency group, so a pause never runs alongside a deploy.
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: The environment
+        required: true
+        type: choice
+        options: [staging]
+      action:
+        description: Pause it (keeps its data; runs nothing) or resume it
+        required: true
+        type: choice
+        options: [pause, resume]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read tool versions
+        id: versions
+        run: |
+          echo "tofu=$(awk '$1 == "opentofu" {print $2}' .tool-versions)" >> "$GITHUB_OUTPUT"
+          echo "just=$(awk '$1 == "just" {print $2}' .tool-versions)" >> "$GITHUB_OUTPUT"
+
+      - uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
+        with:
+          tofu_version: ${{ steps.versions.outputs.tofu }}
+          tofu_wrapper: false
+
+      - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
+        with:
+          just-version: ${{ steps.versions.outputs.just }}
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_APPLY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: ${{ inputs.action == 'pause' && 'Pause' || 'Resume' }}
+        working-directory: engineering/infrastructure
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION }}
+        run: just ${{ inputs.action }} ${{ inputs.environment }}
