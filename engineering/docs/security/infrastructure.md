@@ -34,9 +34,10 @@ One exception: the CloudFront web firewall's log group is always in
 `us-east-1`, and a log group can use only a key from its own region. In an
 environment outside `us-east-1` it is encrypted with the service's own key.
 
-Scheduling the key for deletion makes the database and its backups
-unreadable when the waiting period ends. Don't, except as the last step of
-retiring an environment.
+Scheduling the key for deletion makes the database, its backups, and every
+snapshot taken from it unreadable when the waiting period ends. Don't,
+except as the last step of retiring an environment, and not while a
+snapshot of it is still wanted.
 
 ## The database
 
@@ -71,6 +72,13 @@ it on.
    environment's `app.tfvars`, and have it reviewed: this is the step that
    makes the data deletable.
 2. `just apply app <env>`.
-3. Take a manual snapshot if the data must be kept; with protection off,
-   destroying the cluster takes none.
+3. If the data must be kept:
+   1. Take a manual snapshot; with protection off, destroying the cluster
+      takes none.
+   2. Keep its key. The snapshot is encrypted with the environment's key,
+      which the destroy would schedule for deletion. In the `app` component,
+      run `tofu state rm aws_kms_key.data` so the destroy leaves the key in
+      the account.
 4. `tofu destroy` the `app` component, then `ecr`.
+5. When a kept snapshot is no longer needed, delete it, then schedule its
+   key for deletion by hand; nothing manages the key any more.
