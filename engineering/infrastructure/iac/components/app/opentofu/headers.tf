@@ -9,21 +9,20 @@ locals {
     "https://${local.documents_bucket_name}.s3.${var.aws_region}.amazonaws.com",
   ]
 
+  # The browser signs in against Cognito and posts uploads straight to the documents bucket.
+  content_security_policy_origins = {
+    "connect-src" = concat(["https://cognito-idp.${var.aws_region}.amazonaws.com"], local.documents_origins)
+    "form-action" = local.documents_origins
+  }
+
+  # The sources every environment shares are in a file, so that the end-to-end tests serve
+  # the client under them too (engineering/e2e/serve-client.mts). In it:
+  # - script-src 'unsafe-inline': Next's static export writes inline scripts into every
+  #   page, and with no server there is nothing to issue a nonce (decided 2026-11-12).
+  # - img-src data: USWDS's stylesheet embeds some icons as data: URLs.
   content_security_policy = join("; ", [
-    "default-src 'self'",
-    # 'unsafe-inline': Next's static export writes inline scripts into every page, and
-    # with no server there is nothing to issue a nonce (decided 2026-11-12).
-    "script-src 'self' 'unsafe-inline'",
-    "style-src 'self'",
-    # USWDS's stylesheet embeds some icons as data: URLs.
-    "img-src 'self' data:",
-    "font-src 'self'",
-    # The browser signs in against Cognito and posts uploads straight to the documents bucket.
-    "connect-src ${join(" ", concat(["'self'", "https://cognito-idp.${var.aws_region}.amazonaws.com"], local.documents_origins))}",
-    "form-action ${join(" ", concat(["'self'"], local.documents_origins))}",
-    "frame-ancestors 'none'",
-    "base-uri 'self'",
-    "object-src 'none'",
+    for directive, sources in jsondecode(file("${path.module}/content-security-policy.json")) :
+    join(" ", concat([directive], sources, lookup(local.content_security_policy_origins, directive, [])))
   ])
 }
 

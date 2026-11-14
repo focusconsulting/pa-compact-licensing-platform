@@ -573,6 +573,36 @@ If Stephen makes these changes in #181 before it merges, drop them here.
 
 ---
 
+## Phase 7: The policy runs in the end-to-end tests
+
+Added on 2026-11-14 from review of Phase 2: the policy was enforced only at CloudFront, so a page that broke it was first seen on a deployed environment. Its PR is stacked on Phase 5's, ahead of Phase 6's.
+
+### Changes Required
+
+#### 1. One list of directives
+
+**File**: `engineering/infrastructure/iac/components/app/opentofu/content-security-policy.json` (new), `headers.tf`
+**Changes**: the sources every environment shares move to the JSON file. `headers.tf` reads it and adds Cognito and the documents bucket to `connect-src` and `form-action`. The header's directives come out in alphabetical order, so the plan shows the policy changed in place; its meaning is the same.
+
+#### 2. The end-to-end tests serve the client under it
+
+**File**: `engineering/e2e/serve-client.mts` (new), `playwright.config.ts`, `tests/fixtures.ts`
+**Changes**: Playwright starts `serve` on the client's static export on port 3200, sending the same directives with `http://localhost:*` added to `connect-src` and `form-action` for the API, the Cognito mock, and RustFS. The `page` fixture fails a test on any `securitypolicyviolation` event, and on a page that arrives with no policy, so the tests cannot pass against `next dev`, which sends none.
+
+**File**: `justfile`, `.github/workflows/e2e.yml`, `engineering/api/.env.example`
+**Changes**: `just e2e` builds the client first; CI builds it and leaves serving to Playwright; `CORS_ORIGINS` adds `http://localhost:3200`.
+
+### Success Criteria
+
+#### Automated Verification
+
+- [x] `cd engineering/infrastructure && just check`
+- [x] `just e2e` passes with `just up` running
+- [x] With `'unsafe-inline'` taken out of `script-src`, the tests fail and name the directive; against a server that sends no policy, they fail and name the page
+- [ ] The `E2E` workflow passes on the PR
+
+What this does not cover: the AWS origins in `connect-src` and `form-action`, which only a deployed environment exercises. Phase 2's check against staging stays.
+
 ## Testing Strategy
 
 ### API Tests
