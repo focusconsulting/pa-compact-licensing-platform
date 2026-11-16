@@ -296,7 +296,7 @@ describe("the application's first step", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Only if Kansas's note asks for one. One file: PDF, Word, PNG or JPEG.",
+        "Only if Kansas' note asks for one. One file: PDF, Word, PNG or JPEG.",
       ),
     ).toBeInTheDocument();
     await expectNoAxeViolations(container);

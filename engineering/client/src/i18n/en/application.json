@@ -122,9 +122,9 @@
     "alertHeading": "{{state}} needs more information",
     "askedOn": "Asked on {{asked}}. Resubmit by {{due}}.",
     "reply": "Your reply to {{state}}",
-    "replyHint": "Answer {{state}}'s note here, upload a document, or both.",
+    "replyHint": "Answer {{state, possessive}} note here, upload a document, or both.",
     "upload": "Upload a document",
-    "uploadHint": "Only if {{state}}'s note asks for one. One file: PDF, Word, PNG or JPEG.",
+    "uploadHint": "Only if {{state, possessive}} note asks for one. One file: PDF, Word, PNG or JPEG.",
     "anotherState": "To apply through another state, withdraw this application and apply again."
   }
 }
