@@ -84,7 +84,8 @@ resource "aws_iam_access_key" "ses_smtp" {
 }
 
 resource "aws_secretsmanager_secret" "ses_smtp" {
-  name = "${var.environment_name}-ses-smtp"
+  name       = "${var.environment_name}-ses-smtp"
+  kms_key_id = aws_kms_key.data.arn
 }
 
 # The SMTP password is derived from the access key's secret for this region.

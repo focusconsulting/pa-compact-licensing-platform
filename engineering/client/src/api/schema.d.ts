@@ -351,7 +351,7 @@ export interface paths {
     head?: never;
     /**
      * Save My Profile
-     * @description Changes your date of birth, residence address, NCCPA certification number, or other names. Once your state has verified a field it is listed in `verified_fields`, and only the state changes it: `409 VERIFIED_BY_STATE`. Your address stays yours to change.
+     * @description Changes your date of birth, residence address, NCCPA certification number, or other names. Once your state has verified a field it is listed in `verified_fields`, and only the state changes it: `409 VERIFIED_BY_STATE`. A verified date of birth or NCCPA number that is still empty can be filled in. Your address stays yours to change, in the US only.
      */
     patch: operations["Save_my_profile_api_me_profile_patch"];
     trace?: never;
@@ -1290,8 +1290,7 @@ export interface components {
       | "application_in_review"
       | "information_requested"
       | "not_yet_eligible"
-      | "two_year_bar"
-      | "eligibility_withdrawn";
+      | "two_year_bar";
     /**
      * UploadForm
      * @description POST the ``fields`` and then the file, as ``multipart/form-data`` field ``file``, to ``url``.

@@ -117,7 +117,7 @@ def test_privileges_wait_on_an_application_the_state_has(
     }
 
 
-def test_privileges_are_unavailable_once_eligibility_is_withdrawn(
+def test_a_pa_whose_eligibility_was_withdrawn_may_apply_again(
     client, auth_header, route_db_session, pa
 ):
     email, practitioner = pa
@@ -132,10 +132,11 @@ def test_privileges_are_unavailable_once_eligibility_is_withdrawn(
         ),
     )
 
-    assert _dashboard(client, auth_header, email)['primary_action']['reasons'] == [
-        'not_yet_eligible',
-        'eligibility_withdrawn',
-    ]
+    assert _dashboard(client, auth_header, email)['primary_action'] == {
+        'kind': 'apply_for_participation',
+        'available': True,
+        'reasons': [],
+    }
 
 
 def test_an_eligible_pa_may_apply_for_privileges(client, auth_header, route_db_session, pa):

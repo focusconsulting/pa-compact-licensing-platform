@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.13"
 resolution-markers = [
     "python_full_version >= '3.14'",
@@ -973,6 +973,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "asyncpg" },
     { name = "boto3" },
+    { name = "cryptography" },
     { name = "fastapi" },
     { name = "greenlet" },
     { name = "gunicorn" },
@@ -1006,6 +1007,7 @@ dev = [
 requires-dist = [
     { name = "asyncpg", specifier = ">=0.32.0" },
     { name = "boto3", specifier = ">=1.43.126" },
+    { name = "cryptography", specifier = ">=50.0.2" },
     { name = "fastapi", specifier = ">=0.162.2" },
     { name = "greenlet", specifier = ">=3.5.6" },
     { name = "gunicorn", specifier = ">=26.2.0" },

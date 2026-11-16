@@ -57,7 +57,8 @@ jobs:
           nohup uv run uvicorn licensing_api.__main__:app --port 8000 --env-file .env > api.log 2>&1 &
           for i in $(seq 30); do curl -sf localhost:8000/api/health/ready && break; sleep 1; done
 
-      - name: Build and serve the client
+      # Playwright serves it, under the deployed Content-Security-Policy (serve-client.mts).
+      - name: Build the client
         working-directory: engineering/client
         env:
           PUPPETEER_SKIP_DOWNLOAD: "true" # only the a11y job needs pa11y's Chrome
@@ -65,8 +66,6 @@ jobs:
           cp .env.example .env.local
           pnpm install --frozen-lockfile
           pnpm build
-          nohup pnpm exec serve out -l 3000 > serve.log 2>&1 &
-          for i in $(seq 30); do curl -sf localhost:3000/login >/dev/null && break; sleep 1; done
 
       - name: Install Playwright
         working-directory: engineering/e2e
