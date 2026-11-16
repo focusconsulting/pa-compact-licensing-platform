@@ -1088,18 +1088,17 @@ export interface components {
     PrivilegeComputedStatus: "inactive" | "expired" | "encumbered" | "active";
     /**
      * PrivilegeEvent
-     * @description One change to a privilege: its issue, or a change of administrator status.
+     * @description The day a privilege's status changed, and to what. ``reason`` is the deactivation reason when ``inactive``.
      */
     PrivilegeEvent: {
-      /** Administrator Status */
-      administrator_status: string;
       /**
-       * At
-       * Format: date-time
+       * On
+       * Format: date
        */
-      at: string;
+      on: string;
       /** Reason */
       reason?: string | null;
+      status: components["schemas"]["PrivilegeComputedStatus"];
     };
     /**
      * PrivilegeRequestStatus
@@ -1113,11 +1112,14 @@ export interface components {
       "pending_payment" | "submitted" | "issued" | "denied" | "withdrawn";
     /**
      * PrivilegeSummary
-     * @description A privilege as its holder sees it. ``expires_in_days`` counts from today in the compact's time zone.
+     * @description A privilege as its holder sees it. ``history`` is oldest first.
      */
     PrivilegeSummary: {
-      /** Expires In Days */
-      expires_in_days: number;
+      /**
+       * Expires In Days
+       * @description Days from today in the compact's time zone; null once it is inactive or expired
+       */
+      expires_in_days: number | null;
       /**
        * Expires On
        * Format: date
@@ -1139,8 +1141,7 @@ export interface components {
       privilege_number: string;
       /** Remote State Code */
       remote_state_code: string;
-      /** Status */
-      status: string;
+      status: components["schemas"]["PrivilegeComputedStatus"];
     };
     /**
      * ProfileOut
@@ -1211,7 +1212,7 @@ export interface components {
     };
     /**
      * QualifyingLicenseSummary
-     * @description The license the PA's eligibility rests on, and when its state verified it.
+     * @description The license the PA's eligibility rests on, and when its state, ``state_code``, verified it.
      */
     QualifyingLicenseSummary: {
       /** Expires On */
@@ -1224,8 +1225,6 @@ export interface components {
       status: string;
       /** Verified At */
       verified_at: string | null;
-      /** Verified By State */
-      verified_by_state: string | null;
     };
     /**
      * ReadyResp

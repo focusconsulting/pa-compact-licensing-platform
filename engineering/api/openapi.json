@@ -1370,15 +1370,11 @@
         "type": "string"
       },
       "PrivilegeEvent": {
-        "description": "One change to a privilege: its issue, or a change of administrator status.",
+        "description": "The day a privilege's status changed, and to what. ``reason`` is the deactivation reason when ``inactive``.",
         "properties": {
-          "administrator_status": {
-            "title": "Administrator Status",
-            "type": "string"
-          },
-          "at": {
-            "format": "date-time",
-            "title": "At",
+          "on": {
+            "format": "date",
+            "title": "On",
             "type": "string"
           },
           "reason": {
@@ -1391,11 +1387,14 @@
               }
             ],
             "title": "Reason"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PrivilegeComputedStatus"
           }
         },
         "required": [
-          "administrator_status",
-          "at"
+          "status",
+          "on"
         ],
         "title": "PrivilegeEvent",
         "type": "object"
@@ -1413,11 +1412,19 @@
         "type": "string"
       },
       "PrivilegeSummary": {
-        "description": "A privilege as its holder sees it. ``expires_in_days`` counts from today in the compact's time zone.",
+        "description": "A privilege as its holder sees it. ``history`` is oldest first.",
         "properties": {
           "expires_in_days": {
-            "title": "Expires In Days",
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Days from today in the compact's time zone; null once it is inactive or expired",
+            "title": "Expires In Days"
           },
           "expires_on": {
             "format": "date",
@@ -1450,8 +1457,7 @@
             "type": "string"
           },
           "status": {
-            "title": "Status",
-            "type": "string"
+            "$ref": "#/components/schemas/PrivilegeComputedStatus"
           }
         },
         "required": [
@@ -1649,7 +1655,7 @@
         "type": "object"
       },
       "QualifyingLicenseSummary": {
-        "description": "The license the PA's eligibility rests on, and when its state verified it.",
+        "description": "The license the PA's eligibility rests on, and when its state, ``state_code``, verified it.",
         "properties": {
           "expires_on": {
             "anyOf": [
@@ -1686,17 +1692,6 @@
               }
             ],
             "title": "Verified At"
-          },
-          "verified_by_state": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Verified By State"
           }
         },
         "required": [
@@ -1704,7 +1699,6 @@
           "license_number",
           "expires_on",
           "status",
-          "verified_by_state",
           "verified_at"
         ],
         "title": "QualifyingLicenseSummary",

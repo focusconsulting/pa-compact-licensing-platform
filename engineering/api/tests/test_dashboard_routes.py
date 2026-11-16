@@ -57,6 +57,8 @@ async def _sent(session, practitioner) -> ParticipationApplication:
         ApplicationStatus.SUBMITTED,
         EventType.APPLICATION_SUBMITTED,
         opened_at=_OPENED,
+        sworn_name='Pat Assistant',
+        sworn_at=_OPENED,
     )
     return application
 
@@ -240,19 +242,18 @@ def test_a_denial_shows_its_reason(client, auth_header, route_db_session, pa):
     )
 
 
-def test_the_license_shows_who_verified_it(client, auth_header, route_db_session, pa):
+def test_the_license_shows_when_its_state_verified_it(client, auth_header, route_db_session, pa):
     email, practitioner = pa
     _call(client, lambda: make_eligible_application(route_db_session, practitioner))
 
     license = _dashboard(client, auth_header, email)['qualifying_license']
 
     assert license['state_code'] == 'KS'
-    assert license['verified_by_state'] == 'KS'
     assert license['verified_at'] == '2026-06-01T00:00:00Z'
     assert license['status'] in {'active', 'expired'}
 
 
-def test_a_license_not_yet_verified_names_no_state(client, auth_header, route_db_session, pa):
+def test_a_license_not_yet_verified_has_no_verified_date(client, auth_header, route_db_session, pa):
     email, practitioner = pa
 
     async def _make():
@@ -270,7 +271,22 @@ def test_a_license_not_yet_verified_names_no_state(client, auth_header, route_db
 
     _call(client, _make)
 
-    assert _dashboard(client, auth_header, email)['qualifying_license']['verified_by_state'] is None
+    assert _dashboard(client, auth_header, email)['qualifying_license']['verified_at'] is None
+
+
+async def _privilege(session, practitioner, **overrides):
+    application = await make_eligible_application(session, practitioner)
+    privilege = await make_privilege(
+        session, await make_submitted_request(session, application), **overrides
+    )
+    ctx = ChangeContext(await system_user_id(session), 'req-dash')
+    await history.write(session, ctx, privilege, before=None)
+    await emit(session, ctx, EventType.PRIVILEGE_ISSUED, privilege)
+    return privilege, ctx
+
+
+def _history(shown) -> list[tuple[str, str, str | None]]:
+    return [(h['status'], h['on'], h['reason']) for h in shown['history']]
 
 
 def test_a_privilege_shows_days_to_expiry_and_its_history(
@@ -278,34 +294,85 @@ def test_a_privilege_shows_days_to_expiry_and_its_history(
 ):
     email, practitioner = pa
 
+    privilege, _ = _call(client, lambda: _privilege(route_db_session, practitioner))
+
+    [shown] = _dashboard(client, auth_header, email)['privileges']
+    assert shown['privilege_number'] == privilege.privilege_number
+    assert shown['status'] == 'active'
+    assert shown['expires_in_days'] > 0
+    assert _history(shown) == [('active', '2026-06-02', None)]
+
+
+def test_a_deactivation_shows_on_the_day_it_took_effect_with_its_reason(
+    client, auth_header, route_db_session, pa
+):
+    email, practitioner = pa
+
     async def _make():
-        application = await make_eligible_application(route_db_session, practitioner)
-        privilege = await make_privilege(
-            route_db_session, await make_submitted_request(route_db_session, application)
-        )
-        ctx = ChangeContext(await system_user_id(route_db_session), 'req-dash')
-        await history.write(route_db_session, ctx, privilege, before=None)
-        await emit(route_db_session, ctx, EventType.PRIVILEGE_ISSUED, privilege)
+        privilege, ctx = await _privilege(route_db_session, practitioner)
         before = history.snapshot(privilege)
         privilege.administrator_status = AdministratorStatus.INACTIVE
         privilege.deactivation_reason = DeactivationReason.STATE_DEACTIVATED
-        privilege.deactivated_at = datetime(2026, 9, 1, tzinfo=timezone.utc)
-        await history.write(route_db_session, ctx, privilege, before=before)
+        privilege.deactivated_at = datetime(2026, 9, 1, 16, tzinfo=timezone.utc)
+        await history.write(
+            route_db_session, ctx, privilege, before=before, effective_at=privilege.deactivated_at
+        )
         before = history.snapshot(privilege)
         privilege.deactivation_note = 'Moved away.'
         await history.write(route_db_session, ctx, privilege, before=before)
         await emit(route_db_session, ctx, EventType.PRIVILEGE_DEACTIVATED, privilege)
-        return privilege
 
-    privilege = _call(client, _make)
+    _call(client, _make)
 
     [shown] = _dashboard(client, auth_header, email)['privileges']
-    assert shown['privilege_number'] == privilege.privilege_number
     assert shown['status'] == 'inactive'
-    assert isinstance(shown['expires_in_days'], int)
-    assert [(h['administrator_status'], h['reason']) for h in shown['history']] == [
-        ('active', None),
-        ('inactive', 'state_deactivated'),
+    assert shown['expires_in_days'] is None
+    assert _history(shown) == [
+        ('active', '2026-06-02', None),
+        ('inactive', '2026-09-01', 'state_deactivated'),
+    ]
+
+
+def test_an_adverse_action_encumbers_a_privilege_while_it_is_in_force(
+    client, auth_header, route_db_session, pa
+):
+    email, practitioner = pa
+
+    async def _make():
+        privilege, _ = await _privilege(route_db_session, practitioner)
+        await make_adverse_action(
+            route_db_session,
+            privilege,
+            effective_from=date(2026, 7, 1),
+            effective_until=date(2026, 7, 31),
+        )
+        await make_adverse_action(route_db_session, privilege, effective_from=date(2026, 9, 15))
+
+    _call(client, _make)
+
+    [shown] = _dashboard(client, auth_header, email)['privileges']
+    assert shown['status'] == 'encumbered'
+    assert shown['expires_in_days'] > 0
+    assert _history(shown) == [
+        ('active', '2026-06-02', None),
+        ('encumbered', '2026-07-01', None),
+        ('active', '2026-08-01', None),
+        ('encumbered', '2026-09-15', None),
+    ]
+
+
+def test_a_privilege_expires_the_day_after_its_expiry_date(
+    client, auth_header, route_db_session, pa
+):
+    email, practitioner = pa
+    _call(client, lambda: _privilege(route_db_session, practitioner, expires_on=date(2026, 8, 31)))
+
+    [shown] = _dashboard(client, auth_header, email)['privileges']
+    assert shown['status'] == 'expired'
+    assert shown['expires_in_days'] is None
+    assert _history(shown) == [
+        ('active', '2026-06-02', None),
+        ('expired', '2026-09-01', None),
     ]
 
 

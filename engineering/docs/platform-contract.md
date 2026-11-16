@@ -196,7 +196,7 @@ While an application is `draft` or `info_requested`, the PA saves steps (`PATCH`
 
 ### The PA's dashboard
 
-`GET /me/dashboard` (`routes/dashboard.py`) reads the PA's license, applications, and privileges on each request; timelines come from history rows, never from events. Its `primary_action` is `apply_for_participation` until the PA has an application that could make them eligible, then `apply_for_privileges`. That action is unavailable, with every reason listed, while:
+`GET /me/dashboard` (`routes/dashboard.py`) reads the PA's license, applications, and privileges on each request; timelines come from history rows, never from events. A privilege's history is each day its status changed, by the precedence `v_privilege_status` uses: its history rows (on `effective_at` when set), adverse actions against it, and the day after `expires_on`, which writes no row. Its `primary_action` is `apply_for_participation` until the PA has an application that could make them eligible, then `apply_for_privileges`. That action is unavailable, with every reason listed, while:
 
 | Reason | When |
 |---|---|
