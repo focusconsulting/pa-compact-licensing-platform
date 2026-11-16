@@ -253,7 +253,7 @@ Only `retired_at` may change; a trigger refuses any other update. Only a `privil
 
 ### `participation_application_attestations`
 
-What a PA accepted on an application, written with `accept` and checked with `out_of_date_codes` (`repo/attestation.py`). Epic 8 adds `privilege_request_attestations` with the same shape. Tier: private. Owner: epic 6.
+What a PA accepted on an application, written with `accept_participation` and checked with `out_of_date_codes` (`repo/attestation.py`). Epic 8 adds `privilege_request_attestations` with the same shape. Tier: private. Owner: epic 6.
 
 | Column | Type | Meaning |
 |---|---|---|

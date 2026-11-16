@@ -9,7 +9,7 @@ from licensing_api.repo.attestation import (
     Attestation,
     AttestationAppliesTo,
     ParticipationApplicationAttestation,
-    accept,
+    accept_participation,
     current_attestations,
     out_of_date_codes,
 )
@@ -128,7 +128,7 @@ async def test_accepting_every_current_version_leaves_nothing_out_of_date(db_ses
     ctx = await _context(db_session)
 
     for attestation in await _current(db_session):
-        await accept(db_session, ctx, application_id, attestation)
+        await accept_participation(db_session, ctx, application_id, attestation)
 
     assert await out_of_date_codes(db_session, application_id) == []
 
@@ -137,7 +137,7 @@ async def test_a_stale_version_is_out_of_date(db_session):
     application_id = await _application_id(db_session)
     ctx = await _context(db_session)
     for attestation in await _current(db_session):
-        await accept(db_session, ctx, application_id, attestation)
+        await accept_participation(db_session, ctx, application_id, attestation)
 
     await _add_version(db_session, 'no_pending_investigation', 2)
 
@@ -147,13 +147,13 @@ async def test_a_stale_version_is_out_of_date(db_session):
 async def test_accepting_a_newer_version_keeps_the_older_acceptance(db_session):
     application_id = await _application_id(db_session)
     ctx = await _context(db_session)
-    await accept(
+    await accept_participation(
         db_session,
         ctx,
         application_id,
         await db_session.get(Attestation, ('service_of_process', 1)),
     )
-    await accept(
+    await accept_participation(
         db_session, ctx, application_id, await _add_version(db_session, 'service_of_process', 2)
     )
 
@@ -174,8 +174,8 @@ async def test_accepting_the_same_version_twice_records_it_once(db_session):
     ctx = await _context(db_session)
     attestation = await db_session.get(Attestation, ('service_of_process', 1))
 
-    await accept(db_session, ctx, application_id, attestation)
-    await accept(db_session, ctx, application_id, attestation)
+    await accept_participation(db_session, ctx, application_id, attestation)
+    await accept_participation(db_session, ctx, application_id, attestation)
 
     count = await db_session.scalar(
         text(
@@ -194,7 +194,9 @@ async def test_a_privilege_attestation_cannot_be_accepted_on_a_participation_app
     attestation = await db_session.get(Attestation, ('supervision_compliance', 1))
 
     with pytest.raises(ValueError, match='not a participation attestation'):
-        await accept(db_session, await _context(db_session), application_id, attestation)
+        await accept_participation(
+            db_session, await _context(db_session), application_id, attestation
+        )
 
 
 @pytest.mark.parametrize(
@@ -206,7 +208,7 @@ async def test_a_privilege_attestation_cannot_be_accepted_on_a_participation_app
 )
 async def test_an_acceptance_is_never_changed_or_removed(db_session, statement):
     application_id = await _application_id(db_session)
-    await accept(
+    await accept_participation(
         db_session,
         await _context(db_session),
         application_id,
