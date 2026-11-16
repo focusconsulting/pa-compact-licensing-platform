@@ -1,4 +1,4 @@
-"""Moving a participation application between statuses (platform contract, "Participation applications").
+"""Moving a participation application between statuses (FLOW-06).
 
 Its own module because ``history`` imports the application model.
 """
