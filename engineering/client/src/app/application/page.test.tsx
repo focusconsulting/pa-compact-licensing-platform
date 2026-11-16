@@ -584,8 +584,13 @@ describe("the application's first step", () => {
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
 
     expect(
-      await screen.findByText(/Enter a last name for the other name/),
+      await screen.findByRole("heading", { name: "1 answer needs fixing" }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: /^Last name/ }),
+    ).toHaveAccessibleDescription(
+      "Enter a last name for the other name, or leave the other name blank",
+    );
     expect(await bodies(spy, "PATCH /api/me/profile")).toEqual([]);
   });
 

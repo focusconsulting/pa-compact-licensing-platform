@@ -53,7 +53,6 @@
     "save": "We couldn't save your answers. Try again.",
     "stateNotLive": "That state isn't taking applications. Choose another state.",
     "statementsChanged": "A statement changed since you read it. Read the statements again and check each one.",
-    "otherNameLastName": "Enter a last name for the other name, or leave the other name blank.",
     "documentNotClean": "We're still checking your upload for viruses. Try again in a minute.",
     "withdraw": "We couldn't withdraw your application. Try again."
   },
@@ -139,6 +138,7 @@
     "licenseExpires": "Enter your license expiration date",
     "dateOfBirth": "Enter your date of birth",
     "nccpa": "Enter your NCCPA certification number",
+    "otherLastName": "Enter a last name for the other name, or leave the other name blank",
     "statementsGroup": "Agree to the statements",
     "statements": "Tick the statements to agree to them",
     "statement": "Tick the statement to agree to it",

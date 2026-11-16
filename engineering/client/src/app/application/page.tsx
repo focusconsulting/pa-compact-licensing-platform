@@ -62,7 +62,7 @@ interface StartValues {
   document?: UploadedDocument;
 }
 
-type ErrorKey = "load" | "save" | "stateNotLive" | "otherNameLastName";
+type ErrorKey = "load" | "save" | "stateNotLive";
 
 /** The answers step 1 requires, each with what to fix when it is missing (B2e). */
 const REQUIRED = [
@@ -77,6 +77,8 @@ const REQUIRED = [
   "nccpa",
 ] as const;
 type Required = (typeof REQUIRED)[number];
+/** A required answer that's missing, or another name given without its last name. */
+type Fixable = Required | "otherLastName";
 
 interface Loaded {
   application?: Application;
@@ -181,8 +183,8 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
   const asked = application?.status === "info_requested";
   const fixed = new Set(profile.verified_fields);
   const reply = form.register("responseNote");
-  const [missing, setMissing] = useState<Required[]>([]);
-  const fix = (field: Required) =>
+  const [missing, setMissing] = useState<Fixable[]>([]);
+  const fix = (field: Fixable) =>
     missing.includes(field) ? t(`fix.${field}`) : undefined;
 
   // The loader checked an application's state is listed; a new one has none yet.
@@ -198,13 +200,6 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
       last_name: blankToNull(values.otherLastName),
       name_suffix: blankToNull(values.otherSuffix),
     };
-    if (
-      !other.last_name &&
-      (other.first_name || other.middle_name || other.name_suffix)
-    ) {
-      setError("otherNameLastName");
-      return;
-    }
     try {
       await saveProfile({
         residence: {
@@ -251,7 +246,15 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
         (field !== "sqlStateCode" || draft) &&
         (field !== "nccpa" || !fixed.has("nccpa_certification_number")),
     );
-    const found = asks.filter((field) => !String(values[field] ?? "").trim());
+    const found: Fixable[] = asks.filter(
+      (field) => !String(values[field] ?? "").trim(),
+    );
+    const otherName = [
+      values.otherFirstName,
+      values.otherMiddleName,
+      values.otherSuffix,
+    ].some((part) => part.trim());
+    if (otherName && !values.otherLastName.trim()) found.push("otherLastName");
     setMissing(found);
     if (found.length === 0) void save(values);
   };
@@ -385,6 +388,7 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
             label={t("basic:fields.name.lastNameTitle")}
             optional
             showOptional={false}
+            error={fix("otherLastName")}
           />
           <TextField
             id="otherSuffix"
