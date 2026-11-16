@@ -195,7 +195,12 @@ describe("the application's first step", () => {
     await waitFor(() => expect(push).toHaveBeenCalled());
     const [saved] = await bodies(spy, "PATCH /api/me/profile");
     expect(saved.other_names).toEqual([
-      { first_name: "Jo", middle_name: "Lee", last_name: "Smith" },
+      {
+        first_name: "Jo",
+        middle_name: "Lee",
+        last_name: "Smith",
+        name_suffix: null,
+      },
       {
         first_name: null,
         middle_name: null,
@@ -279,7 +284,7 @@ describe("the application's first step", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("shows what the state verified as text, and doesn't send it", async () => {
+  it("shows the NCCPA number the state verified as text, and doesn't send it", async () => {
     const spy = answers({
       "GET /api/me/applications": ok([
         application({
@@ -299,27 +304,13 @@ describe("the application's first step", () => {
             country_code: "US",
           },
           nccpa_certification_number: "1234567",
-          other_names: [
-            {
-              first_name: "Jo",
-              middle_name: null,
-              last_name: "Smith",
-              name_suffix: null,
-            },
-          ],
-          verified_fields: [
-            "date_of_birth",
-            "other_names",
-            "nccpa_certification_number",
-          ],
+          verified_fields: ["nccpa_certification_number"],
         }),
       ),
     });
     render(<Page />);
 
-    expect(await screen.findByText("Mar 14, 1988")).toBeInTheDocument();
-    expect(screen.getByText("Jo Smith")).toBeInTheDocument();
-    expect(screen.getByText("1234567")).toBeInTheDocument();
+    expect(await screen.findByText("1234567")).toBeInTheDocument();
     expect(
       screen.queryByRole("textbox", { name: /NCCPA/ }),
     ).not.toBeInTheDocument();
@@ -327,20 +318,58 @@ describe("the application's first step", () => {
 
     await waitFor(() => expect(push).toHaveBeenCalled());
     const [saved] = await bodies(spy, "PATCH /api/me/profile");
-    expect(Object.keys(saved)).toEqual(["residence"]);
+    expect(Object.keys(saved).sort()).toEqual([
+      "date_of_birth",
+      "other_names",
+      "residence",
+    ]);
   });
 
-  it("leaves out verified other names when there are none", async () => {
-    answers({
-      "GET /api/me/applications": ok([application()]),
-      "GET /api/me/profile": ok(profile({ verified_fields: ["other_names"] })),
+  it("sends another name's suffix", async () => {
+    const spy = answers({
+      "GET /api/me/applications": ok([
+        application({
+          claimed_license_number: "PA-9",
+          claimed_license_expires_on: "2027-01-31",
+        }),
+      ]),
+      "GET /api/me/profile": ok(
+        profile({
+          date_of_birth: "1988-03-14",
+          residence: {
+            line1: "1 Main Street",
+            line2: null,
+            city: "Topeka",
+            region: "KS",
+            postal_code: "66601",
+            country_code: "US",
+          },
+          nccpa_certification_number: "1234567",
+        }),
+      ),
     });
     render(<Page />);
+    await userEvent.type(
+      await screen.findByRole("textbox", { name: /^Last name/ }),
+      "Smith",
+    );
+    await userEvent.type(
+      screen.getByRole("textbox", { name: /^Suffix/ }),
+      "Jr.",
+    );
 
-    await screen.findByRole("button", { name: "Continue" });
-    expect(
-      screen.queryByText("Other names you use or have used (optional)"),
-    ).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+
+    await waitFor(() => expect(push).toHaveBeenCalled());
+    const [saved] = await bodies(spy, "PATCH /api/me/profile");
+    expect(saved.other_names).toEqual([
+      {
+        first_name: null,
+        middle_name: null,
+        last_name: "Smith",
+        name_suffix: "Jr.",
+      },
+    ]);
   });
 
   it("asks for a last name when another name has only a first name", async () => {
