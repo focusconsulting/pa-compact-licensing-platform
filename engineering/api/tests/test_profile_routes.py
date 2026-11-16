@@ -205,6 +205,7 @@ def test_a_partial_address_entered_elsewhere_is_still_shown(client, auth_header,
     'body',
     [
         {'residence': {**_RESIDENCE, 'country_code': 'usa'}},
+        {'residence': {**_RESIDENCE, 'country_code': 'CA'}},
         {'residence': {**_RESIDENCE, 'city': '  '}},
         {'other_names': [{'first_name': 'Jordan'}]},
         {'legal_last_name': 'Changed'},
@@ -255,7 +256,11 @@ def test_the_profile_lists_what_the_state_verified(client, auth_header, verified
 
     response = client.get(_ME, headers=auth_header(email))
 
-    assert response.json()['data']['verified_fields'] == ['nccpa_certification_number']
+    assert response.json()['data']['verified_fields'] == [
+        'date_of_birth',
+        'other_names',
+        'nccpa_certification_number',
+    ]
 
 
 def test_only_the_state_changes_the_nccpa_number_it_verified(
@@ -274,10 +279,10 @@ def test_only_the_state_changes_the_nccpa_number_it_verified(
     assert _events(client, route_db_session, practitioner.id) == []
 
 
-def test_a_verified_pa_still_changes_their_date_of_birth_and_other_names(
-    client, auth_header, verified_pa
+def test_only_the_state_changes_the_identity_it_verified(
+    client, auth_header, route_db_session, verified_pa
 ):
-    email, _ = verified_pa
+    email, practitioner = verified_pa
 
     response = client.patch(
         _ME,
@@ -285,12 +290,31 @@ def test_a_verified_pa_still_changes_their_date_of_birth_and_other_names(
         headers=auth_header(email),
     )
 
-    assert response.status_code == 200
-    data = response.json()['data']
-    assert (data['date_of_birth'], [n['last_name'] for n in data['other_names']]) == (
-        '1988-03-15',
-        ['Jones'],
+    assert (response.status_code, response.json()) == (
+        409,
+        {'code': 'VERIFIED_BY_STATE', 'details': ['date_of_birth', 'other_names']},
     )
+    assert _events(client, route_db_session, practitioner.id) == []
+
+
+def test_a_verified_field_that_is_still_empty_can_be_filled_in(
+    client, auth_header, route_db_session
+):
+    async def _make():
+        practitioner = await make_practitioner(
+            route_db_session,
+            date_of_birth=None,
+            identity_verified_by_state='KS',
+            identity_verified_at=datetime(2026, 10, 20, tzinfo=timezone.utc),
+        )
+        return await route_db_session.get(User, practitioner.user_id)
+
+    email = _read(client, _make).email
+
+    response = client.patch(_ME, json={'date_of_birth': '1988-03-14'}, headers=auth_header(email))
+
+    assert response.status_code == 200
+    assert response.json()['data']['date_of_birth'] == '1988-03-14'
 
 
 def test_sending_what_the_state_verified_unchanged_is_fine(
