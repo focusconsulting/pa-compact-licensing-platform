@@ -423,7 +423,7 @@ describe("the PA dashboard", () => {
       ),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "Kansas's note" }),
+      screen.getByRole("heading", { name: "Kansas' note" }),
     ).toBeInTheDocument();
     expect(
       screen.getByText("Upload your NCCPA certificate."),

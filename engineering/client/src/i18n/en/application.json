@@ -91,7 +91,7 @@
     "barred": "You can't apply to join the PA Compact yet. A license or Compact Privilege of yours is limited or restricted by an adverse action, or was in the last 2 years.",
     "askedOn": "{{state}} asked on {{date}}",
     "resubmitBy": "{{state}} needs more information. Update your application and resubmit it by {{date}}. If {{state}} doesn't have it by then, your application is withdrawn.",
-    "noteHeading": "{{state}}'s note",
+    "noteHeading": "{{state, possessive}} note",
     "update": "Update your application",
     "historyHeading": "History",
     "historyDate": "Date",
