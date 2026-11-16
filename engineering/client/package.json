@@ -77,7 +77,8 @@
     ],
     "overrides": {
       "serve>compression": "^1.8.2",
-      "@storybook/builder-webpack5>webpack-dev-middleware": "^7.4.6"
+      "@storybook/builder-webpack5>webpack-dev-middleware": "^7.4.6",
+      "minimatch@10": "^11.0.1"
     }
   }
 }

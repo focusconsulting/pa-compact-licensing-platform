@@ -12,7 +12,6 @@ ignored one by one.
 
 | Scanner | ID | Where | Why accepted | Ignored in | Until |
 |---|---|---|---|---|---|
-| pnpm audit | [GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249) (moderate) | minimatch 10, under typescript-eslint (client, dev only) | The fix, minimatch 11.0.1, is younger than pnpm's 14-day minimum release age. minimatch here expands only ESLint's own configured globs, not user input. | `engineering/client/package.json` `pnpm.auditConfig.ignoreGhsas` | 2026-11-10: override to `^11.0.1` instead |
 | ZAP | 10038 CSP header not set (medium) | staging, every page | CloudFront has no response headers policy yet; SCRUM-84 adds one. | `.zap/rules.tsv` | SCRUM-84 merges |
 | ZAP | 10020 anti-clickjacking header missing (medium) | staging, every page | As above. | `.zap/rules.tsv` | SCRUM-84 merges |
 | Checkov | 61 OpenTofu checks | `engineering/infrastructure/iac/` | Report-only; SCRUM-84 owns them. `just scan-iac` lists them. | none (report-only) | SCRUM-84 merges |
