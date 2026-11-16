@@ -26,3 +26,9 @@ step must finish in 5 minutes.
   call `expectAccessible(page)` on every page the test reaches.
 - Sign in as a user from
   [`engineering/mocks/cognito/db/local_licensing.json`](../mocks/cognito/db/local_licensing.json).
+  `signIn(page, demoPa("sam.submitted"))` signs in as a practitioner from
+  `just seed demo` ([`docs/demo.md`](../docs/demo.md) lists them), which CI
+  loads. Locally, run `just seed demo` once `just up` is running.
+- A spec that changes a demo practitioner, as `application.spec.ts` does to
+  Ned Bar-Ended, needs a fresh seed: `just infra` in `engineering/api`, then
+  `just migrate`, `just seed`, and `just seed demo`.

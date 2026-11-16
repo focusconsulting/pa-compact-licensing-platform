@@ -53,6 +53,7 @@ jobs:
           uv sync --frozen
           uv run --env-file .env python -c 'from licensing_api.migrations import run_migrations; run_migrations()'
           docker compose -p pa-compact exec -T postgres psql -v ON_ERROR_STOP=1 -U licensing -d licensing < seed/users.sql
+          uv run --env-file .env python -m seed.demo
           nohup uv run uvicorn licensing_api.__main__:app --port 8000 --env-file .env > api.log 2>&1 &
           for i in $(seq 30); do curl -sf localhost:8000/api/health/ready && break; sleep 1; done
 

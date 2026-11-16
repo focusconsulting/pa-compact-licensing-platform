@@ -27,3 +27,20 @@ export const ADMIN = {
   email: "gustavo.torrico@focusconsulting.io",
   password: "Local-Passw0rd!",
 };
+
+/** The password every login in the local Cognito mock uses (engineering/docs/demo.md). */
+const LOCAL_PASSWORD = "Local-Passw0rd!";
+
+/** A practitioner from `just seed demo`, signed in as `<first name>.<surname>@demo.example`. */
+export function demoPa(name: string) {
+  return { email: `${name}@demo.example`, password: LOCAL_PASSWORD };
+}
+
+/** Signs in through the sign-in page and waits to leave it. */
+export async function signIn(page: Page, user: { email: string; password: string }) {
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(user.email);
+  await page.getByLabel("Password").fill(user.password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.waitForURL((url) => url.pathname !== "/login");
+}
