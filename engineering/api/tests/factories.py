@@ -98,6 +98,11 @@ async def make_application(
         'created_by': await system_user_id(session),
     }
     fields.update(overrides)
+    if fields.get('status', ApplicationStatus.DRAFT) != ApplicationStatus.DRAFT:
+        fields.setdefault('sworn_name', 'Sample Practitioner')
+        fields.setdefault(
+            'sworn_at', fields.get('opened_at') or datetime(2026, 6, 1, tzinfo=timezone.utc)
+        )
     return await _add(session, ParticipationApplication(**fields))
 
 
