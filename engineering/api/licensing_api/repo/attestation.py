@@ -85,7 +85,7 @@ def current_attestations(applies_to: AttestationAppliesTo) -> SelectOfScalar[Att
     )
 
 
-async def accept(
+async def accept_participation(
     session: AsyncSession, ctx: ChangeContext, application_id: int, attestation: Attestation
 ) -> None:
     """Record that the PA accepted this version on their application. Accepting the same version again is a no-op."""
