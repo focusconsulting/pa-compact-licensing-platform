@@ -31,7 +31,8 @@ const BACKGROUND_CHECK = "background_check";
 const SWORN = "truthfulness";
 
 type Values = Record<string, boolean | string>;
-type ErrorKey = "save" | "stateNotLive" | "statementsChanged";
+type ErrorKey =
+  "save" | "stateNotLive" | "statementsChanged" | "documentNotClean";
 
 interface StatementProps {
   attestation: Attestation;
@@ -112,7 +113,11 @@ function StatementsForm({
         setError("statementsChanged");
         onChanged();
       } else {
-        setError(code === "STATE_NOT_LIVE" ? "stateNotLive" : "save");
+        const keys: Record<string, ErrorKey> = {
+          STATE_NOT_LIVE: "stateNotLive",
+          DOCUMENT_NOT_CLEAN: "documentNotClean",
+        };
+        setError(keys[String(code)] ?? "save");
       }
     }
   }

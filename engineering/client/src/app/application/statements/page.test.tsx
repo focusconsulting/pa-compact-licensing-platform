@@ -248,6 +248,10 @@ describe("the application's statements and submit step", () => {
       "STATE_NOT_LIVE",
       "That state isn't taking applications. Choose another state.",
     ],
+    [
+      "DOCUMENT_NOT_CLEAN",
+      "We're still checking your upload for viruses. Try again in a minute.",
+    ],
     ["INVALID_TRANSITION", "We couldn't save your answers. Try again."],
   ])("says what went wrong when submit answers %s", async (code, message) => {
     answers({ [SUBMIT]: failure(code) });

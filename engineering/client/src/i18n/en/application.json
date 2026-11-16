@@ -54,6 +54,7 @@
     "stateNotLive": "That state isn't taking applications. Choose another state.",
     "statementsChanged": "A statement changed since you read it. Read the statements again and check each one.",
     "otherNameLastName": "Enter a last name for the other name, or leave the other name blank.",
+    "documentNotClean": "We're still checking your upload for viruses. Try again in a minute.",
     "withdraw": "We couldn't withdraw your application. Try again."
   },
   "intro": {
