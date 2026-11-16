@@ -1,5 +1,6 @@
+import ssl
 from typing import Literal
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 
 from pydantic_settings import BaseSettings
 
@@ -12,6 +13,9 @@ class Settings(BaseSettings):
     db_name: str = 'licensing'
     db_user: str = 'licensing'
     db_password: str = 'invalid'
+    # The CA bundle Postgres's certificate is verified against: the RDS bundle in AWS.
+    # Empty locally, where Postgres has no TLS.
+    db_ca_file: str = ''
 
     api_port: int = 8000
     log_level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = 'INFO'
@@ -52,8 +56,18 @@ class Settings(BaseSettings):
 
     @property
     def sync_db_url(self) -> str:
-        """The plain ``postgresql://`` URL yoyo migrations connect with."""
-        return f'postgresql://{self._db_credentials}@{self.db_host}:{self.db_port}/{self.db_name}'
+        """The plain ``postgresql://`` URL yoyo migrations connect with, verifying the server when ``db_ca_file`` is set."""
+        url = f'postgresql://{self._db_credentials}@{self.db_host}:{self.db_port}/{self.db_name}'
+        if not self.db_ca_file:
+            return url
+        return f'{url}?{urlencode({"sslmode": "verify-full", "sslrootcert": self.db_ca_file})}'
+
+    @property
+    def db_connect_args(self) -> dict[str, ssl.SSLContext]:
+        """What the asyncpg engine connects with beyond its URL: a context that verifies the server when ``db_ca_file`` is set."""
+        if not self.db_ca_file:
+            return {}
+        return {'ssl': ssl.create_default_context(cafile=self.db_ca_file)}
 
     @property
     def _db_credentials(self) -> str:

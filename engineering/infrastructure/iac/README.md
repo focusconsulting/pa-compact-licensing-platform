@@ -98,6 +98,29 @@ a time. From a laptop, with the environment's credentials, `just deploy staging`
 does the same thing. Until `prod` has environment files, a tag
 stops at the Environment's review and, if approved, fails at `just init`.
 
+## Pausing an environment
+
+A paused environment keeps its database, users, documents, and address, and
+runs nothing billed by the hour: no Aurora instance, no API or Worker tasks,
+and no scheduled jobs. Staging paused costs the load balancer and storage,
+about $20 a month against about $150 running.
+
+Run the `Pause or resume` workflow (Actions, Run workflow), or from a laptop:
+
+```bash
+just pause staging    # stops it within a few minutes
+just resume staging   # back on the same image and data in about ten minutes
+```
+
+Both write the SSM parameter `/<env>/licensing/paused` and apply `app` with the
+image already running. The module reads the parameter on every apply and never
+sets it, so a deploy to a paused environment updates it and leaves it paused.
+They need the `image_tag` and `repo_name` outputs, so an environment last
+deployed before they existed needs one deploy first.
+
+While paused, the site loads but its API calls fail, and the two alarms that
+watch for a stopped Worker or scheduler send nothing.
+
 ## What differs between environments
 
 Everything an environment chooses is a variable set in its tfvars files;
@@ -125,13 +148,15 @@ may be left out of the tfvars file when the default is right.
 | `db_username` | The application's database user | `licensing` | required |
 | `db_instance_class` | Aurora instance class | `db.t4g.medium` | `db.t4g.medium` |
 | `instance_count` | Aurora instances | default | `1` |
-| `backup_retention_period` | Days of automated database backups | `1` | `30` |
+| `backup_retention_period` | Days of automated database backups, 7 to 35; `prod` sets 35 | `7` | required |
 | `repo_name` | The `ecr` component's `repository_url` for the API image | the staging repository | required |
 | `image_tag` | The commit SHA whose image runs; `just deploy` passes it, tfvars never set it | per deploy | required |
 | `ecs_max_capacity` | Most API tasks the autoscaler may run | default | `2` |
 | `commission_ops_email` | The Commission's operational mailbox; empty sends nothing | default | empty |
 | `cognito_callback_url`, `cognito_logout_url` | Cognito redirect URLs | default | `https://<dns_name>` |
-| `acm_certificate_arn` | Declared for an HTTPS listener on the load balancer; not yet used (SCRUM-84) | default | none |
+| `acm_certificate_arn` | The certificate the load balancer's HTTPS listener presents: it covers `dns_name` and is issued in `aws_region` | the zone's wildcard certificate in `us-east-1` | required |
+| `cloudtrail_management_events` | Whether the environment's trail records management events; off where another trail in the account already does, since a second copy is charged per event ([what to check](../../docs/security/infrastructure.md#logs-and-the-audit-trail)) | `false`: Focus's baseline trail records them | required |
+| `deletion_protection` | Guards what would block a teardown or lose data in one: the database's and the load balancer's deletion protection, the database's final snapshot, and the logs bucket's contents ([what it does](../../docs/security/infrastructure.md#deletion_protection)). `prod` leaves it on | `false`: staging is spun up and torn down | `true` |
 
 ## Adding an environment
 
@@ -148,7 +173,12 @@ may be left out of the tfvars file when the default is right.
      uses `fck-nat`, a single low-cost NAT instance. **Production must use
      `aws-gateway`**, the AWS managed NAT Gateway.
    - A public Route 53 hosted zone for the parent of `dns_name`, and an issued
-     wildcard ACM certificate for it in `us-east-1`.
+     wildcard ACM certificate for it in `us-east-1`, which CloudFront uses and
+     the module looks up.
+   - A certificate covering `dns_name` in the environment's own region, for the
+     load balancer; its ARN is `acm_certificate_arn`. In `us-east-1` it is the
+     same wildcard certificate. Anywhere else it is a second one, since a load
+     balancer can use only a certificate from its own region.
    - The Secrets Manager secret `<env>-slack-tfvar` (keys `slack_team_id`,
      `slack_channel_id`). A jumpbox, if wanted, is the bootstrap repo's
      `create_jumpbox`; the module reads its security group from the network
