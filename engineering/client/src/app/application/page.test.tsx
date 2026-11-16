@@ -324,7 +324,7 @@ describe("the application's first step", () => {
           request_note: "Upload your NCCPA certificate.",
           requested_at: "2026-10-19T15:00:00Z",
           resubmit_by: "2026-12-13",
-          sql_state_code: "ZZ",
+          sql_state_code: "OK",
           response_note: "Here it is.",
         }),
       ]),
@@ -345,9 +345,9 @@ describe("the application's first step", () => {
     expect((await screen.findAllByText(/nccpa\.pdf/)).length).toBeGreaterThan(
       0,
     );
-    expect(screen.getByText("ZZ")).toBeInTheDocument();
+    expect(screen.getByText("Oklahoma", { selector: "p" })).toBeInTheDocument();
     expect(
-      screen.getByRole("textbox", { name: /^Your reply to ZZ/ }),
+      screen.getByRole("textbox", { name: /^Your reply to Oklahoma/ }),
     ).toHaveValue("Here it is.");
   });
 
@@ -530,6 +530,19 @@ describe("the application's first step", () => {
 
     expect(
       await screen.findByText("We couldn't save your answers. Try again."),
+    ).toBeInTheDocument();
+  });
+
+  it("says the application cannot be loaded when its state is not listed", async () => {
+    answers({
+      "GET /api/me/applications": ok([application({ sql_state_code: "ZZ" })]),
+    });
+    render(<Page />);
+
+    expect(
+      await screen.findByText(
+        "We couldn't load your application. Try again later.",
+      ),
     ).toBeInTheDocument();
   });
 

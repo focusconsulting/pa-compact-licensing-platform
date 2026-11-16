@@ -35,6 +35,7 @@ import {
   loadProfile,
   loadStates,
   loadUnattached,
+  nameOfState,
   openApplication,
   saveApplication,
   saveProfile,
@@ -139,9 +140,10 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
   const asked = application?.status === "info_requested";
   const fixed = new Set(profile.verified_fields);
   const reply = form.register("responseNote");
-  const state =
-    states.find((s) => s.code === application?.sql_state_code)?.name ??
-    String(application?.sql_state_code);
+  // The loader checked an application's state is listed; a new one has none yet.
+  const state = application
+    ? nameOfState(states, application.sql_state_code)
+    : "";
 
   async function save(values: StartValues) {
     setError(null);
@@ -390,6 +392,7 @@ function StartPage() {
           router.replace("/application/received");
           return;
         }
+        if (application) nameOfState(states, application.sql_state_code);
         const [upload] =
           application?.status === "info_requested"
             ? await loadUnattached()
