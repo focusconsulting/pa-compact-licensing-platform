@@ -24,11 +24,10 @@ class AttestationOut(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,
         json_schema_extra=example(
-            code='nccpa_current',
+            code='truthfulness',
             version=1,
             applies_to=AttestationAppliesTo.PARTICIPATION,
-            text='I hold a current certification from the National Commission on Certification of '
-            'Physician Assistants (NCCPA).',
+            text='I swear that the information in this application is true and accurate.',
         ),
     )
 
