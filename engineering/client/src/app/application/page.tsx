@@ -26,7 +26,6 @@ import {
   saveProfile,
   startApplication,
 } from "src/lib/application";
-import { formatDate } from "src/lib/dates";
 
 interface StartValues {
   residenceLine1: string;
@@ -41,6 +40,7 @@ interface StartValues {
   otherFirstName: string;
   otherMiddleName: string;
   otherLastName: string;
+  otherSuffix: string;
   nccpa: string;
 }
 
@@ -69,11 +69,12 @@ function defaults({ application, profile }: Loaded): StartValues {
     otherFirstName: other?.first_name ?? "",
     otherMiddleName: other?.middle_name ?? "",
     otherLastName: other?.last_name ?? "",
+    otherSuffix: other?.name_suffix ?? "",
     nccpa: profile.nccpa_certification_number ?? "",
   };
 }
 
-/** A detail the state verified: shown, not editable (PR1). */
+/** The NCCPA number the state verified: shown, not editable (PR1). */
 function Fixed({ label, value }: { label: string; value: string }) {
   return (
     <div className="margin-top-3">
@@ -100,11 +101,11 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
       first_name: blankToNull(values.otherFirstName),
       middle_name: blankToNull(values.otherMiddleName),
       last_name: blankToNull(values.otherLastName),
+      name_suffix: blankToNull(values.otherSuffix),
     };
     if (
-      !fixed.has("other_names") &&
       !other.last_name &&
-      (other.first_name || other.middle_name)
+      (other.first_name || other.middle_name || other.name_suffix)
     ) {
       setError("otherNameLastName");
       return;
@@ -116,25 +117,19 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
           line2: blankToNull(values.residenceLine2),
           city: values.residenceCity,
           region: values.residenceRegion,
-          postal_code: values.residenceZip,
+          postal_code: blankToNull(values.residenceZip),
           country_code: "US",
         },
-        ...(fixed.has("date_of_birth")
-          ? {}
-          : { date_of_birth: values.dateOfBirth }),
+        date_of_birth: values.dateOfBirth,
         ...(fixed.has("nccpa_certification_number")
           ? {}
           : { nccpa_certification_number: values.nccpa }),
-        ...(fixed.has("other_names")
-          ? {}
-          : {
-              other_names: [
-                ...(other.last_name
-                  ? [{ ...other, last_name: other.last_name }]
-                  : []),
-                ...profile.other_names.slice(1),
-              ],
-            }),
+        other_names: [
+          ...(other.last_name
+            ? [{ ...other, last_name: other.last_name }]
+            : []),
+          ...profile.other_names.slice(1),
+        ],
       });
       const current =
         application ?? (await startApplication(values.sqlStateCode as string));
@@ -213,49 +208,32 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
         <Fieldset legend={t("start.licenseExpires")}>
           <DateFields id="licenseExpires" name="" />
         </Fieldset>
-        {fixed.has("date_of_birth") ? (
-          <Fixed
-            label={t("start.dateOfBirth")}
-            value={formatDate(String(profile.date_of_birth))}
-          />
-        ) : (
-          <Fieldset legend={t("start.dateOfBirth")}>
-            <DateFields id="dateOfBirth" name="" />
-          </Fieldset>
-        )}
+        <Fieldset legend={t("start.dateOfBirth")}>
+          <DateFields id="dateOfBirth" name="" />
+        </Fieldset>
         <h2>{t("start.detailsHeading")}</h2>
-        {fixed.has("other_names") ? (
-          profile.other_names.length > 0 && (
-            <Fixed
-              label={t("start.otherNames")}
-              value={profile.other_names
-                .map((n) =>
-                  [n.first_name, n.middle_name, n.last_name, n.name_suffix]
-                    .filter(Boolean)
-                    .join(" "),
-                )
-                .join(", ")}
-            />
-          )
-        ) : (
-          <Fieldset legend={t("start.otherNames")}>
-            <TextField
-              id="otherFirstName"
-              label={t("basic:fields.name.firstNameTitle")}
-              optional
-            />
-            <TextField
-              id="otherMiddleName"
-              label={t("basic:fields.name.middleNameTitle")}
-              optional
-            />
-            <TextField
-              id="otherLastName"
-              label={t("basic:fields.name.lastNameTitle")}
-              optional
-            />
-          </Fieldset>
-        )}
+        <Fieldset legend={t("start.otherNames")}>
+          <TextField
+            id="otherFirstName"
+            label={t("basic:fields.name.firstNameTitle")}
+            optional
+          />
+          <TextField
+            id="otherMiddleName"
+            label={t("basic:fields.name.middleNameTitle")}
+            optional
+          />
+          <TextField
+            id="otherLastName"
+            label={t("basic:fields.name.lastNameTitle")}
+            optional
+          />
+          <TextField
+            id="otherSuffix"
+            label={t("basic:fields.name.suffixTitle")}
+            optional
+          />
+        </Fieldset>
         {fixed.has("nccpa_certification_number") ? (
           <Fixed
             label={t("start.nccpa")}
