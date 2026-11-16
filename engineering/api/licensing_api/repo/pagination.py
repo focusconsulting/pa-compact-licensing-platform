@@ -3,16 +3,17 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from sqlalchemy import ColumnElement, Select, func, select
+from sqlalchemy import ColumnElement, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped
+from sqlmodel.sql.expression import SelectOfScalar
 
 from licensing_api.responses import PageQuery
 
 
 async def paginate[M](
     session: AsyncSession,
-    statement: Select[tuple[M]],
+    statement: SelectOfScalar[M],
     query: PageQuery,
     # Mapped: what sqlmodel's col() returns for a model field.
     columns: Mapping[str, ColumnElement[Any] | Mapped[Any]],

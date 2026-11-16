@@ -10,6 +10,7 @@ _CONSUMED_ELSEWHERE = {
     EventType.PRACTITIONER_PROFILE_CHANGED: 'U-03 propagates the change to every state the PA is in',
     EventType.PRACTITIONER_EMAIL_CHANGE_REQUESTED: 'U-03 sends the verification code',
     EventType.DOCUMENT_UPLOADED: 'history only; D-01 lists documents',
+    EventType.DOCUMENT_SCANNED: 'history only; D-01 lists documents',
 }
 
 

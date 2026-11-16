@@ -1,3 +1,6 @@
+// Sass compiles each stylesheet alone, so load the theme first: it configures uswds-core
+// (semibold and the rest), and every later @use of uswds-core gets that configuration.
+@use "uswds-theme";
 @use "uswds-core";
 
 .legend-lg > legend {

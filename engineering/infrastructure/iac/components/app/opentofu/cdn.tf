@@ -11,22 +11,52 @@ resource "aws_cloudfront_function" "block_403" {
   EOF
 }
 
+locals {
+  alb_origin_endpoint = {
+    http_port              = 80
+    https_port             = 443
+    origin_protocol_policy = "https-only"
+    ssl_protocols          = ["TLSv1.2"]
+  }
+}
+
+# CloudFront refuses to update a VPC origin a distribution uses (409
+# CannotUpdateEntityWhileInUse), so a change to its settings replaces it instead:
+# the new origin, named from its settings, is created, the distribution moves to it,
+# and then the old one is deleted.
+resource "terraform_data" "alb_origin_endpoint" {
+  input = local.alb_origin_endpoint
+}
+
 # CloudFront VPC Origin — wraps the internal ALB so CloudFront can reach it
 # without making the ALB internet-facing. CloudFront injects ENIs into the VPC;
 # traffic arrives from within the VPC CIDR, which the ALB SG already allows.
 resource "aws_cloudfront_vpc_origin" "alb_origin" {
   vpc_origin_endpoint_config {
-    name                   = "${var.environment_name}-${local.application_name}-alb-origin"
+    name                   = "${var.environment_name}-${local.application_name}-alb-origin-${substr(sha1(jsonencode(local.alb_origin_endpoint)), 0, 8)}"
     arn                    = aws_lb.api_alb.arn
-    http_port              = 80
-    https_port             = 443
-    origin_protocol_policy = "http-only"
+    http_port              = local.alb_origin_endpoint.http_port
+    https_port             = local.alb_origin_endpoint.https_port
+    origin_protocol_policy = local.alb_origin_endpoint.origin_protocol_policy
 
     origin_ssl_protocols {
-      items    = ["TLSv1.2"]
-      quantity = 1
+      items    = local.alb_origin_endpoint.ssl_protocols
+      quantity = length(local.alb_origin_endpoint.ssl_protocols)
     }
   }
+
+  lifecycle {
+    create_before_destroy = true
+    replace_triggered_by  = [terraform_data.alb_origin_endpoint.output]
+  }
+}
+
+data "aws_cloudfront_cache_policy" "caching_disabled" {
+  name = "Managed-CachingDisabled"
+}
+
+data "aws_cloudfront_origin_request_policy" "all_viewer" {
+  name = "Managed-AllViewer"
 }
 
 # CloudFront VPC Origins automatically creates and manages a security group in the account.
@@ -184,18 +214,11 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
     allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods         = ["GET", "HEAD"]
 
-    forwarded_values {
-      query_string = true
-      headers      = ["Authorization", "Accept", "Content-Type"]
-      cookies {
-        forward = "all"
-      }
-    }
-
-    # Disable caching for API responses
-    min_ttl     = 0
-    default_ttl = 0
-    max_ttl     = 0
+    cache_policy_id = data.aws_cloudfront_cache_policy.caching_disabled.id
+    # Forwards the viewer's Host header, which is what makes the load balancer's
+    # certificate (for dns_name) match: CloudFront checks an origin's certificate
+    # against the origin domain or the forwarded Host.
+    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer.id
   }
 
   # Return index.html for 404s so Next.js client-side routing works on direct URL navigation

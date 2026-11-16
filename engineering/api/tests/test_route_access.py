@@ -1,11 +1,12 @@
 """Every /api route declares who may call it (ADR-0009) and sits in a persona namespace whose rule it meets (backlog D3)."""
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Sequence
 from typing import Annotated
 
 import pytest
 from fastapi import APIRouter, FastAPI
-from fastapi.routing import APIRoute
+from fastapi.routing import APIRoute, RouteContext, iter_route_contexts
+from starlette.routing import BaseRoute
 
 from licensing_api.__main__ import app
 from licensing_api.permissions import Permission, RouteAccess, public, require, route_access
@@ -34,8 +35,14 @@ _RULES: dict[str, Callable[[RouteAccess], str | None]] = {
 }
 
 
-def _api_routes(routes: Iterable[object]) -> list[APIRoute]:
-    return [r for r in routes if isinstance(r, APIRoute) and r.path.startswith('/api')]
+def _api_routes(routes: Sequence[BaseRoute]) -> list[RouteContext]:
+    return [
+        r
+        for r in iter_route_contexts(routes)
+        if isinstance(r.original_route, APIRoute)
+        and r.path is not None
+        and r.path.startswith('/api')
+    ]
 
 
 def _namespace(path: str) -> str | None:
@@ -46,7 +53,7 @@ def _namespace(path: str) -> str | None:
     return None
 
 
-def _violations(routes: Iterable[object]) -> list[str]:
+def _violations(routes: Sequence[BaseRoute]) -> list[str]:
     found = []
     for route in _api_routes(routes):
         access = route_access(route)

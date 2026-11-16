@@ -4,10 +4,11 @@ from collections.abc import Mapping
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import Column, Select, insert
+from sqlalchemy import Column, insert
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import Field, SQLModel, col, select
+from sqlmodel.sql.expression import SelectOfScalar
 
 from licensing_api.repo.base import DOTTED_NAME, TimestampTZ, entity_ref, utc_now
 
@@ -89,7 +90,7 @@ def audit_entries(
     actor_user_id: int | None = None,
     occurred_from: datetime | None = None,
     occurred_to: datetime | None = None,
-) -> Select[tuple[AuditLogEntry]]:
+) -> SelectOfScalar[AuditLogEntry]:
     """Entries matching every filter given. ``occurred_to`` is exclusive."""
     statement = select(AuditLogEntry)
     filters = {

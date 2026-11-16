@@ -20,7 +20,7 @@ NAMESPACES: Mapping[str, Sequence[APIRouter]] = {
     # One state's staff, acting in the state named by the path.
     '/states/{state_code}': [document.states],
     # Commission staff, across every state.
-    '/commission': [audit.router],
+    '/commission': [audit.router, document.commission],
     # The system operator.
     '/admin': [],
 }

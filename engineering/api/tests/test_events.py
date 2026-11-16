@@ -71,6 +71,7 @@ _SHIPPED_EVENT_TYPES = frozenset(
         'sii.flagged',
         'sii.closed',
         'document.uploaded',
+        'document.scanned',
     }
 )
 # Types removed from EventType through the two-release process in the platform contract.

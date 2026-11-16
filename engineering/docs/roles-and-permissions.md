@@ -58,7 +58,7 @@ A value that names no permission matches nothing, so a typo denies rather than a
 
 ## What a permission does not decide
 
-A permission decides whether a user may call a route, not which rows they see. A `state_staff` user with `read_private` in Kansas sees only the PAs connected to Kansas (Rule 5 §5.6(a)), and a licensee sees only their own record. The route's query applies that scope, and a record outside it returns `404` (constitution Principle II).
+A permission decides whether a user may call a route, not which rows they see. [Documents](documents.md#who-may-see-a-document) lists the scope for each kind of document. A `state_staff` user with `read_private` in Kansas sees only the PAs connected to Kansas (Rule 5 §5.6(a)), and a licensee sees only their own record. The route's query applies that scope, and a record outside it returns `404` (constitution Principle II).
 
 ## Namespaces
 

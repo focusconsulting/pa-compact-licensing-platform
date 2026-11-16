@@ -14,6 +14,7 @@ class ErrorCode(StrEnum):
     UserInactive = 'USER_INACTIVE'
     Forbidden = 'FORBIDDEN'
     NotFound = 'NOT_FOUND'
+    DocumentNotClean = 'DOCUMENT_NOT_CLEAN'
     ValidationError = 'VALIDATION_ERROR'
     HttpError = 'HTTP_ERROR'
     InternalError = 'INTERNAL_ERROR'

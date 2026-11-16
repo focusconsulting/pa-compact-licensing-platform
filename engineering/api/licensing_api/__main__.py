@@ -86,7 +86,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     logger.info('Starting up', extra={'settings': settings})
     await asyncio.to_thread(run_migrations)
 
-    engine = create_async_engine(settings.db_url, pool_pre_ping=True)
+    engine = create_async_engine(
+        settings.db_url, pool_pre_ping=True, connect_args=settings.db_connect_args
+    )
     app.state.session_factory = async_sessionmaker(engine, expire_on_commit=False)
     app.state.db_engine = engine
     app.state.storage = create_storage(settings)

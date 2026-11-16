@@ -11,6 +11,7 @@ from unittest.mock import patch
 import pytest
 from fastapi import APIRouter, Depends, FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
+from fastapi.routing import APIRoute, iter_route_contexts
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.pool import NullPool
@@ -262,8 +263,8 @@ def test_every_role_has_permissions():
 def test_route_access_reads_each_declaration():
     access = {
         route.path: route_access(route)
-        for route in _test_app().routes
-        if hasattr(route, 'dependant')
+        for route in iter_route_contexts(_test_app().routes)
+        if isinstance(route.original_route, APIRoute)
     }
 
     assert access['/open'] is not None and access['/open'].signed_in is False

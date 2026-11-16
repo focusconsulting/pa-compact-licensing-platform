@@ -176,12 +176,14 @@ A file in object storage owned by one record (D9). `created_by` is the uploader.
 | Column | Type | Meaning |
 |---|---|---|
 | `owner_type`, `owner_id`, `owner_key` | TEXT CHECK, BIGINT, TEXT | `practitioner`, `participation_application`, `privilege_request`, `adverse_action`, `sii_report`, `ingestion_batch` with `owner_id`; `state` with `owner_key` (the code). No foreign key. All three are NULL while a file is uploaded ahead of its owner, e.g. an adverse action whose only evidence is the order (FLOW-05) |
+| `uploaded_in_state` | FK `states`, NULL | The state staff uploaded it for, from the route; NULL for a PA's upload. Scopes it until it is attached |
 | `kind` | TEXT | What it proves; free text until Q-07 |
 | `storage_key` | TEXT, unique | S3 (RustFS locally) object key |
 | `file_name`, `content_type`, `size_bytes` | | |
 | `scan_status` | TEXT CHECK | `pending`, `clean`, `infected`, `error`; only `clean` may be downloaded |
 | `scanned_at` | TIMESTAMPTZ, NULL | When the malware scan's result was recorded |
 | `scan_checked_at` | TIMESTAMPTZ, NULL | When the Worker last looked for a result; it looks again 5 seconds later |
+| `scanned_version_id` | TEXT, NULL | The object version the result belongs to. An upload link can be used again until it expires, making a new version; downloads serve this one only |
 
 The object key is `documents/<public_id>`, never a name the uploader typed. Uploads, scan results, and attachment to an owner are kept in `documents_history`; a document is attached once and never moves (Rule 4 §4.3(e)(4)).
 

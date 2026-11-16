@@ -1,4 +1,4 @@
-"""Documents: upload links and each document's details (backlog D9, F-12).
+"""Documents: upload links, details, and download links (backlog D9, F-12).
 
 The browser uploads straight to the bucket with the link a ``POST`` returns; the API never
 handles the bytes. A new document is ``pending`` until the Worker records its malware scan.
@@ -12,24 +12,38 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, Path
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+from sqlalchemy import ColumnElement
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col, select
 
 from licensing_api.context import ChangeContext, change_context
 from licensing_api.dependencies import get_db_session, get_storage
-from licensing_api.documents import EXTENSIONS, MAX_BYTES, UPLOAD_LINK_LIFETIME, DocumentType
+from licensing_api.documents import (
+    DOWNLOAD_LINK_LIFETIME,
+    EXTENSIONS,
+    MAX_BYTES,
+    UPLOAD_LINK_LIFETIME,
+    DocumentType,
+)
 from licensing_api.errors import AppError, ErrorCode
 from licensing_api.permissions import Permission, require
-from licensing_api.repo import history
+from licensing_api.repo import audit_log, history
 from licensing_api.repo.base import utc_now
 from licensing_api.repo.document import Document, ScanStatus, storage_key_for
+from licensing_api.repo.document_scope import (
+    visible_to_commission,
+    visible_to_practitioner,
+    visible_to_state,
+)
 from licensing_api.repo.domain_event import EventType, emit
+from licensing_api.repo.practitioner import Practitioner
 from licensing_api.repo.user import User
 from licensing_api.responses import Data, example
 from licensing_api.storage import Storage
 
 me = APIRouter(prefix='/documents')
 states = APIRouter(prefix='/documents')
+commission = APIRouter(prefix='/documents')
 
 StateCode = Annotated[str, Path(pattern=r'^[A-Za-z]{2}$', description='Two-letter state code')]
 DocumentId = Annotated[UUID, Path(description="The document's ID")]
@@ -109,6 +123,20 @@ class UploadForm(BaseModel):
     expires_at: datetime
 
 
+class DocumentDownload(BaseModel):
+    """A link that downloads the document's scanned file; it expires at ``expires_at``."""
+
+    model_config = ConfigDict(
+        json_schema_extra=example(
+            url=f'https://example-documents.s3.amazonaws.com/documents/{_EXAMPLE_ID}?versionId=1',
+            expires_at=_EXAMPLE_CREATED,
+        )
+    )
+
+    url: str
+    expires_at: datetime
+
+
 class DocumentUpload(BaseModel):
     """The new ``pending`` document and the form that uploads its file."""
 
@@ -141,7 +169,7 @@ async def upload_my_document(
     storage: Annotated[Storage, Depends(get_storage)],
 ) -> Data[DocumentUpload]:
     """A PA's upload, unattached until a record they submit attaches it."""
-    return Data(data=await _upload(session, ctx, storage, body))
+    return Data(data=await _upload(session, ctx, storage, body, uploaded_in_state=None))
 
 
 @states.post(
@@ -159,40 +187,106 @@ async def upload_state_document(
     storage: Annotated[Storage, Depends(get_storage)],
 ) -> Data[DocumentUpload]:
     """A state staff member's upload, such as an order to attach to an adverse action (FLOW-05)."""
-    return Data(data=await _upload(session, ctx, storage, body))
+    return Data(
+        data=await _upload(session, ctx, storage, body, uploaded_in_state=state_code.upper())
+    )
 
 
-@me.get(
-    '/{document_id}',
-    name='Get my document',
-    description="A document's details, including whether its malware scan has finished.",
+_DETAILS_DESCRIPTION = "A document's details, including whether its malware scan has finished."
+_DOWNLOAD_DESCRIPTION = (
+    'A link, valid for one minute, that downloads the document as a file. Only a document whose '
+    'malware scan found it clean can be downloaded; `409 DOCUMENT_NOT_CLEAN` otherwise.'
 )
+
+
+@me.get('/{document_id}', name='Get my document', description=_DETAILS_DESCRIPTION)
 async def get_my_document(
     document_id: DocumentId,
     caller: Annotated[User, require(Permission.MANAGE_OWN_RECORD)],
     session: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> Data[DocumentOut]:
-    """Only the uploader sees an unattached document; ``404`` for anyone else (Principle II)."""
-    return Data(data=DocumentOut.model_validate(await _uploaded_by(session, caller, document_id)))
+    """One of the PA's own documents, or one they uploaded and have not attached yet."""
+    document = await _find(session, document_id, await _own_scope(session, caller))
+    return Data(data=DocumentOut.model_validate(document))
 
 
-@states.get(
-    '/{document_id}',
-    name="Get a state's document",
-    description="A document's details, including whether its malware scan has finished.",
-)
+@me.get('/{document_id}/download', name='Download my document', description=_DOWNLOAD_DESCRIPTION)
+async def download_my_document(
+    document_id: DocumentId,
+    caller: Annotated[User, require(Permission.MANAGE_OWN_RECORD)],
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+    storage: Annotated[Storage, Depends(get_storage)],
+) -> Data[DocumentDownload]:
+    """A PA reading their own document is not audited; it is their record."""
+    document = await _find(session, document_id, await _own_scope(session, caller))
+    return Data(data=_link(storage, document))
+
+
+@states.get('/{document_id}', name="Get a state's document", description=_DETAILS_DESCRIPTION)
 async def get_state_document(
     state_code: StateCode,
     document_id: DocumentId,
-    caller: Annotated[User, require(Permission.WRITE, state_param='state_code')],
+    _caller: Annotated[User, require(Permission.READ_PRIVATE, state_param='state_code')],
     session: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> Data[DocumentOut]:
-    """Only the uploader sees an unattached document; ``404`` for anyone else (Principle II)."""
-    return Data(data=DocumentOut.model_validate(await _uploaded_by(session, caller, document_id)))
+    """A document in the state's scope; see ``visible_to_state``."""
+    document = await _find(session, document_id, visible_to_state(state_code))
+    return Data(data=DocumentOut.model_validate(document))
+
+
+@states.get(
+    '/{document_id}/download',
+    name="Download a state's document",
+    description=f'{_DOWNLOAD_DESCRIPTION} Every download is recorded in the audit log.',
+)
+async def download_state_document(
+    state_code: StateCode,
+    document_id: DocumentId,
+    _caller: Annotated[User, require(Permission.READ_PRIVATE, state_param='state_code')],
+    ctx: Annotated[ChangeContext, Depends(change_context)],
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+    storage: Annotated[Storage, Depends(get_storage)],
+) -> Data[DocumentDownload]:
+    """A staff read of a private document, so it is audited."""
+    document = await _find(session, document_id, visible_to_state(state_code))
+    return Data(data=await _audited_link(session, ctx, storage, document))
+
+
+@commission.get('/{document_id}', name='Get any document', description=_DETAILS_DESCRIPTION)
+async def get_any_document(
+    document_id: DocumentId,
+    _caller: Annotated[User, require(Permission.COMPACT_ADMIN)],
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+) -> Data[DocumentOut]:
+    """Any document: the Commission reads every state's records."""
+    document = await _find(session, document_id, visible_to_commission())
+    return Data(data=DocumentOut.model_validate(document))
+
+
+@commission.get(
+    '/{document_id}/download',
+    name='Download any document',
+    description=f'{_DOWNLOAD_DESCRIPTION} Every download is recorded in the audit log.',
+)
+async def download_any_document(
+    document_id: DocumentId,
+    _caller: Annotated[User, require(Permission.COMPACT_ADMIN)],
+    ctx: Annotated[ChangeContext, Depends(change_context)],
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+    storage: Annotated[Storage, Depends(get_storage)],
+) -> Data[DocumentDownload]:
+    """A staff read of a private document, so it is audited."""
+    document = await _find(session, document_id, visible_to_commission())
+    return Data(data=await _audited_link(session, ctx, storage, document))
 
 
 async def _upload(
-    session: AsyncSession, ctx: ChangeContext, storage: Storage, body: DocumentUploadIn
+    session: AsyncSession,
+    ctx: ChangeContext,
+    storage: Storage,
+    body: DocumentUploadIn,
+    *,
+    uploaded_in_state: str | None,
 ) -> DocumentUpload:
     public_id = uuid4()
     document = Document(
@@ -202,6 +296,7 @@ async def _upload(
         content_type=body.content_type,
         size_bytes=body.size_bytes,
         storage_key=storage_key_for(public_id),
+        uploaded_in_state=uploaded_in_state,
         created_by=ctx.user_id,
     )
     session.add(document)
@@ -222,11 +317,42 @@ async def _upload(
     )
 
 
-async def _uploaded_by(session: AsyncSession, caller: User, document_id: UUID) -> Document:
-    statement = select(Document).where(
-        col(Document.public_id) == document_id, col(Document.created_by) == caller.id
-    )
+async def _own_scope(session: AsyncSession, caller: User) -> ColumnElement[bool]:
+    statement = select(col(Practitioner.id)).where(col(Practitioner.user_id) == caller.id)
+    practitioner_id = (await session.scalars(statement)).one_or_none()
+    return visible_to_practitioner(practitioner_id, caller.id)  # type: ignore[arg-type]  # a loaded user always has an id
+
+
+async def _find(session: AsyncSession, document_id: UUID, scope: ColumnElement[bool]) -> Document:
+    statement = select(Document).where(col(Document.public_id) == document_id, scope)
     document = (await session.scalars(statement)).one_or_none()
     if document is None:
         raise AppError(404, ErrorCode.NotFound, ['No such document'])
     return document
+
+
+async def _audited_link(
+    session: AsyncSession, ctx: ChangeContext, storage: Storage, document: Document
+) -> DocumentDownload:
+    link = _link(storage, document)
+    await audit_log.write(session, ctx, 'document.downloaded', document)
+    await session.commit()
+    return link
+
+
+def _link(storage: Storage, document: Document) -> DocumentDownload:
+    # The scanned version only: the upload link may have made a newer, unscanned one.
+    if document.scan_status != ScanStatus.CLEAN or not document.scanned_version_id:
+        raise AppError(
+            409,
+            ErrorCode.DocumentNotClean,
+            [f'The document cannot be downloaded: its malware scan is {document.scan_status}'],
+        )
+    url = storage.presign_download(
+        document.storage_key,
+        file_name=document.file_name,
+        content_type=document.content_type,
+        version_id=document.scanned_version_id,
+        expires=DOWNLOAD_LINK_LIFETIME,
+    )
+    return DocumentDownload(url=url, expires_at=utc_now() + DOWNLOAD_LINK_LIFETIME)

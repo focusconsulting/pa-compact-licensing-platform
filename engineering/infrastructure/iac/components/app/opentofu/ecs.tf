@@ -162,6 +162,9 @@ resource "aws_ecs_task_definition" "api_task" {
         { name = "LOG_LEVEL", value = "INFO" },
         { name = "OTEL_ENABLED", value = "true" },
         { name = "CORS_ORIGINS", value = jsonencode(["https://${var.dns_name}"]) },
+        { name = "S3_REGION", value = var.aws_region },
+        { name = "S3_DOCUMENTS_BUCKET", value = aws_s3_bucket.documents.id },
+        { name = "DB_CA_FILE", value = local.db_ca_file },
       ]
       secrets = [
         {
@@ -190,7 +193,9 @@ resource "aws_ecs_task_definition" "api_task" {
         # not whether dependencies are reachable. Using /ready here causes ECS to
         # kill and restart tasks whenever the DB is slow, creating restart loops
         # and slow deployments. The ALB /ready check gates traffic separately.
-        command     = ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health/live')\""]
+        # The API serves TLS with a certificate it makes at start (ADR-0019,
+        # licensing_api/serve.py); the check trusts exactly that certificate.
+        command     = ["CMD-SHELL", "python -c \"import ssl, urllib.request; urllib.request.urlopen('https://localhost:8000/api/health/live', context=ssl.create_default_context(cafile='/tmp/licensing-api-tls/cert.pem'))\""]
         interval    = 30
         timeout     = 5
         retries     = 3
@@ -237,12 +242,17 @@ resource "aws_lb" "api_alb" {
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_sg.id]
   subnets            = data.terraform_remote_state.network.outputs.private_subnet_ids
+
+  drop_invalid_header_fields = true
+  enable_deletion_protection = var.deletion_protection
 }
 
 resource "aws_lb_listener" "api_listener" {
   load_balancer_arn = aws_lb.api_alb.arn
-  port              = 80
-  protocol          = "HTTP"
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  certificate_arn   = var.acm_certificate_arn
 
   default_action {
     type             = "forward"
@@ -252,20 +262,26 @@ resource "aws_lb_listener" "api_listener" {
 
 resource "aws_lb_target_group" "api_target_group" {
   # Target group names are capped at 32 characters; "staging-licensing-api-target-group" is 34.
-  name        = "${var.environment_name}-${local.application_name}-api-tg"
-  port        = 8000
-  protocol    = "HTTP"
+  name = "${var.environment_name}-${local.application_name}-api-https"
+  port = 8000
+  # The load balancer encrypts to the task but does not validate its certificate (ADR-0019).
+  protocol    = "HTTPS"
   vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
   target_type = "ip"
 
   health_check {
     healthy_threshold   = 3  # Mark healthy after 3 successful checks
     interval            = 30 # Check every 30 seconds
-    protocol            = "HTTP"
+    protocol            = "HTTPS"
     matcher             = "200"               # Look for HTTP 200 responses
     timeout             = 3                   # Timeout after 3 seconds
     path                = "/api/health/ready" # Health check endpoint
     unhealthy_threshold = 2                   # Mark unhealthy after 2 failed checks
+  }
+
+  # A protocol change replaces the group while the listener still forwards to it.
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
@@ -298,11 +314,15 @@ resource "aws_ecs_service" "api_service" {
 
 # Registers the ECS service as a scalable target
 resource "aws_appautoscaling_target" "api_service" {
-  max_capacity       = var.ecs_max_capacity
-  min_capacity       = 1
+  # A range of 0 to 0 is how a paused API stops: the autoscaler, not desired_count, owns the count.
+  max_capacity       = local.paused ? 0 : var.ecs_max_capacity
+  min_capacity       = local.paused ? 0 : 1
   resource_id        = "service/${aws_ecs_cluster.app_cluster.name}/${aws_ecs_service.api_service.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
+
+  # On resume the API starts once the database instance is back; on pause it stops first.
+  depends_on = [aws_rds_cluster_instance.cluster_instances]
 }
 
 # Target-tracking policy: scale out when average CPU > 70%, scale in automatically

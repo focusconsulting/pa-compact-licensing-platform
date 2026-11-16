@@ -130,6 +130,11 @@ locals {
       pattern     = "{ $.logger = \"licensing_api.jobs\" && $.outcome = \"failed\" }"
       description = "A scheduled job failed; its job_runs row and log say why"
     }
+    DocumentsInfected = {
+      log_group   = aws_cloudwatch_log_group.worker_logs.name
+      pattern     = "{ $.logger = \"licensing_api.scans\" && $.outcome = \"infected\" }"
+      description = "GuardDuty found malware in an uploaded document; it can never be downloaded. The log's document_id says which"
+    }
   }
 }
 
@@ -177,8 +182,10 @@ resource "aws_cloudwatch_metric_alarm" "worker_not_running" {
   threshold           = 1
   # Container Insights reports nothing for a service with no tasks.
   treat_missing_data = "breaching"
-  alarm_actions      = [aws_sns_topic.api_alerts.arn]
-  ok_actions         = [aws_sns_topic.api_alerts.arn]
+  # A paused environment reports nothing, which this alarm treats as breaching.
+  actions_enabled = !local.paused
+  alarm_actions   = [aws_sns_topic.api_alerts.arn]
+  ok_actions      = [aws_sns_topic.api_alerts.arn]
 }
 
 resource "aws_cloudwatch_log_metric_filter" "heartbeat" {
@@ -204,6 +211,8 @@ resource "aws_cloudwatch_metric_alarm" "jobs_not_running" {
   comparison_operator = "LessThanThreshold"
   threshold           = 1
   treat_missing_data  = "breaching"
-  alarm_actions       = [aws_sns_topic.api_alerts.arn]
-  ok_actions          = [aws_sns_topic.api_alerts.arn]
+  # A paused environment reports nothing, which this alarm treats as breaching.
+  actions_enabled = !local.paused
+  alarm_actions   = [aws_sns_topic.api_alerts.arn]
+  ok_actions      = [aws_sns_topic.api_alerts.arn]
 }

@@ -1,5 +1,5 @@
 # Build stage — install dependencies using uv
-FROM ghcr.io/astral-sh/uv:0.13.7-python3.13-alpine@sha256:7b02bf9f2d812bf1b21b4d790901eb22250523943b82af93e8c543ea54b6b4d5 AS build
+FROM ghcr.io/astral-sh/uv:0.13.8-python3.13-alpine@sha256:f2d6278d0821c35881b010ddbf75825049661a98dbfdf61bbd1407e8dd544d00 AS build
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -14,7 +14,7 @@ RUN uv sync --frozen --no-dev
 
 
 # Dev
-FROM ghcr.io/astral-sh/uv:0.13.7-python3.13-alpine@sha256:7b02bf9f2d812bf1b21b4d790901eb22250523943b82af93e8c543ea54b6b4d5 AS dev
+FROM ghcr.io/astral-sh/uv:0.13.8-python3.13-alpine@sha256:f2d6278d0821c35881b010ddbf75825049661a98dbfdf61bbd1407e8dd544d00 AS dev
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -51,4 +51,5 @@ COPY --chown=python:python . .
 USER 1000
 
 ENV PATH="/app/.venv/bin:$PATH"
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "licensing_api.__main__:app"]
+# gunicorn behind TLS, with a certificate made at start (ADR-0019)
+CMD ["python", "-m", "licensing_api.serve"]

@@ -67,8 +67,23 @@ variable "dns_name" {
 
 variable "acm_certificate_arn" {
   type        = string
-  description = "ACM certificate ARN for HTTPS on the ALB listener (optional; HTTP-only if not set)"
-  default     = null
+  description = "ARN of the ACM certificate the load balancer's HTTPS listener presents. It must cover dns_name and be issued in aws_region; CloudFront's own certificate is looked up in us-east-1 (dns.tf)."
+
+  validation {
+    condition     = can(regex("^arn:aws[a-z-]*:acm:[a-z0-9-]+:[0-9]{12}:certificate/.+$", var.acm_certificate_arn))
+    error_message = "acm_certificate_arn must be an ACM certificate ARN."
+  }
+
+  validation {
+    condition     = try(split(":", var.acm_certificate_arn)[3], "") == var.aws_region
+    error_message = "acm_certificate_arn must be a certificate in aws_region: a load balancer can use only a certificate from its own region."
+  }
+}
+
+variable "deletion_protection" {
+  type        = bool
+  description = "Guards everything that would block or lose data in a teardown. Leave on wherever data must survive; an environment that is spun up and torn down turns it off."
+  default     = true
 }
 
 variable "ecs_max_capacity" {

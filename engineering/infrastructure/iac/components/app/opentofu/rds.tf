@@ -52,7 +52,9 @@ resource "aws_rds_cluster" "rds_aurora_cluster" {
 # Else the instance will default to a mismatched version
 # https://github.com/terraform-providers/terraform-provider-aws/issues/4779
 resource "aws_rds_cluster_instance" "cluster_instances" {
-  count                        = var.instance_count
+  # Paused, the cluster keeps its storage and loses its instances: AWS restarts a
+  # stopped cluster after seven days, so a stopped one would not stay stopped.
+  count                        = local.paused ? 0 : var.instance_count
   identifier                   = "${local.cluster_identifier}-instance-${count.index}"
   cluster_identifier           = aws_rds_cluster.rds_aurora_cluster.id
   engine                       = "aurora-postgresql"
