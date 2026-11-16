@@ -184,6 +184,8 @@ class _Demo:
         fields: dict[str, Any] = {}
         if status != ApplicationStatus.DRAFT:
             fields['opened_at'] = self.at(-60)
+            fields['sworn_name'] = f'{practitioner.legal_first_name} {practitioner.legal_last_name}'
+            fields['sworn_at'] = self.at(-60)
         if status in _APPROVED:
             fields |= {
                 'license_verified_at': self.at(-50),
