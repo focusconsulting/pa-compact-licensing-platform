@@ -2,9 +2,13 @@
 
 import ProtectedRoute from "src/components/ProtectedRoute";
 import { useCurrentUser } from "src/contexts/CurrentUserContext";
+import { portalFor } from "src/lib/navigation";
+import PaDashboard from "./PaDashboard";
 
 function Dashboard() {
   const { user, error } = useCurrentUser();
+
+  if (user && portalFor(user.permissions) === "pa") return <PaDashboard />;
 
   return (
     <div className="usa-section">

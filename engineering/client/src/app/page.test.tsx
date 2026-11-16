@@ -7,12 +7,14 @@ import { useAuth } from "src/contexts/AuthContext";
 import { CurrentUserProvider } from "src/contexts/CurrentUserContext";
 import { getCurrentSession } from "src/lib/auth";
 import { expectNoAxeViolations } from "src/tests/axe";
-import { answerFetch } from "src/tests/fetch";
+import { answerFetch, routeFetch } from "src/tests/fetch";
 import HomePage from "./page";
 
 vi.mock("src/lib/auth");
 vi.mock("src/contexts/AuthContext");
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+}));
 
 const mockSignOut = vi.fn();
 
@@ -59,6 +61,38 @@ function failMe(status: number) {
 }
 
 describe("Home (Dashboard) page", () => {
+  it("shows a PA their own dashboard", async () => {
+    routeFetch({
+      "GET /api/me": Response.json({
+        data: {
+          ...mockUser,
+          role: "licensee",
+          permissions: ["manage_own_record"],
+        },
+      }),
+      "GET /api/me/dashboard": Response.json({
+        data: {
+          qualifying_license: null,
+          applications: [],
+          privileges: [],
+          primary_action: {
+            kind: "apply_for_participation",
+            available: true,
+            reasons: [],
+          },
+        },
+      }),
+      "GET /api/public/states": Response.json({ data: [] }),
+    });
+
+    render(<Home />);
+
+    await waitFor(() =>
+      expect(vi.mocked(globalThis.fetch)).toHaveBeenCalledTimes(3),
+    );
+    expect(screen.queryByText("user@example.com")).not.toBeInTheDocument();
+  });
+
   it("displays user data after successful fetch", async () => {
     answerMe({});
 
