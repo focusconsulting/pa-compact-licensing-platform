@@ -7,8 +7,9 @@ test.describe("Looking up a PA's Compact Privileges, with no account", () => {
     page,
     expectAccessible,
   }) => {
-    await test.step("Open the lookup page", async () => {
-      await page.goto("/verify");
+    await test.step("Open the lookup from the front door", async () => {
+      await page.goto("/");
+      await page.getByRole("link", { name: "Look up a PA" }).click();
       await expect(
         page.getByRole("heading", { name: "Look up a Compact Privilege", level: 1 }),
       ).toBeVisible();

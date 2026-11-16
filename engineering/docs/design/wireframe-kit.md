@@ -49,6 +49,14 @@ Where each user starts.
 
 An action that can't be undone opens a Modal over the page it came from (C5 · Confirm decision, [`3539:37050`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3539-37050)). The page after it starts with a success Alert, then either what happens next as a Process list (B9 · Application received, [`3504:34259`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3504-34259)) or the list the user returns to (C6 · Decision recorded, [`3539:37448`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3539-37448)).
 
+### Front door
+
+The page at the site's address, for anyone. V0 · Front door ([`5126:16369`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=5126-16369)), and V0s ([`5126:16573`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=5126-16573)) for a visitor who is signed in.
+
+1. `h1` and the intro line
+2. A Card group, one Card per way in: its `h2`, one line saying who it is for, and a Button. The cards stack below desktop width.
+3. Signed in, the visitor's own Card leads to their dashboard
+
 ### Lookup
 
 A search anyone can use, its results, and one record. Block V on the board:

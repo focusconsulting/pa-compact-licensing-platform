@@ -49,7 +49,7 @@ describe("LoginPage", () => {
     await user.type(document.getElementById("password")!, "password123");
     await user.click(screen.getByRole("button", { name: /Sign in/i }));
 
-    await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/"));
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/dashboard"));
   });
 
   it("shows set-password form when newPasswordRequired", async () => {
@@ -146,7 +146,7 @@ describe("LoginPage", () => {
     );
     await user.click(screen.getByRole("button", { name: /Set password/i }));
 
-    await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/"));
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/dashboard"));
   });
 
   it("shows error when password change fails", async () => {

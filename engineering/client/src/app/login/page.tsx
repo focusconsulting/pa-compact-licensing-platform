@@ -46,7 +46,7 @@ export default function LoginPage() {
           userAttributes: result.userAttributes,
         });
       } else {
-        router.push("/");
+        router.push("/dashboard");
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Sign in failed");
@@ -72,7 +72,7 @@ export default function LoginPage() {
         newPassword,
         challenge.userAttributes,
       );
-      router.push("/");
+      router.push("/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Password change failed");
     } finally {

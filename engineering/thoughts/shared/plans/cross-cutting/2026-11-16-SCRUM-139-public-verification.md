@@ -344,9 +344,9 @@ One address per meaning is the reason for the move rather than showing either pa
 **File**: `src/app/page.tsx` (new)
 **Changes**: `PageHeading` with the intro, then a USWDS `CardGroup` of three `Card`s, each a heading, one line, and a link styled as a button. The cards stack below desktop width.
 
-- Physician assistants, and State and Commission staff: each links to `/login`. Once the session check finds a signed-in visitor, their own portal's card reads "Go to your dashboard" and links there; until then it is the sign-in card, so nothing waits on the check.
+- Physician assistants, and State and Commission staff: each links to `/login`, as "Sign in as a PA" and "Sign in as staff", so the two links are told apart by name. Once the session check finds a signed-in visitor, their own portal's card reads "Go to your dashboard" and links there; until then it is the sign-in card, so nothing waits on the check.
 - Look up a Compact Privilege: links to `/verify`.
-- V0's first button reads "Sign in or create an account". It reads "Sign in" until PA registration (epic 5) gives it somewhere to send people.
+- V0's first button reads "Sign in or create an account". Creating an account waits for PA registration (epic 5), which gives it somewhere to send people.
 
 #### 3. Strings, stories, scans, docs
 
@@ -360,12 +360,12 @@ One address per meaning is the reason for the move rather than showing either pa
 
 #### Automated Verification
 
-- [ ] Tests pass at 100% coverage: `cd engineering/client && pnpm test:coverage`
-- [ ] Type checking passes: `cd engineering/client && pnpm exec tsc --noEmit`
-- [ ] Linting passes: `cd engineering/client && pnpm lint`
-- [ ] Build succeeds and writes `out/index.html` and `out/dashboard.html`: `cd engineering/client && pnpm build`
-- [ ] pa11y is clean: `cd engineering/client && pnpm a11y`
-- [ ] E2E passes: `just e2e`
+- [x] Tests pass at 100% coverage: `cd engineering/client && pnpm test:coverage`
+- [x] Type checking passes: `cd engineering/client && pnpm exec tsc --noEmit`
+- [x] Linting passes: `cd engineering/client && pnpm lint`
+- [x] Build succeeds and writes `out/index.html` and `out/dashboard.html`: `cd engineering/client && pnpm build`
+- [x] pa11y is clean: `cd engineering/client && pnpm a11y`
+- [ ] E2E passes: `just e2e` (run locally on 2026-11-16 for the sign-in, dashboard, and verification specs only; CI runs all of them on a fresh seed)
 
 #### Manual Verification
 

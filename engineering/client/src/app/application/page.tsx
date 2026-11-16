@@ -342,7 +342,7 @@ function StartPage() {
     Promise.all([loadApplications(), loadProfile(), loadStates()])
       .then(([applications, profile, states]) => {
         if (applications.some((a) => a.status === "eligible")) {
-          router.replace("/");
+          router.replace("/dashboard");
           return;
         }
         const application = openApplication(applications);
