@@ -44,7 +44,15 @@ stateDiagram-v2
 
 The 60-day withdrawal applies only when the PA has not answered the SQL's request for information (Open Question 35, decided 2026-11-16). A `submitted` application is waiting on the SQL, so it never times out. The clock starts when the SQL receives the application (`opened_at`, R3r §3.7(a)).
 
-A draft never expires and the PA can keep editing it: the SQL has not received it, so no clock runs. `tests/test_application_transitions.py` keeps this diagram equal to `APPLICATION_TRANSITIONS`.
+A draft never expires and the PA can keep editing it: the SQL has not received it, so no clock runs.
+
+- **One open application.** A PA with an application in `draft`, `submitted`, or `info_requested` continues it rather than starting another.
+- **No new application once eligible.** Changing the state of qualifying license (`change_sql`) is not in v1: approving one ends the PA's privileges (R3r §3.6(d)) and the rules for it are incomplete (TENSION-02). The PA is told to contact PA Compact instead.
+- **Editing.** The PA edits the application and accepts attestations only while it is `draft` or `info_requested`, and changes the state of qualifying license only in a draft.
+- **History starts when the SQL receives it.** Starting and saving a draft, and the PA's edits while `info_requested`, record no history. Each submit and resubmit records the whole application as sent, so history keeps every version the SQL saw.
+- **Documents attach at submit.** Each must be the PA's own unattached upload whose malware scan came back clean; one still being scanned waits.
+
+`tests/test_application_transitions.py` keeps this diagram equal to `APPLICATION_TRANSITIONS`.
 
 ## Privilege request (P-01 / P-03)
 
