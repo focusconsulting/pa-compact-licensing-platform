@@ -186,7 +186,7 @@ Both run the same checks, in this order, then the transition above:
 | Every current participation attestation is accepted at its current version | `409 ATTESTATIONS_OUT_OF_DATE`, with the missing or stale codes in `details` |
 | A sworn statement: the checkbox, and a typed name that is not blank (Q-06). The name is not compared with the profile | `422 VALIDATION_ERROR` |
 
-The server records `sworn_at` and `sworn_ip`; the client sends only the name. No document is required (Q-07's default). The three error codes are added to `ErrorCode` by the ticket that first returns them.
+The server records `sworn_at`; the client sends only the name. No document is required (Q-07's default). The three error codes are added to `ErrorCode` by the ticket that first returns them.
 
 ## Signatures the tracks implement
 

@@ -233,7 +233,6 @@ SCRUM-111 adds the sworn statement (Q-06), required outside `draft` and set agai
 |---|---|---|
 | `sworn_name` | TEXT | The name the PA typed |
 | `sworn_at` | TIMESTAMPTZ | When the server received it |
-| `sworn_ip` | INET | The address it came from |
 
 The database enforces: `eligible` needs a linked license, `license_verified_at`, and `cbc_completed_on` (FLOW-02); one open application (`draft`, `submitted`, `info_requested`) per practitioner; one `eligible` application per practitioner, so a `change_sql` application that becomes eligible supersedes the old one in the same transaction, and the issuance check "participation still eligible" can only find the current one. The queue index is `(sql_state_code, status)`.
 
