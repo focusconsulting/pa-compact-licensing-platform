@@ -16,6 +16,7 @@ from licensing_api.repo.participation_application import (
     ApplicationStatus,
 )
 from tests.factories import (
+    assert_rejected,
     make_application,
     make_eligible_application,
     make_practitioner,
@@ -97,6 +98,8 @@ async def test_submitting_records_the_whole_application_and_its_event(db_session
         ApplicationStatus.SUBMITTED,
         EventType.APPLICATION_SUBMITTED,
         opened_at=opened_at,
+        sworn_name='Sample Practitioner',
+        sworn_at=opened_at,
     )
 
     [history] = (
@@ -114,3 +117,14 @@ async def test_submitting_records_the_whole_application_and_its_event(db_session
         )
     ).all()
     assert events == [EventType.APPLICATION_SUBMITTED]
+
+
+async def test_an_application_outside_draft_needs_a_sworn_statement(db_session):
+    application = await make_application(db_session, await make_practitioner(db_session))
+
+    await assert_rejected(
+        db_session,
+        "UPDATE participation_applications SET status = 'submitted', opened_at = now() "
+        'WHERE id = :id',
+        {'id': application.id},
+    )
