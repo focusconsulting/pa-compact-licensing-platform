@@ -910,6 +910,18 @@
         "title": "Data[DocumentUpload]",
         "type": "object"
       },
+      "Data_PrivilegeHolder_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PrivilegeHolder"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Data[PrivilegeHolder]",
+        "type": "object"
+      },
       "Data_ProfileOut_": {
         "properties": {
           "data": {
@@ -1227,6 +1239,7 @@
           "STATE_NOT_LIVE",
           "ATTESTATIONS_OUT_OF_DATE",
           "VALIDATION_ERROR",
+          "RATE_LIMITED",
           "HTTP_ERROR",
           "INTERNAL_ERROR"
         ],
@@ -1393,6 +1406,26 @@
         "title": "Paged[AuditEntryOut]",
         "type": "object"
       },
+      "Paged_PrivilegeHolderSummary_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/PrivilegeHolderSummary"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "page": {
+            "$ref": "#/components/schemas/Page"
+          }
+        },
+        "required": [
+          "data",
+          "page"
+        ],
+        "title": "Paged[PrivilegeHolderSummary]",
+        "type": "object"
+      },
       "Permission": {
         "description": "What a caller may do: granted by role in every state (``ROLE_PERMISSIONS``), or per state in ``users.permissions``.",
         "enum": [
@@ -1447,6 +1480,148 @@
           "on"
         ],
         "title": "PrivilegeEvent",
+        "type": "object"
+      },
+      "PrivilegeHolder": {
+        "additionalProperties": false,
+        "description": "A PA who holds a privilege, and each privilege with its status and dates.",
+        "examples": [
+          {
+            "first_name": "Pat",
+            "id": "5f0c2d6e-8a41-4b7c-9d13-6e2f4a8b1c90",
+            "last_name": "Morgan",
+            "name_suffix": null,
+            "privileges": [
+              {
+                "expires_on": "2027-12-31",
+                "issued_on": "2026-11-02",
+                "number": "PA-OK-000123",
+                "state": {
+                  "code": "OK",
+                  "name": "Oklahoma"
+                },
+                "status": "active"
+              }
+            ],
+            "state_of_qualifying_license": {
+              "code": "KS",
+              "name": "Kansas"
+            }
+          }
+        ],
+        "properties": {
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          },
+          "name_suffix": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name Suffix"
+          },
+          "privileges": {
+            "items": {
+              "$ref": "#/components/schemas/PublicPrivilege"
+            },
+            "title": "Privileges",
+            "type": "array"
+          },
+          "state_of_qualifying_license": {
+            "$ref": "#/components/schemas/StateRef"
+          }
+        },
+        "required": [
+          "id",
+          "first_name",
+          "last_name",
+          "name_suffix",
+          "state_of_qualifying_license",
+          "privileges"
+        ],
+        "title": "PrivilegeHolder",
+        "type": "object"
+      },
+      "PrivilegeHolderSummary": {
+        "additionalProperties": false,
+        "description": "A PA who holds a privilege, and the states they hold one in.",
+        "examples": [
+          {
+            "first_name": "Pat",
+            "id": "5f0c2d6e-8a41-4b7c-9d13-6e2f4a8b1c90",
+            "last_name": "Morgan",
+            "name_suffix": null,
+            "privilege_states": [
+              {
+                "code": "OK",
+                "name": "Oklahoma"
+              }
+            ],
+            "state_of_qualifying_license": {
+              "code": "KS",
+              "name": "Kansas"
+            }
+          }
+        ],
+        "properties": {
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          },
+          "name_suffix": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name Suffix"
+          },
+          "privilege_states": {
+            "items": {
+              "$ref": "#/components/schemas/StateRef"
+            },
+            "title": "Privilege States",
+            "type": "array"
+          },
+          "state_of_qualifying_license": {
+            "$ref": "#/components/schemas/StateRef"
+          }
+        },
+        "required": [
+          "id",
+          "first_name",
+          "last_name",
+          "name_suffix",
+          "state_of_qualifying_license",
+          "privilege_states"
+        ],
+        "title": "PrivilegeHolderSummary",
         "type": "object"
       },
       "PrivilegeRequestStatus": {
@@ -1704,6 +1879,63 @@
         "title": "ProfileUpdate",
         "type": "object"
       },
+      "PublicPrivilege": {
+        "additionalProperties": false,
+        "description": "A privilege as the public sees it: no reason for its status, and nothing about discipline.",
+        "examples": [
+          {
+            "expires_on": "2027-12-31",
+            "issued_on": "2026-11-02",
+            "number": "PA-OK-000123",
+            "state": {
+              "code": "OK",
+              "name": "Oklahoma"
+            },
+            "status": "active"
+          }
+        ],
+        "properties": {
+          "expires_on": {
+            "format": "date",
+            "title": "Expires On",
+            "type": "string"
+          },
+          "issued_on": {
+            "format": "date",
+            "title": "Issued On",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/StateRef"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PublicPrivilegeStatus"
+          }
+        },
+        "required": [
+          "state",
+          "number",
+          "status",
+          "issued_on",
+          "expires_on"
+        ],
+        "title": "PublicPrivilege",
+        "type": "object"
+      },
+      "PublicPrivilegeStatus": {
+        "description": "What public verification shows (FLOW-06).\n\nAn encumbered privilege is ``inactive``: the public never learns that an adverse\naction exists, public or not (Rule 4 \u00a74.5(c)).",
+        "enum": [
+          "active",
+          "expired",
+          "inactive"
+        ],
+        "title": "PublicPrivilegeStatus",
+        "type": "string"
+      },
       "QualifyingLicenseSummary": {
         "description": "The license the PA's eligibility rests on, and when its state, ``state_code``, verified it.",
         "properties": {
@@ -1888,6 +2120,32 @@
           "is_live"
         ],
         "title": "StateOut",
+        "type": "object"
+      },
+      "StateRef": {
+        "additionalProperties": false,
+        "description": "A state by code and name, for a response that names a state without describing it.",
+        "examples": [
+          {
+            "code": "OK",
+            "name": "Oklahoma"
+          }
+        ],
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ],
+        "title": "StateRef",
         "type": "object"
       },
       "StatusOut": {
@@ -3149,6 +3407,200 @@
           }
         },
         "summary": "List Current Attestations",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/public/privilege-holders": {
+      "get": {
+        "description": "PAs who hold a compact privilege, active or not. Search by `first_name` and `last_name` together, or by `privilege_number` alone. Names must match in full, ignoring case. No match is an empty list.",
+        "operationId": "Search_privilege_holders_api_public_privilege_holders_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "first_name",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "First Name"
+            }
+          },
+          {
+            "in": "query",
+            "name": "last_name",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Last Name"
+            }
+          },
+          {
+            "description": "For example `PA-OK-000123`",
+            "in": "query",
+            "name": "privilege_number",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^[Pp][Aa]-[A-Za-z]{2}-\\d{6,}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "For example `PA-OK-000123`",
+              "title": "Privilege Number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sort"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paged_PrivilegeHolderSummary_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many requests from one address. The web firewall sends this, not the API."
+          }
+        },
+        "summary": "Search Privilege Holders",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/public/privilege-holders/{holder_id}": {
+      "get": {
+        "description": "A PA's compact privileges: the state, number, status, and dates of each. A privilege that is not active shows as `expired` or `inactive`, with no reason.",
+        "operationId": "Get_a_privilege_holder_api_public_privilege_holders__holder_id__get",
+        "parameters": [
+          {
+            "description": "The `id` from a search result",
+            "in": "path",
+            "name": "holder_id",
+            "required": true,
+            "schema": {
+              "description": "The `id` from a search result",
+              "format": "uuid",
+              "title": "Holder Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_PrivilegeHolder_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many requests from one address. The web firewall sends this, not the API."
+          }
+        },
+        "summary": "Get A Privilege Holder",
         "tags": [
           "public"
         ]
