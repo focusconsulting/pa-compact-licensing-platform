@@ -1,7 +1,5 @@
 """The attestations catalogue: its seed, its current versions, and what an application accepted (SCRUM-110)."""
 
-import re
-
 import pytest
 from sqlalchemy import text
 from sqlmodel import col, select
@@ -41,7 +39,6 @@ async def _add_version(session, code: str, version: int, /, **overrides) -> Atte
         'applies_to': original.applies_to,
         'sort_order': original.sort_order,
         'text': f'{original.text} (reworded)',
-        'source': original.source,
         'created_by': await system_user_id(session),
     }
     fields.update(overrides)
@@ -61,32 +58,10 @@ async def test_the_seed_asks_for_each_participation_attestation_in_order(db_sess
     assert [a.code for a in await _current(db_session)] == _PARTICIPATION
 
 
-async def test_the_seed_lists_the_eligibility_requirements_the_state_checks(db_session):
-    codes = [a.code for a in await _current(db_session, AttestationAppliesTo.ELIGIBILITY)]
-
-    assert codes == [
-        'arc_pa_graduate',
-        'nccpa_current',
-        'no_convictions',
-        'no_controlled_substance_action',
-        'no_current_restriction',
-        'two_year_bar',
-    ]
-
-
 async def test_the_seed_asks_for_supervision_and_prescribing_compliance_on_a_privilege(db_session):
     codes = [a.code for a in await _current(db_session, AttestationAppliesTo.PRIVILEGE)]
 
     assert codes == ['supervision_compliance', 'prescribing_compliance']
-
-
-async def test_every_seeded_attestation_cites_a_rule_or_model_legislation_clause(db_session):
-    seeded = (await db_session.scalars(select(Attestation))).all()
-
-    uncited = [
-        a.code for a in seeded if not re.fullmatch(r'(Rule 3|ML) §\S+(; ML §\S+)?', a.source)
-    ]
-    assert uncited == []
 
 
 async def test_a_new_version_becomes_current(db_session):
@@ -112,7 +87,6 @@ async def test_a_state_s_own_attestation_is_not_asked_of_every_state(db_session)
         1,
         code='ks_jurisprudence',
         state_code='KS',
-        source='Rule 3 §3.3(a)(9)',
     )
 
     codes = [a.code for a in await _current(db_session, AttestationAppliesTo.PRIVILEGE)]
@@ -123,31 +97,23 @@ async def test_a_state_s_own_attestation_is_not_asked_of_every_state(db_session)
 async def test_only_a_privilege_attestation_belongs_to_one_state(db_session):
     await assert_rejected(
         db_session,
-        "UPDATE attestations SET state_code = 'KS' WHERE code = 'nccpa_current'",
+        "UPDATE attestations SET state_code = 'KS' WHERE code = 'truthfulness'",
     )
     await assert_rejected(
         db_session,
-        'INSERT INTO attestations (code, version, applies_to, state_code, sort_order, text, source, created_by) '
-        "SELECT 'x', 1, 'participation', 'KS', 1, 'x', 'Rule 3 §3.4', id FROM users LIMIT 1",
+        'INSERT INTO attestations (code, version, applies_to, state_code, sort_order, text, created_by) '
+        "SELECT 'x', 1, 'participation', 'KS', 1, 'x', id FROM users LIMIT 1",
     )
 
 
-@pytest.mark.parametrize('column', ['text', 'source', 'applies_to'])
+@pytest.mark.parametrize('column', ['text', 'sort_order', 'applies_to'])
 async def test_an_attestation_s_wording_cannot_be_rewritten(db_session, column):
-    value = 'privilege' if column == 'applies_to' else 'changed'
+    value = {'text': 'changed', 'sort_order': 9, 'applies_to': 'privilege'}[column]
 
     await assert_rejected(
         db_session,
-        f"UPDATE attestations SET {column} = :value WHERE code = 'nccpa_current'",
+        f"UPDATE attestations SET {column} = :value WHERE code = 'truthfulness'",
         {'value': value},
-    )
-
-
-async def test_an_attestation_without_a_source_is_refused(db_session):
-    await assert_rejected(
-        db_session,
-        'INSERT INTO attestations (code, version, applies_to, sort_order, text, source, created_by) '
-        "SELECT 'x', 1, 'participation', 1, 'x', '', id FROM users LIMIT 1",
     )
 
 
