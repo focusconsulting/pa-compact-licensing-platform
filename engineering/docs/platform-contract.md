@@ -2,6 +2,8 @@
 
 The functions every feature calls to record a change and declare a route, and the signatures the epic 2 tracks implement. Decided in [ADR-0009](../adrs/0009-route-authorization-and-change-context.md); planned in the [contract step plan](../thoughts/shared/plans/api/2026-10-14-SCRUM-77-platform-contract.md). Changing a signature here is a platform change: it needs the tech lead's review.
 
+This page is not for business logic. How an application, privilege request, or privilege moves, and who may move it, lives in the [flows](../../product/context/flows/), which are the source of truth; code links to them rather than restating them here.
+
 ## Recording a change
 
 A write validates, then changes its rows, writes a history row and an event, and commits once (constitution Principle VI). Nothing sends email or cascades inside the request: handlers do that later.
@@ -145,54 +147,6 @@ Every `/api` route outside `/api/health` returns `Data`, `Paged`, or no body; `t
 | `compact_date_at(instant, time_zone) -> date` | The day an aware instant falls on; a naive datetime is a `ValueError` |
 | `add_days(day, days)`, `days_between(start, end)` | Calendar days; `days_between` is 0 for the same day |
 | `is_business_day(day)`, `add_business_days(day, days)` | Counting starts the day after `day`, which need not be a business day |
-
-## Participation applications
-
-What epic 6 (the PA's side) and epic 7 (the SQL's review) build against. Statuses are `ApplicationStatus` and the moves are `APPLICATION_TRANSITIONS` (`repo/participation_application.py`), kept equal to FLOW-06 by `tests/test_application_transitions.py`.
-
-### Transitions
-
-Every move is one transaction: the row, a history row, and the event, as in [Recording a change](#recording-a-change), made with `move` (`repo/application_transition.py`). The event's aggregate is the application and its payload is empty: handlers read the application. A move `APPLICATION_TRANSITIONS` does not allow raises `InvalidTransitionError`, which a route returns as `409 INVALID_TRANSITION`.
-
-History starts when the SQL receives the application. Starting and saving a draft, and the PA's edits while `info_requested`, write no history and no event. Submit and resubmit each write one history row holding the whole application as sent, so history keeps every version the SQL saw. The PA's routes are under `/me/applications`.
-
-| From | To | Who | Sets | Event |
-|---|---|---|---|---|
-| | `draft` | PA | `sql_state_code` (a live state); `kind` is `initial`. A PA with an open application gets `409 APPLICATION_OPEN`, and an eligible PA `409 ALREADY_ELIGIBLE`: changing the state of qualifying license (`change_sql`) is not in v1, because approving one ends the PA's privileges (Rule 3 §3.6(d)) | |
-| `draft` | `submitted` | PA | `opened_at`, the sworn statement | `application.submitted` |
-| `submitted` | `info_requested` | SQL (`write`) | `request_note` | `application.info_requested` |
-| `info_requested` | `submitted` | PA | The sworn statement again. `opened_at` and `request_note` stay; history keeps each request and resubmission | `application.resubmitted` |
-| `submitted` | `eligible` | SQL | `qualifying_license_id`, `license_verified_*`, `cbc_completed_on`, `decided_*`. A `change_sql` application also moves the PA's eligible one to `superseded` | `application.eligible` |
-| `submitted` | `denied` | SQL | `denial_reason_code` (an `eligibility` reason), `denial_reason_detail`, `decided_*` | `application.denied` |
-| `submitted`, `info_requested` | `withdrawn` | PA, or the L-06 job 60 days after `opened_at` (Rule 3 §3.7(a)) | `withdrawn_at` | `application.withdrawn` |
-| `eligible` | `eligibility_withdrawn` | SQL | `eligibility_withdrawn_at`, `eligibility_withdrawal_reason` (Rule 3 §3.9(b)) | `application.eligibility_withdrawn` |
-| `eligible` | `superseded` | The `change_sql` decision above, in its transaction | `superseded_at` | None: the new application's `application.eligible` covers it |
-
-A draft is never withdrawn: the SQL has not received it (Rule 3 §3.7(a)).
-
-### Attestations
-
-The catalogue is `attestations`, keyed `(code, version)` ([data model](data-model.md#attestations)). A wording change is a new version, never an edit. The current set for a participation application is the highest unretired version of each `applies_to = 'participation'` code. A privilege request's adds `applies_to = 'privilege'` codes with no `state_code` or the remote state's own.
-
-The API shows an attestation as `{code, version, applies_to, state_code, text}` and an acceptance as `{code, version, accepted_at}`. Accepting writes a `participation_application_attestations` row; rows are never changed or deleted, so accepting a newer version adds a row and the latest per code counts.
-
-### Submit and resubmit
-
-Both run the same checks, in this order, then the transition above:
-
-| Check | Failure |
-|---|---|
-| The caller is the application's practitioner | `404 NOT_FOUND` |
-| The status allows the move | `409 INVALID_TRANSITION` |
-| `sql_state_code` is a member state that `is_live` | `409 STATE_NOT_LIVE` |
-| Every current participation attestation is accepted at its current version | `409 ATTESTATIONS_OUT_OF_DATE`, with the missing or stale codes in `details` |
-| A sworn statement: the checkbox, and a typed name that is not blank (Q-06). The name is not compared with the profile | `422 VALIDATION_ERROR` |
-| Each of `document_ids` is the caller's own upload that nothing holds yet (`GET /me/documents/unattached`) | `404 NOT_FOUND` |
-| Each of those uploads' malware scan is `clean`, so one still `pending` waits | `409 DOCUMENT_NOT_CLEAN`, with the file names in `details` |
-
-The server records `sworn_at`; the client sends only the name. Submit attaches the named documents in the same transaction, since a document is attached once and never moves. No document is required (Q-07's default).
-
-While an application is `draft` or `info_requested`, the PA saves steps (`PATCH`; the state only in a draft) and accepts attestations; any other status is `409 INVALID_TRANSITION`. Accepting a version that is not the current one is `409 ATTESTATIONS_OUT_OF_DATE`. `GET /public/attestations?applies_to=participation` lists the current versions in display order, and `GET /public/states` says which states are live.
 
 ## Signatures the tracks implement
 
