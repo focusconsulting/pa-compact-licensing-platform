@@ -18,6 +18,7 @@ from licensing_api.routes import (
     document,
     health,
     profile,
+    status,
     user,
 )
 
@@ -31,7 +32,7 @@ NAMESPACES: Mapping[str, Sequence[APIRouter]] = {
     # Commission staff, across every state.
     '/commission': [audit.router, document.commission],
     # The system operator.
-    '/admin': [],
+    '/admin': [status.router],
 }
 
 # A 422 carries ErrorResponse (errors.validation_error_handler), not FastAPI's default body.

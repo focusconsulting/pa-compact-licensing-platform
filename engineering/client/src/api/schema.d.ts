@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+  "/api/admin/status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get The System Status
+     * @description The deployed version, environment, when this task started and how long it has run, and the database's response time and newest migration. Needs `system_admin`.
+     */
+    get: operations["Get_the_system_status_api_admin_status_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/commission/audit": {
     parameters: {
       query?: never;
@@ -848,6 +868,10 @@ export interface components {
     Data_ProfileOut_: {
       data: components["schemas"]["ProfileOut"];
     };
+    /** Data[StatusOut] */
+    Data_StatusOut_: {
+      data: components["schemas"]["StatusOut"];
+    };
     /** Data[list[ApplicationOut]] */
     Data_list_ApplicationOut__: {
       /** Data */
@@ -867,6 +891,18 @@ export interface components {
     Data_list_StateOut__: {
       /** Data */
       data: components["schemas"]["StateOut"][];
+    };
+    /**
+     * DatabaseStatus
+     * @description Whether the database answered, how fast, and the newest migration applied to it.
+     */
+    DatabaseStatus: {
+      /** Latency Ms */
+      latency_ms: number | null;
+      /** Latest Migration */
+      latest_migration: string | null;
+      /** Reachable */
+      reachable: boolean;
     };
     /**
      * DocumentDownload
@@ -1282,6 +1318,38 @@ export interface components {
       name: string;
     };
     /**
+     * StatusOut
+     * @description The task answering this request; another task behind the load balancer may differ.
+     * @example {
+     *       "database": {
+     *         "latency_ms": 1.8,
+     *         "latest_migration": "20261112_110000_practitioner_other_names",
+     *         "reachable": true
+     *       },
+     *       "environment": "STAGING",
+     *       "started_at": "2026-11-16T21:46:19Z",
+     *       "uptime_seconds": 3600,
+     *       "version": "3f2a9c1d8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a39"
+     *     }
+     */
+    StatusOut: {
+      database: components["schemas"]["DatabaseStatus"];
+      /**
+       * Environment
+       * @enum {string}
+       */
+      environment: "LOCAL_DEV" | "STAGING" | "PROD";
+      /**
+       * Started At
+       * Format: date-time
+       */
+      started_at: string;
+      /** Uptime Seconds */
+      uptime_seconds: number;
+      /** Version */
+      version: string;
+    };
+    /**
      * UnavailableReason
      * @description Why the PA cannot apply for privileges yet.
      * @enum {string}
@@ -1325,6 +1393,35 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+  Get_the_system_status_api_admin_status_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_StatusOut_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
   List_audit_log_entries_api_commission_audit_get: {
     parameters: {
       query?: {
