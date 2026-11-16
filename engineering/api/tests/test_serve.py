@@ -28,6 +28,8 @@ def test_a_client_trusting_only_the_certificate_completes_a_handshake_with_local
     try:
         # The context the container's health check builds (ecs.tf).
         client_context = ssl.create_default_context(cafile=str(cert_path))
+        # Already the default's minimum; CodeQL's py/insecure-protocol can't tell.
+        client_context.minimum_version = ssl.TLSVersion.TLSv1_2
         with (
             socket.create_connection(('127.0.0.1', port)) as raw,
             client_context.wrap_socket(raw, server_hostname='localhost') as tls,
