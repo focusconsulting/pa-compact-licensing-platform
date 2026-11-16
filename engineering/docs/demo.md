@@ -10,7 +10,7 @@ just seed           # the team's admin logins
 just seed demo
 ```
 
-Dates count from the compact's today, so every status holds whenever the seed runs. Rows get history but no events, so no email goes out. A second run is refused; `just infra` resets. `tests/test_demo_seed.py` checks every status below against the status views.
+Dates count from the compact's today, so every status holds whenever the seed runs. Rows get history but no events, so no email goes out. An application reaches its status one step at a time, each history row dated when that step took effect, so the dashboard's timeline shows every step. Each practitioner has an address and NCCPA number, and each application past `draft` has its license, sworn statement, and accepted statements. A second run is refused; `just infra` resets. `tests/test_demo_seed.py` checks every status below against the status views.
 
 ## Who to sign in as
 
@@ -21,8 +21,8 @@ Every login uses the password `Local-Passw0rd!` against the local Cognito mock.
 | `kansas.staff@demo.example` | KS `state_staff`, with `read_private` and `write` in KS | Kansas applicants and licenses |
 | `kansas.admin@demo.example` | KS `state_admin`, with `read_private` and `admin` in KS | Kansas, and its staff and settings |
 | `oklahoma.staff@demo.example` | OK `state_staff`, with `read_private` and `write` in OK | Privileges in Oklahoma, the remote state |
-| `avery.active@demo.example` | `licensee` | A PA with an active privilege |
-| `lex.license-action@demo.example` | `licensee` | A PA barred by an adverse action |
+
+Every practitioner below signs in as a `licensee` at `<first name>.<surname>@demo.example`, such as `sam.submitted@demo.example` or `eli.withdrawn-eligibility@demo.example`, and sees their own dashboard.
 
 The team's own logins from `just seed` are `admin` and see everything.
 
@@ -52,7 +52,7 @@ Each practitioner's surname names what they show. Kansas is the state of qualify
 
 ## Sprint review
 
-1. Sign in as `avery.active@demo.example`: the dashboard shows a signed-in PA.
+1. Sign in as `avery.active@demo.example`: an eligible PA's license and privileges. `sam.submitted@demo.example` shows an application under review, `dee.denied@demo.example` a denial, and `bea.barred-until@demo.example` why a barred PA can't apply.
 2. Sign in as `kansas.staff@demo.example`: a state staff member, scoped to Kansas.
 3. Show the statuses the views compute, which each epic's screens will read:
 
