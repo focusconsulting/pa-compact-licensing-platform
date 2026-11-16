@@ -1,6 +1,7 @@
 """The PA's dashboard: what it shows, read from the database, and why an action is unavailable (SCRUM-112)."""
 
 from datetime import date, datetime, timezone
+from types import SimpleNamespace
 
 import pytest
 
@@ -18,6 +19,7 @@ from tests.factories import (
     make_eligible_application,
     make_practitioner,
     make_privilege,
+    make_qualifying_license,
     make_submitted_request,
     make_user,
     system_user_id,
@@ -185,6 +187,31 @@ def test_the_two_year_bar_holds_up_privileges(client, auth_header, route_db_sess
 
     assert _dashboard(client, auth_header, email)['primary_action'] == {
         'kind': 'apply_for_privileges',
+        'available': False,
+        'reasons': ['two_year_bar'],
+    }
+
+
+def test_the_two_year_bar_holds_up_applying_to_participate(
+    client, auth_header, route_db_session, pa
+):
+    email, practitioner = pa
+
+    async def _make():
+        license = await make_qualifying_license(route_db_session, practitioner)
+        await make_adverse_action(
+            route_db_session,
+            SimpleNamespace(id=None, practitioner_id=practitioner.id, remote_state_code='KS'),
+            against=AdverseActionTarget.QUALIFYING_LICENSE,
+            privilege_id=None,
+            qualifying_license_id=license.id,
+            effective_from=date(2026, 1, 1),
+        )
+
+    _call(client, _make)
+
+    assert _dashboard(client, auth_header, email)['primary_action'] == {
+        'kind': 'apply_for_participation',
         'available': False,
         'reasons': ['two_year_bar'],
     }

@@ -209,7 +209,8 @@ def _primary_action(applications: list[ParticipationApplication], barred: bool) 
     """Apply for privileges once eligible, or once an application could make the PA eligible; else apply to participate.
 
     A pending change of state of qualifying license does not block privileges: the PA stays
-    eligible through their current state until the new one decides (Rule 3 §3.6).
+    eligible through their current state until the new one decides (Rule 3 §3.6). A barred PA
+    cannot be eligible (ML §4.A(8)), so applying to participate waits too.
     """
     statuses = [a.status for a in applications]
     eligible = ApplicationStatus.ELIGIBLE in statuses
@@ -222,7 +223,10 @@ def _primary_action(applications: list[ParticipationApplication], barred: bool) 
         elif statuses[:1] == [ApplicationStatus.ELIGIBILITY_WITHDRAWN]:
             pending = UnavailableReason.ELIGIBILITY_WITHDRAWN
         else:
-            return Action(kind=ActionKind.APPLY_FOR_PARTICIPATION, available=True, reasons=[])
+            reasons = [UnavailableReason.TWO_YEAR_BAR] if barred else []
+            return Action(
+                kind=ActionKind.APPLY_FOR_PARTICIPATION, available=not reasons, reasons=reasons
+            )
     reasons = [] if eligible else [UnavailableReason.NOT_YET_ELIGIBLE, pending]
     if barred:
         reasons.append(UnavailableReason.TWO_YEAR_BAR)

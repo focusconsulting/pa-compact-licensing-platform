@@ -204,7 +204,7 @@ While an application is `draft` or `info_requested`, the PA saves steps (`PATCH`
 | `application_in_review` | An application is `submitted` |
 | `information_requested` | An application is `info_requested` |
 | `eligibility_withdrawn` | The newest application is `eligibility_withdrawn` |
-| `two_year_bar` | `v_compact_eligibility` says the PA is barred (ML §4.A(8)) |
+| `two_year_bar` | `v_compact_eligibility` says the PA is barred (ML §4.A(8)). It also holds up `apply_for_participation`, alone |
 
 A pending `change_sql` application does not block privileges: the PA stays eligible through their current state (Rule 3 §3.6).
 
