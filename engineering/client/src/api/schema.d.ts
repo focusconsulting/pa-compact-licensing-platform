@@ -324,17 +324,17 @@ export interface components {
       | "superseded";
     /**
      * AttestationAppliesTo
-     * @description What an attestation is for: the PA's participation application, the state's eligibility check, or a privilege request.
+     * @description What an attestation is for: the PA's participation application or a privilege request.
      * @enum {string}
      */
-    AttestationAppliesTo: "participation" | "eligibility" | "privilege";
+    AttestationAppliesTo: "participation" | "privilege";
     /**
      * AttestationOut
      * @description The current version of an attestation. Accept it by ``code`` and ``version``.
      * @example {
      *       "applies_to": "participation",
-     *       "code": "nccpa_current",
-     *       "text": "I hold a current certification from the National Commission on Certification of Physician Assistants (NCCPA).",
+     *       "code": "truthfulness",
+     *       "text": "I swear that the information in this application is true and accurate.",
      *       "version": 1
      *     }
      */

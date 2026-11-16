@@ -17,10 +17,9 @@
         "type": "string"
       },
       "AttestationAppliesTo": {
-        "description": "What an attestation is for: the PA's participation application, the state's eligibility check, or a privilege request.",
+        "description": "What an attestation is for: the PA's participation application or a privilege request.",
         "enum": [
           "participation",
-          "eligibility",
           "privilege"
         ],
         "title": "AttestationAppliesTo",
@@ -31,8 +30,8 @@
         "examples": [
           {
             "applies_to": "participation",
-            "code": "nccpa_current",
-            "text": "I hold a current certification from the National Commission on Certification of Physician Assistants (NCCPA).",
+            "code": "truthfulness",
+            "text": "I swear that the information in this application is true and accurate.",
             "version": 1
           }
         ],
