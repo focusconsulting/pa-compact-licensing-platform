@@ -45,7 +45,7 @@ Epic 5's contract step (SCRUM-103) fixes the permission matrix every later route
 
 ## Consequences
 
-- SCRUM-104 adds the standing check and the `*` key to `require` and `held_permissions`, and adds `repo/scope.py` with tests. The permission matrix in the [platform contract](../docs/platform-contract.md#permission-matrix) is the table its role × endpoint test drives.
+- SCRUM-104 adds the standing check and the `*` key to `require` and `held_permissions`, and adds `repo/scope.py` with tests. The [permission matrix](../docs/roles-and-permissions.md#permission-matrix) is the table its role × endpoint test drives.
 - A `/commission` route that also needs `read_ssn` declares `require(Permission.COMPACT_ADMIN)` on its router and `require(Permission.READ_SSN)` on the route. The namespace rule reads the router's declaration.
 - A Commission user configuring one state uses a `/commission/states/{state_code}` route, not the state's own settings route.
 - Search (epic 10), document downloads (SCRUM-81), and every state queue use the same predicates, so "who can see this PA" has one answer.

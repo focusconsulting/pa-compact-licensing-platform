@@ -29,10 +29,11 @@ Defaults taken without a separate decision:
 ## Changes
 
 - `engineering/adrs/0020-state-standing-and-relationship-scoping.md`: decisions 1–4.
-- `engineering/docs/platform-contract.md`: adds the Permission matrix, Relationships, and Profile fields sections, plus the epic 5 track list.
-- `engineering/docs/roles-and-permissions.md`: adds standing, the `*` grant, and links to the matrix and the predicates.
-- `engineering/docs/data-model.md`: adds `practitioner_other_names`; the change logs come from history.
-- `engineering/api/tests/test_profile_fields.py`: holds the contract's group table to the `Practitioner` model.
+- `engineering/docs/platform-contract.md`: adds the Relationships section, the `scope.py` predicates other routes call. The contract holds no business logic, so the rest lives elsewhere.
+- `engineering/docs/roles-and-permissions.md`: adds standing, the `*` grant, and the Permission matrix.
+- `engineering/docs/data-model.md`: adds the profile field groups; the change logs come from history.
+- `product/context/flows/02-sql-eligibility-verification.md`: the rules for stamping the groups.
+- `engineering/api/tests/test_profile_fields.py`: holds the data model's group table to the `Practitioner` model.
 
 ## What We're NOT Doing
 

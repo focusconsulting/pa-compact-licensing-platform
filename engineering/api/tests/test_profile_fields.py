@@ -1,4 +1,4 @@
-"""The platform contract's profile field groups match the ``practitioners`` model (SCRUM-103)."""
+"""The data model's profile field groups match the ``practitioners`` model (SCRUM-103)."""
 
 import re
 from pathlib import Path
@@ -8,7 +8,7 @@ from sqlmodel import SQLModel
 import licensing_api.repo  # noqa: F401 -- registers every table model on SQLModel.metadata
 from licensing_api.repo.practitioner import Practitioner
 
-_CONTRACT = Path(__file__).parents[2] / 'docs/platform-contract.md'
+_DATA_MODEL = Path(__file__).parents[2] / 'docs/data-model.md'
 
 _PROVENANCE = ('entered_by', 'verified_by_state', 'verified_at')
 
@@ -25,12 +25,9 @@ _UNGROUPED = {
     'updated_by',
 }
 
-# Listed in the contract before their table exists. SCRUM-107 creates it; remove it then.
-_PENDING_TABLES = {'practitioner_other_names'}
-
 
 def _groups() -> dict[str, list[str]]:
-    section = _CONTRACT.read_text().split('### Profile fields\n')[1].split('\n## ')[0]
+    section = _DATA_MODEL.read_text().split('#### Field groups\n')[1].split('\n#')[0]
     rows = (line.split('|')[1:-1] for line in section.splitlines() if line.startswith('| `'))
     return {
         re.findall(r'`([a-z_]+)`', cells[0])[0]: re.findall(r'`([a-z_0-9]+)`', cells[1])
@@ -54,6 +51,6 @@ def test_every_data_set_column_is_in_exactly_one_group():
 
 
 def test_every_other_listed_name_is_a_table():
-    tables = set(SQLModel.metadata.tables) | _PENDING_TABLES
+    tables = set(SQLModel.metadata.tables)
     others = {name for fields in _groups().values() for name in fields if name not in _columns()}
     assert others <= tables

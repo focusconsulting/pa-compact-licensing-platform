@@ -153,9 +153,23 @@ A PA's uniform data set (Rule 4 §4.3(c)), held by the Commission and written by
 | `pa_program_name`, `pa_program_graduation_year` | TEXT, SMALLINT | §4.3(c)(9) |
 | `nccpa_certification_number`, `_status`, `_expires_on` | TEXT, TEXT, DATE | §4.3(c)(10) |
 | `npi` | TEXT, NULL | Not in the adopted uniform data set; optional, never verified |
-| `<group>_entered_by`, `<group>_verified_by_state`, `<group>_verified_at` | FK `users`, FK `states`, TIMESTAMPTZ | Provenance for each group: `identity`, `residence`, `contact`, `education`, `certification`. A state and a time are set together or not at all. Which fields each group covers, and the rules for stamping it, are in the [platform contract](platform-contract.md#profile-fields) |
+| `<group>_entered_by`, `<group>_verified_by_state`, `<group>_verified_at` | FK `users`, FK `states`, TIMESTAMPTZ | Provenance for each group: `identity`, `residence`, `contact`, `education`, `certification`. A state and a time are set together or not at all. [Field groups](#field-groups) lists each group's fields |
 
 The address and email change logs (§4.3(e)(1)–(2)) are read from `practitioners_history`.
+
+#### Field groups
+
+The uniform data set the PA enters (Rule 4 §4.3(c)(1)–(10)) is stamped in five groups. `<group>_entered_by` is the last user who wrote the group: the PA, or staff entering on their behalf. When and by whom a group is verified is in [FLOW-02](../../product/context/flows/02-sql-eligibility-verification.md#uniform-data-set-what-the-sql-owns-after-verification).
+
+| Group | Fields | Rule 4 §4.3(c) |
+|---|---|---|
+| `identity` | `legal_first_name`, `legal_middle_name`, `legal_last_name`, `name_suffix`, `practitioner_other_names` rows, `sex_code`, `date_of_birth`, `practitioner_ssn` | (1)–(5) |
+| `residence` | `residence_line1`, `residence_line2`, `residence_city`, `residence_region`, `residence_postal_code`, `residence_country_code` | (6) |
+| `contact` | `phone`, `correspondence_email` | (7)–(8) |
+| `education` | `pa_program_name`, `pa_program_graduation_year` | (9) |
+| `certification` | `nccpa_certification_number`, `nccpa_certification_status`, `nccpa_certification_expires_on` | (10) |
+
+`users.email` is the sign-in, not part of the data set. `correspondence_email` is, and email goes to it when it is set ([notifications](notifications.md)).
 
 ### `practitioner_other_names`
 
