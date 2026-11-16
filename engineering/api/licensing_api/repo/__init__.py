@@ -1,6 +1,7 @@
 """Table models. Importing them all here keeps SQLAlchemy's metadata complete, so foreign keys between tables resolve whichever model is used first."""
 
 from licensing_api.repo.adverse_action import AdverseAction, AdverseActionNpdbCategory
+from licensing_api.repo.attestation import Attestation, ParticipationApplicationAttestation
 from licensing_api.repo.audit_log import AuditLogEntry
 from licensing_api.repo.compact_settings import CompactSettings
 from licensing_api.repo.document import Document
@@ -42,6 +43,7 @@ __all__ = [
     'AdverseAction',
     'AdverseActionHistory',
     'AdverseActionNpdbCategory',
+    'Attestation',
     'AuditLogEntry',
     'CompactEligibility',
     'CompactSettings',
@@ -54,6 +56,7 @@ __all__ = [
     'JobRun',
     'Notification',
     'ParticipationApplication',
+    'ParticipationApplicationAttestation',
     'ParticipationApplicationHistory',
     'Practitioner',
     'PractitionerHistory',
