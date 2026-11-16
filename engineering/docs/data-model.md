@@ -238,16 +238,15 @@ The database enforces: `eligible` needs a linked license, `license_verified_at`,
 
 ### `attestations`
 
-The statements a PA accepts to apply: for participation from Rule 3 §3.4(a), for a privilege from Rule 3 §3.3(a)(11)–(12). It also holds the Rule 3 §3.3(a) eligibility requirements the state checks under §3.4(b)(1), which the PA does not accept. Seeded with drafted texts that Commission legal signs off (Q-06); a state's jurisprudence attestation is added when the state configures one. Tier: public. Owner: epic 6.
+The statements a PA accepts to apply: for participation from Rule 3 §3.4(a), for a privilege from Rule 3 §3.3(a)(11)–(12). Seeded with drafted texts that Commission legal signs off (Q-06); a state's jurisprudence attestation is added when the state configures one. Tier: public. Owner: epic 6.
 
 | Column | Type | Meaning |
 |---|---|---|
 | `code`, `version` | TEXT, INTEGER | Primary key. A wording change is a new version, so an acceptance always names the text the PA read |
-| `applies_to` | TEXT CHECK | `participation`, `eligibility` (the state's checklist, not accepted by the PA), or `privilege` |
+| `applies_to` | TEXT CHECK | `participation` or `privilege` |
 | `state_code` | FK `states`, NULL | One remote state's own attestation, for a requirement it configures as `attestation`, such as jurisprudence; NULL applies to every state |
 | `sort_order` | SMALLINT | Display order within `applies_to` |
 | `text` | TEXT | What the PA reads |
-| `source` | TEXT, not empty | The clause it carries out, e.g. `Rule 3 §3.4(a)(5)` |
 | `retired_at` | TIMESTAMPTZ, NULL | No longer asked for |
 
 Only `retired_at` may change; a trigger refuses any other update. Only a `privilege` attestation may name a state. The current version of a code is its highest unretired one (`current_attestations` in `repo/attestation.py`).

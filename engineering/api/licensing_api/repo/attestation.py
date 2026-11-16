@@ -21,11 +21,9 @@ if TYPE_CHECKING:
 
 
 class AttestationAppliesTo(StrEnum):
-    """What an attestation is for: the PA's participation application, the state's eligibility check, or a privilege request."""
+    """What an attestation is for: the PA's participation application or a privilege request."""
 
     PARTICIPATION = 'participation'
-    # The Rule 3 §3.3(a) requirements the state checks (§3.4(b)(1)); the PA does not accept them.
-    ELIGIBILITY = 'eligibility'
     PRIVILEGE = 'privilege'
 
 
@@ -41,7 +39,6 @@ class Attestation(AuditColumns, table=True):
     state_code: str | None = Field(default=None, foreign_key='states.code')
     sort_order: int
     text: str
-    source: str
     retired_at: datetime | None = Field(default=None, sa_type=TimestampTZ)
 
 
