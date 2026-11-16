@@ -11,6 +11,25 @@ resource "aws_cloudfront_function" "block_403" {
   EOF
 }
 
+# The static export writes /verify as verify.html, and S3 has no key named "verify":
+# without this, every page but / answers 403 when loaded directly or reloaded.
+resource "aws_cloudfront_function" "page_html" {
+  name    = "${var.environment_name}-${local.application_name}-page-html"
+  runtime = "cloudfront-js-2.0"
+  publish = true
+  code    = <<-EOF
+    function handler(event) {
+      var request = event.request;
+      var uri = request.uri.replace(/\/+$/, "");
+      // "/" is left to the default root object, and a file keeps its own name.
+      if (uri !== "" && uri.split("/").pop().indexOf(".") === -1) {
+        request.uri = uri + ".html";
+      }
+      return request;
+    }
+  EOF
+}
+
 locals {
   alb_origin_endpoint = {
     http_port              = 80
@@ -188,6 +207,11 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
       cookies {
         forward = "none"
       }
+    }
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.page_html.arn
     }
   }
 

@@ -81,7 +81,9 @@ build, so it always shows the task definitions changing.
 
 A deploy is `just deploy <env>`: apply `ecr`, build and push the API image
 tagged with the commit, apply `app` with that tag, build the client from the
-app outputs, sync it to S3, and invalidate CloudFront. Nothing else deploys
+app outputs, sync it to S3, and invalidate CloudFront. The client is a static
+export, one `.html` file per page, so CloudFront rewrites a page's address to
+its file (`page_html` in `cdn.tf`). Nothing else deploys
 anything, and nothing deploys on its own: staging is deployed when someone runs
 the `Deploy` workflow, until the team turns on deploy-on-merge.
 
