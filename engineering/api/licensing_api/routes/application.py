@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col, select
 
+from licensing_api.consts import StateCode
 from licensing_api.context import ChangeContext, change_context
 from licensing_api.dependencies import get_db_session
 from licensing_api.errors import AppError, ErrorCode
@@ -46,7 +47,6 @@ from licensing_api.routes.document import DocumentOut
 me = APIRouter(prefix='/applications')
 
 ApplicationId = Annotated[UUID, Path(description="The application's ID")]
-StateCode = Annotated[str, Field(pattern=r'^[A-Z]{2}$', description='Two-letter state code')]
 
 # The PA changes their answers only while the SQL is not looking at them.
 _EDITABLE = frozenset({ApplicationStatus.DRAFT, ApplicationStatus.INFO_REQUESTED})
@@ -199,9 +199,10 @@ async def start_my_application(
             409, ErrorCode.ApplicationOpen, ['Continue the application you already started']
         )
     if ApplicationStatus.ELIGIBLE in statuses:
-        # Approving a new state would end the PA's privileges (Rule 3 §3.6(d)), which v1 doesn't do.
+        # Not only left out of v1: the rules for changing the state of qualifying license are
+        # incomplete (TENSION-02), and approving a new one ends the PA's privileges (Rule 3 §3.6(d)).
         raise AppError(409, ErrorCode.AlreadyEligible, ['Contact PA Compact to change your state'])
-    await _require_live(session, body.sql_state_code)
+    await _require_state_is_active(session, body.sql_state_code)
     application = ParticipationApplication(
         practitioner_id=practitioner_id,
         kind=ApplicationKind.INITIAL,
@@ -250,7 +251,7 @@ async def save_my_application(
                 ErrorCode.InvalidTransition,
                 ['The state cannot change once the SQL has the application'],
             )
-        await _require_live(session, changes['sql_state_code'])
+        await _require_state_is_active(session, changes['sql_state_code'])
     for name, value in changes.items():
         setattr(application, name, value)
     application.updated_by = ctx.user_id
@@ -320,7 +321,7 @@ async def submit_my_application(
             ErrorCode.InvalidTransition,
             [f'An application that is {application.status} cannot be submitted'],
         )
-    await _require_live(session, application.sql_state_code)
+    await _require_state_is_active(session, application.sql_state_code)
     stale = await out_of_date_codes(session, _id(application))
     if stale:
         raise AppError(409, ErrorCode.AttestationsOutOfDate, list(stale))
@@ -419,7 +420,7 @@ def _require_editable(application: ParticipationApplication) -> None:
         )
 
 
-async def _require_live(session: AsyncSession, state_code: str) -> None:
+async def _require_state_is_active(session: AsyncSession, state_code: str) -> None:
     state = await session.get(State, state_code)
     if state is None or not (state.is_member and state.is_live):
         raise AppError(409, ErrorCode.StateNotLive, [f'{state_code} is not accepting applications'])
@@ -439,10 +440,10 @@ async def _unattached_uploads(
     documents = list((await session.scalars(statement)).all())
     if len(documents) != len(set(document_ids)):
         raise AppError(404, ErrorCode.NotFound, ['No such document'])
-    return documents
     unclean = [d.file_name for d in documents if d.scan_status != ScanStatus.CLEAN]
     if unclean:
         raise AppError(409, ErrorCode.DocumentNotClean, unclean)
+    return documents
 
 
 async def _out(session: AsyncSession, application: ParticipationApplication) -> ApplicationOut:
