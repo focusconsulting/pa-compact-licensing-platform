@@ -100,6 +100,21 @@ The happy path above is unchanged. SOW §2.1 now lists three capabilities that t
 - **Military affiliation.** The PA portal list adds "Verify military affiliation". The only military element in this flow is the service-member SQL basis in the Phase 1 wizard, which comes from draft Rule 2.1 and was not adopted (`TENSION-02`). The SOW does not say what the verification is for, so no step is drawn.
 - **National credentialing organizations.** Integration moved from "Out of Scope" into the Commission portal list. Today the PA enters NCCPA certification in Phase 0 and the SQL verifies it in Phase 1; an integration would change who enters that field, not the phases.
 
+## What the PA's dashboard offers next
+
+The dashboard offers one next step. It is **apply to participate** until the PA has an application that could make them eligible (submitted, information requested, or eligible), then **apply for privileges**. When the step is unavailable, the dashboard lists every reason:
+
+| Reason | When |
+|---|---|
+| Not yet eligible | No eligible application; always shown with one of the next two |
+| Application in review | An application is with the SQL |
+| Information requested | The SQL asked the PA for more |
+| Two-year bar | Within two years of a restriction on a license or privilege ending (ML §4.A(8)). It holds up applying to participate too |
+
+- **After a state withdraws eligibility, the PA may apply to participate again straight away.** R3r §3.9(b) leaves the appeal to the state's own law, with no wait in Rule 3, and the client decided on 2026-11-05 not to stop a PA applying to the same state again (confirmed 2026-11-16).
+- **A pending change of state of qualifying license does not hold up privileges**: the PA stays eligible through their current state until the new one decides (R3r §3.6).
+- **Each step of an application or privilege is dated by when it took effect**, which can be earlier than when it was recorded. A privilege's history includes the day it expired (the day after its expiry date), and the days an adverse action against it started and ended.
+
 ## Why two phases
 
 The PA compact is mutual recognition, not a multistate license. Only the state that issued the license (the SQL) can vouch that it is unrestricted and that the PA meets ML §4.A; remote states rely on that verdict rather than re-verifying. Detail in FLOW-02. Phase 2 detail, including payment, in FLOW-03.
