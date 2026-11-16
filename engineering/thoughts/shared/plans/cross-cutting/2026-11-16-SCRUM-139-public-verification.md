@@ -80,9 +80,7 @@ Verified by: the API and client test suites at 100% coverage, the Playwright spe
 
 ## Implementation Approach
 
-Four pull requests, stacked on PR #224 in this order: the API and the contract, the home page and the dashboard's move, the verification pages and their E2E spec, then the infrastructure. Each merges on its own; verification works locally after the third, and in AWS after the fourth.
-
-**To rewrite before building:** Phases 2 and 3 below predate the product step, SCRUM-137, which ran on 2026-11-16 and produced FLOW-08 and block V. They still describe a two-column home page and pages patterned on round 2. Rewrite both from FLOW-08's frames, and settle Q-31 and Q-32 first. Phases 1 and 4 do not depend on it.
+Four pull requests, stacked in this order: the API and the contract, the `/verify` pages and their E2E spec, the front door and the dashboard's move, then the infrastructure. Each merges on its own; verification works locally after the second, and in AWS after the fourth. Phases 2 and 3 were rewritten on 2026-11-16 from FLOW-08 and block V, the output of the product step SCRUM-137, and swapped so the front door never links to a page that isn't there.
 
 The allow-list is the response models: they forbid extras and are built field by field. Two tests hold it there: one pins each model's field set to the documented list, and one fills every private column with a marker value and asserts no marker reaches a response. The queries return ordinary rows, as every repo module does; an earlier draft selected only the allow-listed columns, which review judged a second mechanism for what the models already do.
 
@@ -264,43 +262,99 @@ Every example is a module-level constant. A nested value is an instance of its o
 
 ---
 
-## Phase 2: A public home page, and the dashboard at `/dashboard`
+## Phase 2: The `/verify` pages and the E2E spec
 
 ### Overview
 
-`/` stops being a page that only redirects a visitor to sign in. It becomes the public front door, and the dashboard gets its own URL.
+The search, its results, and a PA's page, from FLOW-08's frames V1 to V3i. Built before the front door so that the front door's third card never links to a page that isn't there.
 
-One URL per meaning is the reason for the move rather than showing either page at `/` by session. A page that is public sometimes cannot be drawn until the session check finishes, so every visitor would wait on it; `ProtectedRoute` would no longer describe the whole page; and titles, bookmarks, the pa11y scan, and E2E would each have two pages behind one address.
+### Changes Required
+
+#### 1. An unauthenticated client
+
+- `engineering/client/src/lib/api.ts`: export `publicApi`, the same `createClient<paths>` without the `authorize` middleware.
+- `engineering/client/src/lib/verification.ts` (new): the two calls, the `Search` type (both names, or a number), and the helpers that read a search from an address and write it back.
+- `cd engineering/client && pnpm generate` rewrites `src/api/schema.d.ts`.
+
+#### 2. Search and results
+
+- `src/components/VerifySearchForm.tsx` (V1, V1n): a radio pair picks the search; `react-hook-form` with `TextField`s. The browser's `required` and `pattern` stop an empty or malformed search.
+- `src/components/VerifyResults.tsx` (V2, V2e): "Results (n)", a `DataTable` whose first column links to the PA, `EmptyState` when no one matches, and USWDS `Pagination` past one page.
+- `src/app/verify/page.tsx`: the form above its results. The search lives in the address (`?first_name=&last_name=` or `?privilege_number=`, and `page`), read with `useSearchParams` inside the `Suspense` boundary a static export needs, so results survive a reload and Back. A `429` shows the warning alert of V2x and keeps the search.
+
+#### 3. A PA's page
+
+- `src/app/verify/practitioner/page.tsx` (V3, V3i): reads `?id=`, shows the name, the state of qualifying license, and one `PrivilegeCard` per privilege. A static export cannot have `/verify/[id]`.
+- The result's link carries the search, so "Back to results" is a real link and survives a reload; opened from a bare link, it reads "Look up another PA".
+- `src/components/PrivilegeCard.tsx`: `inactiveQualifier={false}` drops "Deactivated" from an inactive card (Q-31's default). The card's own tag and labels stand: an expired privilege reads "Inactive" with "Expired: date" beside it, and the labels are "Active from" and "Privilege number", where V3i draws an "Expired" tag and "Issued".
+- An unknown or malformed id, or none, shows "We couldn't find that PA".
+
+#### 4. Strings, stories, scans, docs
+
+- `src/i18n/en/verify.json`, registered in `src/i18n/config.ts` and `src/@types/resources.ts`.
+- Stories for both components and both pages, and a public inactive `PrivilegeCard`.
+- `.pa11yci.json`: `/verify/`, `/verify/` with a search, and `/verify/practitioner/`.
+- `engineering/docs/design/wireframe-kit.md` (a "Lookup" template), `demo.md` (the sprint-review step).
+
+#### 5. E2E
+
+`engineering/e2e/tests/public-verification.spec.ts`: signed out throughout, against the demo seed CI already loads. By name and back to the results; by number; expired; inactive with no reason for a license action and for a privilege action; no match; a PA with no privilege; an unknown address.
+
+### Success Criteria
+
+#### Automated Verification
+
+- [x] Tests pass at 100% coverage: `cd engineering/client && pnpm test:coverage`
+- [x] Type checking passes: `cd engineering/client && pnpm exec tsc --noEmit`
+- [x] Linting passes: `cd engineering/client && pnpm lint`
+- [x] Build succeeds and writes `out/verify.html` and `out/verify/practitioner.html`: `cd engineering/client && pnpm build`
+- [x] pa11y is clean: `cd engineering/client && pnpm a11y`
+- [x] The verification spec passes against the demo seed: `cd engineering/e2e && pnpm exec playwright test public-verification`
+- [x] E2E type check passes: `cd engineering/e2e && pnpm typecheck`
+
+#### Manual Verification
+
+- [ ] Signed out, `/verify` finds Avery Active by name and by number; Back from the PA's page keeps the results
+- [ ] Pia Expired shows "Expired:" with the date in red; Lex and Enzo show "Inactive" and nothing about why
+- [ ] Side by side with V1 to V3i, the pages read as the same product
+- [ ] Keyboard only: switch the search, search, open a result, return
+- [ ] The pages read correctly at 320px wide
+
+---
+
+## Phase 3: The front door, and the dashboard at `/dashboard`
+
+### Overview
+
+`/` stops being a page that sends a visitor to sign in. It becomes the front door, V0 ([`5126:16369`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=5126-16369)) and V0s ([`5126:16573`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=5126-16573)), and the dashboard gets its own address.
+
+One address per meaning is the reason for the move rather than showing either page at `/` by session. A page that is public sometimes cannot be drawn until the session check finishes, so every visitor would wait on it; `ProtectedRoute` would no longer describe the whole page; and titles, bookmarks, the pa11y scan, and E2E would each have two pages behind one address.
 
 ### Changes Required
 
 #### 1. Move the dashboard
 
-- `git mv` `engineering/client/src/app/page.tsx` and `page.test.tsx` to `src/app/dashboard/`, with a `layout.tsx` for its title. Rename `src/stories/pages/home.stories.tsx` to `dashboard.stories.tsx`.
-- `src/app/login/page.tsx:49,75`: after sign-in, go to `/dashboard`.
-- `src/lib/navigation.ts:26,30,37`: the three portal home items point to `/dashboard`.
-- `src/components/CaseLayout.stories.tsx`: the breadcrumb's `href`.
+- `git mv` `src/app/page.tsx`, `page.test.tsx`, `PaDashboard.tsx`, and `PaDashboard.test.tsx` to `src/app/dashboard/`, with a `layout.tsx` for its title. Rename `src/stories/pages/home.stories.tsx` to `dashboard.stories.tsx`.
+- `src/app/login/page.tsx`: after sign-in, go to `/dashboard`. `src/app/application/page.tsx` leaves the wizard for `/dashboard`.
+- `src/lib/navigation.ts`: the three portal home items point to `/dashboard`, and `AppShell` no longer treats `/` as a nav item.
 - `ProtectedRoute` still sends a signed-out visitor to `/login`. The wordmark still links to `/`.
 
-The application stack (PRs #205–#220) rewrites `app/page.tsx` and adds `app/PaDashboard.tsx` beside it. Whichever stack merges second moves `PaDashboard` under `app/dashboard/` and repoints its links; git follows the rename for `page.tsx` itself.
+#### 2. The front door
 
-#### 2. The home page
+**File**: `src/app/page.tsx` (new)
+**Changes**: `PageHeading` with the intro, then a USWDS `CardGroup` of three `Card`s, each a heading, one line, and a link styled as a button. The cards stack below desktop width.
 
-**Files**: `engineering/client/src/app/page.tsx` (new), `engineering/client/src/components/VerifySearchForm.tsx` (new)
-**Changes**: An `h1`, then a USWDS grid row of two `tablet:grid-col-6` columns that stack on a phone.
-
-- **Sign in.** An `h2`, one line saying who signs in (PAs and state and Commission staff), and a `Button` linking to `/login`. The form itself stays on `/login`: sign-in has password, new-password, and authenticator steps, and `/login` is where `ProtectedRoute` sends people. Once the session check finds a signed-in visitor, the button reads "Go to your dashboard" and links there; until then it is the sign-in button, so nothing waits on the check.
-- **Verify a Compact Privilege.** An `h2`, one line saying what it shows, and `VerifySearchForm`, which on submit navigates to `/verify` with the search in the query string.
-
-`VerifySearchForm`: `react-hook-form` in a USWDS `Form`. A radio pair chooses the mode, "Name" or "Compact Privilege number". Name mode shows `TextField`s for first and last name, both required; number mode shows one required `TextField` with the format (`PA-OK-000123`) as its hint. The browser's own `required` validation covers the empty case, so `TextField` needs no error display. It takes `defaultValues` and an `onSearch` callback and knows nothing about routing.
+- Physician assistants, and State and Commission staff: each links to `/login`. Once the session check finds a signed-in visitor, their own portal's card reads "Go to your dashboard" and links there; until then it is the sign-in card, so nothing waits on the check.
+- Look up a Compact Privilege: links to `/verify`.
+- V0's first button reads "Sign in or create an account". It reads "Sign in" until PA registration (epic 5) gives it somewhere to send people.
 
 #### 3. Strings, stories, scans, docs
 
-- `engineering/client/src/i18n/en/home.json` and `verify.json` (new), registered in `src/i18n/config.ts` and `src/@types/i18next.d.ts`.
-- Stories: `VerifySearchForm.stories.tsx` (each mode) and `src/stories/pages/home.stories.tsx` for the new page.
-- `engineering/client/.pa11yci.json`: add `http://localhost:3100/`.
-- `engineering/e2e/tests/sign-in.spec.ts`: a signed-in user lands on `/dashboard`; one new test opens `/` signed out, scans it, and follows "Sign in".
-- `engineering/docs/design/wireframe-kit.md`: a "Home" template, marked as having no board yet.
+- `src/i18n/en/home.json`, registered as above.
+- `src/stories/pages/home.stories.tsx` for the new page.
+- `.pa11yci.json`: add `/`.
+- `engineering/e2e/tests/sign-in.spec.ts`: a signed-in user lands on `/dashboard`. `public-verification.spec.ts` starts from `/` and follows the third card. `pa-dashboard.spec.ts` expects `/dashboard`.
+- `engineering/docs/design/wireframe-kit.md`: a "Front door" template.
 
 ### Success Criteria
 
@@ -315,102 +369,10 @@ The application stack (PRs #205–#220) rewrites `app/page.tsx` and adds `app/Pa
 
 #### Manual Verification
 
-- [ ] Signed out, `/` shows both columns at once, with no flash of an empty page
+- [ ] Signed out, `/` shows all three cards at once, with no flash of an empty page
 - [ ] Signing in lands on `/dashboard`; `/dashboard` signed out goes to `/login`
-- [ ] Signed in, `/` offers the dashboard, and every nav item still works
-- [ ] At 320px wide the columns stack, sign in first
-
-**Implementation Note**: After this phase's automated checks pass, pause for manual confirmation before Phase 3.
-
----
-
-## Phase 3: The `/verify` pages and the E2E spec
-
-### Overview
-
-The results page and the privilege holder's page, drawn after the Parts Library's round 2 screens, and the Playwright spec.
-
-### Design reference
-
-No board draws these pages. They reuse three patterns from round 2, and where a drawing and a component differ, the component wins, as the library's own notes say.
-
-| Pattern | Frame | Used for |
-|---|---|---|
-| A count in the `h2`, then a bordered Table whose first column is a link | E3 · applications to review, [`4960:13420`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=4960-13420) | Results |
-| A privilege as a block: the state, a Tag with "Expires: date" beside it, then "Active from" and "Compact Privilege number" as label and value | E8 · Dashboard: Compact Privilege active, [`4960:13350`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=4960-13350) | Each privilege on the holder's page |
-| A back link above the `h1`, then `h2` sections | E9 · Compact Privilege detail, [`4960:13372`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=4960-13372) | The holder's page |
-
-The screens write "Compact Privilege" with capitals and dates as "Oct 23, 2026" (`formatDate`); the new strings do the same. E9's History section is not built: the public sees no timeline.
-
-### Changes Required
-
-#### 1. An unauthenticated client
-
-**File**: `engineering/client/src/lib/api.ts`
-**Changes**: Export `publicApi`, the same `createClient<paths>` without the `authorize` middleware, for routes under `/api/public/`.
-
-**Generated**: `cd engineering/client && pnpm generate` rewrites `src/api/schema.d.ts`.
-
-#### 2. Status types
-
-**File**: `engineering/client/src/lib/status.ts`
-**Changes**: None expected. `PublicPrivilegeStatus` is a subset of `PrivilegeComputedStatus`, so it is assignable to `PrivilegeCard`'s `status`. If `tsc` disagrees, widen `StatusByKind["privilege"]` rather than cast.
-
-#### 3. Results page
-
-**Files**: `engineering/client/src/app/verify/layout.tsx` (title only, after `login/layout.tsx`), `engineering/client/src/app/verify/page.tsx`, `engineering/client/src/components/VerifyResults.tsx`
-**Changes**:
-
-- The page is an `h1`, `VerifySearchForm` filled from the URL query (`?first_name=&last_name=` or `?privilege_number=`), and the results below it. It reads the query with `useSearchParams` inside a `Suspense` boundary, which the static export requires, so results survive Back from the holder's page and a reload. With no query it shows the form alone.
-- `VerifyResults`, after E3: an `h2` "Results (n)" and a `DataTable` of name (a link to the holder's page), state of qualifying license, and Compact Privilege states. No match renders `EmptyState`. A `429` renders an `Alert` asking the visitor to wait a few minutes; any other failure renders a general error `Alert`. A page of results beyond the first uses USWDS `Pagination`.
-
-#### 4. The holder's page
-
-**Files**: `engineering/client/src/app/verify/practitioner/layout.tsx`, `engineering/client/src/app/verify/practitioner/page.tsx`
-**Changes**: Reads `?id=` and calls the detail route. After E9 and E8: a "Back to results" link, `PageHeading` with the name, an `h2` "Qualifying license" with the state's name, and an `h2` "Compact Privileges" with one `PrivilegeCard` per privilege: `state.name`, `number`, `status`, `issued_on` as `activeFrom`, and `expires_on`. No `discipline`, no `detailsHref`, and the default public `view`. A missing id or a `404` renders "No such privilege holder" with a link back to search.
-
-#### 5. Strings, stories, accessibility scan, docs
-
-- Strings go in `verify.json`.
-- Stories: `VerifyResults.stories.tsx` (results, empty, rate-limited), and page stories for both pages under `src/stories/pages/`.
-- `engineering/client/.pa11yci.json`: add `http://localhost:3100/verify/` and `http://localhost:3100/verify/practitioner/`.
-- `engineering/docs/design/wireframe-kit.md`: a "Verify" template naming the three frames above.
-
-#### 6. E2E
-
-**File**: `engineering/e2e/tests/public-verification.spec.ts` (new)
-**Changes**: Signed out throughout, starting from `/`, with `expectAccessible` on every page.
-
-- "A member of the public confirms a PA's privilege by name": search Avery Active from the home page, open the result, see Oklahoma, a privilege number, and Active.
-- "…and by privilege number": search the number read from Avery's page.
-- "An inactive privilege shows no reason": Lex License-Action and Enzo Encumbered both show Inactive, and the page contains none of "suspension", "adverse", or "encumbered".
-- "A search that matches no one says so".
-
-**File**: `.github/workflows/e2e.yml`
-**Changes**: After `seed/users.sql`, load the demo seed (`uv run --env-file .env.example python -m seed.demo`).
-
-**File**: `engineering/e2e/README.md`, `engineering/docs/demo.md`
-**Changes**: The spec needs `just seed demo`; the sprint-review list gains the verification step.
-
-### Success Criteria
-
-#### Automated Verification
-
-- [ ] Tests pass at 100% coverage: `cd engineering/client && pnpm test:coverage`
-- [ ] Type checking passes: `cd engineering/client && pnpm exec tsc --noEmit`
-- [ ] Linting passes: `cd engineering/client && pnpm lint`
-- [ ] Build succeeds and writes `out/verify.html` and `out/verify/practitioner.html`: `cd engineering/client && pnpm build`
-- [ ] pa11y is clean: `cd engineering/client && pnpm a11y`
-- [ ] E2E passes against `just up` with the demo seed: `just e2e`
-- [ ] E2E type check passes: `cd engineering/e2e && pnpm typecheck`
-
-#### Manual Verification
-
-- [ ] Signed out, a search from `/` finds Avery Active by name and by number; Back from the holder's page keeps the results
-- [ ] Pia Expired shows "Expired" with the date in red; Lex and Enzo show "Inactive" and nothing about why
-- [ ] Side by side with E3, E8, and E9, the pages read as the same product
-- [ ] Keyboard only: mode switch, search, open a result, return
-- [ ] The pages read correctly at 320px wide
+- [ ] Signed in, `/` offers the dashboard on the visitor's own card, and every nav item still works
+- [ ] At 320px wide the cards stack: PAs, staff, lookup
 
 **Implementation Note**: After this phase's automated checks pass, pause for manual confirmation before Phase 4.
 

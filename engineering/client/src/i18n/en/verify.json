@@ -1,0 +1,41 @@
+{
+  "title": "Look up a Compact Privilege",
+  "intro": "Check whether a physician assistant (PA) holds a Compact Privilege to practice in a PA Compact state. You don't need an account.",
+  "required": "A red asterisk (*) indicates a required field.",
+  "form": {
+    "legend": "Search by",
+    "byName": "Name",
+    "byNumber": "Compact Privilege number",
+    "firstName": "First name",
+    "nameHint": "Enter the PA's full first and last name. Part of a name doesn't match.",
+    "lastName": "Last name",
+    "number": "Compact Privilege number",
+    "numberHint": "For example, PA-OK-000123.",
+    "search": "Search"
+  },
+  "results": {
+    "heading": "Results ({{count}})",
+    "caption": "PAs who match your search",
+    "name": "Name",
+    "license": "State of qualifying license",
+    "privileges": "Compact Privilege states",
+    "noneByName": "No PA with a Compact Privilege is named {{name}}. Check the spelling and search again. The search needs the full first and last name, and a PA who hasn't been issued a Compact Privilege isn't listed.",
+    "noneByNumber": "No Compact Privilege has the number {{number}}. Check the number and search again.",
+    "pages": "Pages of results"
+  },
+  "holder": {
+    "title": "Compact Privileges",
+    "backToResults": "Back to results",
+    "searchAgain": "Look up another PA",
+    "license": "State of qualifying license",
+    "privileges": "Compact Privileges",
+    "missingTitle": "We couldn't find that PA",
+    "missing": "The link may be wrong, or the PA may not hold a Compact Privilege."
+  },
+  "errors": {
+    "limitedHeading": "Too many searches",
+    "limited": "Wait a few minutes, then search again.",
+    "heading": "There is a problem",
+    "load": "We couldn't look that up. Try again later."
+  }
+}

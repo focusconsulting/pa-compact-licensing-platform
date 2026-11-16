@@ -23,6 +23,7 @@ function renderCard(props: Partial<PrivilegeCardProps> = {}) {
         activeFrom={BASE.activeFrom}
         expires={BASE.expires}
         view={props.view}
+        inactiveQualifier={props.inactiveQualifier}
         discipline={props.discipline}
         detailsHref={props.detailsHref}
       />
@@ -67,6 +68,13 @@ describe("PrivilegeCard", () => {
     renderCard({ status: "inactive", view: "staff" });
 
     expect(screen.getByText("Deactivated")).toBeInTheDocument();
+  });
+
+  it("says only that a privilege is inactive where the reason is not shown", () => {
+    renderCard({ status: "inactive", inactiveQualifier: false });
+
+    expect(screen.getByText("Inactive")).toBeInTheDocument();
+    expect(screen.queryByText("Deactivated")).toBeNull();
   });
 
   it("gives an encumbered privilege no qualifier, and staff its status", () => {

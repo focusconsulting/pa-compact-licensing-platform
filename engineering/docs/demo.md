@@ -54,7 +54,8 @@ Each practitioner's surname names what they show. Kansas is the state of qualify
 
 1. Sign in as `avery.active@demo.example`: an eligible PA's license and privileges. `sam.submitted@demo.example` shows an application under review, `dee.denied@demo.example` a denial, and `bea.barred-until@demo.example` why a barred PA can't apply.
 2. Sign in as `kansas.staff@demo.example`: a state staff member, scoped to Kansas.
-3. Show the statuses the views compute, which each epic's screens will read:
+3. Signed out, open `/verify` and search for Avery Active: public verification. Pia Expired shows an expired privilege; Lex License-Action and Enzo Encumbered show "Inactive" and no reason.
+4. Show the statuses the views compute, which each epic's screens will read:
 
    ```bash
    docker compose -p pa-compact exec postgres psql -U licensing -d licensing -c \

@@ -16,6 +16,8 @@ export interface PrivilegeCardProps {
   expires: string;
   /** Staff see the computed status; defaults to the public pill. */
   view?: StatusView;
+  /** Off on public verification, which says no more than "Inactive" about an inactive privilege (FLOW-08). */
+  inactiveQualifier?: boolean;
   discipline?: string;
   detailsHref?: string;
   actions?: ReactNode;
@@ -33,22 +35,24 @@ export default function PrivilegeCard({
   activeFrom,
   expires,
   view,
+  inactiveQualifier = true,
   discipline,
   detailsHref,
   actions,
   headingLevel = "h3",
 }: PrivilegeCardProps) {
   const { t } = useTranslation(["common", "status"]);
-  const qualifier =
-    status === "encumbered" ? null : (
-      <span
-        className={`margin-left-1 ${status === "expired" ? "text-error-dark" : ""}`}
-      >
-        {t(`status:privilegeQualifier.${status}`, {
-          date: formatDate(expires),
-        })}
-      </span>
-    );
+  const bare =
+    status === "encumbered" || (status === "inactive" && !inactiveQualifier);
+  const qualifier = bare ? null : (
+    <span
+      className={`margin-left-1 ${status === "expired" ? "text-error-dark" : ""}`}
+    >
+      {t(`status:privilegeQualifier.${status}`, {
+        date: formatDate(expires),
+      })}
+    </span>
+  );
   return (
     <RecordCard
       heading={state}
