@@ -18,6 +18,7 @@ from licensing_api.context import ChangeContext, change_context
 from licensing_api.dependencies import get_db_session
 from licensing_api.errors import AppError, ErrorCode
 from licensing_api.permissions import Permission, require
+from licensing_api.practitioners import own_practitioner
 from licensing_api.repo import history
 from licensing_api.repo.base import utc_now
 from licensing_api.repo.domain_event import EventType, emit
@@ -134,7 +135,7 @@ async def get_my_profile(
     session: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> Data[ProfileOut]:
     """Read-only legal names come from the PA's registration."""
-    practitioner = await _practitioner(session, caller)
+    practitioner = await own_practitioner(session, caller)
     return Data(data=await _out(session, practitioner))
 
 
@@ -154,7 +155,7 @@ async def save_my_profile(
     session: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> Data[ProfileOut]:
     """One history row for the practitioner and one per added or removed name, and one event if anything changed."""
-    practitioner = await _practitioner(session, caller, for_update=True)
+    practitioner = await own_practitioner(session, caller, for_update=True)
     fixed = _changes_to_verified(practitioner, body)
     if fixed:
         raise AppError(409, ErrorCode.VerifiedByState, fixed)
@@ -197,18 +198,6 @@ def _changes_to_verified(practitioner: Practitioner, body: ProfileUpdate) -> lis
         for field in _verified_fields(practitioner)
         if field in body.model_fields_set and getattr(body, field) != getattr(practitioner, field)
     ]
-
-
-async def _practitioner(
-    session: AsyncSession, caller: User, *, for_update: bool = False
-) -> Practitioner:
-    statement = select(Practitioner).where(col(Practitioner.user_id) == caller.id)
-    if for_update:
-        statement = statement.with_for_update()
-    practitioner = (await session.scalars(statement)).one_or_none()
-    if practitioner is None:
-        raise AppError(404, ErrorCode.NotFound, ['You have no practitioner record'])
-    return practitioner
 
 
 async def _current_names(
