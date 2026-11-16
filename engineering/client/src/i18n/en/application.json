@@ -88,6 +88,6 @@
     "verified": "Verified by {{state}}, {{date}}",
     "privilegesHeading": "Your Compact Privileges",
     "noPrivileges": "You don't have any Compact Privileges yet. A Compact Privilege lets you practice as a PA in another state in the compact, under that state's laws. To get one, you choose the states, meet any requirements they have, and pay their fees.",
-    "applyPrivileges": "Apply for Compact Privileges"
+    "barred": "You can't apply to join the PA Compact yet. A license or Compact Privilege of yours is limited or restricted by an adverse action, or was in the last 2 years."
   }
 }

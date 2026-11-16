@@ -5,7 +5,6 @@ import {
   ModalRef,
   ModalToggleButton,
 } from "@trussworks/react-uswds";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -20,6 +19,7 @@ import {
   State,
   loadDashboard,
   loadStates,
+  nameOfState,
   withdrawApplication,
 } from "src/lib/application";
 import { formatDate } from "src/lib/dates";
@@ -130,7 +130,7 @@ function EligibleSection({ dashboard, stateName }: EligibleProps) {
       <p>
         <StatusTag kind="application" status="eligible" />{" "}
         {t("dashboard.verified", {
-          state: stateName(String(license.verified_by_state)),
+          state,
           date: formatDate(String(license.verified_at)),
         })}
       </p>
@@ -151,11 +151,6 @@ function EligibleSection({ dashboard, stateName }: EligibleProps) {
             />
           ))}
         </CardGroup>
-      )}
-      {dashboard.primary_action.available && (
-        <Link href="/privileges" className="usa-button">
-          {t("dashboard.applyPrivileges")}
-        </Link>
       )}
     </>
   );
@@ -178,6 +173,11 @@ export default function PaDashboard() {
     let current = true;
     Promise.all([loadDashboard(), loadStates()])
       .then(([dashboard, states]) => {
+        [
+          ...dashboard.applications.map((a) => a.sql_state_code),
+          ...dashboard.privileges.map((p) => p.remote_state_code),
+          dashboard.qualifying_license?.state_code,
+        ].forEach((code) => code && nameOfState(states, code));
         if (current) setLoaded({ dashboard, states });
       })
       .catch(() => {
@@ -191,14 +191,19 @@ export default function PaDashboard() {
   const applications = loaded?.dashboard.applications ?? [];
   const eligible = applications.find((a) => a.status === "eligible");
   const shown = eligible ?? applications[0];
-  const toWizard = loaded !== null && (!shown || IN_WIZARD.has(shown.status));
+  const toWizard =
+    loaded !== null &&
+    (shown
+      ? IN_WIZARD.has(shown.status)
+      : loaded.dashboard.primary_action.available);
 
   useEffect(() => {
     if (toWizard) router.replace("/application");
   }, [toWizard, router]);
 
+  // Only called once loaded, which checked every state the dashboard names.
   const stateName = (code: string) =>
-    loaded?.states.find((s) => s.code === code)?.name ?? code;
+    nameOfState((loaded as { states: State[] }).states, code);
 
   async function withdraw(id: string) {
     setWithdrawFailed(false);
@@ -236,6 +241,12 @@ export default function PaDashboard() {
                   state: stateName(shown.sql_state_code),
                 })}
               </AlertBanner>
+            )}
+            {loaded && !shown && !toWizard && (
+              <>
+                <PageHeading title={t("dashboard.title")} />
+                <p>{t("dashboard.barred")}</p>
+              </>
             )}
             {loaded && shown && !toWizard && (
               <>

@@ -69,7 +69,6 @@ const ELIGIBLE = dashboard({
     license_number: "PA-000123",
     expires_on: "2027-06-30",
     status: "active",
-    verified_by_state: "KS",
     verified_at: "2026-10-20T15:00:00Z",
   },
   applications: [
@@ -278,26 +277,29 @@ describe("the PA dashboard", () => {
       screen.getByText(/You don't have any Compact Privileges yet/),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "Apply for Compact Privileges" }),
-    ).toHaveAttribute("href", "/privileges");
+      screen.queryByRole("link", { name: "Apply for Compact Privileges" }),
+    ).not.toBeInTheDocument();
     await expectNoAxeViolations(container);
   });
 
-  it("does not offer privileges while the action is unavailable", async () => {
-    answers({
-      ...ELIGIBLE,
-      primary_action: {
-        kind: "apply_for_privileges",
-        available: false,
-        reasons: ["two_year_bar"],
-      },
-    });
-    render(<PaDashboard />);
+  it("tells a barred PA they can't apply yet, rather than sending them to apply", async () => {
+    answers(
+      dashboard({
+        applications: [],
+        primary_action: {
+          kind: "apply_for_participation",
+          available: false,
+          reasons: ["two_year_bar"],
+        },
+      }),
+    );
+    const { container } = render(<PaDashboard />);
 
-    expect(await screen.findByText(/Verified by Kansas/)).toBeInTheDocument();
     expect(
-      screen.queryByRole("link", { name: "Apply for Compact Privileges" }),
-    ).not.toBeInTheDocument();
+      await screen.findByText(/You can't apply to join the PA Compact yet/),
+    ).toBeInTheDocument();
+    expect(replace).not.toHaveBeenCalled();
+    await expectNoAxeViolations(container);
   });
 
   it("lists the PA's privileges", async () => {
@@ -325,21 +327,58 @@ describe("the PA dashboard", () => {
     await expectNoAxeViolations(container);
   });
 
-  it("names a state by its code when the list does not have it", async () => {
-    answers(dashboard({ applications: [summary({ sql_state_code: "ZZ" })] }));
-    render(<PaDashboard />);
+  it.each([
+    [
+      "an application",
+      dashboard({ applications: [summary({ sql_state_code: "ZZ" })] }),
+    ],
+    [
+      "a privilege",
+      {
+        ...ELIGIBLE,
+        privileges: [
+          {
+            id: "p",
+            remote_state_code: "ZZ",
+            privilege_number: "PA-ZZ-1",
+            status: "active",
+            issued_at: "2026-10-25T15:00:00Z",
+            expires_on: "2027-06-30",
+            expires_in_days: 230,
+            history: [],
+          },
+        ],
+      } as Dashboard,
+    ],
+  ])(
+    "says the dashboard cannot be loaded when %s names a state not listed",
+    async (_, shown) => {
+      answers(shown);
+      render(<PaDashboard />);
 
-    expect(
-      await screen.findByText("ZZ · License PA-000123"),
-    ).toBeInTheDocument();
-  });
+      expect(
+        await screen.findByText(
+          "We couldn't load your application. Try again later.",
+        ),
+      ).toBeInTheDocument();
+    },
+  );
 
   it.each([
     ["no application", []],
     ["a draft", [summary({ status: "draft" })]],
     ["an information request", [summary({ status: "info_requested" })]],
   ])("sends a PA with %s to the application", async (_, applications) => {
-    answers(dashboard({ applications }));
+    answers(
+      dashboard({
+        applications,
+        primary_action: {
+          kind: "apply_for_participation",
+          available: true,
+          reasons: [],
+        },
+      }),
+    );
     render(<PaDashboard />);
 
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/application"));
