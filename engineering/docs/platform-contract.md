@@ -188,6 +188,7 @@ Both run the same checks, in this order, then the transition above:
 | Every current participation attestation is accepted at its current version | `409 ATTESTATIONS_OUT_OF_DATE`, with the missing or stale codes in `details` |
 | A sworn statement: the checkbox, and a typed name that is not blank (Q-06). The name is not compared with the profile | `422 VALIDATION_ERROR` |
 | Each of `document_ids` is the caller's own upload that nothing holds yet (`GET /me/documents/unattached`) | `404 NOT_FOUND` |
+| Each of those uploads' malware scan is `clean`, so one still `pending` waits | `409 DOCUMENT_NOT_CLEAN`, with the file names in `details` |
 
 The server records `sworn_at`; the client sends only the name. Submit attaches the named documents in the same transaction, since a document is attached once and never moves. No document is required (Q-07's default).
 

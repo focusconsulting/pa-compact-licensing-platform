@@ -8,7 +8,7 @@ from sqlalchemy import update
 from sqlmodel import col, select
 
 from licensing_api.repo.attestation import Attestation
-from licensing_api.repo.document import Document, DocumentOwnerType
+from licensing_api.repo.document import Document, DocumentOwnerType, ScanStatus
 from licensing_api.repo.domain_event import DomainEvent, EventType
 from licensing_api.repo.history import ParticipationApplicationHistory
 from licensing_api.repo.participation_application import ParticipationApplication
@@ -131,6 +131,7 @@ def _upload(client, session, practitioner, **overrides) -> str:
             'content_type': 'application/pdf',
             'size_bytes': 1000,
             'storage_key': f'documents/{public_id}',
+            'scan_status': ScanStatus.CLEAN,
             'created_by': practitioner.user_id,
             **overrides,
         }
@@ -509,6 +510,27 @@ def test_submit_sends_only_the_pa_s_own_unattached_uploads(
     )
 
     assert response.status_code == 404
+    row = _db(client, lambda: _row(route_db_session, application['id']))
+    assert row.status == 'draft'
+
+
+@pytest.mark.parametrize('scan_status', [ScanStatus.PENDING, ScanStatus.INFECTED, ScanStatus.ERROR])
+def test_submit_waits_for_each_upload_s_malware_scan_to_come_back_clean(
+    client, auth_header, route_db_session, pa, scan_status
+):
+    email, practitioner = pa
+    application = _ready(client, auth_header, email)
+    document_id = _upload(client, route_db_session, practitioner, scan_status=scan_status)
+
+    response = client.post(
+        f'{_ME}/{application["id"]}/submit',
+        json={**_SWORN, 'document_ids': [document_id]},
+        headers=auth_header(email),
+    )
+
+    assert response.status_code == 409
+    assert response.json()['code'] == 'DOCUMENT_NOT_CLEAN'
+    assert response.json()['details'] == ['nccpa.pdf']
     row = _db(client, lambda: _row(route_db_session, application['id']))
     assert row.status == 'draft'
 

@@ -28,7 +28,7 @@ from licensing_api.repo.attestation import (
     out_of_date_codes,
 )
 from licensing_api.repo.base import utc_now
-from licensing_api.repo.document import Document, DocumentOwnerType
+from licensing_api.repo.document import Document, DocumentOwnerType, ScanStatus
 from licensing_api.repo.document_owner import attach
 from licensing_api.repo.domain_event import EventType
 from licensing_api.repo.participation_application import (
@@ -299,8 +299,9 @@ async def accept_attestation(
     description=(
         'Sends a draft to the state of qualifying license, or resubmits one waiting on information, in one '
         'transaction. Refused with `409 INVALID_TRANSITION`, `409 STATE_NOT_LIVE`, or '
-        '`409 ATTESTATIONS_OUT_OF_DATE` (the codes to accept are in `details`), and `404` for a document '
-        'that is not your unattached upload.'
+        '`409 ATTESTATIONS_OUT_OF_DATE` (the codes to accept are in `details`), `404` for a document '
+        'that is not your unattached upload, and `409 DOCUMENT_NOT_CLEAN` for one whose malware scan is '
+        'not finished or not clean (the file names are in `details`).'
     ),
 )
 async def submit_my_application(
@@ -439,6 +440,9 @@ async def _unattached_uploads(
     if len(documents) != len(set(document_ids)):
         raise AppError(404, ErrorCode.NotFound, ['No such document'])
     return documents
+    unclean = [d.file_name for d in documents if d.scan_status != ScanStatus.CLEAN]
+    if unclean:
+        raise AppError(409, ErrorCode.DocumentNotClean, unclean)
 
 
 async def _out(session: AsyncSession, application: ParticipationApplication) -> ApplicationOut:

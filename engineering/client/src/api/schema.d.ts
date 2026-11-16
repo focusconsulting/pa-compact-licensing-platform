@@ -203,7 +203,7 @@ export interface paths {
     put?: never;
     /**
      * Submit My Application
-     * @description Sends a draft to the state of qualifying license, or resubmits one waiting on information, in one transaction. Refused with `409 INVALID_TRANSITION`, `409 STATE_NOT_LIVE`, or `409 ATTESTATIONS_OUT_OF_DATE` (the codes to accept are in `details`), and `404` for a document that is not your unattached upload.
+     * @description Sends a draft to the state of qualifying license, or resubmits one waiting on information, in one transaction. Refused with `409 INVALID_TRANSITION`, `409 STATE_NOT_LIVE`, or `409 ATTESTATIONS_OUT_OF_DATE` (the codes to accept are in `details`), `404` for a document that is not your unattached upload, and `409 DOCUMENT_NOT_CLEAN` for one whose malware scan is not finished or not clean (the file names are in `details`).
      */
     post: operations["Submit_my_application_api_me_applications__application_id__submit_post"];
     delete?: never;
@@ -421,7 +421,7 @@ export interface components {
      * @description The version of an attestation the PA last accepted on this application.
      * @example {
      *       "accepted_at": "2026-11-12T15:04:05Z",
-     *       "code": "nccpa_current",
+     *       "code": "truthfulness",
      *       "version": 1
      *     }
      */
@@ -555,7 +555,7 @@ export interface components {
      * AttestationAccept
      * @description The attestation, and the version of its text, the PA accepted.
      * @example {
-     *       "code": "nccpa_current",
+     *       "code": "truthfulness",
      *       "version": 1
      *     }
      */
