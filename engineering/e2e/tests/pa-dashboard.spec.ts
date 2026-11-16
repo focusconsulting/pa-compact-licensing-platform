@@ -14,6 +14,22 @@ test.describe("A PA's dashboard", () => {
     await expect(main.getByText(/Sent to Kansas on/)).toBeVisible();
     await expect(main.getByText(/through Kansas' process/)).toBeVisible();
     await expect(main.getByRole("button", { name: "Withdraw application" })).toBeVisible();
+    await expect(main.getByRole("heading", { name: "History" })).toBeVisible();
+    await expect(main.getByText("You applied.")).toBeVisible();
+    await expectAccessible(page);
+  });
+
+  test("An information request shows the state's note and how to answer it", async ({
+    page,
+    expectAccessible,
+  }) => {
+    await signIn(page, demoPa("ira.info"));
+
+    const main = page.getByRole("main");
+    await expect(main.getByText("Information requested")).toBeVisible();
+    await expect(main.getByRole("heading", { name: "Kansas' note" })).toBeVisible();
+    await expect(main.getByText("Upload your NCCPA certificate.")).toBeVisible();
+    await expect(main.getByRole("link", { name: "Update your application" })).toBeVisible();
     await expectAccessible(page);
   });
 
