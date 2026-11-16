@@ -7,15 +7,15 @@ Let anyone, signed in or not, confirm that a PA holds a compact privilege: a `/v
 ## Related
 
 - **Spec**: epic 11 in [MVP epics and tickets](../../../../../product/backlog/mvp-jira-tickets.md) and V-01 in the [MVP ticket breakdown](../../../../../product/backlog/mvp-ticket-breakdown.md)
-- **Flows**: [FLOW-05](../../../../../product/context/flows/05-adverse-action-cascade.md) (what the public view withholds), [FLOW-06](../../../../../product/context/flows/06-state-machines.md) (the public status vocabulary)
+- **Flows**: [FLOW-08](../../../../../product/context/flows/08-public-verification.md) (the flow and its wireframes), [FLOW-05](../../../../../product/context/flows/05-adverse-action-cascade.md) (what the public view withholds), [FLOW-06](../../../../../product/context/flows/06-state-machines.md) (the public status vocabulary)
 - **Compact rules**: [Rule 4 §4.5(b)–(d)](../../../../../product/context/research-corpus/sources/rule-4-compact-data-system--confidentiality-information-sharing.md); SOW §2.1 (v2: "verify active and inactive PA compact privileges")
 - **Decisions**: D1 (privilege status is computed). Q-12, closed in this plan's session on 2026-11-16 (Michael Kalish):
   - The allow-list is the Q-12 default: first name, last name, suffix, state of qualifying license, and per privilege its state, number, status, issue date, and expiry date. No NPI, no middle name, no deactivation reason, no adverse-action data. This plan absorbs the contract step, SCRUM-138.
   - The public sees three statuses: `active`, `expired`, `inactive`. An encumbered privilege shows as `inactive`, whether or not the action behind it is public, so nothing tells a sealed action from any other deactivation.
   - The branch stacks on the SCRUM-84 stack (PR #224), which holds the web firewall.
   - This ticket fixes direct page loads on CloudFront, which return `403` today for every page but `/`.
-  - `/` becomes a public home page in two columns, sign in and verify, and the dashboard moves to `/dashboard`.
-  - The pages follow the Parts Library's round 2 screens ([`4960:13074`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=4960-13074)) as a pattern. No board draws verification or the home page yet.
+  - `/` becomes the public front door and the dashboard moves to `/dashboard`. The front door is the board's V0 ([`5126:16369`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=5126-16369)), the designed version of A2: three cards, with the search on its own page, and V0s for a signed-in visitor. This replaces the two columns first decided here.
+  - The pages follow block V on the board ([`5121:15647`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=5121-15647)), drawn by the product step, SCRUM-137.
   - A cache or read replica for the public queries is deferred to SCRUM-202.
   - `StateRef` stays as planned here and is reconciled with the application stack's `StateOut` when that stack merges.
 - Jira: SCRUM-139, under SCRUM-98. Absorbs SCRUM-138. Blocked by SCRUM-84 (in review). Blocks SCRUM-142. Follow-up: SCRUM-202 (read replica).
@@ -82,7 +82,7 @@ Verified by: the API and client test suites at 100% coverage, the Playwright spe
 
 Four pull requests, stacked on PR #224 in this order: the API and the contract, the home page and the dashboard's move, the verification pages and their E2E spec, then the infrastructure. Each merges on its own; verification works locally after the third, and in AWS after the fourth.
 
-**On hold, 2026-11-16:** Phases 2 and 3 wait for the product step, SCRUM-137, which has not run: there is no flow or wireframe for public verification, and the backlog gives the public landing page to epics 4 and 5 with three entries, not the two columns Phase 2 describes. Those phases are rewritten from its flow and wireframes. Phases 1 and 4 do not depend on it.
+**To rewrite before building:** Phases 2 and 3 below predate the product step, SCRUM-137, which ran on 2026-11-16 and produced FLOW-08 and block V. They still describe a two-column home page and pages patterned on round 2. Rewrite both from FLOW-08's frames, and settle Q-31 and Q-32 first. Phases 1 and 4 do not depend on it.
 
 The allow-list is enforced three ways, so no single mistake leaks a field: the response models forbid extras and are built field by field from named columns; a test pins each model's field set to the documented list; and a test fills every private column with a marker value and asserts no marker reaches a response.
 
