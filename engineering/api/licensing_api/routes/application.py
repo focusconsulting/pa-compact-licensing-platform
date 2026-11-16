@@ -20,6 +20,7 @@ from licensing_api.context import ChangeContext, change_context
 from licensing_api.dependencies import get_db_session
 from licensing_api.errors import AppError, ErrorCode
 from licensing_api.permissions import Permission, require
+from licensing_api.practitioners import own_practitioner_id
 from licensing_api.repo.application_transition import InvalidTransitionError, move
 from licensing_api.repo.attestation import (
     Attestation,
@@ -38,7 +39,6 @@ from licensing_api.repo.participation_application import (
     ApplicationStatus,
     ParticipationApplication,
 )
-from licensing_api.repo.practitioner import Practitioner
 from licensing_api.repo.state import State
 from licensing_api.repo.user import User
 from licensing_api.responses import Data, example
@@ -162,7 +162,7 @@ async def list_my_applications(
     session: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> Data[list[ApplicationOut]]:
     """Every application the PA has made, including decided and withdrawn ones."""
-    practitioner_id = await _practitioner_id(session, caller)
+    practitioner_id = await own_practitioner_id(session, caller)
     statement = (
         select(ParticipationApplication)
         .where(col(ParticipationApplication.practitioner_id) == practitioner_id)
@@ -192,7 +192,7 @@ async def start_my_application(
     session: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> Data[ApplicationOut]:
     """A draft writes no history and no event: the SQL has not received it (Rule 3 §3.7(a))."""
-    practitioner_id = await _practitioner_id(session, caller)
+    practitioner_id = await own_practitioner_id(session, caller)
     statuses = {a.status for a in await _applications_of(session, practitioner_id)}
     if statuses & OPEN_APPLICATION_STATUSES:
         raise AppError(
@@ -379,14 +379,6 @@ def _id(application: ParticipationApplication) -> int:
     return application.id  # type: ignore[return-value]  # every application here was loaded or flushed
 
 
-async def _practitioner_id(session: AsyncSession, caller: User) -> int:
-    statement = select(col(Practitioner.id)).where(col(Practitioner.user_id) == caller.id)
-    practitioner_id = (await session.scalars(statement)).one_or_none()
-    if practitioner_id is None:
-        raise AppError(404, ErrorCode.NotFound, ['You have no practitioner record'])
-    return practitioner_id
-
-
 async def _applications_of(
     session: AsyncSession, practitioner_id: int
 ) -> list[ParticipationApplication]:
@@ -401,7 +393,7 @@ async def _find(
 ) -> ParticipationApplication:
     statement = select(ParticipationApplication).where(
         col(ParticipationApplication.public_id) == application_id,
-        col(ParticipationApplication.practitioner_id) == await _practitioner_id(session, caller),
+        col(ParticipationApplication.practitioner_id) == await own_practitioner_id(session, caller),
     )
     if for_update:
         statement = statement.with_for_update()

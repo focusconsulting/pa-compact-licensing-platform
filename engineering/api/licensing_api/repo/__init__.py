@@ -13,6 +13,7 @@ from licensing_api.repo.history import (
     FeeHistory,
     ParticipationApplicationHistory,
     PractitionerHistory,
+    PractitionerOtherNameHistory,
     PrivilegeHistory,
     PrivilegeRequestHistory,
     QualifyingLicenseHistory,
@@ -23,7 +24,7 @@ from licensing_api.repo.history import (
 from licensing_api.repo.job_run import JobRun
 from licensing_api.repo.notification import Notification
 from licensing_api.repo.participation_application import ParticipationApplication
-from licensing_api.repo.practitioner import Practitioner, PractitionerSsn
+from licensing_api.repo.practitioner import Practitioner, PractitionerOtherName, PractitionerSsn
 from licensing_api.repo.privilege import Privilege, PrivilegeNumberSequence
 from licensing_api.repo.privilege_request import PrivilegeRequest
 from licensing_api.repo.qualifying_license import QualifyingLicense
@@ -60,6 +61,8 @@ __all__ = [
     'ParticipationApplicationHistory',
     'Practitioner',
     'PractitionerHistory',
+    'PractitionerOtherName',
+    'PractitionerOtherNameHistory',
     'PractitionerSsn',
     'Privilege',
     'PrivilegeHistory',
