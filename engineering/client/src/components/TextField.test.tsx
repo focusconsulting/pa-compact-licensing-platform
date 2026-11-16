@@ -25,6 +25,15 @@ describe("TextField component", () => {
     ).not.toBeRequired();
   });
 
+  it("leaves an optional field unmarked when its fieldset already says so", () => {
+    renderWithForm(
+      <TextField id="last" label="Last name" optional showOptional={false} />,
+    );
+    const field = screen.getByRole("textbox", { name: "Last name" });
+    expect(field).not.toBeRequired();
+    expect(screen.queryByText("(optional)")).not.toBeInTheDocument();
+  });
+
   it("renders with hint", () => {
     renderWithForm(
       <TextField id="some-id" label="some-name" hint="some-hint" />,

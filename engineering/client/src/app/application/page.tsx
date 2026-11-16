@@ -172,7 +172,10 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
           </AlertBanner>
         )}
         <p className="text-base">{t("required")}</p>
-        <Fieldset legend={t("start.residence")} className="legend-lg">
+        <Fieldset
+          legend={t("start.residence")}
+          className="legend-lg margin-top-3"
+        >
           <span className="usa-hint">{t("start.residenceHint")}</span>
           <TextField
             id="residenceLine1"
@@ -212,10 +215,10 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
         )}
         <h2>{t("start.licenseHeading")}</h2>
         <TextField id="licenseNumber" label={t("start.licenseNumber")} />
-        <Fieldset legend={t("start.licenseExpires")}>
+        <Fieldset legend={t("start.licenseExpires")} className="margin-top-3">
           <DateFields id="licenseExpires" name="" />
         </Fieldset>
-        <Fieldset legend={t("start.dateOfBirth")}>
+        <Fieldset legend={t("start.dateOfBirth")} className="margin-top-3">
           <DateFields id="dateOfBirth" name="" />
         </Fieldset>
         <h2>{t("start.detailsHeading")}</h2>
@@ -234,6 +237,7 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
             id="otherLastName"
             label={t("basic:fields.name.lastNameTitle")}
             optional
+            showOptional={false}
           />
           <TextField
             id="otherSuffix"
