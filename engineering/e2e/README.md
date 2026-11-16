@@ -23,9 +23,10 @@ in `engineering/api/.env` lists `http://localhost:3200`, as
 [`.env.example`](../api/.env.example) does.
 
 `E2E_BASE_URL` points the tests at a site that is already served, which must
-send the policy itself. CI runs them on every pull request that touches `engineering/`, against the
+send the policy itself. CI runs them on every pull request, against the
 same local stack, in [`e2e.yml`](../../.github/workflows/e2e.yml); the test
-step must finish in 5 minutes.
+step must finish in 5 minutes. The `E2E / e2e` check is required to merge into
+`main`.
 
 ## Writing tests
 
