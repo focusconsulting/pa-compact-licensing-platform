@@ -64,11 +64,22 @@ describe("the application received page", () => {
       screen.getAllByRole("listitem").map((item) => item.textContent),
     ).toEqual([
       "Kansas checks your license against its records.",
-      "To join the PA Compact, submit to a criminal background check, including fingerprints, through Kansas's process within 60 days of applying.",
+      "To join the PA Compact, submit to a criminal background check, including fingerprints, through Kansas' process within 60 days of applying.",
       "If Kansas needs more information, Kansas will contact you.",
       "If Kansas confirms you're eligible, PA Compact will email you. Then you can apply for Compact Privileges to practice in other states, and pay their fees.",
     ]);
     await expectNoAxeViolations(container);
+  });
+
+  it("gives a state whose name doesn't end in s the full possessive", async () => {
+    answers({
+      "GET /api/me/applications": ok([{ ...SUBMITTED, sql_state_code: "OK" }]),
+    });
+    render(<Page />);
+
+    expect(
+      await screen.findByText(/through Oklahoma's process within 60 days/),
+    ).toBeInTheDocument();
   });
 
   it("says the application cannot be loaded when its state is not listed", async () => {

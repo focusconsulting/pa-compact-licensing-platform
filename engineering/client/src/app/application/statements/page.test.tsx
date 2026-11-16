@@ -83,7 +83,7 @@ describe("the application's statements and submit step", () => {
 
     expect(
       await screen.findByText(
-        "To join the PA Compact, submit to a criminal background check, including fingerprints, through Kansas's process within 60 days of applying.",
+        "To join the PA Compact, submit to a criminal background check, including fingerprints, through Kansas' process within 60 days of applying.",
       ),
     ).toBeInTheDocument();
     await agreeToEverything();

@@ -109,7 +109,7 @@ describe("the PA dashboard", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Kansas checks your license. If you haven't yet, submit to a criminal background check through Kansas's process within 60 days of your application.",
+        "Kansas checks your license. If you haven't yet, submit to a criminal background check through Kansas' process within 60 days of your application.",
       ),
     ).toBeInTheDocument();
     expect(

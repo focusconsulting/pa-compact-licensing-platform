@@ -27,6 +27,13 @@ void i18next.use(initReactI18next).init({
     },
   },
   defaultNS,
+  // React escapes what it renders; escaping here too shows "Kansas&#39;".
+  interpolation: { escapeValue: false },
 });
+
+// "Kansas'" and "Oklahoma's": a name that ends in s takes only the apostrophe. Use as {{state, possessive}}.
+i18next.services.formatter?.add("possessive", (value: string) =>
+  value.endsWith("s") ? `${value}'` : `${value}'s`,
+);
 
 export default i18next;

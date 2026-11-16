@@ -131,9 +131,7 @@ function StatementsForm({
         {backgroundCheck && (
           <>
             <h2>{t("statements.backgroundHeading")}</h2>
-            <p className="usa-intro">
-              {t("statements.backgroundCheck", { state: stateName })}
-            </p>
+            <p>{t("statements.backgroundCheck", { state: stateName })}</p>
             <Statement
               attestation={backgroundCheck}
               form={form}
@@ -149,7 +147,9 @@ function StatementsForm({
         )}
         <TextField id="swornName" label={t("statements.swornName")} />
         <div className="margin-top-4 display-flex flex-align-center">
-          <Button type="submit">{t("statements.submit")}</Button>
+          <Button type="submit" className="margin-top-0">
+            {t("statements.submit")}
+          </Button>
           <Link href="/application" className="usa-link margin-left-3">
             {t("statements.back")}
           </Link>
