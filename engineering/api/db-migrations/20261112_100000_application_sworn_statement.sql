@@ -6,5 +6,4 @@
 -- migration have none, so the submit route requires it instead.
 ALTER TABLE participation_applications
     ADD COLUMN sworn_name TEXT,
-    ADD COLUMN sworn_at   TIMESTAMPTZ,
-    ADD COLUMN sworn_ip   TEXT;
+    ADD COLUMN sworn_at   TIMESTAMPTZ;
