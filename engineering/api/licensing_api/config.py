@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     api_port: int = 8000
     log_level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = 'INFO'
     environment: Literal['LOCAL_DEV', 'STAGING', 'PROD'] = 'LOCAL_DEV'
+    # The deployed image's tag, which is its commit SHA; the task definition sets it.
+    app_version: str = 'dev'
     otel_enabled: bool = False
     otel_collector_endpoint: str = 'http://localhost:4317'
 

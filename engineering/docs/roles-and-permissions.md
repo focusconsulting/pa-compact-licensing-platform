@@ -72,6 +72,8 @@ Every `/api` route outside `/api/health` sits under the namespace of the people 
 | `/commission` | Commission staff, across every state | `compact_admin` |
 | `/admin` | The system operator | `system_admin` |
 
+The health checks under `/api/health` are public for the load balancer, so they say only whether the API and database answer. `GET /api/admin/status` gives the system operator the deployed version, environment, uptime, database latency, and newest migration.
+
 `/commission` routes need `compact_admin`, not `read_private`: with no state in the path, `read_private` is checked in the caller's own state, so a state staff member's grant would pass.
 
 ## Declaring a route

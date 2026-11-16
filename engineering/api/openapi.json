@@ -922,6 +922,18 @@
         "title": "Data[ProfileOut]",
         "type": "object"
       },
+      "Data_StatusOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/StatusOut"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Data[StatusOut]",
+        "type": "object"
+      },
       "Data_list_ApplicationOut__": {
         "properties": {
           "data": {
@@ -984,6 +996,44 @@
           "data"
         ],
         "title": "Data[list[StateOut]]",
+        "type": "object"
+      },
+      "DatabaseStatus": {
+        "description": "Whether the database answered, how fast, and the newest migration applied to it.",
+        "properties": {
+          "latency_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms"
+          },
+          "latest_migration": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Migration"
+          },
+          "reachable": {
+            "title": "Reachable",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "reachable",
+          "latency_ms",
+          "latest_migration"
+        ],
+        "title": "DatabaseStatus",
         "type": "object"
       },
       "DocumentDownload": {
@@ -1840,6 +1890,58 @@
         "title": "StateOut",
         "type": "object"
       },
+      "StatusOut": {
+        "description": "The task answering this request; another task behind the load balancer may differ.",
+        "examples": [
+          {
+            "database": {
+              "latency_ms": 1.8,
+              "latest_migration": "20261112_110000_practitioner_other_names",
+              "reachable": true
+            },
+            "environment": "STAGING",
+            "started_at": "2026-11-16T21:46:19Z",
+            "uptime_seconds": 3600,
+            "version": "3f2a9c1d8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a39"
+          }
+        ],
+        "properties": {
+          "database": {
+            "$ref": "#/components/schemas/DatabaseStatus"
+          },
+          "environment": {
+            "enum": [
+              "LOCAL_DEV",
+              "STAGING",
+              "PROD"
+            ],
+            "title": "Environment",
+            "type": "string"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
+          "uptime_seconds": {
+            "title": "Uptime Seconds",
+            "type": "integer"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "environment",
+          "started_at",
+          "uptime_seconds",
+          "database"
+        ],
+        "title": "StatusOut",
+        "type": "object"
+      },
       "UnavailableReason": {
         "description": "Why the PA cannot apply for privileges yet.",
         "enum": [
@@ -1904,6 +2006,43 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/admin/status": {
+      "get": {
+        "description": "The deployed version, environment, when this task started and how long it has run, and the database's response time and newest migration. Needs `system_admin`.",
+        "operationId": "Get_the_system_status_api_admin_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_StatusOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get The System Status",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/commission/audit": {
       "get": {
         "description": "Staff reads of private data and security events, newest first. Filters combine; `occurred_to` is exclusive. Changes to records are in their history, not here.",
