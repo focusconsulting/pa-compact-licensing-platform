@@ -22,6 +22,7 @@ import {
   loadAttestations,
   loadStates,
   openApplication,
+  nameOfState,
   submitApplication,
 } from "src/lib/application";
 
@@ -185,9 +186,8 @@ function StatementsPage() {
           router.replace("/application");
           return;
         }
-        const state = states.find((s) => s.code === application.sql_state_code);
-        const stateName = state?.name ?? application.sql_state_code;
-        if (current) setLoaded({ application, attestations, stateName });
+        const name = nameOfState(states, application.sql_state_code);
+        if (current) setLoaded({ application, attestations, stateName: name });
       })
       .catch(() => {
         if (current) setFailed(true);

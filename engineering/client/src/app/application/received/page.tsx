@@ -11,7 +11,12 @@ import { useTranslation } from "react-i18next";
 
 import AlertBanner from "src/components/AlertBanner";
 import ProtectedRoute from "src/components/ProtectedRoute";
-import { Application, loadApplications, loadStates } from "src/lib/application";
+import {
+  Application,
+  loadApplications,
+  loadStates,
+  nameOfState,
+} from "src/lib/application";
 import { formatDate } from "src/lib/dates";
 
 interface Received {
@@ -35,13 +40,8 @@ function ReceivedPage() {
           router.replace("/application");
           return;
         }
-        const state = states.find((s) => s.code === application.sql_state_code);
-        if (current) {
-          setReceived({
-            application,
-            stateName: state?.name ?? application.sql_state_code,
-          });
-        }
+        const name = nameOfState(states, application.sql_state_code);
+        if (current) setReceived({ application, stateName: name });
       })
       .catch(() => {
         if (current) setFailed(true);

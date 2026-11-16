@@ -56,6 +56,13 @@ export const saveProfile = (body: ProfileUpdate) =>
 /** Every state, with whether it takes applications. */
 export const loadStates = () => unwrap(api.GET("/api/public/states"));
 
+/** A state's name. Every state is listed, so a code with none is a bug, not a state to show by its code. */
+export function nameOfState(states: State[], code: string) {
+  const state = states.find((s) => s.code === code);
+  if (!state) throw new Error(`No state ${code}`);
+  return state.name;
+}
+
 /** The current participation attestations, in the order to show them. */
 export const loadAttestations = () =>
   unwrap(

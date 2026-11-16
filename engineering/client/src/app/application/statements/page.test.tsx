@@ -151,12 +151,14 @@ describe("the application's statements and submit step", () => {
     ]);
   });
 
-  it("names the state by its code when the list does not have it", async () => {
+  it("says the application cannot be loaded when its state is not listed", async () => {
     answers({ "GET /api/public/states": ok([]) });
     render(<Page />);
 
     expect(
-      await screen.findByText(/through KS's process within 60 days/),
+      await screen.findByText(
+        "We couldn't load your application. Try again later.",
+      ),
     ).toBeInTheDocument();
   });
 
