@@ -10,7 +10,7 @@ from datetime import date, datetime
 from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Path, Request
+from fastapi import APIRouter, Depends, Path
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col, select
@@ -24,7 +24,7 @@ from licensing_api.repo.attestation import (
     Attestation,
     AttestationAppliesTo,
     ParticipationApplicationAttestation,
-    accept,
+    accept_participation,
     out_of_date_codes,
 )
 from licensing_api.repo.base import utc_now
@@ -59,7 +59,7 @@ class AcceptedAttestation(BaseModel):
     """The version of an attestation the PA last accepted on this application."""
 
     model_config = ConfigDict(
-        json_schema_extra=example(code='nccpa_current', version=1, accepted_at=_EXAMPLE_AT)
+        json_schema_extra=example(code='truthfulness', version=1, accepted_at=_EXAMPLE_AT)
     )
 
     code: str
@@ -132,7 +132,7 @@ class AttestationAccept(BaseModel):
     """The attestation, and the version of its text, the PA accepted."""
 
     model_config = ConfigDict(
-        extra='forbid', json_schema_extra=example(code='nccpa_current', version=1)
+        extra='forbid', json_schema_extra=example(code='truthfulness', version=1)
     )
 
     code: str
@@ -288,7 +288,7 @@ async def accept_attestation(
     )
     if latest != body.version:
         raise AppError(409, ErrorCode.AttestationsOutOfDate, [body.code])
-    await accept(session, ctx, _id(application), attestation)
+    await accept_participation(session, ctx, _id(application), attestation)
     await session.commit()
     return Data(data=await _out(session, application))
 
@@ -306,7 +306,6 @@ async def accept_attestation(
 async def submit_my_application(
     application_id: ApplicationId,
     body: ApplicationSubmit,
-    request: Request,
     caller: Annotated[User, require(Permission.MANAGE_OWN_RECORD)],
     ctx: Annotated[ChangeContext, Depends(change_context)],
     session: Annotated[AsyncSession, Depends(get_db_session)],
@@ -326,11 +325,7 @@ async def submit_my_application(
         raise AppError(409, ErrorCode.AttestationsOutOfDate, list(stale))
     documents = await _unattached_uploads(session, caller, body.document_ids)
     now = utc_now()
-    fields = {
-        'sworn_name': body.sworn_name,
-        'sworn_at': now,
-        'sworn_ip': request.client.host if request.client else None,
-    }
+    fields = {'sworn_name': body.sworn_name, 'sworn_at': now}
     if not resubmitting:
         fields['opened_at'] = now
     event = EventType.APPLICATION_RESUBMITTED if resubmitting else EventType.APPLICATION_SUBMITTED

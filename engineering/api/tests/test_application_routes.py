@@ -105,6 +105,10 @@ async def _row(session, application_id) -> ParticipationApplication:
 
 
 def _set(client, session, application_id, **fields) -> None:
+    if fields.get('status', 'draft') != 'draft':
+        fields.setdefault('sworn_name', 'Pat Assistant')
+        fields.setdefault('sworn_at', datetime.now(timezone.utc))
+
     async def _write():
         application = await _row(session, application_id)
         await session.execute(
@@ -337,7 +341,7 @@ def test_an_old_version_cannot_be_accepted(client, auth_header, route_db_session
         original = await route_db_session.get(Attestation, ('service_of_process', 1))
         route_db_session.add(
             Attestation(
-                **original.model_dump(include={'code', 'applies_to', 'sort_order', 'source'}),
+                **original.model_dump(include={'code', 'applies_to', 'sort_order'}),
                 version=2,
                 text='Reworded',
                 created_by=await system_user_id(route_db_session),
@@ -364,7 +368,7 @@ def test_an_old_version_cannot_be_accepted(client, auth_header, route_db_session
     [
         {'code': 'no_such_thing', 'version': 1},
         {'code': 'supervision_compliance', 'version': 1},
-        {'code': 'nccpa_current', 'version': 1},
+        {'code': 'truthfulness', 'version': 2},
     ],
 )
 def test_only_a_participation_attestation_can_be_accepted(client, auth_header, pa, body):
@@ -420,7 +424,7 @@ def test_submitting_opens_the_application_and_records_it_as_sent(
     assert data['sworn_at'] == data['opened_at']
     assert [d['id'] for d in data['documents']] == [document_id]
     row = _db(client, lambda: _row(route_db_session, application['id']))
-    assert (row.sworn_name, row.sworn_ip) == ('Pat Assistant', 'testclient')
+    assert row.sworn_name == 'Pat Assistant'
     assert _events(client, route_db_session, application['id']) == [EventType.APPLICATION_SUBMITTED]
     [history] = _histories(client, route_db_session, application['id'])
     assert history.previous is None
