@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date, datetime
 from enum import StrEnum
 from uuid import UUID, uuid4
@@ -34,6 +35,25 @@ class ApplicationStatus(StrEnum):
 OPEN_APPLICATION_STATUSES = frozenset(
     {ApplicationStatus.DRAFT, ApplicationStatus.SUBMITTED, ApplicationStatus.INFO_REQUESTED}
 )
+
+# The moves FLOW-06 allows; a test keeps its diagram equal to this. Who makes each is in the platform contract.
+APPLICATION_TRANSITIONS: Mapping[ApplicationStatus, frozenset[ApplicationStatus]] = {
+    ApplicationStatus.DRAFT: frozenset({ApplicationStatus.SUBMITTED}),
+    ApplicationStatus.SUBMITTED: frozenset(
+        {
+            ApplicationStatus.INFO_REQUESTED,
+            ApplicationStatus.ELIGIBLE,
+            ApplicationStatus.DENIED,
+            ApplicationStatus.WITHDRAWN,
+        }
+    ),
+    ApplicationStatus.INFO_REQUESTED: frozenset(
+        {ApplicationStatus.SUBMITTED, ApplicationStatus.WITHDRAWN}
+    ),
+    ApplicationStatus.ELIGIBLE: frozenset(
+        {ApplicationStatus.ELIGIBILITY_WITHDRAWN, ApplicationStatus.SUPERSEDED}
+    ),
+}
 
 
 class ParticipationApplication(AuditColumns, table=True):

@@ -32,13 +32,19 @@ stateDiagram-v2
     info_requested --> submitted: PA resubmits
     submitted --> eligible: SQL decision
     submitted --> denied: SQL decision
-    submitted --> withdrawn: 60 days incomplete / PA withdraws
-    info_requested --> withdrawn: 60 days
+    submitted --> withdrawn: PA withdraws
+    info_requested --> withdrawn: 60 days after opened_at with no response / PA withdraws [R3r §3.7(a)(1)]
     eligible --> eligibility_withdrawn: SQL withdraws
+    eligible --> superseded: a change_sql application becomes eligible [R3r §3.6]
     denied --> [*]
     withdrawn --> [*]
     eligibility_withdrawn --> [*]
+    superseded --> [*]
 ```
+
+The 60-day withdrawal applies only when the PA has not answered the SQL's request for information (Open Question 35, decided 2026-11-16). A `submitted` application is waiting on the SQL, so it never times out. The clock starts when the SQL receives the application (`opened_at`, R3r §3.7(a)).
+
+A draft never expires and the PA can keep editing it: the SQL has not received it, so no clock runs. `tests/test_application_transitions.py` keeps this diagram equal to `APPLICATION_TRANSITIONS`.
 
 ## Privilege request (P-01 / P-03)
 
