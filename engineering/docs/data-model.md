@@ -159,14 +159,15 @@ The address and email change logs (§4.3(e)(1)–(2)) are read from `practitione
 
 ### `practitioner_other_names`
 
-Other names a PA has used, previously or currently (§4.3(c)(2)), covered by the `identity` stamp. Tier: private. Owner: epic 5 (SCRUM-107), which creates it.
+Other names a PA has used, previously or currently (Rule 4 §4.3(c)(2)), covered by the `identity` group. Tier: private. Owner: epic 5.
 
 | Column | Type | Meaning |
 |---|---|---|
 | `practitioner_id` | FK | |
 | `first_name`, `middle_name`, `last_name`, `name_suffix` | TEXT | `last_name` is required |
+| `removed_at` | TIMESTAMPTZ, NULL | The PA stopped listing it. Rows are never deleted, so their history keeps pointing at them |
 
-Changes are kept in `practitioner_other_names_history`.
+Changes are kept in `practitioner_other_names_history`. `PATCH /me/profile` replaces the list: a name no longer listed is removed, a new one added, and one listed again left alone.
 
 ### `practitioner_ssn`
 
@@ -187,12 +188,14 @@ A file in object storage owned by one record (D9). `created_by` is the uploader.
 | Column | Type | Meaning |
 |---|---|---|
 | `owner_type`, `owner_id`, `owner_key` | TEXT CHECK, BIGINT, TEXT | `practitioner`, `participation_application`, `privilege_request`, `adverse_action`, `sii_report`, `ingestion_batch` with `owner_id`; `state` with `owner_key` (the code). No foreign key. All three are NULL while a file is uploaded ahead of its owner, e.g. an adverse action whose only evidence is the order (FLOW-05) |
+| `uploaded_in_state` | FK `states`, NULL | The state staff uploaded it for, from the route; NULL for a PA's upload. Scopes it until it is attached |
 | `kind` | TEXT | What it proves; free text until Q-07 |
 | `storage_key` | TEXT, unique | S3 (RustFS locally) object key |
 | `file_name`, `content_type`, `size_bytes` | | |
 | `scan_status` | TEXT CHECK | `pending`, `clean`, `infected`, `error`; only `clean` may be downloaded |
 | `scanned_at` | TIMESTAMPTZ, NULL | When the malware scan's result was recorded |
 | `scan_checked_at` | TIMESTAMPTZ, NULL | When the Worker last looked for a result; it looks again 5 seconds later |
+| `scanned_version_id` | TEXT, NULL | The object version the result belongs to. An upload link can be used again until it expires, making a new version; downloads serve this one only |
 
 The object key is `documents/<public_id>`, never a name the uploader typed. Uploads, scan results, and attachment to an owner are kept in `documents_history`; a document is attached once and never moves (Rule 4 §4.3(e)(4)).
 
@@ -236,7 +239,41 @@ A PA's application to participate in the compact, decided by their state of qual
 | `eligibility_withdrawn_at`, `eligibility_withdrawal_reason` | | Required for `eligibility_withdrawn` (Rule 3 §3.9(b)) |
 | `superseded_at` | TIMESTAMPTZ | Required for `superseded`: a later `change_sql` application became eligible (Rule 3 §3.6) |
 
+The sworn statement (Q-06), set by submit and again by each resubmission. The submit route requires it; there is no CHECK, because rows made before it have none:
+
+| Column | Type | Meaning |
+|---|---|---|
+| `sworn_name` | TEXT | The name the PA typed |
+| `sworn_at` | TIMESTAMPTZ | When the server received it |
+
 The database enforces: `eligible` needs a linked license, `license_verified_at`, and `cbc_completed_on` (FLOW-02); one open application (`draft`, `submitted`, `info_requested`) per practitioner; one `eligible` application per practitioner, so a `change_sql` application that becomes eligible supersedes the old one in the same transaction, and the issuance check "participation still eligible" can only find the current one. The queue index is `(sql_state_code, status)`.
+
+### `attestations`
+
+The statements a PA accepts to apply: for participation from Rule 3 §3.4(a), for a privilege from Rule 3 §3.3(a)(11)–(12). Seeded with drafted texts that Commission legal signs off (Q-06); a state's jurisprudence attestation is added when the state configures one. Tier: public. Owner: epic 6.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `code`, `version` | TEXT, INTEGER | Primary key. A wording change is a new version, so an acceptance always names the text the PA read |
+| `applies_to` | TEXT CHECK | `participation` or `privilege` |
+| `state_code` | FK `states`, NULL | One remote state's own attestation, for a requirement it configures as `attestation`, such as jurisprudence; NULL applies to every state |
+| `sort_order` | SMALLINT | Display order within `applies_to` |
+| `text` | TEXT | What the PA reads |
+| `retired_at` | TIMESTAMPTZ, NULL | No longer asked for |
+
+Only `retired_at` may change; a trigger refuses any other update. Only a `privilege` attestation may name a state. The current version of a code is its highest unretired one (`current_attestations` in `repo/attestation.py`).
+
+### `participation_application_attestations`
+
+What a PA accepted on an application, written with `accept_participation` and checked with `out_of_date_codes` (`repo/attestation.py`). Epic 8 adds `privilege_request_attestations` with the same shape. Tier: private. Owner: epic 6.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `participation_application_id` | FK | |
+| `attestation_code`, `attestation_version` | FK `attestations` | |
+| `accepted_at` | TIMESTAMPTZ | |
+
+The primary key is `(participation_application_id, attestation_code, attestation_version)`. A trigger refuses any update or delete outside an expungement (ADR-0008): accepting a newer version adds a row, and the latest per code counts. That keeps the submitted record (Rule 5 §5.3) without a history table.
 
 ### `fees`
 

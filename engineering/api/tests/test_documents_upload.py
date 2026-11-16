@@ -188,7 +188,10 @@ def test_only_the_uploader_sees_an_unattached_document(client, auth_header, rout
 def test_state_staff_see_their_own_upload(client, auth_header, route_db_session):
     staff = client.portal.call(
         lambda: make_user(
-            route_db_session, role='state_staff', state_code='KS', permissions={'KS': ['write']}
+            route_db_session,
+            role='state_staff',
+            state_code='KS',
+            permissions={'KS': ['read_private', 'write']},
         )
     )
     headers = auth_header(staff.email)

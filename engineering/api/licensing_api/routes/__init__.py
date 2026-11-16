@@ -10,17 +10,17 @@ from collections.abc import Mapping, Sequence
 from fastapi import APIRouter
 
 from licensing_api.errors import ErrorResponse
-from licensing_api.routes import audit, document, health, user
+from licensing_api.routes import application, audit, catalogue, document, health, profile, user
 
 NAMESPACES: Mapping[str, Sequence[APIRouter]] = {
     # A PA's own record, and the signed-in user's own account.
-    '/me': [user.router, document.me],
+    '/me': [user.router, document.me, application.me, profile.me],
     # Anyone, signed in or not: verification and published configuration.
-    '/public': [],
+    '/public': [catalogue.router],
     # One state's staff, acting in the state named by the path.
     '/states/{state_code}': [document.states],
     # Commission staff, across every state.
-    '/commission': [audit.router],
+    '/commission': [audit.router, document.commission],
     # The system operator.
     '/admin': [],
 }

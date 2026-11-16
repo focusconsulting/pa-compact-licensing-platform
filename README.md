@@ -88,8 +88,8 @@ That installs dependencies, creates `engineering/api/.env` and
 `engineering/client/.env` from their examples if missing, starts the
 local services, applies migrations, loads the local users, and runs the API,
 the Worker, and the client. Ctrl-C stops them; `just down` stops the services.
-With the system running, `just e2e` runs the Playwright tests
-([`engineering/e2e/`](engineering/e2e/README.md)).
+With the system running, `just e2e` builds the client and runs the Playwright
+tests against it ([`engineering/e2e/`](engineering/e2e/README.md)).
 No AWS account or credentials are needed.
 
 | What | Where |
@@ -98,6 +98,7 @@ No AWS account or credentials are needed.
 | API docs | <http://localhost:8000/docs> |
 | Email (maildev) | <http://localhost:1080> |
 | File storage console (RustFS, `rustfsadmin` / `rustfsadmin`) | <http://localhost:9301> |
+| Malware scanner (tags uploads as GuardDuty would) | `docker compose -p pa-compact logs malware-scanner` |
 
 Sign in as any user in
 [`engineering/mocks/cognito/db/local_licensing.json`](engineering/mocks/cognito/db/local_licensing.json)
@@ -113,7 +114,8 @@ names, ports, and settings are in
 [`engineering/api/.env.example`](engineering/api/.env.example) and
 [`engineering/client/.env.example`](engineering/client/.env.example). If your
 `.env` files predate the local stack, copy the Cognito, SMTP, and S3 settings
-from the examples.
+from the examples; the RustFS keys are now the standard `AWS_*` variables
+([ADR-0017](engineering/adrs/0017-s3-client.md)).
 
 ## Getting Started
 

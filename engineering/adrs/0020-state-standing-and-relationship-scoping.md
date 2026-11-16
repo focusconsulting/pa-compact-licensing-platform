@@ -4,7 +4,7 @@ status: proposed
 date: 2026-11-09
 ---
 
-# ADR-0017: State Standing and Relationship Scoping
+# ADR-0020: State Standing and Relationship Scoping
 
 ## Status
 

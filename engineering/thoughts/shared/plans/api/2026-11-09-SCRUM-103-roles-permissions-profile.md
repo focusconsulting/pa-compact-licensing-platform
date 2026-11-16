@@ -10,7 +10,7 @@ This plan fixes what the epic 5 tracks build against: the role × route-family p
 - Spec: [`mvp-ticket-breakdown.md` §2.4 and F-04](../../../../../product/backlog/mvp-ticket-breakdown.md)
 - Flows: [FLOW-01](../../../../../product/context/flows/01-end-to-end-privilege-issuance.md), [FLOW-02](../../../../../product/context/flows/02-sql-eligibility-verification.md) (the SQL's verification stamps)
 - Rules: Rule 4 §4.3(c) and (e) (uniform data set), §4.6(a) (state access)
-- ADRs: [ADR-0009](../../../../adrs/0009-route-authorization-and-change-context.md), [ADR-0017](../../../../adrs/0017-state-standing-and-relationship-scoping.md) (new)
+- ADRs: [ADR-0009](../../../../adrs/0009-route-authorization-and-change-context.md), [ADR-0020](../../../../adrs/0020-state-standing-and-relationship-scoping.md) (new)
 - Area: api
 
 ## Decisions (agreed 2026-11-09)
@@ -28,7 +28,7 @@ Defaults taken without a separate decision:
 
 ## Changes
 
-- `engineering/adrs/0017-state-standing-and-relationship-scoping.md`: decisions 1–4.
+- `engineering/adrs/0020-state-standing-and-relationship-scoping.md`: decisions 1–4.
 - `engineering/docs/platform-contract.md`: adds the Permission matrix, Relationships, and Profile fields sections, plus the epic 5 track list.
 - `engineering/docs/roles-and-permissions.md`: adds standing, the `*` grant, and links to the matrix and the predicates.
 - `engineering/docs/data-model.md`: adds `practitioner_other_names`; the change logs come from history.

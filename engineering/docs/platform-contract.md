@@ -2,6 +2,8 @@
 
 The functions every feature calls to record a change and declare a route, and the signatures the epic 2 tracks implement. Decided in [ADR-0009](../adrs/0009-route-authorization-and-change-context.md); planned in the [contract step plan](../thoughts/shared/plans/api/2026-10-14-SCRUM-77-platform-contract.md). Changing a signature here is a platform change: it needs the tech lead's review.
 
+This page is not for business logic. How an application, privilege request, or privilege moves, and who may move it, lives in the [flows](../../product/context/flows/), which are the source of truth; code links to them rather than restating them here.
+
 ## Recording a change
 
 A write validates, then changes its rows, writes a history row and an event, and commits once (constitution Principle VI). Nothing sends email or cascades inside the request: handlers do that later.
@@ -123,7 +125,7 @@ async def list_applications(
 
 ### Permission matrix
 
-What each role reaches, by route family, decided in [ADR-0017](../adrs/0017-state-standing-and-relationship-scoping.md). A `/states/{st}` row applies only to a caller with **standing** in `st`: `st` is their `state_code`, or they hold a grant there. Without standing the route returns `403 FORBIDDEN`, whatever the role. **✓** means the role alone passes; **grant** means the user also needs that permission granted in the state (in `*` for a Commission user); **own** means only their own record. SCRUM-104's role × endpoint test is driven from this table.
+What each role reaches, by route family, decided in [ADR-0020](../adrs/0020-state-standing-and-relationship-scoping.md). A `/states/{st}` row applies only to a caller with **standing** in `st`: `st` is their `state_code`, or they hold a grant there. Without standing the route returns `403 FORBIDDEN`, whatever the role. **✓** means the role alone passes; **grant** means the user also needs that permission granted in the state (in `*` for a Commission user); **own** means only their own record. SCRUM-104's role × endpoint test is driven from this table.
 
 | Route family | Declares | Rows the query returns | `licensee` | `state_staff` | `state_admin` | `compact_admin` | `admin` |
 |---|---|---|---|---|---|---|---|
@@ -247,7 +249,9 @@ Builds on `require` (download permission, with record scoping in the query), `Ch
 | `attach(session, ctx, document, *, owner_type, owner_id=None, owner_key=None) -> None` | `repo/document_owner.py` | Gives an unattached document to its owner in the caller's transaction and writes history; the caller emits its own event. Raises `ValueError` if the document is already attached. The caller checks its user may attach it, such as by having uploaded it |
 | `get_storage` | `dependencies.py` | FastAPI dependency: the documents bucket (`Storage`), built once at start-up ([ADR-0017](../adrs/0017-s3-client.md)) |
 
-Implemented in part: `POST /me/documents` and `POST /states/{state_code}/documents` (`write`) create a `pending` document, emit `document.uploaded`, and return a five-minute presigned POST for exactly the declared size and type (PDF, PNG, JPEG, CSV, DOCX; at most 20 MiB). `GET .../documents/{id}` returns its details to the uploader.
+Implemented: upload, scan, scoped details, and download, as [Documents](documents.md) describes. `visible_to_practitioner`, `visible_to_state`, and `visible_to_commission` (`repo/document_scope.py`) are the scope conditions every document query uses.
+
+The Worker runs `check_document_scans(session_factory, storage, *, batch_size=20) -> int` (`scans.py`) in a loop of its own, apart from event delivery and email. It reads the `GuardDutyMalwareScanStatus` tag of each pending document's current version at most every 5 seconds, checks a clean file starts like its type, and records `clean`, `infected`, or `error` with the version, history, and `document.scanned`. No result within 15 minutes is `error`. Each result logs `Document scanned` with `outcome` and `reason`.
 
 ### Epic 5: roles, permissions, and accounts
 

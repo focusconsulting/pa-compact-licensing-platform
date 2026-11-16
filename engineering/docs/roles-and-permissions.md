@@ -13,7 +13,7 @@ held in state S = the permissions their role holds everywhere
 
 S is the state in the route's path, such as `KS` in `/states/KS/applications`, or the user's own `state_code` when the path names none. A user with no `state_code` (the Commission roles) holds their `*` grants there.
 
-In a `/states/{state_code}` path the user must first have **standing** in S: S is their `state_code`, or they hold a grant there. Without it they are refused whatever their role holds, so a Kansas user cannot use Missouri's routes, and Commission users read states only through `/commission` ([ADR-0017](../adrs/0017-state-standing-and-relationship-scoping.md)).
+In a `/states/{state_code}` path the user must first have **standing** in S: S is their `state_code`, or they hold a grant there. Without it they are refused whatever their role holds, so a Kansas user cannot use Missouri's routes, and Commission users read states only through `/commission` ([ADR-0020](../adrs/0020-state-standing-and-relationship-scoping.md)).
 
 Routes never check a role. To change what a role may do, change `ROLE_PERMISSIONS`, not the routes.
 
@@ -62,7 +62,7 @@ A value that names no permission matches nothing, so a typo denies rather than a
 
 ## What a permission does not decide
 
-A permission decides whether a user may call a route, not which rows they see. A `state_staff` user with `read_private` in Kansas sees only the PAs related to Kansas, and a licensee sees only their own record. The route's query applies that scope with the [relationship predicates](platform-contract.md#relationships), and a record outside it returns `404` (constitution Principle II). Which role reaches which route family is the [permission matrix](platform-contract.md#permission-matrix).
+A permission decides whether a user may call a route, not which rows they see. [Documents](documents.md#who-may-see-a-document) lists the scope for each kind of document. A `state_staff` user with `read_private` in Kansas sees only the PAs related to Kansas (Rule 5 §5.6(a)), and a licensee sees only their own record. The route's query applies that scope with the [relationship predicates](platform-contract.md#relationships), and a record outside it returns `404` (constitution Principle II). Which role reaches which route family is the [permission matrix](platform-contract.md#permission-matrix).
 
 ## Namespaces
 

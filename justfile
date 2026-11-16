@@ -20,14 +20,14 @@ install:
     cd engineering/api && uv sync
     cd engineering/client && pnpm install
 
-# Start the local services in the background (Postgres, maildev, RustFS, Cognito mock) and wait until ready
+# Start the local services in the background (Postgres, maildev, RustFS, the malware scanner, Cognito mock) and wait until ready
 services:
-    {{ compose }} up -d --wait --build
+    {{ compose }} --profile scanner up -d --wait --build
     {{ compose }} run --rm rustfs-init >/dev/null
 
 # Stop the local services
 down:
-    {{ compose }} down
+    {{ compose }} --profile scanner down
 
 # Load local seed data from engineering/api/seed/: `users` (safe to rerun), or `demo` (docs/demo.md)
 seed name="users":
@@ -46,8 +46,9 @@ mock-api:
         -v "$PWD/engineering/api/openapi.json:/openapi.json:ro" \
         stoplight/prism:5.15.10 mock -m false -h 0.0.0.0 /openapi.json
 
-# Run the end-to-end tests against the running system (start it with `just up` first)
+# Run the end-to-end tests against the running system (start it with `just up` first), with a fresh build of the client served under the deployed Content-Security-Policy
 e2e:
+    cd engineering/client && pnpm build
     cd engineering/e2e && pnpm install && pnpm exec playwright install chromium && pnpm test
 
 # Everything CI checks, for the API, client, and e2e specs (the API's tests need `just services`)

@@ -69,3 +69,23 @@ output "jobs_task_definition_family" {
   description = "The scheduled jobs' task definition family; CI registers a revision per deploy"
   value       = aws_ecs_task_definition.jobs_task.family
 }
+
+output "documents_bucket" {
+  description = "S3 bucket holding uploaded documents, scanned by GuardDuty Malware Protection"
+  value       = aws_s3_bucket.documents.bucket
+}
+
+output "image_tag" {
+  description = "The commit SHA whose API image runs; `just pause` and `just resume` reapply it"
+  value       = var.image_tag
+}
+
+output "repo_name" {
+  description = "The repository the API image comes from; `just pause` and `just resume` reapply it"
+  value       = var.repo_name
+}
+
+output "paused_parameter" {
+  description = "The SSM parameter `just pause` and `just resume` write"
+  value       = aws_ssm_parameter.paused.name
+}

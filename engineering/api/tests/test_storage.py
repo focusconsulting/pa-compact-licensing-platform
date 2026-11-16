@@ -10,7 +10,7 @@ from botocore.exceptions import ClientError
 from botocore.stub import Stubber
 
 from licensing_api.config import Settings
-from licensing_api.storage import SCAN_TAG, Storage, create_storage
+from licensing_api.storage import SCAN_TAG, CurrentVersion, Storage, create_storage
 from tests.conftest import TEST_SETTINGS
 
 _MINUTE = timedelta(minutes=1)
@@ -63,12 +63,19 @@ async def test_the_bucket_refuses_another_content_type(storage):
     assert await storage.read_start(key, 1) == b''
 
 
-def test_a_download_link_saves_the_file_under_its_name(storage):
+async def test_a_download_link_saves_one_version_under_its_name(storage):
     key = _key()
     _post(storage, key, b'%PDF-1.7 x', declared=10, content_type='application/pdf')
+    current = await storage.current_version(key)
+    assert current is not None and current.version_id is not None
+    _post(storage, key, b'%PDF-1.7 y', declared=10, content_type='application/pdf')
 
     url = storage.presign_download(
-        key, file_name='Ordre "final" é.pdf', content_type='application/pdf', expires=_MINUTE
+        key,
+        file_name='Ordre "final" é.pdf',
+        content_type='application/pdf',
+        version_id=current.version_id,
+        expires=_MINUTE,
     )
     response = httpx.get(url)
 
@@ -80,12 +87,13 @@ def test_a_download_link_saves_the_file_under_its_name(storage):
     )
 
 
-async def test_the_scan_tag_is_read_once_written(storage, caplog):
+async def test_the_scan_tag_belongs_to_one_version(storage, caplog):
     key = _key()
     _post(storage, key, b'%PDF-1.7 x', declared=10, content_type='application/pdf')
 
     with caplog.at_level(logging.INFO, logger='licensing_api.storage'):
-        before = await storage.scan_tag(key)
+        before = await storage.current_version(key)
+    assert before is not None
     storage._client.put_object_tagging(
         Bucket='documents',
         Key=key,
@@ -96,9 +104,16 @@ async def test_the_scan_tag_is_read_once_written(storage, caplog):
             ]
         },
     )
+    scanned = await storage.current_version(key)
+    # The upload link is used again: a new, unscanned version.
+    _post(storage, key, b'%PDF-1.7 y', declared=10, content_type='application/pdf')
+    replaced = await storage.current_version(key)
 
-    assert before is None
-    assert await storage.scan_tag(key) == 'NO_THREATS_FOUND'
+    assert before.scan_status is None
+    assert scanned == CurrentVersion(version_id=before.version_id, scan_status='NO_THREATS_FOUND')
+    assert replaced is not None
+    assert replaced.version_id != before.version_id
+    assert replaced.scan_status is None
     record = caplog.records[-1]
     assert (record.message, record.__dict__['outcome'], record.__dict__['operation']) == (
         'Storage call',
@@ -108,16 +123,20 @@ async def test_the_scan_tag_is_read_once_written(storage, caplog):
     assert record.__dict__['duration_ms'] >= 0
 
 
-async def test_the_start_of_a_file_is_read(storage):
+async def test_the_start_of_a_version_is_read(storage):
     key = _key()
     _post(storage, key, b'%PDF-1.7 x', declared=10, content_type='application/pdf')
+    first = await storage.current_version(key)
+    assert first is not None
+    _post(storage, key, b'PK\x03\x04 docx!', declared=10, content_type='application/pdf')
 
-    assert await storage.read_start(key, 5) == b'%PDF-'
+    assert await storage.read_start(key, 5) == b'PK\x03\x04 '
+    assert await storage.read_start(key, 5, version_id=first.version_id) == b'%PDF-'
 
 
 async def test_a_missing_object_has_no_tag_and_no_bytes(storage, caplog):
     with caplog.at_level(logging.INFO, logger='licensing_api.storage'):
-        assert await storage.scan_tag(_key()) is None
+        assert await storage.current_version(_key()) is None
         assert await storage.read_start(_key(), 5) == b''
 
     assert [record.__dict__['outcome'] for record in caplog.records] == ['missing', 'missing']
@@ -132,7 +151,7 @@ async def test_any_other_error_is_logged_and_raised(caplog):
         pytest.raises(ClientError),
     ):
         stubber.add_client_error('get_object_tagging', service_error_code='AccessDenied')
-        await storage.scan_tag('anything')
+        await storage.current_version('anything')
 
     record = caplog.records[-1]
     assert (record.__dict__['outcome'], record.__dict__['error_code']) == ('failed', 'AccessDenied')
