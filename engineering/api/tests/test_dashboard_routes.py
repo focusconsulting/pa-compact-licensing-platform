@@ -246,6 +246,26 @@ def test_the_timeline_comes_from_history_with_the_state_s_note(
     ]
 
 
+def test_a_step_shows_on_the_day_it_took_effect(client, auth_header, route_db_session, pa):
+    email, practitioner = pa
+
+    async def _make():
+        application = await _sent(route_db_session, practitioner)
+        ctx = ChangeContext(await system_user_id(route_db_session), 'req-dash')
+        before = history.snapshot(application)
+        application.status = ApplicationStatus.WITHDRAWN
+        application.withdrawn_at = datetime(2026, 10, 5, 15, tzinfo=timezone.utc)
+        await history.write(
+            route_db_session, ctx, application, before=before, effective_at=application.withdrawn_at
+        )
+        await emit(route_db_session, ctx, EventType.APPLICATION_WITHDRAWN, application)
+
+    _call(client, _make)
+
+    [application] = _dashboard(client, auth_header, email)['applications']
+    assert application['timeline'][-1]['at'] == '2026-10-05T15:00:00Z'
+
+
 def test_a_denial_shows_its_reason(client, auth_header, route_db_session, pa):
     email, practitioner = pa
     _call(

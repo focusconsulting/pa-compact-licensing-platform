@@ -277,7 +277,10 @@ async def _application(
             )
         )
     ).all()
-    timeline = [_application_event(row.changed_at, row.updated or {}) for row in rows]
+    # A step dated apart from when it was recorded, such as the day the state reviewed it, shows on that day.
+    timeline = [
+        _application_event(row.effective_at or row.changed_at, row.updated or {}) for row in rows
+    ]
     denial = (
         await session.get(RefDenialReason, application.denial_reason_code)
         if application.denial_reason_code
