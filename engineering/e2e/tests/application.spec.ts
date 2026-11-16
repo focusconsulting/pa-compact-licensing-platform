@@ -2,6 +2,8 @@ import { demoPa, expect, signIn, test } from "./fixtures";
 
 // Submits an application for Ned Bar-Ended, whose bar has ended and who has none yet. Run it on
 // a fresh `just seed demo`: once Ned has applied, a second run finds his application under review.
+// A retry would start from wherever the failed run left Ned, so it can't pass; report the first failure.
+test.describe.configure({ retries: 0 });
 test("A PA applies to join, signs the statements, and sees their application under review", async ({
   page,
   expectAccessible,
