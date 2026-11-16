@@ -15,7 +15,7 @@ Rule citations are to the adopted Rules 3 and 4 in `product/context/research-cor
 
 | Tier | Who may see it |
 |---|---|
-| Public | Anyone, through public verification (Rule 4 §4.5(b)) |
+| Public | Anyone, through [public verification](public-verification.md) (Rule 4 §4.5(b)) |
 | Private | The PA themselves, and state and Commission users with a relationship to the PA (`read_private`) |
 | States and Commission | State and Commission users only; never the PA or the public (ML §8.C) |
 | Restricted | The full SSN: `read_ssn`, every read audited (ADR-0007) |

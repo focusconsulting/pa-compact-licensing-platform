@@ -82,6 +82,8 @@ Verified by: the API and client test suites at 100% coverage, the Playwright spe
 
 Four pull requests, stacked on PR #224 in this order: the API and the contract, the home page and the dashboard's move, the verification pages and their E2E spec, then the infrastructure. Each merges on its own; verification works locally after the third, and in AWS after the fourth.
 
+**On hold, 2026-11-16:** Phases 2 and 3 wait for the product step, SCRUM-137, which has not run: there is no flow or wireframe for public verification, and the backlog gives the public landing page to epics 4 and 5 with three entries, not the two columns Phase 2 describes. Those phases are rewritten from its flow and wireframes. Phases 1 and 4 do not depend on it.
+
 The allow-list is enforced three ways, so no single mistake leaks a field: the response models forbid extras and are built field by field from named columns; a test pins each model's field set to the documented list; and a test fills every private column with a marker value and asserts no marker reaches a response.
 
 ## Phase 1: The API and the allow-list contract
@@ -216,7 +218,7 @@ Every example is a module-level constant. A nested value is an instance of its o
 
 `StateRef` is the code-and-name pair. The application stack's `StateOut` in `routes/catalogue.py` (PR #208, unmerged, not on this base) is that pair plus `is_member` and `is_live`, which a verification response has no reason to carry. Whichever stack merges second makes `StateOut` extend `StateRef`, so the two fields have one definition.
 
-- `GET ''` → `Paged[PrivilegeHolderSummary]`. Query parameters `first_name`, `last_name` (each 1–100 characters after trimming) and `privilege_number` (pattern `^[Pp][Aa]-[A-Za-z]{2}-\d{6,}$`, upper-cased before the lookup). Exactly one mode: both names, or the number alone. Anything else is `AppError(422, ErrorCode.ValidationError, ...)`. Paged with `page_query('last_name', default_sort='last_name')`, tie-broken on first name then id. No match is `200` with an empty list.
+- `GET ''` → `Paged[PrivilegeHolderSummary]`. Query parameters `first_name`, `last_name` (each 1–100 characters after trimming) and `privilege_number` (pattern `^[Pp][Aa]-[A-Za-z]{2}-\d{6,}$`, upper-cased before the lookup). Exactly one mode: both names, or the number alone. Anything else is `AppError(422, ErrorCode.ValidationError, ...)`. Paged with `page_query('last_name', 'first_name', default_sort='last_name,first_name')`, tie-broken on the holder's id. No match is `200` with an empty list.
 - `GET '/{holder_id}'` → `Data[PrivilegeHolder]`. `holder_id` is the practitioner's `public_id`. An unknown id, or a practitioner with no privilege, is `AppError(404, ErrorCode.NotFound, ['No such privilege holder'])`, one message for both.
 - `issued_on` is `compact_date_at(issued_at, await reference_time_zone(session))`.
 - Each search logs `logger.info('public verification search', extra={'mode': ..., 'results': total})`.
@@ -244,12 +246,12 @@ Every example is a module-level constant. A nested value is an instance of its o
 
 #### Automated Verification
 
-- [ ] Local services running: `cd engineering/api && just infra`
-- [ ] Tests pass at 100% line and branch coverage: `cd engineering/api && just test-coverage`
-- [ ] Lint, format, and type checks pass: `cd engineering/api && just lint`
-- [ ] `openapi.json` matches the code (`tests/test_openapi.py`)
-- [ ] Route access rules hold (`tests/test_route_access.py`)
-- [ ] Markdown lint passes: `pre-commit run --files <changed .md files>`
+- [x] Local services running: `cd engineering/api && just infra`
+- [x] Tests pass at 100% line and branch coverage: `cd engineering/api && just test-coverage`
+- [x] Lint, format, and type checks pass: `cd engineering/api && just lint`
+- [x] `openapi.json` matches the code (`tests/test_openapi.py`)
+- [x] Route access rules hold (`tests/test_route_access.py`)
+- [x] Markdown lint passes: `pre-commit run --files <changed .md files>`
 
 #### Manual Verification
 
@@ -511,7 +513,7 @@ resource "aws_cloudfront_function" "page_html" {
 - **Search.** Both names match case-insensitively and ignore surrounding spaces; a prefix does not match; a practitioner with no privilege never appears; two PAs with the same name both appear, in a stable order; a number matches in either case; paging metadata is right.
 - **Validation.** Last name alone, first name alone, names with a number, no parameters, an unknown parameter, an over-long name, and a malformed number are each `422` with `VALIDATION_ERROR`.
 - **Detail.** An unknown id, a malformed id, and a practitioner with no privilege: `404`, `422`, `404`, the two `404` bodies identical.
-- **Dates.** `issued_on` for a privilege issued at 23:30 and at 00:30 in the reference time zone, with `issued_at` on the other UTC date; `expired` on the day after `expires_on` and `active` on the day itself, with time frozen.
+- **Dates.** `issued_on` for a privilege issued at 23:30 and at 00:30 in the reference time zone, with `issued_at` on the other UTC date; `expired` on the day after `expires_on` and `active` on the day itself, set relative to `compact_today()`: the suite has no clock to freeze, and the view reads the database's.
 - The search log line carries the mode and count and neither name.
 
 `tests/test_route_access.py` and `tests/test_openapi.py` cover the new routes without change.

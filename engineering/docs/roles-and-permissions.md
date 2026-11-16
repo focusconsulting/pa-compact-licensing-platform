@@ -67,7 +67,7 @@ Every `/api` route outside `/api/health` sits under the namespace of the people 
 | Namespace | Who calls it | Rule |
 |---|---|---|
 | `/me` | A PA, for their own record; any user, for their own account | Signed in |
-| `/public` | Anyone: verification and published configuration | `public()` |
+| `/public` | Anyone: [verification](public-verification.md) and published configuration | `public()` |
 | `/states/{state_code}` | One state's staff, in the state the path names | `state_param='state_code'` |
 | `/commission` | Commission staff, across every state | `compact_admin` |
 | `/admin` | The system operator | `system_admin` |
