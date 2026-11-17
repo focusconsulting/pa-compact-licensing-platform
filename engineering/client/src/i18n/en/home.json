@@ -1,9 +1,9 @@
 {
   "title": "PA Compact",
-  "intro": "Physician assistants (PAs) licensed in one PA Compact state can apply here for a Compact Privilege to practice in others.",
+  "intro": "PAs licensed in one PA Compact state can apply here for a Compact Privilege to practice in others.",
   "dashboard": "Go to your dashboard",
   "pa": {
-    "title": "Physician assistants",
+    "title": "PAs",
     "text": "Join the PA Compact, then apply for Compact Privileges in other states.",
     "action": "Sign in as a PA"
   },

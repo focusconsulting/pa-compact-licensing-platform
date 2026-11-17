@@ -1,6 +1,6 @@
 {
   "title": "Look up a Compact Privilege",
-  "intro": "Check whether a physician assistant (PA) holds a Compact Privilege to practice in a PA Compact state. You don't need an account.",
+  "intro": "Check whether a PA holds a Compact Privilege to practice in a PA Compact state. You don't need an account.",
   "required": "A red asterisk (*) indicates a required field.",
   "form": {
     "legend": "Search by",
