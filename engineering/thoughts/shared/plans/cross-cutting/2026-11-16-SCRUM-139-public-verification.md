@@ -445,14 +445,13 @@ resource "aws_cloudfront_function" "page_html" {
 #### 3. Documentation
 
 - `engineering/docs/security/infrastructure.md`: the web firewall's limits, the `429` body, and `Retry-After`.
-- `engineering/docs/architecture.md`: the public person reaches `/verify` through the CDN.
 - `engineering/infrastructure/iac/README.md`: one line that page URLs are rewritten to `.html` at the edge.
 
 ### Success Criteria
 
 #### Automated Verification
 
-- [ ] Formatting and validation pass: `cd engineering/infrastructure && just check`
+- [x] Formatting and validation pass: `cd engineering/infrastructure && just check`
 - [ ] `just plan app staging` shows only the web ACL's rate rules, the new function, and the default behaviour's function association changing
 - [ ] Checkov reports nothing new (the pull request's scan)
 

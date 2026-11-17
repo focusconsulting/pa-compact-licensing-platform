@@ -88,6 +88,20 @@ variable on.
 Request logs elsewhere: the web firewalls log to `aws-waf-logs-<env>-licensing-*`
 with the `Authorization` and `Cookie` headers redacted.
 
+## Rate limits
+
+The web firewall in front of CloudFront counts requests from one address over
+five minutes (`waf.tf`): 300 to `/api/public/`, and 2,000 to `/api/` as a
+whole. Past either, it answers for the API with `429`, `Retry-After: 300`, and
+the API's own error body, `{"code": "RATE_LIMITED", "details": [...]}`, so the
+client reads it like any other error. An alarm fires when a limit blocks 100
+requests in five minutes.
+
+The firewall in front of Cognito allows 200 sign-in requests and blocks with
+its default `403`: Cognito's SDK reads its own errors.
+
+There is no rate limit locally, and the API never sends a `429` itself.
+
 ## Containers
 
 The API, the Worker, the jobs, and the ADOT collector run with read-only root
