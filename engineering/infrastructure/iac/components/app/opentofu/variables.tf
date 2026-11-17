@@ -89,6 +89,11 @@ variable "cloudtrail_management_events" {
   description = "Whether this environment's trail records management events. False where another trail in the account already does: a second copy is charged per event. Reads and writes of uploaded documents are recorded either way."
 }
 
+variable "site_password_protected" {
+  type        = bool
+  description = "Whether CloudFront asks for the site password before it serves a page or passes an API call. On for an environment the public should not reach; the password is in the <environment_name>-site-access secret."
+}
+
 variable "deletion_protection" {
   type        = bool
   description = "Guards everything that would block or lose data in a teardown. Leave on wherever data must survive; an environment that is spun up and torn down turns it off."

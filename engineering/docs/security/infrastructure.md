@@ -102,6 +102,32 @@ its default `403`: Cognito's SDK reads its own errors.
 
 There is no rate limit locally, and the API never sends a `429` itself.
 
+## The site password
+
+Where `site_password_protected` is on, CloudFront serves nothing without the
+environment's password (`site_access.tf`): the browser asks for it once, with
+its own prompt. The username and password are in the secret
+`<env>-site-access`:
+
+```bash
+aws secretsmanager get-secret-value --secret-id staging-site-access \
+  --query SecretString --output text
+```
+
+Pages check the password itself. The API cannot, because the client's
+`Authorization` header carries the Cognito token, so each page response sets
+the cookie `site-access` and API calls are checked for that. A call without it
+gets a bare `401` from CloudFront and never reaches the API. To call the API
+from a script, send the cookie a browser holds.
+
+Nothing that calls the site without a browser gets through: a payment
+processor's webhook or an uptime check needs its own path exempted first. The
+Cognito user pool is not behind CloudFront and is not covered.
+
+To change the password, raise `secret_string_wo_version` on the secret's
+version and run `tofu apply -replace='random_password.site_access[0]'`.
+Everyone is asked again.
+
 ## Containers
 
 The API, the Worker, the jobs, and the ADOT collector run with read-only root
