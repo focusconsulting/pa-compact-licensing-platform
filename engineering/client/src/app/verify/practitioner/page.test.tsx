@@ -48,14 +48,12 @@ describe("a PA's public page", () => {
     await expectNoAxeViolations(container);
   });
 
-  it("says a privilege expired and when, and of an inactive one only that it is inactive", async () => {
+  it("says only that a privilege expired, and of an inactive one only that it is inactive", async () => {
     routeFetch({ [HOLDER]: ok(holder()) });
     render(<Page />);
 
     const cards = await screen.findAllByRole("listitem");
-    expect(
-      within(cards[1]).getByText("Expired: Jun 30, 2026"),
-    ).toBeInTheDocument();
+    expect(within(cards[1]).getByText("Expired")).toBeInTheDocument();
     expect(within(cards[2]).getByText("Inactive")).toBeInTheDocument();
     expect(
       within(cards[2]).queryByText(/Deactivated|Expire/),
