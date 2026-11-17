@@ -34,7 +34,7 @@ export const FOOTER_LINKS = {
 } as const;
 
 function isCurrent(href: string, pathname: string): boolean {
-  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+  return pathname.startsWith(href);
 }
 
 function displayName(user: CurrentUser): string {

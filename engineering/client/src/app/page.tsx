@@ -1,62 +1,65 @@
 "use client";
 
-import ProtectedRoute from "src/components/ProtectedRoute";
+import {
+  Card,
+  CardBody,
+  CardFooter,
+  CardGroup,
+  CardHeader,
+} from "@trussworks/react-uswds";
+import Link from "next/link";
+import { useTranslation } from "react-i18next";
+
+import PageHeading from "src/components/PageHeading";
 import { useCurrentUser } from "src/contexts/CurrentUserContext";
-import { portalFor } from "src/lib/navigation";
-import PaDashboard from "./PaDashboard";
+import { portalFor, type Portal } from "src/lib/navigation";
 
-function Dashboard() {
-  const { user, error } = useCurrentUser();
+const DOORS = ["pa", "staff", "lookup"] as const;
+type Door = (typeof DOORS)[number];
 
-  if (user && portalFor(user.permissions) === "pa") return <PaDashboard />;
+/** The door a signed-in visitor came through; the lookup is nobody's own. */
+function doorOf(portal: Portal | null): Door | null {
+  if (portal === "pa") return "pa";
+  return portal ? "staff" : null;
+}
+
+/**
+ * The front door (V0, V0s): one card each for PAs, for staff, and for anyone
+ * looking up a privilege. It is drawn signed out and never waits on the session
+ * check; once a signed-in visitor is known, their own card leads to their dashboard.
+ */
+export default function Home() {
+  const { t } = useTranslation("home");
+  const { user } = useCurrentUser();
+  const own = doorOf(user ? portalFor(user.permissions) : null);
+
+  const hrefOf = (door: Door) => {
+    if (door === "lookup") return "/verify";
+    return door === own ? "/dashboard" : "/login";
+  };
 
   return (
     <div className="usa-section">
       <div className="grid-container">
-        <h1>Dashboard</h1>
-        {error && <p className="text-red">{error}</p>}
-        {user && (
-          <table className="usa-table usa-table--borderless">
-            <tbody>
-              <tr>
-                <th>Name</th>
-                <td>
-                  {[user.given_name, user.family_name]
-                    .filter(Boolean)
-                    .join(" ") || "—"}
-                </td>
-              </tr>
-              <tr>
-                <th>Email</th>
-                <td>{user.email}</td>
-              </tr>
-              <tr>
-                <th>Role</th>
-                <td>{user.role}</td>
-              </tr>
-              {user.state_code && (
-                <tr>
-                  <th>State</th>
-                  <td>{user.state_code}</td>
-                </tr>
-              )}
-              <tr>
-                <th>Status</th>
-                <td>{user.is_active ? "Active" : "Inactive"}</td>
-              </tr>
-            </tbody>
-          </table>
-        )}
+        <PageHeading title={t("title")} intro={t("intro")} />
+        <CardGroup>
+          {DOORS.map((door) => (
+            <Card key={door} gridLayout={{ desktop: { col: 4 } }}>
+              <CardHeader>
+                <h2 className="usa-card__heading">{t(`${door}.title`)}</h2>
+              </CardHeader>
+              <CardBody>
+                <p>{t(`${door}.text`)}</p>
+              </CardBody>
+              <CardFooter>
+                <Link className="usa-button" href={hrefOf(door)}>
+                  {door === own ? t("dashboard") : t(`${door}.action`)}
+                </Link>
+              </CardFooter>
+            </Card>
+          ))}
+        </CardGroup>
       </div>
     </div>
-  );
-}
-
-/** Home page: the signed-in user's dashboard; signed-out visitors are sent to sign in. */
-export default function Home() {
-  return (
-    <ProtectedRoute>
-      <Dashboard />
-    </ProtectedRoute>
   );
 }

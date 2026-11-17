@@ -300,7 +300,7 @@ describe("the application's first step", () => {
     });
     render(<Page />);
 
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/dashboard"));
     expect(
       screen.queryByRole("button", { name: "Continue" }),
     ).not.toBeInTheDocument();

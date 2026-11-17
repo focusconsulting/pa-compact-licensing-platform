@@ -9,6 +9,7 @@ import status from "./en/status.json";
 import shell from "./en/shell.json";
 import application from "./en/application.json";
 import verify from "./en/verify.json";
+import home from "./en/home.json";
 
 export const defaultNS = "common";
 
@@ -26,6 +27,7 @@ void i18next.use(initReactI18next).init({
       shell,
       application,
       verify,
+      home,
     },
   },
   defaultNS,

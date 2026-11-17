@@ -1,0 +1,20 @@
+{
+  "title": "PA Compact",
+  "intro": "Physician assistants (PAs) licensed in one PA Compact state can apply here for a Compact Privilege to practice in others.",
+  "dashboard": "Go to your dashboard",
+  "pa": {
+    "title": "Physician assistants",
+    "text": "Join the PA Compact, then apply for Compact Privileges in other states.",
+    "action": "Sign in as a PA"
+  },
+  "staff": {
+    "title": "State and Commission staff",
+    "text": "Review applications and manage PA records for your state.",
+    "action": "Sign in as staff"
+  },
+  "lookup": {
+    "title": "Look up a Compact Privilege",
+    "text": "Check whether a PA holds a Compact Privilege in a state. You don't need an account.",
+    "action": "Look up a PA"
+  }
+}
