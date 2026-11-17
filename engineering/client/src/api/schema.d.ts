@@ -425,7 +425,7 @@ export interface paths {
     };
     /**
      * Get A Privilege Holder
-     * @description A PA's compact privileges: the state, number, status, and dates of each. A privilege that is not active shows as `expired` or `inactive`, with no reason.
+     * @description A PA's compact privileges: the state, number, status, and issue date of each. A privilege that is not active shows as `expired` or `inactive`, with no reason and no `expires_on`.
      */
     get: operations["Get_a_privilege_holder_api_public_privilege_holders__holder_id__get"];
     put?: never;
@@ -1378,6 +1378,9 @@ export interface components {
     /**
      * PublicPrivilege
      * @description A privilege as the public sees it: no reason for its status, and nothing about discipline.
+     *
+     *     ``expires_on`` is None unless the privilege is active: a date still ahead beside
+     *     ``inactive`` would show the privilege was ended early.
      * @example {
      *       "expires_on": "2027-12-31",
      *       "issued_on": "2026-11-02",
@@ -1390,11 +1393,8 @@ export interface components {
      *     }
      */
     PublicPrivilege: {
-      /**
-       * Expires On
-       * Format: date
-       */
-      expires_on: string;
+      /** Expires On */
+      expires_on: string | null;
       /**
        * Issued On
        * Format: date

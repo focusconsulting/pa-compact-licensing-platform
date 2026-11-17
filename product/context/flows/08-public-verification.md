@@ -4,7 +4,7 @@ flow-id: FLOW-08
 title: Public verification — anyone looks up a PA's compact privileges
 status: draft
 authored-by: CTO (Kalish)
-last-revised: 2026-11-16
+last-revised: 2026-11-17
 sources:
   - product/context/research-corpus/sources/rule-4-compact-data-system--confidentiality-information-sharing.md
   - product/context/research-corpus/sources/pa-compact-model-legislation.md
@@ -13,7 +13,7 @@ sources:
 rules-cited: [R4 §4.3(d), R4 §4.5(b), R4 §4.5(c), R4 §4.5(d), ML §8.E, SOW §2.1]
 tickets: [V-01]
 decisions: [D1]
-open-questions: [Q-12, Q-31, Q-32]
+open-questions: [Q-12, Q-32]
 see-also: [FLOW-05, FLOW-06, compactconnect-crosswalk §6]
 atoms: [ATOM-GOV-R5-06, ATOM-GOV-R4-03, ATOM-GOV-ML-17]
 signals: [SIGNAL-disciplinary-data-is-confidential-by-default]
@@ -49,7 +49,7 @@ sequenceDiagram
             Public->>Web: opens one PA
             Web->>API: GET /api/public/privilege-holders/{id}
             API->>DB: that PA's privileges, with computed status (D1)
-            API-->>Web: per privilege: state, number, public status, issue date, expiry date
+            API-->>Web: per privilege: state, number, public status, issue date, expiry date if active
             Web-->>Public: one card per privilege
         end
     end
@@ -61,7 +61,7 @@ sequenceDiagram
 |---|---|
 | First name, last name, suffix | R4 §4.5(b)(1): the names of participating PAs |
 | State of qualifying license; each privilege's state | R4 §4.5(b)(2) |
-| Each privilege's number, status, issue date, expiry date | Q-12 default, taken as the answer on 2026-11-16. These are the four fields the remote state submits (R4 §4.3(d)(1)) |
+| Each privilege's number, status, and issue date; its expiry date while it is active | Q-12 default, taken as the answer on 2026-11-16. These are the four fields the remote state submits (R4 §4.3(d)(1)) |
 
 Nothing else: no middle or other names, date of birth, NPI, contact details, license number or status, compact eligibility, history, or anything about an adverse action or investigation. CompactConnect shows NPI, eligibility, and discipline dates (crosswalk §6); we do not.
 
@@ -69,6 +69,7 @@ Nothing else: no middle or other names, date of birth, NPI, contact details, lic
 
 - **Three public statuses.** `active`, `expired`, `inactive`. FLOW-06's `encumbered` shows as `inactive` whether or not the action behind it is public: if only the non-public ones were collapsed, the status would tell the two apart. R4 §4.5(c) seals adverse-action reports except publicly available ones, and R4 §4.5(d) (ML §8.E) lets a state mark information not to be shared with the public; showing neither kind is stricter than both.
 - **Never why.** A privilege that is not active carries no reason and no date of the change (FLOW-05).
+- **An expiry date only while active.** An `expired` or `inactive` privilege carries none. A date still ahead beside `inactive` would show the privilege was ended early, which is most of the way to saying it is encumbered. Decided 2026-11-17 in review of SCRUM-139; it answers Q-31.
 - **Two searches, no others.** Both names in full, ignoring letter case and surrounding spaces, or one exact privilege number. No partial names, no search by state alone, no NPI, so the register cannot be listed a letter at a time.
 - **Only privilege holders are found.** A PA with no privilege, active or not, does not appear. An unknown PA and a PA with no privilege get the same answer.
 - **Same name, both shown.** The suffix and the states tell two PAs apart; nothing private is added to do it.
@@ -90,7 +91,7 @@ Wireframes are block V on the [board](https://www.figma.com/design/k1W9PxXhtQ3fo
 | V2e · No match ([`5122:16055`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=5122-16055)) | Says what the search needs, since a misspelling and a PA with no privilege look the same |
 | V2x · Too many searches ([`5122:16217`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=5122-16217)) | A warning alert above the search, which stays filled in |
 | V3 · A PA's page ([`5122:16336`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=5122-16336)) | Name, state of qualifying license, one card per privilege. No history |
-| V3i · Not active ([`5122:16450`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=5122-16450)) | An expired card with its date; an inactive card with the tag alone |
+| V3i · Not active ([`5122:16450`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=5122-16450)) | An expired card with its date; an inactive card with the tag alone. The expired card's date is as first drawn: the API no longer returns it |
 
 Not drawn: pagination under the results table, the "We couldn't find that PA" page for an unknown address, and the front door at phone width, where the cards stack in order.
 
@@ -98,7 +99,6 @@ The front door is the backlog's three entries (epics 4 and 5), with the search o
 
 ## Open questions
 
-- **Q-31.** Whether an inactive privilege shows anything beside the word. V3i shows the tag, the issue date, and the number; the built card adds "Deactivated", and the API returns the expiry date.
 - **Q-32.** Whether the public word is "look up" or "verify". The screens say "Look up a Compact Privilege"; the SOW says verify.
 
 ## Evidence
