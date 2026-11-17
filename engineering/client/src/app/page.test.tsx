@@ -39,7 +39,7 @@ describe("the front door", () => {
       screen.getByRole("heading", { level: 1, name: "PA Compact" }),
     ).toBeInTheDocument();
     expect(doors()).toEqual([
-      ["Physician assistants", "Sign in as a PA", "/login"],
+      ["PAs", "Sign in as a PA", "/login"],
       ["State and Commission staff", "Sign in as staff", "/login"],
       ["Look up a Compact Privilege", "Look up a PA", "/verify"],
     ]);
@@ -50,7 +50,7 @@ describe("the front door", () => {
     const { container } = renderHome(["manage_own_record"]);
 
     expect(doors()).toEqual([
-      ["Physician assistants", "Go to your dashboard", "/dashboard"],
+      ["PAs", "Go to your dashboard", "/dashboard"],
       ["State and Commission staff", "Sign in as staff", "/login"],
       ["Look up a Compact Privilege", "Look up a PA", "/verify"],
     ]);
