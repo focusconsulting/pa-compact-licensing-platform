@@ -1881,7 +1881,7 @@
       },
       "PublicPrivilege": {
         "additionalProperties": false,
-        "description": "A privilege as the public sees it: no reason for its status, and nothing about discipline.",
+        "description": "A privilege as the public sees it: no reason for its status, and nothing about discipline.\n\n``expires_on`` is None unless the privilege is active: a date still ahead beside\n``inactive`` would show the privilege was ended early.",
         "examples": [
           {
             "expires_on": "2027-12-31",
@@ -1896,9 +1896,16 @@
         ],
         "properties": {
           "expires_on": {
-            "format": "date",
-            "title": "Expires On",
-            "type": "string"
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires On"
           },
           "issued_on": {
             "format": "date",
@@ -3556,7 +3563,7 @@
     },
     "/api/public/privilege-holders/{holder_id}": {
       "get": {
-        "description": "A PA's compact privileges: the state, number, status, and dates of each. A privilege that is not active shows as `expired` or `inactive`, with no reason.",
+        "description": "A PA's compact privileges: the state, number, status, and issue date of each. A privilege that is not active shows as `expired` or `inactive`, with no reason and no `expires_on`.",
         "operationId": "Get_a_privilege_holder_api_public_privilege_holders__holder_id__get",
         "parameters": [
           {

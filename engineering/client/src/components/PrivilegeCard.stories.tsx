@@ -41,6 +41,11 @@ export const PublicInactive: Story = {
   },
 };
 
+/** V3i: public verification says that a privilege expired, and not when. */
+export const PublicExpired: Story = {
+  args: { status: "expired", expires: null, detailsHref: undefined },
+};
+
 /** Staff see the computed status; discipline shows as its own field. */
 export const StaffEncumbered: Story = {
   args: {
