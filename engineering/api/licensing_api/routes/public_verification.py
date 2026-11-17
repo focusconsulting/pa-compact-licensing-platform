@@ -78,7 +78,11 @@ _PRIVILEGE_EXAMPLE: dict[str, Any] = {
 
 
 class PublicPrivilege(BaseModel):
-    """A privilege as the public sees it: no reason for its status, and nothing about discipline."""
+    """A privilege as the public sees it: no reason for its status, and nothing about discipline.
+
+    ``expires_on`` is None unless the privilege is active: a date still ahead beside
+    ``inactive`` would show the privilege was ended early.
+    """
 
     model_config = ConfigDict(extra='forbid', json_schema_extra=example(**_PRIVILEGE_EXAMPLE))
 
@@ -86,7 +90,7 @@ class PublicPrivilege(BaseModel):
     number: str
     status: PublicPrivilegeStatus
     issued_on: date
-    expires_on: date
+    expires_on: date | None
 
 
 _PRIVILEGE = PublicPrivilege(**_PRIVILEGE_EXAMPLE)
@@ -242,8 +246,8 @@ async def search_privilege_holders(
     '/{holder_id}',
     name='Get a privilege holder',
     description=(
-        "A PA's compact privileges: the state, number, status, and dates of each. A privilege that "
-        'is not active shows as `expired` or `inactive`, with no reason.'
+        "A PA's compact privileges: the state, number, status, and issue date of each. A privilege "
+        'that is not active shows as `expired` or `inactive`, with no reason and no `expires_on`.'
     ),
 )
 async def get_privilege_holder(
@@ -262,7 +266,11 @@ async def get_privilege_holder(
             'number': privilege.privilege_number,
             'status': PUBLIC_STATUS[status],
             'issued_on': compact_date_at(privilege.issued_at, time_zone),
-            'expires_on': privilege.expires_on,
+            'expires_on': (
+                privilege.expires_on
+                if PUBLIC_STATUS[status] is PublicPrivilegeStatus.ACTIVE
+                else None
+            ),
         }
         for privilege, status in await privileges_of(session, holder)
     ]
