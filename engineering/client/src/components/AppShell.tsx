@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import {
   Button,
@@ -51,8 +51,28 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const { signOut } = useAuth();
   const { user } = useCurrentUser();
   const pathname = usePathname();
+  const router = useRouter();
   const [expanded, setExpanded] = useState(false);
   const toggle = () => setExpanded((open) => !open);
+  const leaving = useRef(false);
+
+  // Signing out on a protected page would send the visitor to sign in, so the
+  // session ends only once they are at the front door.
+  const leave = () => {
+    if (pathname === "/") {
+      signOut();
+    } else {
+      leaving.current = true;
+      router.push("/");
+    }
+  };
+  useEffect(() => {
+    if (leaving.current && pathname === "/") {
+      leaving.current = false;
+      signOut();
+    }
+  }, [pathname, signOut]);
+
   const portal = user && portalFor(user.permissions);
   const name =
     user && portal === "state"
@@ -98,7 +118,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             ))}
             secondaryItems={[
               <span key="name">{name}</span>,
-              <Button key="signOut" type="button" unstyled onClick={signOut}>
+              <Button key="signOut" type="button" unstyled onClick={leave}>
                 {t("signOut")}
               </Button>,
             ]}
