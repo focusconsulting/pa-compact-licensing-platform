@@ -73,11 +73,13 @@ function Verify() {
               </AlertBanner>
             )}
             <PageHeading title={t("title")} intro={t("intro")} />
-            <VerifySearchForm
-              key={query}
-              search={search}
-              onSearch={(next) => router.push(`/verify?${searchQuery(next)}`)}
-            />
+            <div className="bg-base-lightest padding-3 border border-base-lighter radius-md">
+              <VerifySearchForm
+                key={query}
+                search={search}
+                onSearch={(next) => router.push(`/verify?${searchQuery(next)}`)}
+              />
+            </div>
             {search && shown && "found" in shown && (
               <VerifyResults
                 search={search}

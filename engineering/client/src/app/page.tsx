@@ -42,7 +42,7 @@ export default function Home() {
     <div className="usa-section">
       <div className="grid-container">
         <PageHeading title={t("title")} intro={t("intro")} />
-        <CardGroup>
+        <CardGroup className="margin-top-4 portal-cards">
           {DOORS.map((door) => (
             <Card key={door} gridLayout={{ desktop: { col: 4 } }}>
               <CardHeader>

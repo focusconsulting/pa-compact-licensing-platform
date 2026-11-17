@@ -102,37 +102,47 @@ export default function LoginPage() {
     return (
       <div className="usa-section">
         <div className="grid-container">
-          <h1>Set a new password</h1>
-          <p>You must set a new password before continuing.</p>
-          {error && (
-            <Alert type="error" slim>
-              <AlertHeading level="h2">Error</AlertHeading>
-              <AlertText>{error}</AlertText>
-            </Alert>
-          )}
-          <Form onSubmit={(e) => handleNewPassword(e, pendingChallenge)}>
-            <Label htmlFor="new-password">New password</Label>
-            <TextInput
-              id="new-password"
-              name="new-password"
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-            />
-            <Label htmlFor="confirm-password">Confirm new password</Label>
-            <TextInput
-              id="confirm-password"
-              name="confirm-password"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-            />
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving…" : "Set password"}
-            </Button>
-          </Form>
+          <div className="grid-row">
+            <div className="grid-col-12 tablet:grid-col-8 desktop:grid-col-6">
+              <h1 className="margin-top-0 margin-bottom-2">
+                Set a new password
+              </h1>
+              <p>You must set a new password before continuing.</p>
+              {error && (
+                <Alert type="error" slim className="margin-bottom-3">
+                  <AlertHeading level="h2">Error</AlertHeading>
+                  <AlertText>{error}</AlertText>
+                </Alert>
+              )}
+              <Form onSubmit={(e) => handleNewPassword(e, pendingChallenge)}>
+                <Label htmlFor="new-password">New password</Label>
+                <TextInput
+                  id="new-password"
+                  name="new-password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                />
+                <Label htmlFor="confirm-password">Confirm new password</Label>
+                <TextInput
+                  id="confirm-password"
+                  name="confirm-password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+                <Button
+                  type="submit"
+                  className="margin-top-3"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Saving…" : "Set password"}
+                </Button>
+              </Form>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -141,41 +151,51 @@ export default function LoginPage() {
   return (
     <div className="usa-section">
       <div className="grid-container">
-        <h1>Sign in</h1>
-        {error && (
-          <Alert type="error" slim>
-            <AlertHeading level="h2">Error</AlertHeading>
-            <AlertText>{error}</AlertText>
-          </Alert>
-        )}
-        <Form onSubmit={handleSignIn}>
-          <Label htmlFor="email">Email address</Label>
-          <TextInput
-            id="email"
-            name="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <Label htmlFor="password">Password</Label>
-          <TextInput
-            id="password"
-            name="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Signing in…" : "Sign in"}
-          </Button>
-        </Form>
-        {DevSignIns && (
-          <Suspense>
-            <DevSignIns onPick={signInAs} />
-          </Suspense>
-        )}
+        <div className="grid-row">
+          <div className="grid-col-12 tablet:grid-col-8 desktop:grid-col-6">
+            <h1 className="margin-top-0 margin-bottom-3">Sign in</h1>
+            {error && (
+              <Alert type="error" slim className="margin-bottom-3">
+                <AlertHeading level="h2">Error</AlertHeading>
+                <AlertText>{error}</AlertText>
+              </Alert>
+            )}
+            <div className="bg-base-lightest padding-3 border border-base-lighter radius-md">
+              <Form onSubmit={handleSignIn}>
+                <Label htmlFor="email">Email address</Label>
+                <TextInput
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+                <Label htmlFor="password">Password</Label>
+                <TextInput
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <Button
+                  type="submit"
+                  className="margin-top-3"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Signing in…" : "Sign in"}
+                </Button>
+              </Form>
+            </div>
+            {DevSignIns && (
+              <Suspense>
+                <DevSignIns onPick={signInAs} />
+              </Suspense>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -53,7 +53,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
   const toggle = () => setExpanded((open) => !open);
-
   const portal = user && portalFor(user.permissions);
   const name =
     user && portal === "state"
@@ -70,7 +69,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <Header extended showMobileOverlay={expanded}>
         <div className="usa-navbar">
           <Title>
-            <Link href="/">{t("wordmark")}</Link>
+            <Link href="/" className="display-inline-flex flex-align-center">
+              <img
+                src="/img/pa-compact-logo.png"
+                alt={t("wordmark")}
+                className="height-5 width-auto display-block"
+              />
+            </Link>
           </Title>
           {user && <NavMenuButton onClick={toggle} label={t("menu")} />}
         </div>
@@ -111,7 +116,28 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         }
         primary={null}
-        secondary={<p className="usa-footer__logo-heading">{t("wordmark")}</p>}
+        secondary={
+          <div className="grid-row grid-gap flex-align-center padding-y-2">
+            <div className="grid-col-12 tablet:grid-col-4 margin-bottom-2 tablet:margin-bottom-0">
+              <img
+                src="/img/pa-compact-logo-stacked.png"
+                alt={t("wordmark")}
+                className="height-8 width-auto display-block"
+              />
+            </div>
+            <div className="grid-col-12 tablet:grid-col-8">
+              <p className="margin-0 font-body-sm">
+                {t("footer.contactPrompt")}
+                <a
+                  className="usa-link"
+                  href={`mailto:${t("footer.contactEmail")}`}
+                >
+                  {t("footer.contactEmail")}
+                </a>
+              </p>
+            </div>
+          </div>
+        }
       />
       <Identifier>
         <IdentifierMasthead aria-label={t("identifier.label")}>
