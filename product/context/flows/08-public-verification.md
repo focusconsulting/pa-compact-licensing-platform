@@ -13,7 +13,7 @@ sources:
 rules-cited: [R4 §4.3(d), R4 §4.5(b), R4 §4.5(c), R4 §4.5(d), ML §8.E, SOW §2.1]
 tickets: [V-01]
 decisions: [D1]
-open-questions: [Q-12, Q-32]
+open-questions: [Q-12, Q-32, Q-33]
 see-also: [FLOW-05, FLOW-06, compactconnect-crosswalk §6]
 atoms: [ATOM-GOV-R5-06, ATOM-GOV-R4-03, ATOM-GOV-ML-17]
 signals: [SIGNAL-disciplinary-data-is-confidential-by-default]
@@ -100,6 +100,7 @@ The front door is the backlog's three entries (epics 4 and 5), with the search o
 ## Open questions
 
 - **Q-32.** Whether the public word is "look up" or "verify". The screens say "Look up a Compact Privilege"; the SOW says verify.
+- **Q-33.** Whether a search may match a PA's other names, such as a maiden name, or match loosely. Someone may know only a former name, and "the names of participating PAs" (R4 §4.5(b)(1)) may or may not cover the other names of R4 §4.3(c)(2). Until answered, the two searches above stand.
 
 ## Evidence
 
