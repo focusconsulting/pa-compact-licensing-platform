@@ -64,13 +64,13 @@ test.describe("Looking up a PA's Compact Privileges, with no account", () => {
     });
   });
 
-  test("An expired privilege says when it expired", async ({ page, expectAccessible }) => {
+  test("An expired privilege says that it expired, and not when", async ({ page, expectAccessible }) => {
     await page.goto("/verify?first_name=Pia&last_name=Expired");
     await page.getByRole("link", { name: "Pia Expired" }).click();
 
     const card = page.getByRole("listitem").filter({ hasText: "Oklahoma" });
     await expect(card.getByText("Inactive", { exact: true })).toBeVisible();
-    await expect(card.getByText(/^Expired: /)).toBeVisible();
+    await expect(card.getByText("Expired", { exact: true })).toBeVisible();
     await expectAccessible(page);
   });
 
