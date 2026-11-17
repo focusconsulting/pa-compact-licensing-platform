@@ -1,8 +1,10 @@
 """Public verification: anyone may confirm that a PA holds a compact privilege (SOW §2.1).
 
-The response models are an allow-list (Rule 4 §4.5(b)-(d), Q-12). A field is added
-to one only by changing ``engineering/docs/public-verification.md``, which says
-why each field is public; ``tests/test_public_verification.py`` pins the list.
+The response models are the allow-list (Rule 4 §4.5(b)-(d), Q-12): they forbid
+extra fields and are built field by field, so nothing else on a practitioner or a
+privilege can reach a response. A field is added to one only by changing FLOW-08
+(``product/context/flows/08-public-verification.md``), which says why each is
+public; ``tests/test_public_verification.py`` pins the list.
 """
 
 import logging
@@ -20,17 +22,18 @@ from licensing_api.dependencies import get_db_session
 from licensing_api.errors import AppError, ErrorCode, ErrorResponse
 from licensing_api.permissions import public
 from licensing_api.repo.pagination import paginate
+from licensing_api.repo.practitioner import Practitioner
 from licensing_api.repo.public_verification import (
     HOLDER_SORT,
     HOLDER_TIEBREAKER,
-    Holder,
-    holder_by_id,
-    holders,
+    get_holder,
     holders_by_name,
     holders_by_privilege_number,
+    privilege_states,
     privileges_of,
+    state_names,
 )
-from licensing_api.repo.status import PublicPrivilegeStatus
+from licensing_api.repo.status import PUBLIC_STATUS, PublicPrivilegeStatus
 from licensing_api.responses import Data, Paged, PageQuery, example, page_query
 
 logger = logging.getLogger(__name__)
@@ -140,7 +143,7 @@ async def _known_parameters(request: Request) -> None:
 
 def _search(
     first_name: str | None, last_name: str | None, privilege_number: str | None
-) -> tuple[str, SelectOfScalar[UUID]]:
+) -> tuple[str, SelectOfScalar[Practitioner]]:
     """The search's mode and statement. Both names together or a number alone; anything else could enumerate."""
     first, last = (first_name or '').strip(), (last_name or '').strip()
     if privilege_number and first_name is None and last_name is None:
@@ -154,15 +157,19 @@ def _search(
     )
 
 
-def _holder_fields(holder: Holder) -> dict[str, Any]:
+def _state(names: dict[str, str], code: str | None) -> dict[str, Any]:
+    """A state as a ``StateRef``'s fields."""
+    return {'code': code, 'name': names.get(code) if code else None}
+
+
+def _holder_fields(holder: Practitioner, names: dict[str, str]) -> dict[str, Any]:
+    """The fields both holder models share. The models validate them: a holder always has each (``repo.holders``)."""
     return {
         'id': holder.public_id,
-        'first_name': holder.first_name,
-        'last_name': holder.last_name,
+        'first_name': holder.legal_first_name,
+        'last_name': holder.legal_last_name,
         'name_suffix': holder.name_suffix,
-        'state_of_qualifying_license': StateRef(
-            code=holder.sql_state_code, name=holder.sql_state_name
-        ),
+        'state_of_qualifying_license': _state(names, holder.current_sql_state_code),
     }
 
 
@@ -181,32 +188,51 @@ async def search_privilege_holders(
     query: Annotated[
         PageQuery, page_query('last_name', 'first_name', default_sort='last_name,first_name')
     ],
-    first_name: Annotated[str | None, Query(min_length=1, max_length=_NAME_LENGTH)] = None,
-    last_name: Annotated[str | None, Query(min_length=1, max_length=_NAME_LENGTH)] = None,
+    # Each is optional only because the other search exists; _search requires one whole search.
+    first_name: Annotated[
+        str | None,
+        Query(
+            min_length=1,
+            max_length=_NAME_LENGTH,
+            description='Required with `last_name`, unless searching by `privilege_number`',
+        ),
+    ] = None,
+    last_name: Annotated[
+        str | None,
+        Query(
+            min_length=1,
+            max_length=_NAME_LENGTH,
+            description='Required with `first_name`, unless searching by `privilege_number`',
+        ),
+    ] = None,
     privilege_number: Annotated[
-        str | None, Query(pattern=_PRIVILEGE_NUMBER, description='For example `PA-OK-000123`')
+        str | None,
+        Query(
+            pattern=_PRIVILEGE_NUMBER,
+            description='For example `PA-OK-000123`. Not with a name',
+        ),
     ] = None,
 ) -> Paged[PrivilegeHolderSummary]:
     """Page through the holders a search matches; the log line never carries the search terms."""
     mode, statement = _search(first_name, last_name, privilege_number)
-    public_ids, total = await paginate(
+    found, total = await paginate(
         session, statement, query, HOLDER_SORT, tiebreaker=HOLDER_TIEBREAKER
     )
     logger.info('public verification search', extra={'mode': mode, 'results': total})
-    held = await privileges_of(session, public_ids)
+    names = await state_names(session)
+    held = await privilege_states(session, found)
     return Paged(
         data=[
-            PrivilegeHolderSummary(
-                **_holder_fields(holder),
-                privilege_states=[
-                    StateRef(code=code, name=name)
-                    # A dict keeps the first of each state, in order: a PA may hold two privileges in one state over time.
-                    for code, name in dict.fromkeys(
-                        (p.state_code, p.state_name) for p in held[holder.public_id]
-                    )
-                ],
+            PrivilegeHolderSummary.model_validate(
+                {
+                    **_holder_fields(holder, names),
+                    'privilege_states': sorted(
+                        (_state(names, code) for code in held[holder.id or 0]),
+                        key=lambda state: state['name'],
+                    ),
+                }
             )
-            for holder in await holders(session, public_ids)
+            for holder in found
         ],
         page=query.page_of(total),
     )
@@ -225,23 +251,26 @@ async def get_privilege_holder(
     session: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> Data[PrivilegeHolder]:
     """One holder; a PA with no privilege is as absent as an unknown id."""
-    public_ids = list((await session.scalars(holder_by_id(holder_id))).all())
-    if not public_ids:
+    holder = await get_holder(session, holder_id)
+    if holder is None:
         raise AppError(404, ErrorCode.NotFound, ['No such privilege holder'])
-    (holder,) = await holders(session, public_ids)
+    names = await state_names(session)
     time_zone = await reference_time_zone(session)
+    privileges = [
+        {
+            'state': _state(names, privilege.remote_state_code),
+            'number': privilege.privilege_number,
+            'status': PUBLIC_STATUS[status],
+            'issued_on': compact_date_at(privilege.issued_at, time_zone),
+            'expires_on': privilege.expires_on,
+        }
+        for privilege, status in await privileges_of(session, holder)
+    ]
     return Data(
-        data=PrivilegeHolder(
-            **_holder_fields(holder),
-            privileges=[
-                PublicPrivilege(
-                    state=StateRef(code=p.state_code, name=p.state_name),
-                    number=p.number,
-                    status=p.status,
-                    issued_on=compact_date_at(p.issued_at, time_zone),
-                    expires_on=p.expires_on,
-                )
-                for p in (await privileges_of(session, public_ids))[holder.public_id]
-            ],
+        data=PrivilegeHolder.model_validate(
+            {
+                **_holder_fields(holder, names),
+                'privileges': sorted(privileges, key=lambda p: (p['state']['name'], p['number'])),
+            }
         )
     )

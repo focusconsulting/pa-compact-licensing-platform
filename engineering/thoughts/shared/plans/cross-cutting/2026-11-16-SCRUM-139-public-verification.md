@@ -34,7 +34,7 @@ Let anyone, signed in or not, confirm that a PA holds a compact privilege: a `/v
 - **VIII, Observability.** Each search logs its mode and result count, never its terms. The firewall's rate rules already have metrics and an alarm (SCRUM-84).
 - **IX, Links.** This plan links the spec and flows; the code cites Rule 4 §4.5 once, on the response models.
 - **X, USWDS.** The pages compose existing components (`PrivilegeCard`, `DataTable`, `TextField`, `EmptyState`) in the layouts the Parts Library draws; every string goes through `i18next`; each new component and page has a story.
-- **XI, Prose.** `engineering/docs/public-verification.md` is the feature's one home; other docs link to it.
+- **XI, Prose.** FLOW-08 is the feature's one home; other docs link to it. A second document under `engineering/docs/` repeated it and was removed in review.
 - **XII, Fresh clone.** No new tool or setting. `engineering/docs/demo.md` gains the verification step.
 - **XIII, Dates.** See [Dates and Deadlines](#dates-and-deadlines).
 - **XIV, Migrations.** None.
@@ -84,7 +84,7 @@ Four pull requests, stacked on PR #224 in this order: the API and the contract, 
 
 **To rewrite before building:** Phases 2 and 3 below predate the product step, SCRUM-137, which ran on 2026-11-16 and produced FLOW-08 and block V. They still describe a two-column home page and pages patterned on round 2. Rewrite both from FLOW-08's frames, and settle Q-31 and Q-32 first. Phases 1 and 4 do not depend on it.
 
-The allow-list is enforced three ways, so no single mistake leaks a field: the response models forbid extras and are built field by field from named columns; a test pins each model's field set to the documented list; and a test fills every private column with a marker value and asserts no marker reaches a response.
+The allow-list is the response models: they forbid extras and are built field by field. Two tests hold it there: one pins each model's field set to the documented list, and one fills every private column with a marker value and asserts no marker reaches a response. The queries return ordinary rows, as every repo module does; an earlier draft selected only the allow-listed columns, which review judged a second mechanism for what the models already do.
 
 ## Phase 1: The API and the allow-list contract
 
@@ -122,10 +122,12 @@ Add `PublicPrivilegeStatus` to `STATUS_ENUMS` in `engineering/api/scripts/export
 #### 2. Queries
 
 **File**: `engineering/api/licensing_api/repo/public_verification.py` (new)
-**Changes**: Three functions that select only the columns the allow-list names, never a whole `Practitioner` or `Privilege` row.
+**Changes**: Ordinary queries that return rows.
 
-- `holders_by_name(first_name, last_name)` and `holders_by_privilege_number(number)`: statements over `practitioners` that hold at least one privilege (`exists()` on `privileges`), selecting `public_id`, the three name columns, and the state of qualifying license joined to `states` for its name. Names match on `func.lower(column) == value.lower()` after trimming, so the existing `lower(legal_last_name)` index serves it.
-- `privileges_of(session, practitioner_ids)`: for the practitioners on the page, each privilege's state code and name, `privilege_number`, `issued_at`, `expires_on`, and its status from `PrivilegeStatus`, ordered by state. One query for the page, not one per row.
+- `holders()`: practitioners who hold at least one privilege (`exists()` on `privileges`) and have a name and a state of qualifying license. `holders_by_name` and `holders_by_privilege_number` narrow it; names match on `func.lower(column) == value.lower()` after trimming, so the existing `lower(legal_last_name)` index serves it. `get_holder` finds one by `public_id`.
+- `privilege_states(session, practitioners)`: for a page of results, the states each holds a privilege in. One light query for the page; the status view is not read for a search.
+- `privileges_of(session, practitioner)`: one PA's privileges, each with its status from `PrivilegeStatus`.
+- `state_names(session)`: each state's name by code.
 
 The state of qualifying license is `practitioners.current_sql_state_code`.
 
@@ -157,7 +159,7 @@ _OKLAHOMA = StateRef(code='OK', name='Oklahoma')
 
 class PublicPrivilege(BaseModel):
     """A privilege as the public sees it. The allow-list is closed (Rule 4 §4.5(b)–(d), Q-12):
-    a field is added here only by changing ``engineering/docs/public-verification.md``."""
+    a field is added here only by changing FLOW-08."""
 
     model_config = ConfigDict(
         extra='forbid',
@@ -236,7 +238,7 @@ Every example is a module-level constant. A nested value is an instance of its o
 
 #### 5. Documentation
 
-- `engineering/docs/public-verification.md` (new): the allow-list table (field, source column, why it is public), the search rules, the three statuses and how each computed status maps, what is withheld, the `404` and `429` behaviour, and the rate limit. This is SCRUM-138's committed contract.
+- FLOW-08 holds the contract SCRUM-138 asked for: the allow-list and why each field is public, the search rules, the three statuses, and what is withheld.
 - `engineering/docs/data-model.md`: the Public tier row links to it.
 - `engineering/docs/roles-and-permissions.md`: the `/public` row links to it.
 - `product/context/flows/06-state-machines.md`: one sentence, that the public sees `active`, `expired`, and `inactive`, and an encumbered privilege shows as `inactive`.
@@ -540,7 +542,7 @@ The manual criteria under each phase; the rate limit and direct loads can only b
 
 - The firewall limits one address to 300 public requests per five minutes and logs blocks to the existing alarm.
 - The routes take no credentials and read no caller identity.
-- The queries select named columns only; the response models forbid extras; the tests above pin both.
+- The response models forbid extras and are built field by field; the tests above pin them.
 - The status is collapsed before it leaves the API, so the confidential tier (non-public actions, SII, deactivation reasons) has no path into a response.
 
 **What could go wrong.**
@@ -563,7 +565,7 @@ Not applicable: no schema change. The name search uses the existing `lower(legal
 
 ## Documentation Updates
 
-- New: `engineering/docs/public-verification.md`.
+- New: FLOW-08, in `product/`.
 - Changed: `engineering/docs/data-model.md`, `roles-and-permissions.md`, `architecture.md`, `demo.md`, `design/wireframe-kit.md`, `security/infrastructure.md`; `engineering/infrastructure/iac/README.md`; `engineering/e2e/README.md`; `product/context/flows/06-state-machines.md`; `product/backlog/mvp-ticket-breakdown.md` (Q-12).
 - Docstrings on every new public function, model, and route; JSDoc on every exported component and on `publicApi`.
 - No dependency is added, so the inventory is unchanged.

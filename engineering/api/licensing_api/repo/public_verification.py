@@ -1,16 +1,12 @@
-"""Queries for public verification.
+"""Queries for public verification (FLOW-08): who the public may find, and their privileges.
 
-Each selects only the columns the public allow-list names
-(``engineering/docs/public-verification.md``), never a whole practitioner or
-privilege row, and collapses the computed status to the public one before it
-leaves this module.
+They return whole rows, as every repo module does. What leaves the API is decided
+by the response models in ``routes/public_verification.py``.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
-from datetime import date, datetime
 from typing import Any
 from uuid import UUID
 
@@ -24,12 +20,7 @@ from sqlmodel.sql.expression import SelectOfScalar
 from licensing_api.repo.practitioner import Practitioner
 from licensing_api.repo.privilege import Privilege
 from licensing_api.repo.state import State
-from licensing_api.repo.status import (
-    PUBLIC_STATUS,
-    PrivilegeComputedStatus,
-    PrivilegeStatus,
-    PublicPrivilegeStatus,
-)
+from licensing_api.repo.status import PrivilegeComputedStatus, PrivilegeStatus
 
 # What a list of holders may be sorted by, case-insensitively as the search matches.
 HOLDER_SORT: Mapping[str, ColumnElement[Any]] = {
@@ -39,33 +30,9 @@ HOLDER_SORT: Mapping[str, ColumnElement[Any]] = {
 HOLDER_TIEBREAKER: Mapped[UUID] = col(Practitioner.public_id)
 
 
-@dataclass(frozen=True)
-class Holder:
-    """A PA who holds at least one privilege, as the public may see them."""
-
-    public_id: UUID
-    first_name: str
-    last_name: str
-    name_suffix: str | None
-    sql_state_code: str
-    sql_state_name: str
-
-
-@dataclass(frozen=True)
-class HeldPrivilege:
-    """One privilege of a holder, with its public status."""
-
-    state_code: str
-    state_name: str
-    number: str
-    issued_at: datetime
-    expires_on: date
-    status: PublicPrivilegeStatus
-
-
-def _holder_ids() -> SelectOfScalar[UUID]:
-    """The ``public_id`` of every practitioner the public may find: one with a privilege, a name, and a state of qualifying license."""
-    return select(col(Practitioner.public_id)).where(
+def holders() -> SelectOfScalar[Practitioner]:
+    """Every PA the public may find: one who holds a privilege, active or not, with a name and a state of qualifying license on record."""
+    return select(Practitioner).where(
         exists().where(col(Privilege.practitioner_id) == col(Practitioner.id)),
         col(Practitioner.legal_first_name).is_not(None),
         col(Practitioner.legal_last_name).is_not(None),
@@ -73,17 +40,17 @@ def _holder_ids() -> SelectOfScalar[UUID]:
     )
 
 
-def holders_by_name(first_name: str, last_name: str) -> SelectOfScalar[UUID]:
+def holders_by_name(first_name: str, last_name: str) -> SelectOfScalar[Practitioner]:
     """Holders whose first and last names both equal the ones given, ignoring case. A prefix does not match."""
-    return _holder_ids().where(
+    return holders().where(
         func.lower(col(Practitioner.legal_last_name)) == last_name.lower(),
         func.lower(col(Practitioner.legal_first_name)) == first_name.lower(),
     )
 
 
-def holders_by_privilege_number(number: str) -> SelectOfScalar[UUID]:
+def holders_by_privilege_number(number: str) -> SelectOfScalar[Practitioner]:
     """The holder of the privilege with exactly this number."""
-    return _holder_ids().where(
+    return holders().where(
         exists().where(
             col(Privilege.practitioner_id) == col(Practitioner.id),
             col(Privilege.privilege_number) == number,
@@ -91,72 +58,40 @@ def holders_by_privilege_number(number: str) -> SelectOfScalar[UUID]:
     )
 
 
-def holder_by_id(public_id: UUID) -> SelectOfScalar[UUID]:
-    """The holder with this ``public_id``; nothing for a practitioner who holds no privilege."""
-    return _holder_ids().where(col(Practitioner.public_id) == public_id)
+async def get_holder(session: AsyncSession, public_id: UUID) -> Practitioner | None:
+    """The holder with this ``public_id``; None for a practitioner who holds no privilege."""
+    return await session.scalar(holders().where(col(Practitioner.public_id) == public_id))
 
 
-async def holders(session: AsyncSession, public_ids: Sequence[UUID]) -> list[Holder]:
-    """The holders with these ids, in the order given."""
-    statement = (
-        select_columns(
-            col(Practitioner.public_id),
-            col(Practitioner.legal_first_name),
-            col(Practitioner.legal_last_name),
-            col(Practitioner.name_suffix),
-            col(State.code).label('state_code'),
-            col(State.name).label('state_name'),
-        )
-        .join(State, col(State.code) == col(Practitioner.current_sql_state_code))
-        .where(col(Practitioner.public_id).in_(public_ids))
-    )
-    found = {
-        row.public_id: Holder(
-            public_id=row.public_id,
-            # Nullable columns, but _holder_ids admits only practitioners with both names.
-            first_name=row.legal_first_name,
-            last_name=row.legal_last_name,
-            name_suffix=row.name_suffix,
-            sql_state_code=row.state_code,
-            sql_state_name=row.state_name,
-        )
-        for row in (await session.execute(statement)).all()
-    }
-    return [found[public_id] for public_id in public_ids]
+async def privilege_states(
+    session: AsyncSession, practitioners: Sequence[Practitioner]
+) -> dict[int, set[str]]:
+    """The states each of these PAs holds a privilege in, by practitioner id."""
+    statement = select_columns(
+        col(Privilege.practitioner_id), col(Privilege.remote_state_code)
+    ).where(col(Privilege.practitioner_id).in_([p.id for p in practitioners]))
+    held: dict[int, set[str]] = {}
+    for practitioner_id, state_code in (await session.execute(statement)).tuples():
+        held.setdefault(practitioner_id, set()).add(state_code)
+    return held
 
 
 async def privileges_of(
-    session: AsyncSession, public_ids: Sequence[UUID]
-) -> dict[UUID, list[HeldPrivilege]]:
-    """Every privilege of each of these holders, by state name then number, in one query."""
+    session: AsyncSession, practitioner: Practitioner
+) -> list[tuple[Privilege, PrivilegeComputedStatus]]:
+    """Every privilege this PA holds, each with its status today."""
     statement = (
-        select_columns(
-            col(Practitioner.public_id),
-            col(State.code),
-            col(State.name),
-            col(Privilege.privilege_number),
-            col(Privilege.issued_at),
-            col(Privilege.expires_on),
-            col(PrivilegeStatus.status),
-        )
-        .join(Privilege, col(Privilege.practitioner_id) == col(Practitioner.id))
-        .join(State, col(State.code) == col(Privilege.remote_state_code))
+        select_columns(Privilege, col(PrivilegeStatus.status))
         .join(PrivilegeStatus, col(PrivilegeStatus.privilege_id) == col(Privilege.id))
-        .where(col(Practitioner.public_id).in_(public_ids))
-        .order_by(col(State.name), col(Privilege.privilege_number))
+        .where(col(Privilege.practitioner_id) == practitioner.id)
     )
-    held: dict[UUID, list[HeldPrivilege]] = {public_id: [] for public_id in public_ids}
-    for public_id, code, name, number, issued_at, expires_on, status in (
-        await session.execute(statement)
-    ).tuples():
-        held[public_id].append(
-            HeldPrivilege(
-                state_code=code,
-                state_name=name,
-                number=number,
-                issued_at=issued_at,
-                expires_on=expires_on,
-                status=PUBLIC_STATUS[PrivilegeComputedStatus(status)],
-            )
-        )
-    return held
+    return [
+        (privilege, PrivilegeComputedStatus(status))
+        for privilege, status in (await session.execute(statement)).tuples()
+    ]
+
+
+async def state_names(session: AsyncSession) -> dict[str, str]:
+    """Each state's name by its code."""
+    rows = await session.execute(select_columns(col(State.code), col(State.name)))
+    return dict(rows.tuples().all())

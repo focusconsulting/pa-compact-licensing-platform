@@ -3418,6 +3418,7 @@
         "operationId": "Search_privilege_holders_api_public_privilege_holders_get",
         "parameters": [
           {
+            "description": "Required with `last_name`, unless searching by `privilege_number`",
             "in": "query",
             "name": "first_name",
             "required": false,
@@ -3432,10 +3433,12 @@
                   "type": "null"
                 }
               ],
+              "description": "Required with `last_name`, unless searching by `privilege_number`",
               "title": "First Name"
             }
           },
           {
+            "description": "Required with `first_name`, unless searching by `privilege_number`",
             "in": "query",
             "name": "last_name",
             "required": false,
@@ -3450,11 +3453,12 @@
                   "type": "null"
                 }
               ],
+              "description": "Required with `first_name`, unless searching by `privilege_number`",
               "title": "Last Name"
             }
           },
           {
-            "description": "For example `PA-OK-000123`",
+            "description": "For example `PA-OK-000123`. Not with a name",
             "in": "query",
             "name": "privilege_number",
             "required": false,
@@ -3468,7 +3472,7 @@
                   "type": "null"
                 }
               ],
-              "description": "For example `PA-OK-000123`",
+              "description": "For example `PA-OK-000123`. Not with a name",
               "title": "Privilege Number"
             }
           },

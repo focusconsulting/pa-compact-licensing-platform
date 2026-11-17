@@ -164,7 +164,7 @@ def test_a_holders_page_lists_each_privilege_with_its_status_and_dates(client, r
     ids=lambda value: getattr(value, '__name__', ''),
 )
 def test_a_public_model_holds_exactly_the_allow_list(model, fields):
-    """Adding a field here means changing engineering/docs/public-verification.md first."""
+    """Adding a field here means changing FLOW-08 (product/context/flows/08-public-verification.md) first."""
     assert set(model.model_fields) == fields
     assert model.model_config['extra'] == 'forbid'
 

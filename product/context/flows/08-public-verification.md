@@ -74,6 +74,7 @@ Nothing else: no middle or other names, date of birth, NPI, contact details, lic
 - **Same name, both shown.** The suffix and the states tell two PAs apart; nothing private is added to do it.
 - **Rate limit.** One address gets 300 requests in five minutes. Privilege numbers run in sequence within a state, so the limit is what paces a walk through them; everything such a walk returns is public by rule.
 - **Read-only.** No write, event, or notification; the PA is not told they were looked up.
+- **Search terms are not in the API's log.** It records a search's kind and result count. The terms are in the query string, so the CloudFront, firewall, and load-balancer access logs hold them beside the caller's address.
 
 ## Screens
 
