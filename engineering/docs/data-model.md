@@ -308,7 +308,7 @@ One open request (`pending_payment`, `submitted`) per practitioner and remote st
 
 ### `privileges`
 
-A compact privilege issued by a remote state (Rule 4 §4.3(d)). Tier: the state, number, status, and dates are public (Rule 4 §4.5(b), Q-12); the deactivation reason and note are states and Commission. Owner: epic 8.
+A compact privilege issued by a remote state (Rule 4 §4.3(d)). Tier: the state, number, status, and issue date are public, and the expiry date while the privilege is active (Rule 4 §4.5(b), Q-12); the deactivation reason and note are states and Commission. Owner: epic 8.
 
 | Column | Type | Meaning |
 |---|---|---|

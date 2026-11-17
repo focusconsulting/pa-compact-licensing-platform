@@ -278,21 +278,33 @@ def test_a_privilege_deactivated_by_a_non_public_action_is_inactive_with_no_reas
 
     assert privilege['status'] == 'inactive'
     assert set(privilege) == {'state', 'number', 'status', 'issued_on', 'expires_on'}
+    assert privilege['expires_on'] is None
 
 
-async def _expiring(session, days_from_today: int) -> Practitioner:
+async def _expiring(session, days_from_today: int) -> tuple[Practitioner, date]:
     today = await days.compact_today(session)
-    practitioner, _, _ = await _holder(session, expires_on=days.add_days(today, days_from_today))
-    return practitioner
+    expires_on = days.add_days(today, days_from_today)
+    practitioner, _, _ = await _holder(session, expires_on=expires_on)
+    return practitioner, expires_on
 
 
 @pytest.mark.parametrize(('days_from_today', 'status'), [(0, 'active'), (-1, 'expired')])
 def test_a_privilege_is_active_through_its_expiry_date_and_expired_the_day_after(
     client, route_db_session, days_from_today, status
 ):
-    practitioner = client.portal.call(_expiring, route_db_session, days_from_today)
+    practitioner, _ = client.portal.call(_expiring, route_db_session, days_from_today)
 
     assert _only_privilege(client, practitioner)['status'] == status
+
+
+@pytest.mark.parametrize(('days_from_today', 'shown'), [(0, True), (-1, False)])
+def test_only_an_active_privilege_shows_its_expiry_date(
+    client, route_db_session, days_from_today, shown
+):
+    practitioner, expires_on = client.portal.call(_expiring, route_db_session, days_from_today)
+
+    expected = expires_on.isoformat() if shown else None
+    assert _only_privilege(client, practitioner)['expires_on'] == expected
 
 
 async def _encumbered(session, *, is_public: bool) -> Practitioner:
@@ -310,6 +322,7 @@ def test_an_encumbered_privilege_is_inactive_whether_or_not_its_action_is_public
     shown = [_only_privilege(client, practitioner) for practitioner in (sealed, public)]
 
     assert [privilege['status'] for privilege in shown] == ['inactive', 'inactive']
+    assert [privilege['expires_on'] for privilege in shown] == [None, None]
     assert shown[0] | {'number': None} == shown[1] | {'number': None}
 
 
