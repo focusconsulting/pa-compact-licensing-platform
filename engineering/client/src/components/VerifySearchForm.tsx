@@ -24,6 +24,8 @@ export interface VerifySearchFormProps {
   /** The search to show filled in, as on a page of its results. */
   search?: Search | null;
   onSearch: (search: Search) => void;
+  /** The visitor chose the other kind of search, so the last one's results no longer answer the form. */
+  onSwitch?: () => void;
 }
 
 /**
@@ -33,11 +35,16 @@ export interface VerifySearchFormProps {
 export default function VerifySearchForm({
   search = null,
   onSearch,
+  onSwitch,
 }: VerifySearchFormProps) {
   const { t } = useTranslation("verify");
   const [byNumber, setByNumber] = useState(
     search !== null && "privilege_number" in search,
   );
+  const searchBy = (number: boolean) => {
+    setByNumber(number);
+    onSwitch?.();
+  };
   // The other search's fields leave the form with their inputs, so they are never required.
   const form = useForm<Values>({
     shouldUnregister: true,
@@ -71,14 +78,14 @@ export default function VerifySearchForm({
             name="search-by"
             label={t("form.byName")}
             checked={!byNumber}
-            onChange={() => setByNumber(false)}
+            onChange={() => searchBy(false)}
           />
           <Radio
             id="search-by-number"
             name="search-by"
             label={t("form.byNumber")}
             checked={byNumber}
-            onChange={() => setByNumber(true)}
+            onChange={() => searchBy(true)}
           />
         </Fieldset>
         {byNumber ? (

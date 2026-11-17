@@ -61,11 +61,13 @@ describe("VerifySearchForm", () => {
     await expectNoAxeViolations(container);
   });
 
-  it("goes back to searching by name", async () => {
+  it("goes back to searching by name, and says the search switched", async () => {
+    const onSwitch = vi.fn();
     render(
       <VerifySearchForm
         search={{ privilege_number: "PA-OK-000001" }}
         onSearch={vi.fn()}
+        onSwitch={onSwitch}
       />,
     );
 
@@ -74,6 +76,7 @@ describe("VerifySearchForm", () => {
     expect(
       screen.getByRole("textbox", { name: /First name/ }),
     ).toBeInTheDocument();
+    expect(onSwitch).toHaveBeenCalledOnce();
   });
 
   it("shows the search it was given", () => {
