@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, lazy, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CognitoUser } from "amazon-cognito-identity-js";
 import {
@@ -13,6 +13,13 @@ import {
   TextInput,
 } from "@trussworks/react-uswds";
 import { useAuth } from "src/contexts/AuthContext";
+
+// The local Cognito mock's shared password. A build for a deployed environment
+// leaves it empty, which compiles the list and its module out (ADR-0020).
+const DEV_PASSWORD = process.env.NEXT_PUBLIC_DEV_SIGN_IN_PASSWORD;
+const DevSignIns = process.env.NEXT_PUBLIC_DEV_SIGN_IN_PASSWORD
+  ? lazy(() => import("src/components/DevSignIns"))
+  : null;
 
 /**
  * Sign-in page. Signs in with Cognito (SRP); an admin-created user is asked to
@@ -34,12 +41,11 @@ export default function LoginPage() {
     userAttributes: Record<string, string>;
   } | null>(null);
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submit = async (as: string, withPassword: string) => {
     setError(null);
     setIsSubmitting(true);
     try {
-      const result = await signIn(email, password);
+      const result = await signIn(as, withPassword);
       if (result.type === "newPasswordRequired") {
         setPendingChallenge({
           user: result.user,
@@ -53,6 +59,18 @@ export default function LoginPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSignIn = (e: React.FormEvent) => {
+    e.preventDefault();
+    void submit(email, password);
+  };
+
+  // Fills the form as well as submitting, so a failure leaves what was tried.
+  const signInAs = (seeded: string) => {
+    setEmail(seeded);
+    setPassword(DEV_PASSWORD as string);
+    void submit(seeded, DEV_PASSWORD as string);
   };
 
   async function handleNewPassword(
@@ -153,6 +171,11 @@ export default function LoginPage() {
             {isSubmitting ? "Signing in…" : "Sign in"}
           </Button>
         </Form>
+        {DevSignIns && (
+          <Suspense>
+            <DevSignIns onPick={signInAs} />
+          </Suspense>
+        )}
       </div>
     </div>
   );
