@@ -63,10 +63,14 @@ jobs:
         working-directory: engineering/client
         env:
           PUPPETEER_SKIP_DOWNLOAD: "true" # only the a11y job needs pa11y's Chrome
+          # Empty, as `just deploy` leaves it: the tests run the client a deploy
+          # would build, with no list of seeded users on the sign-in page (ADR-0020).
+          NEXT_PUBLIC_DEV_SIGN_IN_PASSWORD: ""
         run: |
           cp .env.example .env.local
           pnpm install --frozen-lockfile
           pnpm build
+          scripts/check-deployed-build.sh
 
       - name: Install Playwright
         working-directory: engineering/e2e
