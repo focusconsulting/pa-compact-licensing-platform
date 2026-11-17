@@ -134,6 +134,27 @@ describe("the public verification page", () => {
     ).toBeInTheDocument();
   });
 
+  it("clears the results when the visitor switches the kind of search, until they search again", async () => {
+    query = "first_name=Jordan&last_name=Sample";
+    routeFetch({ [SEARCH]: found([summary()]) });
+    render(<Page />);
+    await screen.findByRole("link", { name: "Jordan Sample" });
+
+    await userEvent.click(
+      screen.getByRole("radio", { name: "Compact Privilege number" }),
+    );
+
+    expect(screen.queryByRole("link", { name: "Jordan Sample" })).toBeNull();
+    expect(screen.queryByRole("heading", { level: 2 })).toBeNull();
+
+    await userEvent.click(screen.getByRole("radio", { name: "Name" }));
+    await userEvent.click(screen.getByRole("button", { name: "Search" }));
+
+    expect(
+      screen.getByRole("link", { name: "Jordan Sample" }),
+    ).toBeInTheDocument();
+  });
+
   it.each([
     ["answers", { [SEARCH]: found([summary()]) }],
     ["fails", {}],

@@ -33,6 +33,8 @@ function Verify() {
   const params = useSearchParams();
   const query = params.toString();
   const [outcome, setOutcome] = useState<Outcome | null>(null);
+  // The address whose results the visitor cleared by switching the kind of search.
+  const [cleared, setCleared] = useState<string | null>(null);
 
   useEffect(() => {
     const asked = new URLSearchParams(query);
@@ -55,7 +57,7 @@ function Verify() {
 
   const search = searchFrom(params);
   // An outcome for an earlier address is not this search's answer.
-  const shown = outcome?.query === query ? outcome : null;
+  const shown = outcome?.query === query && cleared !== query ? outcome : null;
 
   return (
     <div className="usa-section">
@@ -77,7 +79,11 @@ function Verify() {
               <VerifySearchForm
                 key={query}
                 search={search}
-                onSearch={(next) => router.push(`/verify?${searchQuery(next)}`)}
+                onSearch={(next) => {
+                  setCleared(null);
+                  router.push(`/verify?${searchQuery(next)}`);
+                }}
+                onSwitch={() => setCleared(query)}
               />
             </div>
             {search && shown && "found" in shown && (
