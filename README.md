@@ -106,6 +106,14 @@ with `Local-Passw0rd!`, for example `gustavo.torrico@focusconsulting.io`.
 `backfill@example.com` (`Temp-Passw0rd!`) is asked to choose a new password
 on first sign-in.
 
+To sign in with SRP and TOTP as the deployed app does, run `just up dev`
+instead. The API, the Worker, and the client then use DEV's Cognito pool, and
+everything else stays local
+([ADR-0022](engineering/adrs/0022-local-totp-against-the-dev-pool.md)). It
+needs AWS credentials for DEV, OpenTofu, and a user in DEV's pool whose email
+matches a local user. If you've signed in as that user through the mock since
+the last `just infra`, run `just infra` first.
+
 Each AWS service is replaced by a local one that the app reaches through
 its production client; only URLs differ (constitution Principle IV), except
 that sign-in uses password auth instead of SRP

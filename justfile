@@ -8,10 +8,17 @@ compose := "docker compose -p pa-compact -f engineering/api/docker-compose.yaml"
 default:
     @just --list
 
-# Start everything: local services, migrations, seed data, then the API, Worker, and client (Ctrl-C stops them)
-up: install services
-    cd engineering/api && just migrate && just seed
-    trap 'kill 0' EXIT; (cd engineering/api && just dev) & (cd engineering/api && just worker) & (cd engineering/client && pnpm dev) & wait
+# Start everything: local services, migrations, seed data, then the API, Worker, and client (Ctrl-C stops them); `just up dev` signs in with DEV's Cognito pool instead of the mock (ADR-0022)
+up cognito="local": install services
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ "{{ cognito }}" != local ]; then
+        exports=$(cd engineering/infrastructure && just cognito-env {{ cognito }})
+        eval "$exports"
+    fi
+    (cd engineering/api && just migrate && just seed)
+    trap 'kill 0' EXIT
+    (cd engineering/api && just dev) & (cd engineering/api && just worker) & (cd engineering/client && pnpm dev) & wait
 
 # Install API and client dependencies, and create local settings files from the examples if missing
 install:
