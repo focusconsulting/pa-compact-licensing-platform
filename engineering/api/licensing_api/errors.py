@@ -22,6 +22,8 @@ class ErrorCode(StrEnum):
     StateNotLive = 'STATE_NOT_LIVE'
     AttestationsOutOfDate = 'ATTESTATIONS_OUT_OF_DATE'
     ValidationError = 'VALIDATION_ERROR'
+    # Sent by the web firewall past its rate limit (waf.tf); the API never raises it.
+    RateLimited = 'RATE_LIMITED'
     HttpError = 'HTTP_ERROR'
     InternalError = 'INTERNAL_ERROR'
 

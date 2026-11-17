@@ -15,7 +15,11 @@ from pydantic import TypeAdapter
 from licensing_api.__main__ import app
 from licensing_api.repo.participation_application import ApplicationStatus
 from licensing_api.repo.privilege_request import PrivilegeRequestStatus
-from licensing_api.repo.status import LicenseComputedStatus, PrivilegeComputedStatus
+from licensing_api.repo.status import (
+    LicenseComputedStatus,
+    PrivilegeComputedStatus,
+    PublicPrivilegeStatus,
+)
 
 DOCUMENT = Path(__file__).parents[1] / 'openapi.json'
 # A route that returns one of these emits the same schema under the same name.
@@ -24,6 +28,7 @@ STATUS_ENUMS = (
     PrivilegeRequestStatus,
     PrivilegeComputedStatus,
     LicenseComputedStatus,
+    PublicPrivilegeStatus,
 )
 
 
