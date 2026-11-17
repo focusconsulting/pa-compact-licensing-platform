@@ -308,6 +308,11 @@ describe("LoginPage", () => {
       await screen.findByRole("heading", {
         name: /Set up your authenticator app/i,
       });
+      expect(
+        screen.getByRole("img", {
+          name: /QR code for your authenticator app/i,
+        }),
+      ).toBeInTheDocument();
       expect(screen.getByTestId("totp-secret")).toHaveTextContent(
         "JBSW Y3DP EHPK 3PXP",
       );

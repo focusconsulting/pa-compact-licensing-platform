@@ -34,12 +34,13 @@ Prism answers each route with the examples in the document.
 
 ## Key dependencies
 
-| Package                                                | Purpose                                                                   | Docs                                    |
-| ------------------------------------------------------ | ------------------------------------------------------------------------- | --------------------------------------- |
-| [openapi-typescript](https://openapi-ts.dev/)          | Generates `src/api/schema.d.ts` from the API's OpenAPI document           | <https://openapi-ts.dev/>               |
-| [openapi-fetch](https://openapi-ts.dev/openapi-fetch/) | The typed API client in `src/lib/api.ts`                                  | <https://openapi-ts.dev/openapi-fetch/> |
-| [Prism](https://github.com/stoplightio/prism) (Docker) | `just mock-api`: a mock API from the document, never installed in the app | <https://docs.stoplight.io/docs/prism/> |
-| [webpack](https://webpack.js.org/)                     | Storybook's bundler; `next build` uses Turbopack                          | <https://webpack.js.org/>               |
+| Package                                                | Purpose                                                                                                          | Docs                                    |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| [openapi-typescript](https://openapi-ts.dev/)          | Generates `src/api/schema.d.ts` from the API's OpenAPI document                                                  | <https://openapi-ts.dev/>               |
+| [openapi-fetch](https://openapi-ts.dev/openapi-fetch/) | The typed API client in `src/lib/api.ts`                                                                         | <https://openapi-ts.dev/openapi-fetch/> |
+| [Prism](https://github.com/stoplightio/prism) (Docker) | `just mock-api`: a mock API from the document, never installed in the app                                        | <https://docs.stoplight.io/docs/prism/> |
+| [qrcode.react](https://github.com/zpao/qrcode.react)   | Draws the TOTP enrolment QR code on the login page ([ADR-0021](../adrs/0021-qrcode-react-for-totp-enrolment.md)) | <https://github.com/zpao/qrcode.react>  |
+| [webpack](https://webpack.js.org/)                     | Storybook's bundler; `next build` uses Turbopack                                                                 | <https://webpack.js.org/>               |
 
 ## Dependency overrides
 

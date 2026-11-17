@@ -11,6 +11,7 @@ import {
   Label,
   TextInput,
 } from "@trussworks/react-uswds";
+import { QRCodeSVG } from "qrcode.react";
 import { useAuth } from "src/contexts/AuthContext";
 import { SignInResult, totpUri } from "src/lib/auth";
 
@@ -159,12 +160,21 @@ export default function LoginPage() {
           {setup ? (
             <>
               <p>
-                Add this account to an authenticator app, such as Google
-                Authenticator or Microsoft Authenticator. On this device,{" "}
+                Scan this QR code with an authenticator app, such as Google
+                Authenticator or Microsoft Authenticator.
+              </p>
+              <QRCodeSVG
+                value={totpUri(email, challenge.secret)}
+                title="QR code for your authenticator app"
+                role="img"
+                marginSize={4}
+              />
+              <p>
+                On this device,{" "}
                 <a href={totpUri(email, challenge.secret)}>
                   open it in your authenticator app
                 </a>
-                ; otherwise, enter this setup key:
+                ; or enter this setup key:
               </p>
               <p>
                 <code data-testid="totp-secret">
