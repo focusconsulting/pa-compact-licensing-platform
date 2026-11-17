@@ -84,6 +84,11 @@ main h2 {
   background-color: transparent;
 }
 
+// USWDS's hint gray falls short of 4.5:1 on the panel's light gray.
+.bg-base-lightest .usa-hint {
+  color: color("base-dark");
+}
+
 // Restore USWDS active page fill overridden by react-uswds's bg-transparent
 // utility when $utilities-use-important is enabled.
 .usa-pagination .usa-pagination__button.usa-current {

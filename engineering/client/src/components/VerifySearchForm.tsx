@@ -64,7 +64,7 @@ export default function VerifySearchForm({
   return (
     <FormProvider {...form}>
       <Form onSubmit={form.handleSubmit(submit)} large>
-        <p className="text-base">{t("required")}</p>
+        <p className="text-base-dark">{t("required")}</p>
         <Fieldset
           className="margin-top-3"
           legend={
