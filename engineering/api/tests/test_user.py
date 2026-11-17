@@ -98,6 +98,14 @@ def test_me_inactive_user_returns_403(client, auth_header, route_db_session):
             ['read_general', 'read_private', 'write'],
         ),
         ({'role': 'compact_admin'}, ['read_general', 'compact_admin', 'read_private']),
+        (
+            {'role': 'compact_admin', 'permissions': {'*': ['read_ssn']}},
+            ['read_general', 'compact_admin', 'read_private', 'read_ssn'],
+        ),
+        (
+            {'role': 'admin', 'permissions': {'*': ['read_ssn']}},
+            ['read_general', 'compact_admin', 'system_admin', 'read_private'],
+        ),
     ],
 )
 def test_me_returns_permissions_held_in_own_state(

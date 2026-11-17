@@ -75,6 +75,25 @@ ROLE_PERMISSIONS: Mapping[Role, frozenset[Permission]] = {
 }
 
 
+# The users.permissions key for a Commission user's grants (ADR-0020). It names no state, so it
+# gives no standing in one.
+COMMISSION_KEY = '*'
+
+_STATE_GRANTS = frozenset(
+    {Permission.READ_PRIVATE, Permission.READ_SSN, Permission.WRITE, Permission.ADMIN}
+)
+
+# What each role may be granted: staff per state, a compact_admin under COMMISSION_KEY. Any other
+# grant matches nothing, so a bad value in users.permissions denies rather than escalates.
+GRANTABLE: Mapping[Role, frozenset[Permission]] = {
+    Role.LICENSEE: frozenset(),
+    Role.STATE_STAFF: _STATE_GRANTS,
+    Role.STATE_ADMIN: _STATE_GRANTS,
+    Role.COMPACT_ADMIN: frozenset({Permission.READ_SSN}),
+    Role.ADMIN: frozenset(),
+}
+
+
 @dataclass(frozen=True)
 class RouteAccess:
     """A route's declaration. ``signed_in`` is False for a public route."""
@@ -89,28 +108,47 @@ _ACCESS = '__route_access__'
 
 
 def held_permissions(user: User, state_code: str | None) -> frozenset[str]:
-    """Everything ``user`` may do in ``state_code``: their role's permissions plus that state's grants.
+    """Everything ``user`` may do in ``state_code``: their role's permissions plus their grants there.
 
-    A grant naming no ``Permission`` matches nothing, so a bad value in ``users.permissions`` denies.
+    With no state, the grants are the ones held under ``COMMISSION_KEY``.
     """
-    granted = user.permissions.get(state_code.upper(), []) if state_code else []
-    return ROLE_PERMISSIONS[Role(user.role)] | frozenset(granted)
+    key = COMMISSION_KEY if state_code is None else state_code.upper()
+    return ROLE_PERMISSIONS[Role(user.role)] | _grants(user, key)
+
+
+def has_standing(user: User, state_code: str) -> bool:
+    """Whether ``user`` belongs to ``state_code``: it is their state, or they hold a grant there (ADR-0020)."""
+    state_code = state_code.upper()
+    if state_code == COMMISSION_KEY:
+        return False
+    return state_code == user.state_code or bool(_grants(user, state_code))
+
+
+def _grants(user: User, key: str) -> frozenset[Permission]:
+    # Staff hold grants under state codes, Commission users (who have no state) under COMMISSION_KEY.
+    if (key == COMMISSION_KEY) != (user.state_code is None):
+        return frozenset()
+    return GRANTABLE[Role(user.role)] & frozenset(user.permissions.get(key, []))
 
 
 def require(permission: Permission | None = None, *, state_param: str | None = None) -> Any:
     """``Depends`` admitting an active caller who holds ``permission``; yields the caller's ``User``.
 
-    The state is the path parameter named ``state_param``, or the caller's own
-    ``state_code``. With no ``permission``, any active user passes. Which rows the
-    caller may see is the route's query's job (constitution Principle II).
+    The state is the path parameter named ``state_param``, where the caller must have
+    standing, or the caller's own ``state_code``. With no ``permission``, any active user
+    with standing passes. Which rows the caller may see is the route's query's job
+    (constitution Principle II).
     """
     access = RouteAccess(signed_in=True, permission=permission, state_param=state_param)
 
     async def check(request: Request, user: Annotated[User, Depends(current_user)]) -> User:
-        if permission is None:
-            return user
-        state = request.path_params.get(state_param) if state_param else user.state_code
-        if permission not in held_permissions(user, state):
+        if state_param is None:
+            state = user.state_code
+        else:
+            state = request.path_params[state_param]
+            if not has_standing(user, state):
+                raise AppError(403, ErrorCode.Forbidden, [f'You have no access to {state}'])
+        if permission is not None and permission not in held_permissions(user, state):
             raise AppError(403, ErrorCode.Forbidden, [f'You need the {permission} permission'])
         return user
 
