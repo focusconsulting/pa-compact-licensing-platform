@@ -10,11 +10,13 @@ import React, {
 } from "react";
 import { CognitoUser, CognitoUserSession } from "amazon-cognito-identity-js";
 import {
+  answerTotp as cognitoAnswerTotp,
   completeNewPassword as cognitoCompleteNewPassword,
   getCurrentSession,
   signIn as cognitoSignIn,
   signOut as cognitoSignOut,
   SignInResult,
+  verifyTotpSetup as cognitoVerifyTotpSetup,
 } from "src/lib/auth";
 
 interface AuthState {
@@ -29,7 +31,9 @@ interface AuthContextValue extends AuthState {
     user: CognitoUser,
     newPassword: string,
     userAttributes: Record<string, string>,
-  ) => Promise<void>;
+  ) => Promise<SignInResult>;
+  verifyTotpSetup: (user: CognitoUser, code: string) => Promise<void>;
+  answerTotp: (user: CognitoUser, code: string) => Promise<void>;
   signOut: () => void;
 }
 
@@ -65,15 +69,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .catch(() => setState({ isLoading: false, idToken: null, email: null }));
   }, []);
 
+  const signedIn = useCallback((session: CognitoUserSession): void => {
+    setState({ isLoading: false, ...sessionToState(session) });
+  }, []);
+
   const signIn = useCallback(
     async (email: string, password: string): Promise<SignInResult> => {
       const result = await cognitoSignIn(email, password);
-      if (result.type === "success") {
-        setState({ isLoading: false, ...sessionToState(result.session) });
-      }
+      if (result.type === "success") signedIn(result.session);
       return result;
     },
-    [],
+    [signedIn],
   );
 
   const completeNewPassword = useCallback(
@@ -81,15 +87,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user: CognitoUser,
       newPassword: string,
       userAttributes: Record<string, string>,
-    ): Promise<void> => {
-      const session = await cognitoCompleteNewPassword(
+    ): Promise<SignInResult> => {
+      const result = await cognitoCompleteNewPassword(
         user,
         newPassword,
         userAttributes,
       );
-      setState({ isLoading: false, ...sessionToState(session) });
+      if (result.type === "success") signedIn(result.session);
+      return result;
     },
-    [],
+    [signedIn],
+  );
+
+  const verifyTotpSetup = useCallback(
+    async (user: CognitoUser, code: string): Promise<void> => {
+      signedIn(await cognitoVerifyTotpSetup(user, code));
+    },
+    [signedIn],
+  );
+
+  const answerTotp = useCallback(
+    async (user: CognitoUser, code: string): Promise<void> => {
+      signedIn(await cognitoAnswerTotp(user, code));
+    },
+    [signedIn],
   );
 
   const signOut = useCallback((): void => {
@@ -99,8 +120,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Memoised so consumers re-render only when the auth state changes.
   const value = useMemo(
-    () => ({ ...state, signIn, completeNewPassword, signOut }),
-    [state, signIn, completeNewPassword, signOut],
+    () => ({
+      ...state,
+      signIn,
+      completeNewPassword,
+      verifyTotpSetup,
+      answerTotp,
+      signOut,
+    }),
+    [state, signIn, completeNewPassword, verifyTotpSetup, answerTotp, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

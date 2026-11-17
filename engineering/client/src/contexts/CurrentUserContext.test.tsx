@@ -29,6 +29,8 @@ function signedIn(idToken: string | null) {
     signOut: vi.fn(),
     signIn: vi.fn(),
     completeNewPassword: vi.fn(),
+    verifyTotpSetup: vi.fn(),
+    answerTotp: vi.fn(),
   });
 }
 

@@ -58,6 +58,8 @@ beforeEach(() => {
     signOut,
     signIn: vi.fn(),
     completeNewPassword: vi.fn(),
+    verifyTotpSetup: vi.fn(),
+    answerTotp: vi.fn(),
   });
 });
 
