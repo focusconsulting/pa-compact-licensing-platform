@@ -66,7 +66,9 @@ export default function VerifyResults({
 
   return (
     <>
-      <h2>{t("results.heading", { count: page.total })}</h2>
+      <h2 className="margin-top-4">
+        {t("results.heading", { count: page.total })}
+      </h2>
       {holders.length === 0 ? (
         <EmptyState>
           {"privilege_number" in search

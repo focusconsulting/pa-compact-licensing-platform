@@ -105,7 +105,9 @@ export default function VerifySearchForm({
             />
           </>
         )}
-        <Button type="submit">{t("form.search")}</Button>
+        <Button type="submit" className="margin-top-3">
+          {t("form.search")}
+        </Button>
       </Form>
     </FormProvider>
   );
