@@ -61,7 +61,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       : user && displayName(user);
 
   return (
-    <>
+    // A column as tall as the window, with the page taking the slack, keeps the
+    // footer at the bottom when the page is short.
+    <div className="display-flex flex-column minh-viewport">
       <a className="usa-skipnav" href="#main-content">
         {t("skipLink")}
       </a>
@@ -98,7 +100,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           />
         )}
       </Header>
-      <main id="main-content">{children}</main>
+      <main id="main-content" className="flex-1">
+        {children}
+      </main>
       <Footer
         size="slim"
         returnToTop={
@@ -130,6 +134,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           ))}
         </IdentifierLinks>
       </Identifier>
-    </>
+    </div>
   );
 }

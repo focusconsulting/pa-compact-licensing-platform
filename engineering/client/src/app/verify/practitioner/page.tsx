@@ -99,7 +99,7 @@ function Practitioner() {
                 <h2>{t("holder.license")}</h2>
                 <p>{holder.state_of_qualifying_license.name}</p>
                 <h2>{t("holder.privileges")}</h2>
-                <CardGroup>
+                <CardGroup className="margin-top-2">
                   {holder.privileges.map((privilege) => (
                     <PrivilegeCard
                       key={privilege.number}

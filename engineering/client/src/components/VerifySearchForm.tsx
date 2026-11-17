@@ -1,6 +1,12 @@
 "use client";
 
-import { Button, Fieldset, Form, Radio } from "@trussworks/react-uswds";
+import {
+  Button,
+  Fieldset,
+  Form,
+  Radio,
+  RequiredMarker,
+} from "@trussworks/react-uswds";
 import { useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -52,7 +58,14 @@ export default function VerifySearchForm({
     <FormProvider {...form}>
       <Form onSubmit={form.handleSubmit(submit)} large>
         <p className="text-base">{t("required")}</p>
-        <Fieldset legend={t("form.legend")}>
+        <Fieldset
+          className="margin-top-3"
+          legend={
+            <>
+              {t("form.legend")} <RequiredMarker />
+            </>
+          }
+        >
           <Radio
             id="search-by-name"
             name="search-by"
