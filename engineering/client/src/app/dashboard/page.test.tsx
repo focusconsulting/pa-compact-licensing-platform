@@ -102,6 +102,10 @@ describe("Dashboard page", () => {
       expect(screen.getByText("user@example.com")).toBeInTheDocument(),
     );
     expect(screen.getByText("Jane Doe")).toBeInTheDocument();
+    // USWDS draws a borderless table's top line only over cells marked as row headers.
+    expect(
+      screen.getAllByRole("rowheader").map((cell) => cell.textContent),
+    ).toEqual(["Name", "Email", "Role", "State", "Status"]);
     expect(screen.getByText("admin")).toBeInTheDocument();
     expect(screen.getByText("CA")).toBeInTheDocument();
     expect(screen.getByText("Active")).toBeInTheDocument();

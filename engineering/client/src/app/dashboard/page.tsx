@@ -19,7 +19,7 @@ function Dashboard() {
           <table className="usa-table usa-table--borderless">
             <tbody>
               <tr>
-                <th>Name</th>
+                <th scope="row">Name</th>
                 <td>
                   {[user.given_name, user.family_name]
                     .filter(Boolean)
@@ -27,21 +27,21 @@ function Dashboard() {
                 </td>
               </tr>
               <tr>
-                <th>Email</th>
+                <th scope="row">Email</th>
                 <td>{user.email}</td>
               </tr>
               <tr>
-                <th>Role</th>
+                <th scope="row">Role</th>
                 <td>{user.role}</td>
               </tr>
               {user.state_code && (
                 <tr>
-                  <th>State</th>
+                  <th scope="row">State</th>
                   <td>{user.state_code}</td>
                 </tr>
               )}
               <tr>
-                <th>Status</th>
+                <th scope="row">Status</th>
                 <td>{user.is_active ? "Active" : "Inactive"}</td>
               </tr>
             </tbody>
