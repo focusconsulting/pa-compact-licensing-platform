@@ -7,6 +7,7 @@ import date from "../i18n/en/date.json";
 import status from "../i18n/en/status.json";
 import shell from "../i18n/en/shell.json";
 import application from "../i18n/en/application.json";
+import verify from "../i18n/en/verify.json";
 
 const resources = {
   common,
@@ -18,6 +19,7 @@ const resources = {
   status,
   shell,
   application,
+  verify,
 } as const;
 
 export default resources;
