@@ -1,4 +1,4 @@
-"""The attestations catalogue, and the attestations a PA accepted on an application (platform contract)."""
+"""The attestations catalogue, and the attestations a PA accepted on an application."""
 
 from __future__ import annotations
 
@@ -121,7 +121,7 @@ async def out_of_date_codes(
 ) -> Sequence[str]:
     """Current participation attestations the application has not accepted at their current version since ``since``.
 
-    Submit and resubmit refuse while any are left: ``409 ATTESTATIONS_OUT_OF_DATE`` (platform contract).
+    Submit and resubmit refuse while any are left: ``409 ATTESTATIONS_OUT_OF_DATE``.
     """
     current = (
         await session.scalars(current_attestations(AttestationAppliesTo.PARTICIPATION))

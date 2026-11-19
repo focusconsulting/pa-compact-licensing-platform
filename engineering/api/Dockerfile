@@ -1,5 +1,5 @@
 # Build stage — install dependencies using uv
-FROM ghcr.io/astral-sh/uv:0.13.7-python3.13-alpine@sha256:7b02bf9f2d812bf1b21b4d790901eb22250523943b82af93e8c543ea54b6b4d5 AS build
+FROM ghcr.io/astral-sh/uv:0.13.8-python3.13-alpine@sha256:f2d6278d0821c35881b010ddbf75825049661a98dbfdf61bbd1407e8dd544d00 AS build
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -14,7 +14,7 @@ RUN uv sync --frozen --no-dev
 
 
 # Dev
-FROM ghcr.io/astral-sh/uv:0.13.7-python3.13-alpine@sha256:7b02bf9f2d812bf1b21b4d790901eb22250523943b82af93e8c543ea54b6b4d5 AS dev
+FROM ghcr.io/astral-sh/uv:0.13.8-python3.13-alpine@sha256:f2d6278d0821c35881b010ddbf75825049661a98dbfdf61bbd1407e8dd544d00 AS dev
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -32,11 +32,14 @@ CMD ["uv", "run", "uvicorn", "licensing_api.__main__:app", "--reload", "--host=0
 
 
 # Prod
-FROM python:3.13.18-alpine@sha256:1e1f6334529d1fb26a2ef619d7cffb30a7c7d7cc1cc7338ebee283a58d1aeaca AS app
+FROM python:3.13.18-alpine@sha256:9ef1a599f863231c3d91e941389bfdc4a2d6070557243d54df1a4e57015b960e AS app
 
 # The app runs from the venv; the base image's pip, with its vendored urllib3,
 # msgpack, and setuptools, would only add unpatched packages to scans.
-RUN python -m pip uninstall -y pip && \
+# Fixes the pinned base image predates: zlib 1.4 (CVE-2026-4738) and OpenSSL
+# 3.5.9-r1 (CVE-2026-107496).
+RUN apk upgrade --no-cache zlib libcrypto3 libssl3 && \
+    python -m pip uninstall -y pip && \
     addgroup -g 1000 python && \
     adduser -u 1000 -G python -D python
 
@@ -49,4 +52,5 @@ COPY --chown=python:python . .
 USER 1000
 
 ENV PATH="/app/.venv/bin:$PATH"
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "licensing_api.__main__:app"]
+# gunicorn behind TLS, with a certificate made at start (ADR-0019)
+CMD ["python", "-m", "licensing_api.serve"]

@@ -1,0 +1,4 @@
+# Trivy findings `just scan-image` accepts. Give each an `expired_at` date: past
+# it, the finding fails the scan again. Each has an entry in
+# engineering/docs/security/false-positives.md.
+vulnerabilities: []

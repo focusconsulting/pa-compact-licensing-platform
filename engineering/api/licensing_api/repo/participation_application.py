@@ -36,7 +36,7 @@ OPEN_APPLICATION_STATUSES = frozenset(
     {ApplicationStatus.DRAFT, ApplicationStatus.SUBMITTED, ApplicationStatus.INFO_REQUESTED}
 )
 
-# The moves FLOW-06 allows; a test keeps its diagram equal to this. Who makes each is in the platform contract.
+# The moves FLOW-06 allows; a test keeps its diagram equal to this.
 APPLICATION_TRANSITIONS: Mapping[ApplicationStatus, frozenset[ApplicationStatus]] = {
     ApplicationStatus.DRAFT: frozenset({ApplicationStatus.SUBMITTED}),
     ApplicationStatus.SUBMITTED: frozenset(

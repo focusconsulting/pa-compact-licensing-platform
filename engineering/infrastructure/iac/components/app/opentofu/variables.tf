@@ -36,9 +36,13 @@ variable "instance_count" {
 }
 
 variable "backup_retention_period" {
-  description = "RDS backup retention period in days"
+  description = "Days of automated database backups to keep"
   type        = number
-  default     = 30
+
+  validation {
+    condition     = var.backup_retention_period >= 7 && var.backup_retention_period <= 35
+    error_message = "backup_retention_period must be between 7 and 35 days."
+  }
 }
 
 variable "db_username" {
@@ -67,8 +71,33 @@ variable "dns_name" {
 
 variable "acm_certificate_arn" {
   type        = string
-  description = "ACM certificate ARN for HTTPS on the ALB listener (optional; HTTP-only if not set)"
-  default     = null
+  description = "ARN of the ACM certificate the load balancer's HTTPS listener presents. It must cover dns_name and be issued in aws_region; CloudFront's own certificate is looked up in us-east-1 (dns.tf)."
+
+  validation {
+    condition     = can(regex("^arn:aws[a-z-]*:acm:[a-z0-9-]+:[0-9]{12}:certificate/.+$", var.acm_certificate_arn))
+    error_message = "acm_certificate_arn must be an ACM certificate ARN."
+  }
+
+  validation {
+    condition     = try(split(":", var.acm_certificate_arn)[3], "") == var.aws_region
+    error_message = "acm_certificate_arn must be a certificate in aws_region: a load balancer can use only a certificate from its own region."
+  }
+}
+
+variable "cloudtrail_management_events" {
+  type        = bool
+  description = "Whether this environment's trail records management events. False where another trail in the account already does: a second copy is charged per event. Reads and writes of uploaded documents are recorded either way."
+}
+
+variable "site_password_protected" {
+  type        = bool
+  description = "Whether CloudFront asks for the site password before it serves a page or passes an API call. On for an environment the public should not reach; the password is in the <environment_name>-site-access secret."
+}
+
+variable "deletion_protection" {
+  type        = bool
+  description = "Guards everything that would block or lose data in a teardown. Leave on wherever data must survive; an environment that is spun up and torn down turns it off."
+  default     = true
 }
 
 variable "ecs_max_capacity" {

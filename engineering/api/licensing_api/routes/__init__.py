@@ -18,6 +18,8 @@ from licensing_api.routes import (
     document,
     health,
     profile,
+    public_verification,
+    status,
     user,
 )
 
@@ -25,13 +27,13 @@ NAMESPACES: Mapping[str, Sequence[APIRouter]] = {
     # A PA's own record, and the signed-in user's own account.
     '/me': [user.router, document.me, application.me, profile.me, dashboard.me],
     # Anyone, signed in or not: verification and published configuration.
-    '/public': [catalogue.router],
+    '/public': [catalogue.router, public_verification.router],
     # One state's staff, acting in the state named by the path.
     '/states/{state_code}': [document.states],
     # Commission staff, across every state.
     '/commission': [audit.router, document.commission],
     # The system operator.
-    '/admin': [],
+    '/admin': [status.router],
 }
 
 # A 422 carries ErrorResponse (errors.validation_error_handler), not FastAPI's default body.
