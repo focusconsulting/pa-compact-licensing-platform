@@ -11,6 +11,9 @@ acm_certificate_arn = "arn:aws:acm:us-east-1:126942145463:certificate/9445a6cd-f
 # writes; this environment's trail adds reads and writes of uploaded documents.
 cloudtrail_management_events = false
 
+# Not for the public: the username and password are in the staging-site-access secret
+site_password_protected = true
+
 # Staging is spun up and torn down by design
 deletion_protection = false
 

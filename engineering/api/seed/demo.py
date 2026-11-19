@@ -22,6 +22,11 @@ from licensing_api.context import ChangeContext, system_context
 from licensing_api.days import add_days, compact_today
 from licensing_api.repo import history
 from licensing_api.repo.adverse_action import AdverseAction, AdverseActionTarget
+from licensing_api.repo.attestation import (
+    AttestationAppliesTo,
+    accept_participation,
+    current_attestations,
+)
 from licensing_api.repo.fee import Fee, FeeType
 from licensing_api.repo.participation_application import (
     ApplicationKind,
@@ -54,13 +59,6 @@ STAFF = (
         ['read_private', 'write'],
     ),
 )
-
-_APPROVED = (
-    ApplicationStatus.ELIGIBLE,
-    ApplicationStatus.ELIGIBILITY_WITHDRAWN,
-    ApplicationStatus.SUPERSEDED,
-)
-_DECIDED = (*_APPROVED, ApplicationStatus.DENIED)
 
 
 def _id(row: Any) -> int:
@@ -142,6 +140,12 @@ class _Demo:
                 legal_first_name=given,
                 legal_last_name=family,
                 date_of_birth=date(1988, 4, 12),
+                residence_line1='100 Sample Street',
+                residence_city='Sample City',
+                residence_region='KS',
+                residence_postal_code='66601',
+                residence_country_code='US',
+                nccpa_certification_number=f'{1000000 + _id(user)}',
                 correspondence_email=user.email,
                 created_by=self.ctx.user_id,
             )
@@ -180,43 +184,106 @@ class _Demo:
         license: QualifyingLicense | None = None,
         kind: ApplicationKind = ApplicationKind.INITIAL,
     ) -> ParticipationApplication:
-        """An application in ``status``, with every field that status's check constraints require."""
-        fields: dict[str, Any] = {}
+        """An application in ``status``, reached step by step as FLOW-06 allows, each step dated when it took effect.
+
+        A draft has no history. From the submit on, each step writes the history row the
+        routes would, so the dashboard's timeline shows every step.
+        """
+        row = ParticipationApplication(
+            practitioner_id=_id(practitioner),
+            kind=kind,
+            sql_state_code=license.state_code if license else 'KS',
+            qualifying_license_id=_id(license) if license else None,
+            claimed_license_number=license.license_number if license else None,
+            claimed_license_expires_on=license.expires_on if license else None,
+            created_by=self.ctx.user_id,
+        )
+        self.session.add(row)
+        await self.session.flush()
+        for step, offset, fields in self._steps(practitioner, status):
+            before = None if step == ApplicationStatus.SUBMITTED else history.snapshot(row)
+            for name, value in {'status': step, **fields}.items():
+                setattr(row, name, value)
+            await history.write(
+                self.session, self.ctx, row, before=before, effective_at=self.at(offset)
+            )
         if status != ApplicationStatus.DRAFT:
-            fields['opened_at'] = self.at(-60)
-            fields['sworn_name'] = f'{practitioner.legal_first_name} {practitioner.legal_last_name}'
-            fields['sworn_at'] = self.at(-60)
-        if status in _APPROVED:
-            fields |= {
+            for attestation in await self.session.scalars(
+                current_attestations(AttestationAppliesTo.PARTICIPATION)
+            ):
+                await accept_participation(self.session, self.ctx, _id(row), attestation)
+        self.expect('application', row, status)
+        return row
+
+    def _steps(
+        self, practitioner: Practitioner, status: ApplicationStatus
+    ) -> list[tuple[ApplicationStatus, int, dict[str, Any]]]:
+        """The moves from draft to ``status``: each step, days from today, and the fields it sets."""
+        if status == ApplicationStatus.DRAFT:
+            return []
+        submitted = (
+            ApplicationStatus.SUBMITTED,
+            -60,
+            {
+                'opened_at': self.at(-60),
+                'sworn_name': f'{practitioner.legal_first_name} {practitioner.legal_last_name}',
+                'sworn_at': self.at(-60),
+            },
+        )
+        eligible = (
+            ApplicationStatus.ELIGIBLE,
+            -45,
+            {
                 'license_verified_at': self.at(-50),
                 'license_verified_by': self.ctx.user_id,
                 'cbc_completed_on': self.day(-55),
-            }
-        if status in _DECIDED:
-            fields |= {'decided_at': self.at(-45), 'decided_by': self.ctx.user_id}
-        fields |= {
-            ApplicationStatus.INFO_REQUESTED: {'request_note': 'Upload your NCCPA certificate.'},
-            ApplicationStatus.DENIED: {'denial_reason_code': 'nccpa_not_current'},
-            ApplicationStatus.WITHDRAWN: {'withdrawn_at': self.at(-50)},
-            ApplicationStatus.ELIGIBILITY_WITHDRAWN: {
-                'eligibility_withdrawn_at': self.at(-10),
-                'eligibility_withdrawal_reason': 'NCCPA certification lapsed.',
+                'decided_at': self.at(-45),
+                'decided_by': self.ctx.user_id,
             },
-            ApplicationStatus.SUPERSEDED: {'superseded_at': self.at(-5)},
-        }.get(status, {})
-        row = await self.add(
-            ParticipationApplication(
-                practitioner_id=_id(practitioner),
-                kind=kind,
-                sql_state_code=license.state_code if license else 'KS',
-                qualifying_license_id=_id(license) if license else None,
-                status=status,
-                created_by=self.ctx.user_id,
-                **fields,
-            )
         )
-        self.expect('application', row, status)
-        return row
+        after_submit: dict[
+            ApplicationStatus, list[tuple[ApplicationStatus, int, dict[str, Any]]]
+        ] = {
+            ApplicationStatus.SUBMITTED: [],
+            ApplicationStatus.INFO_REQUESTED: [
+                (
+                    ApplicationStatus.INFO_REQUESTED,
+                    -20,
+                    {'request_note': 'Upload your NCCPA certificate.'},
+                )
+            ],
+            ApplicationStatus.DENIED: [
+                (
+                    ApplicationStatus.DENIED,
+                    -45,
+                    {
+                        'decided_at': self.at(-45),
+                        'decided_by': self.ctx.user_id,
+                        'denial_reason_code': 'nccpa_not_current',
+                    },
+                )
+            ],
+            ApplicationStatus.WITHDRAWN: [
+                (ApplicationStatus.WITHDRAWN, -50, {'withdrawn_at': self.at(-50)})
+            ],
+            ApplicationStatus.ELIGIBLE: [eligible],
+            ApplicationStatus.ELIGIBILITY_WITHDRAWN: [
+                eligible,
+                (
+                    ApplicationStatus.ELIGIBILITY_WITHDRAWN,
+                    -10,
+                    {
+                        'eligibility_withdrawn_at': self.at(-10),
+                        'eligibility_withdrawal_reason': 'NCCPA certification lapsed.',
+                    },
+                ),
+            ],
+            ApplicationStatus.SUPERSEDED: [
+                eligible,
+                (ApplicationStatus.SUPERSEDED, -5, {'superseded_at': self.at(-5)}),
+            ],
+        }
+        return [submitted, *after_submit[status]]
 
     async def request(
         self,

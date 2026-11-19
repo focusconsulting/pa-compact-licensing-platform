@@ -15,7 +15,7 @@ Rule citations are to the adopted Rules 3 and 4 in `product/context/research-cor
 
 | Tier | Who may see it |
 |---|---|
-| Public | Anyone, through public verification (Rule 4 §4.5(b)) |
+| Public | Anyone, through [public verification](../../product/context/flows/08-public-verification.md) (Rule 4 §4.5(b)) |
 | Private | The PA themselves, and state and Commission users with a relationship to the PA (`read_private`) |
 | States and Commission | State and Commission users only; never the PA or the public (ML §8.C) |
 | Restricted | The full SSN: `read_ssn`, every read audited (ADR-0007) |
@@ -322,7 +322,7 @@ One open request (`pending_payment`, `submitted`) per practitioner and remote st
 
 ### `privileges`
 
-A compact privilege issued by a remote state (Rule 4 §4.3(d)). Tier: the state, number, status, and dates are public (Rule 4 §4.5(b), Q-12); the deactivation reason and note are states and Commission. Owner: epic 8.
+A compact privilege issued by a remote state (Rule 4 §4.3(d)). Tier: the state, number, status, and issue date are public, and the expiry date while the privilege is active (Rule 4 §4.5(b), Q-12); the deactivation reason and note are states and Commission. Owner: epic 8.
 
 | Column | Type | Meaning |
 |---|---|---|

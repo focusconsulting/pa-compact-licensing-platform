@@ -1,7 +1,7 @@
 """A PA's participation applications: the wizard's draft, attestations, submit, and withdraw (FLOW-01 Phase 1).
 
 A draft is the PA's working copy. History starts when the SQL receives the application:
-submit and resubmit each record the whole application as sent (platform contract).
+submit and resubmit each record the whole application as sent (FLOW-06).
 """
 
 from __future__ import annotations

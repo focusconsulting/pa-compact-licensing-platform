@@ -33,6 +33,8 @@ When iterating on the API, use these commands from `engineering/api/`:
 - `just job <name>` — run one scheduled job once
 - `just infra` / `just infra-down` — the local services: Postgres, maildev, RustFS, Cognito mock (resets data)
 - `just up` (repo root) — the whole system locally, with no AWS account
+- `just security` (repo root) — the dependency, image, and secret scans
+  CI fails a PR on ([`SECURITY.md`](SECURITY.md))
 - `just --list` — full recipe list
 
 When iterating on the client, use these commands from

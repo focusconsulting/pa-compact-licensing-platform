@@ -89,7 +89,7 @@ stateDiagram-v2
 
 The status vocabulary shown to the PA and the public follows CompactConnect's privilege card and history: "Active (Expires: date)", "Inactive (Expired: date)", "Inactive (Deactivated)", and one event vocabulary for the timeline (issued, renewed, expired, deactivated, disciplinary action, disciplinary action lifted). CompactConnect's "Privilege purchased" becomes "Privilege issued" (crosswalk §3.4).
 
-SOW §2.1 (redline response v2) has public verification cover active and inactive privileges, so the inactive statuses in this vocabulary are public as well as the active one; FLOW-05 says what the public view withholds. Renewal on the same number is listed in SOW §2.1 but still deferred in the backlog (FLOW-04).
+SOW §2.1 (redline response v2) has public verification cover active and inactive privileges, so the inactive statuses in this vocabulary are public as well as the active one; FLOW-05 says what the public view withholds. The public sees three statuses, `active`, `expired`, and `inactive`: an encumbered privilege shows as `inactive`, whether or not the action against it is public (decided 2026-11-16, SCRUM-139). Renewal on the same number is listed in SOW §2.1 but still deferred in the backlog (FLOW-04).
 
 ## Evidence
 
