@@ -53,7 +53,6 @@
     "save": "We couldn't save your answers. Try again.",
     "stateNotLive": "That state isn't taking applications. Choose another state.",
     "statementsChanged": "A statement changed since you read it. Read the statements again and check each one.",
-    "otherNameLastName": "Enter a last name for the other name, or leave the other name blank.",
     "documentNotClean": "We're still checking your upload for viruses. Try again in a minute.",
     "withdraw": "We couldn't withdraw your application. Try again."
   },
@@ -126,5 +125,24 @@
     "upload": "Upload a document",
     "uploadHint": "Only if {{state, possessive}} note asks for one. One file: PDF, Word, PNG or JPEG.",
     "anotherState": "To apply through another state, withdraw this application and apply again."
+  },
+  "fix": {
+    "count_one": "{{count}} answer needs fixing",
+    "count_other": "{{count}} answers need fixing",
+    "residenceLine1": "Enter your address line 1",
+    "residenceCity": "Enter your city or town",
+    "residenceRegion": "Select your state",
+    "residenceZip": "Enter your ZIP code",
+    "sqlStateCode": "Select your state",
+    "licenseNumber": "Enter your license number",
+    "licenseExpires": "Enter your license expiration date",
+    "dateOfBirth": "Enter your date of birth",
+    "nccpa": "Enter your NCCPA certification number",
+    "otherLastName": "Enter a last name for the other name, or leave the other name blank",
+    "statementsGroup": "Agree to the statements",
+    "statements": "Tick the statements to agree to them",
+    "statement": "Tick the statement to agree to it",
+    "understand": "Tick the box to confirm you understand",
+    "swornName": "Type your full name to sign"
   }
 }

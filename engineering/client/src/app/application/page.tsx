@@ -11,7 +11,7 @@ import {
   Textarea,
 } from "@trussworks/react-uswds";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -62,7 +62,23 @@ interface StartValues {
   document?: UploadedDocument;
 }
 
-type ErrorKey = "load" | "save" | "stateNotLive" | "otherNameLastName";
+type ErrorKey = "load" | "save" | "stateNotLive";
+
+/** The answers step 1 requires, each with what to fix when it is missing (B2e). */
+const REQUIRED = [
+  "residenceLine1",
+  "residenceCity",
+  "residenceRegion",
+  "residenceZip",
+  "sqlStateCode",
+  "licenseNumber",
+  "licenseExpires",
+  "dateOfBirth",
+  "nccpa",
+] as const;
+type Required = (typeof REQUIRED)[number];
+/** A required answer that's missing, or another name given without its last name. */
+type Fixable = Required | "otherLastName";
 
 interface Loaded {
   application?: Application;
@@ -103,6 +119,33 @@ function Fixed({ label, value }: { label: string; value: string }) {
       <p className="text-bold margin-bottom-05">{label}</p>
       <p className="margin-top-0">{value}</p>
     </div>
+  );
+}
+
+/** A month, day, and year question, with what to fix under its legend. */
+function DateQuestion({
+  id,
+  legend,
+  error,
+}: {
+  id: string;
+  legend: string;
+  error?: string;
+}) {
+  const question = (
+    <Fieldset legend={legend} className="margin-top-3">
+      {error && (
+        <span className="usa-error-message" id={`${id}Error`}>
+          {error}
+        </span>
+      )}
+      <DateFields id={id} name="" error={Boolean(error)} />
+    </Fieldset>
+  );
+  return error ? (
+    <div className="usa-form-group usa-form-group--error">{question}</div>
+  ) : (
+    question
   );
 }
 
@@ -147,6 +190,10 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
   const fixedOtherNames = verified.has("other_names");
   const asked = application?.status === "info_requested";
   const reply = form.register("responseNote");
+  const [missing, setMissing] = useState<Fixable[]>([]);
+  const fix = (field: Fixable) =>
+    missing.includes(field) ? t(`fix.${field}`) : undefined;
+
   // The loader checked an application's state is listed; a new one has none yet.
   const state = application
     ? nameOfState(states, application.sql_state_code)
@@ -160,14 +207,6 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
       last_name: blankToNull(values.otherLastName),
       name_suffix: blankToNull(values.otherSuffix),
     };
-    if (
-      !fixedOtherNames &&
-      !other.last_name &&
-      (other.first_name || other.middle_name || other.name_suffix)
-    ) {
-      setError("otherNameLastName");
-      return;
-    }
     try {
       await saveProfile({
         residence: {
@@ -208,16 +247,44 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
     }
   }
 
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    const values = form.getValues();
+    const asks = REQUIRED.filter(
+      (field) =>
+        (field !== "sqlStateCode" || draft) &&
+        (field !== "dateOfBirth" || !fixedDateOfBirth) &&
+        (field !== "nccpa" || !fixedNccpa),
+    );
+    const found: Fixable[] = asks.filter(
+      (field) => !String(values[field] ?? "").trim(),
+    );
+    const otherName = [
+      values.otherFirstName,
+      values.otherMiddleName,
+      values.otherSuffix,
+    ].some((part) => part.trim());
+    if (!fixedOtherNames && otherName && !values.otherLastName.trim()) {
+      found.push("otherLastName");
+    }
+    setMissing(found);
+    if (found.length === 0) void save(values);
+  };
+
   return (
     <FormProvider {...form}>
-      <Form onSubmit={form.handleSubmit(save)} large>
+      <Form onSubmit={submit} large noValidate>
+        <PageHeading title={t(asked ? "update.title" : "start.title")} />
+        {missing.length > 0 && (
+          <AlertBanner
+            type="error"
+            heading={t("fix.count", { count: missing.length })}
+          />
+        )}
         {asked ? (
-          <>
-            <PageHeading title={t("update.title")} />
-            <Request application={application} state={state} />
-          </>
+          <Request application={application} state={state} />
         ) : (
-          <PageHeading title={t("start.title")} intro={t("start.intro")} />
+          <p className="usa-intro margin-top-0">{t("start.intro")}</p>
         )}
         {error && (
           <AlertBanner type="error" heading={t("errors.heading")}>
@@ -259,6 +326,7 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
           <TextField
             id="residenceLine1"
             label={t("address:fields.address.address1Title")}
+            error={fix("residenceLine1")}
           />
           <TextField
             id="residenceLine2"
@@ -268,16 +336,19 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
           <TextField
             id="residenceCity"
             label={t("address:fields.address.cityTitle")}
+            error={fix("residenceCity")}
           />
           <SelectField
             id="residenceRegion"
             label={t("address:fields.address.stateTitle")}
             options={states.map((s) => [s.code, s.name])}
             required
+            error={fix("residenceRegion")}
           />
           <TextField
             id="residenceZip"
             label={t("address:fields.address.zipTitle")}
+            error={fix("residenceZip")}
           />
         </Fieldset>
         <h2>{t("start.sqlHeading")}</h2>
@@ -288,6 +359,7 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
             hint={t("start.stateHint")}
             options={live.map((s) => [s.code, s.name])}
             required
+            error={fix("sqlStateCode")}
           />
         ) : (
           <>
@@ -296,19 +368,27 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
           </>
         )}
         <h2>{t("start.licenseHeading")}</h2>
-        <TextField id="licenseNumber" label={t("start.licenseNumber")} />
-        <Fieldset legend={t("start.licenseExpires")} className="margin-top-3">
-          <DateFields id="licenseExpires" name="" />
-        </Fieldset>
+        <TextField
+          id="licenseNumber"
+          label={t("start.licenseNumber")}
+          error={fix("licenseNumber")}
+        />
+        <DateQuestion
+          id="licenseExpires"
+          legend={t("start.licenseExpires")}
+          error={fix("licenseExpires")}
+        />
         {fixedDateOfBirth ? (
           <Fixed
             label={t("start.dateOfBirth")}
             value={formatDate(String(profile.date_of_birth))}
           />
         ) : (
-          <Fieldset legend={t("start.dateOfBirth")} className="margin-top-3">
-            <DateFields id="dateOfBirth" name="" />
-          </Fieldset>
+          <DateQuestion
+            id="dateOfBirth"
+            legend={t("start.dateOfBirth")}
+            error={fix("dateOfBirth")}
+          />
         )}
         <h2>{t("start.detailsHeading")}</h2>
         {fixedOtherNames ? (
@@ -341,6 +421,7 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
               label={t("basic:fields.name.lastNameTitle")}
               optional
               showOptional={false}
+              error={fix("otherLastName")}
             />
             <TextField
               id="otherSuffix"
@@ -355,7 +436,7 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
             value={String(profile.nccpa_certification_number)}
           />
         ) : (
-          <TextField id="nccpa" label={t("start.nccpa")} />
+          <TextField id="nccpa" label={t("start.nccpa")} error={fix("nccpa")} />
         )}
         <Button type="submit" className="margin-top-4">
           {t("start.continue")}
