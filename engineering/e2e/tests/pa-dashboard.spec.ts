@@ -70,7 +70,7 @@ test.describe("A PA's dashboard", () => {
     await signIn(page, demoPa("bea.barred-until"));
 
     await expect(page.getByText(/You can't apply to join the PA Compact yet/)).toBeVisible();
-    await expect(page).toHaveURL("/");
+    await expect(page).toHaveURL("/dashboard");
     await expectAccessible(page);
   });
 

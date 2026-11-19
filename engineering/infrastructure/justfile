@@ -35,19 +35,39 @@ deploy env:
     just apply app {{ env }} -auto-approve -var image_tag="$sha" -var repo_name="$repo"
     out() { (cd {{ iac }}/components/app/opentofu && tofu output -raw "$1"); }
     # Every NEXT_PUBLIC_* value is set explicitly so a laptop's .env cannot leak into the build:
-    # the API is same-origin behind CloudFront, and Cognito is the real service (no endpoint, SRP).
+    # the API is same-origin behind CloudFront, Cognito is the real service (no endpoint, SRP), and
+    # the sign-in page has no list of seeded users (ADR-0020).
     (cd {{ justfile_directory() }}/../client \
         && pnpm install --frozen-lockfile \
         && NEXT_PUBLIC_BASE_PATH="" \
            NEXT_PUBLIC_API_BASE_URL="" \
            NEXT_PUBLIC_COGNITO_ENDPOINT_URL="" \
            NEXT_PUBLIC_COGNITO_AUTH_FLOW="" \
+           NEXT_PUBLIC_DEV_SIGN_IN_PASSWORD="" \
            NEXT_PUBLIC_COGNITO_REGION={{ region }} \
            NEXT_PUBLIC_COGNITO_USER_POOL_ID="$(out cognito_user_pool_id)" \
            NEXT_PUBLIC_COGNITO_CLIENT_ID="$(out cognito_client_id)" \
            pnpm build)
     aws s3 sync {{ justfile_directory() }}/../client/out/ "s3://$(out client_assets_bucket)/" --delete
     aws cloudfront create-invalidation --distribution-id "$(out cloudfront_distribution_id)" --paths "/*" >/dev/null
+
+# Pause an environment: keep its data and address, and run no database instance, tasks, or jobs (`resume` undoes it)
+pause env: (set-paused env "true")
+
+# Resume a paused environment on the image it was running; the database instance takes about ten minutes
+resume env: (set-paused env "false")
+
+# Write the environment's paused parameter, then apply app with the image already running.
+# The outputs read here exist once a deploy has applied this version of app.
+[private]
+set-paused env paused: (init "app" env)
+    #!/usr/bin/env bash
+    set -euo pipefail
+    out() { (cd {{ iac }}/components/app/opentofu && tofu output -raw "$1"); }
+    tag=$(out image_tag)
+    repo=$(out repo_name)
+    aws ssm put-parameter --overwrite --type String --name "$(out paused_parameter)" --value {{ paused }} >/dev/null
+    just apply app {{ env }} -auto-approve -var image_tag="$tag" -var repo_name="$repo"
 
 # Format every .tf file
 fmt:

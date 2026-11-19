@@ -5,15 +5,16 @@ name: E2E
 on:
   push:
     branches: [main]
+  # Every pull request, with no paths filter: the check is required on main, and a
+  # filtered-out run would never report it.
   pull_request:
-    paths: [engineering/**, .github/workflows/e2e.yml]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  smoke:
+  e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -57,16 +58,19 @@ jobs:
           nohup uv run uvicorn licensing_api.__main__:app --port 8000 --env-file .env > api.log 2>&1 &
           for i in $(seq 30); do curl -sf localhost:8000/api/health/ready && break; sleep 1; done
 
-      - name: Build and serve the client
+      # Playwright serves it, under the deployed Content-Security-Policy (serve-client.mts).
+      - name: Build the client
         working-directory: engineering/client
         env:
           PUPPETEER_SKIP_DOWNLOAD: "true" # only the a11y job needs pa11y's Chrome
+          # Empty, as `just deploy` leaves it: the tests run the client a deploy
+          # would build, with no list of seeded users on the sign-in page (ADR-0020).
+          NEXT_PUBLIC_DEV_SIGN_IN_PASSWORD: ""
         run: |
           cp .env.example .env.local
           pnpm install --frozen-lockfile
           pnpm build
-          nohup pnpm exec serve out -l 3000 > serve.log 2>&1 &
-          for i in $(seq 30); do curl -sf localhost:3000/login >/dev/null && break; sleep 1; done
+          scripts/check-deployed-build.sh
 
       - name: Install Playwright
         working-directory: engineering/e2e

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import {
   Button,
@@ -34,7 +34,7 @@ export const FOOTER_LINKS = {
 } as const;
 
 function isCurrent(href: string, pathname: string): boolean {
-  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+  return pathname.startsWith(href);
 }
 
 function displayName(user: CurrentUser): string {
@@ -51,8 +51,27 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const { signOut } = useAuth();
   const { user } = useCurrentUser();
   const pathname = usePathname();
+  const router = useRouter();
   const [expanded, setExpanded] = useState(false);
   const toggle = () => setExpanded((open) => !open);
+  const leaving = useRef(false);
+
+  // Signing out on a protected page would send the visitor to sign in, so the
+  // session ends only once they are at the front door.
+  const leave = () => {
+    if (pathname === "/") {
+      signOut();
+    } else {
+      leaving.current = true;
+      router.push("/");
+    }
+  };
+  useEffect(() => {
+    if (leaving.current && pathname === "/") {
+      leaving.current = false;
+      signOut();
+    }
+  }, [pathname, signOut]);
 
   const portal = user && portalFor(user.permissions);
   const name =
@@ -61,14 +80,22 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       : user && displayName(user);
 
   return (
-    <>
+    // A column as tall as the window, with the page taking the slack, keeps the
+    // footer at the bottom when the page is short.
+    <div className="display-flex flex-column minh-viewport">
       <a className="usa-skipnav" href="#main-content">
         {t("skipLink")}
       </a>
       <Header extended showMobileOverlay={expanded}>
         <div className="usa-navbar">
           <Title>
-            <Link href="/">{t("wordmark")}</Link>
+            <Link href="/" className="display-inline-flex flex-align-center">
+              <img
+                src="/img/pa-compact-logo.png"
+                alt={t("wordmark")}
+                className="height-5 width-auto display-block"
+              />
+            </Link>
           </Title>
           {user && <NavMenuButton onClick={toggle} label={t("menu")} />}
         </div>
@@ -91,14 +118,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             ))}
             secondaryItems={[
               <span key="name">{name}</span>,
-              <Button key="signOut" type="button" unstyled onClick={signOut}>
+              <Button key="signOut" type="button" unstyled onClick={leave}>
                 {t("signOut")}
               </Button>,
             ]}
           />
         )}
       </Header>
-      <main id="main-content">{children}</main>
+      <main id="main-content" className="flex-1">
+        {children}
+      </main>
       <Footer
         size="slim"
         returnToTop={
@@ -107,7 +136,28 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         }
         primary={null}
-        secondary={<p className="usa-footer__logo-heading">{t("wordmark")}</p>}
+        secondary={
+          <div className="grid-row grid-gap flex-align-center padding-y-2">
+            <div className="grid-col-12 tablet:grid-col-4 margin-bottom-2 tablet:margin-bottom-0">
+              <img
+                src="/img/pa-compact-logo-stacked.png"
+                alt={t("wordmark")}
+                className="height-8 width-auto display-block"
+              />
+            </div>
+            <div className="grid-col-12 tablet:grid-col-8">
+              <p className="margin-0 font-body-sm">
+                {t("footer.contactPrompt")}
+                <a
+                  className="usa-link"
+                  href={`mailto:${t("footer.contactEmail")}`}
+                >
+                  {t("footer.contactEmail")}
+                </a>
+              </p>
+            </div>
+          </div>
+        }
       />
       <Identifier>
         <IdentifierMasthead aria-label={t("identifier.label")}>
@@ -130,6 +180,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           ))}
         </IdentifierLinks>
       </Identifier>
-    </>
+    </div>
   );
 }

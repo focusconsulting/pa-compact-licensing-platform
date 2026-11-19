@@ -112,7 +112,7 @@ function defaults({ application, profile, upload }: Loaded): StartValues {
   };
 }
 
-/** A detail shown, not editable: the NCCPA number the state verified, or the state of an application it has. */
+/** A detail the state verified: shown, not editable (PR1). */
 function Fixed({ label, value }: { label: string; value: string }) {
   return (
     <div className="margin-top-3">
@@ -180,8 +180,15 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
   const { application, profile, states } = loaded;
   const live = states.filter((s) => s.is_live);
   const draft = !application || application.status === "draft";
+  const verified = new Set(profile.verified_fields);
+  // A verified field that is still empty stays the PA's to fill in, as the API allows.
+  const fixedDateOfBirth =
+    verified.has("date_of_birth") && profile.date_of_birth != null;
+  const fixedNccpa =
+    verified.has("nccpa_certification_number") &&
+    profile.nccpa_certification_number != null;
+  const fixedOtherNames = verified.has("other_names");
   const asked = application?.status === "info_requested";
-  const fixed = new Set(profile.verified_fields);
   const reply = form.register("responseNote");
   const [missing, setMissing] = useState<Fixable[]>([]);
   const fix = (field: Fixable) =>
@@ -210,16 +217,18 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
           postal_code: blankToNull(values.residenceZip),
           country_code: "US",
         },
-        date_of_birth: values.dateOfBirth,
-        ...(fixed.has("nccpa_certification_number")
+        ...(fixedDateOfBirth ? {} : { date_of_birth: values.dateOfBirth }),
+        ...(fixedNccpa ? {} : { nccpa_certification_number: values.nccpa }),
+        ...(fixedOtherNames
           ? {}
-          : { nccpa_certification_number: values.nccpa }),
-        other_names: [
-          ...(other.last_name
-            ? [{ ...other, last_name: other.last_name }]
-            : []),
-          ...profile.other_names.slice(1),
-        ],
+          : {
+              other_names: [
+                ...(other.last_name
+                  ? [{ ...other, last_name: other.last_name }]
+                  : []),
+                ...profile.other_names.slice(1),
+              ],
+            }),
       });
       const current =
         application ?? (await startApplication(values.sqlStateCode as string));
@@ -244,7 +253,8 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
     const asks = REQUIRED.filter(
       (field) =>
         (field !== "sqlStateCode" || draft) &&
-        (field !== "nccpa" || !fixed.has("nccpa_certification_number")),
+        (field !== "dateOfBirth" || !fixedDateOfBirth) &&
+        (field !== "nccpa" || !fixedNccpa),
     );
     const found: Fixable[] = asks.filter(
       (field) => !String(values[field] ?? "").trim(),
@@ -254,7 +264,9 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
       values.otherMiddleName,
       values.otherSuffix,
     ].some((part) => part.trim());
-    if (otherName && !values.otherLastName.trim()) found.push("otherLastName");
+    if (!fixedOtherNames && otherName && !values.otherLastName.trim()) {
+      found.push("otherLastName");
+    }
     setMissing(found);
     if (found.length === 0) void save(values);
   };
@@ -366,37 +378,59 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
           legend={t("start.licenseExpires")}
           error={fix("licenseExpires")}
         />
-        <DateQuestion
-          id="dateOfBirth"
-          legend={t("start.dateOfBirth")}
-          error={fix("dateOfBirth")}
-        />
+        {fixedDateOfBirth ? (
+          <Fixed
+            label={t("start.dateOfBirth")}
+            value={formatDate(String(profile.date_of_birth))}
+          />
+        ) : (
+          <DateQuestion
+            id="dateOfBirth"
+            legend={t("start.dateOfBirth")}
+            error={fix("dateOfBirth")}
+          />
+        )}
         <h2>{t("start.detailsHeading")}</h2>
-        <Fieldset legend={t("start.otherNames")}>
-          <TextField
-            id="otherFirstName"
-            label={t("basic:fields.name.firstNameTitle")}
-            optional
-          />
-          <TextField
-            id="otherMiddleName"
-            label={t("basic:fields.name.middleNameTitle")}
-            optional
-          />
-          <TextField
-            id="otherLastName"
-            label={t("basic:fields.name.lastNameTitle")}
-            optional
-            showOptional={false}
-            error={fix("otherLastName")}
-          />
-          <TextField
-            id="otherSuffix"
-            label={t("basic:fields.name.suffixTitle")}
-            optional
-          />
-        </Fieldset>
-        {fixed.has("nccpa_certification_number") ? (
+        {fixedOtherNames ? (
+          profile.other_names.length > 0 && (
+            <Fixed
+              label={t("start.otherNames")}
+              value={profile.other_names
+                .map((n) =>
+                  [n.first_name, n.middle_name, n.last_name, n.name_suffix]
+                    .filter(Boolean)
+                    .join(" "),
+                )
+                .join(", ")}
+            />
+          )
+        ) : (
+          <Fieldset legend={t("start.otherNames")}>
+            <TextField
+              id="otherFirstName"
+              label={t("basic:fields.name.firstNameTitle")}
+              optional
+            />
+            <TextField
+              id="otherMiddleName"
+              label={t("basic:fields.name.middleNameTitle")}
+              optional
+            />
+            <TextField
+              id="otherLastName"
+              label={t("basic:fields.name.lastNameTitle")}
+              optional
+              showOptional={false}
+              error={fix("otherLastName")}
+            />
+            <TextField
+              id="otherSuffix"
+              label={t("basic:fields.name.suffixTitle")}
+              optional
+            />
+          </Fieldset>
+        )}
+        {fixedNccpa ? (
           <Fixed
             label={t("start.nccpa")}
             value={String(profile.nccpa_certification_number)}
@@ -460,7 +494,7 @@ function StartPage() {
     Promise.all([loadApplications(), loadProfile(), loadStates()])
       .then(async ([applications, profile, states]) => {
         if (applications.some((a) => a.status === "eligible")) {
-          router.replace("/");
+          router.replace("/dashboard");
           return;
         }
         const application = openApplication(applications);
