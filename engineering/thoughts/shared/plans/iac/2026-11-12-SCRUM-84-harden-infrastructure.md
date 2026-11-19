@@ -20,7 +20,7 @@ Put the security controls the contract and the constitution require around the r
   - Checkov is report-only until this ticket, which is named as the owner of its findings in `scan-iac`, `SECURITY.md`, and the register.
   - ZAP's two mediums (10038, 10020) are ignored until this ticket.
   - Accepted findings live in `engineering/docs/security/false-positives.md`, one row each, with a reason and an end date.
-- Jira: SCRUM-84, under SCRUM-69. Blocks SCRUM-139 and SCRUM-143. Follow-ups: SCRUM-192 (one certificate on every hop), SCRUM-193 (SES API).
+- Jira: SCRUM-84, under SCRUM-69. Blocks SCRUM-139 and SCRUM-143. Follow-ups: SCRUM-192 (one certificate on every hop), SCRUM-193 (SES API), SCRUM-194 (a USWDS not-found page).
 - ADRs: [ADR-0015](../../../../adrs/0015-opentofu-for-infrastructure.md), [ADR-0014](../../../../adrs/0014-email-templates-and-smtp.md), [ADR-0018](../../../../adrs/0018-pyjwt-for-cognito-token-verification.md); a new ADR in Phase 1
 - **Area**: iac, with a small API change (Phase 1) and CI and docs (Phase 6)
 
@@ -243,12 +243,14 @@ One CloudFront response headers policy on every behavior. Clears CKV2_AWS_32 and
 ```text
 default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self';
 img-src 'self' data:; font-src 'self';
-connect-src 'self' https://cognito-idp.<region>.amazonaws.com https://<documents bucket>.s3.<region>.amazonaws.com;
-form-action 'self' https://<documents bucket>.s3.<region>.amazonaws.com;
+connect-src 'self' https://cognito-idp.<region>.amazonaws.com <documents bucket hosts>;
+form-action 'self' <documents bucket hosts>;
 frame-ancestors 'none'; base-uri 'self'; object-src 'none'
 ```
 
-The bucket host is built from the same name PR #173 uses (`${env}-licensing-documents`), so this phase does not wait for it. A comment on `script-src` says why `'unsafe-inline'` is there.
+The documents bucket has two hosts in the policy: `<bucket>.s3.amazonaws.com` and `<bucket>.s3.<region>.amazonaws.com`. Found while implementing: boto3 signs presigned links for the global host in `us-east-1` and the regional host everywhere else, so naming only the regional one, as first planned, would have blocked every upload in staging. The client posts uploads with `fetch`, which `connect-src` governs. A comment on `script-src` says why `'unsafe-inline'` is there.
+
+Tested on 2026-11-12 by serving a build of the client behind this exact policy and loading it in headless Chromium: `/` and `/login` log no violation. Next's built-in not-found page does: it styles itself with an inline `<style>` element and `style` attributes, which `style-src 'self'` drops, so it shows its text unstyled. That page is replaced by a USWDS one in SCRUM-194; `style-src` stays `'self'`.
 
 **File**: `engineering/infrastructure/iac/components/app/opentofu/cdn.tf`
 **Changes**: `response_headers_policy_id` on the default behavior and all four ordered behaviors.
@@ -256,7 +258,7 @@ The bucket host is built from the same name PR #173 uses (`${env}-licensing-docu
 #### 2. ZAP
 
 **File**: `.zap/rules.tsv`, `engineering/docs/security/false-positives.md` (from PR #181)
-**Changes**:
+**Changes**: not in this phase's PR. PR #181 was not on `main` when it was written, so these files did not exist; by the rule under Implementation Approach, the edit goes into #181 before it merges, or into Phase 6.
 
 - Remove the 10038 and 10020 ignores and their rows.
 - Add 10055, accepted permanently: `script-src 'unsafe-inline'`, because a static export has no server to issue nonces and hashing at deploy was declined on 2026-11-12. The gate ignores by plugin, and 10055 is every CSP-quality alert, so the row says the ignore would also hide a wildcard directive and that the policy in `headers.tf` is the thing to review.
@@ -266,8 +268,10 @@ The bucket host is built from the same name PR #173 uses (`${env}-licensing-docu
 
 #### Automated Verification
 
-- [ ] `cd engineering/infrastructure && just check`
-- [ ] The CI plan shows one policy added and the distribution updated in place
+- [x] `cd engineering/infrastructure && just check`
+- [x] The plan shows one policy added and the distribution updated in place (run locally against staging, 2026-11-12; CI repeats it)
+- [x] Checkov no longer reports CKV2_AWS_32
+- [x] A build of the client behind the policy logs no violation on `/` or `/login` in headless Chromium
 - [ ] On a deployed staging, `curl -sI https://site.dev-pacompact.aws.focusconsulting.io/` shows all eight headers and no `Server`
 - [ ] With staging up, a manual run of `zap.yml` passes with the two ignores removed (needs #181 on `main`)
 
@@ -277,7 +281,7 @@ The bucket host is built from the same name PR #173 uses (`${env}-licensing-docu
 - [ ] With the browser console open: sign in, load each persona's pages, and upload and download a document (once SCRUM-81 is deployed). No CSP violation is logged
 - [ ] The Playwright suite passes against staging
 
-**Implementation Note**: if `style-src 'self'` logs a violation from USWDS, add `'unsafe-inline'` to `style-src` only, and add its ZAP row to the register in the same PR. Pause for confirmation before Phase 3.
+**Implementation Note**: if `style-src 'self'` logs a violation from USWDS on a deployed staging, add `'unsafe-inline'` to `style-src` only, and add its ZAP row to the register. The not-found page's violations are expected until SCRUM-194. Pause for confirmation before Phase 3.
 
 ---
 
@@ -296,12 +300,14 @@ A CloudFront web ACL and a regional one on the Cognito user pool, both logging. 
 
 | Web ACL | Scope | Rules, in order |
 |---|---|---|
-| `cloudfront` (provider `aws.us_east_1`) | `CLOUDFRONT` | Rate: 300 per 5 minutes per IP on `/api/public/`. Rate: 2,000 per 5 minutes per IP on `/api/`. Managed: `AmazonIpReputationList`, `CommonRuleSet`, `KnownBadInputsRuleSet`, `SQLiRuleSet` |
-| `cognito` | `REGIONAL` | Rate: 200 per 5 minutes per IP. Managed: `AmazonIpReputationList`, `KnownBadInputsRuleSet` |
+| `cloudfront` (provider `aws.us_east_1`) | `CLOUDFRONT` | Rate: 300 per 5 minutes per IP on `/api/public/`. Rate: 2,000 per 5 minutes per IP on `/api/`. Managed: `AmazonIpReputationList`, `CommonRuleSet`, `SQLiRuleSet`, `KnownBadInputsRuleSet`. `CommonRuleSet`'s `SizeRestrictions_BODY` counts instead of blocking |
+| `cognito` | `REGIONAL` | Rate: 200 per 5 minutes per IP. No managed groups (decided 2026-11-13): Cognito validates its own requests, so `CKV_AWS_192` is skipped inline on this ACL and needs a register row in Phase 6 |
 
+- `AnonymousIpList` is not attached (decided 2026-11-13, Michael Kalish). Checkov's CKV2_AWS_47 requires it by name beside `KnownBadInputsRuleSet`, but it matches VPNs, proxies, Tor, and hosting providers: a PA on a consumer VPN, a state office behind a cloud-hosted gateway, and the ZAP scan's GitHub runner. CKV2_AWS_47 is skipped inline on the distribution with that reason and needs a register row in Phase 6. `KnownBadInputsRuleSet` is written out as a rule, not generated, because Checkov cannot see inside a dynamic block.
+- `SizeRestrictions_BODY` in `CommonRuleSet` blocks any body over 8 KB, which is too low for the API, so it is overridden to count (decided 2026-11-13). No firewall rule caps body size now.
 - Default action allow. Rate limits are `locals`, with a comment that SCRUM-139 tunes the public one against the verification page.
 - `aws_wafv2_web_acl_association` to `aws_cognito_user_pool.main`; `web_acl_id` on the distribution.
-- One `aws-waf-logs-*` log group per ACL (the CloudFront one in `us-east-1`), 365 days, with `redacted_fields` for the `authorization` and `cookie` headers.
+- One `aws-waf-logs-*` log group per ACL (the CloudFront one in `us-east-1`), 365 days, with `redacted_fields` for the `authorization` and `cookie` headers, and a log resource policy each that lets WAF's log delivery write to it. The two log groups add CKV_AWS_158 (no KMS key) until Phase 4.
 - An alarm per ACL on its rate rules' `BlockedRequests` (100 in 5 minutes) to `aws_sns_topic.api_alerts`. CloudFront's metrics exist only in `us-east-1`, so that alarm is created only when the environment's region is `us-east-1`; the comment says so.
 
 **File**: `engineering/infrastructure/iac/components/app/opentofu/cdn.tf`
@@ -311,9 +317,9 @@ A CloudFront web ACL and a regional one on the Cognito user pool, both logging. 
 
 #### Automated Verification
 
-- [ ] `cd engineering/infrastructure && just check`
-- [ ] The CI plan adds two ACLs, one association, two log groups, and the alarms, and updates the distribution in place
-- [ ] Checkov reports no `CKV_AWS_68`, `CKV2_AWS_47`, `CKV_AWS_192`, or `CKV2_AWS_31`
+- [x] `cd engineering/infrastructure && just check`
+- [x] The plan adds two ACLs, one association, two log groups with their resource policies and logging configurations, and three alarms, and updates the distribution in place (run locally against staging, 2026-11-12; CI repeats it)
+- [x] Checkov reports no `CKV_AWS_68` or `CKV2_AWS_31`, and `CKV2_AWS_47` and `CKV_AWS_192` (Cognito ACL) only as skipped
 
 #### Manual Verification
 
@@ -339,13 +345,15 @@ One customer-managed key per environment for the database, secrets, logs, and al
 **File**: `engineering/infrastructure/iac/components/app/opentofu/kms.tf` (new)
 **Changes**: `aws_kms_key.data` with rotation and an alias. Its policy lets the account administer it and delegate through IAM, lets CloudWatch Logs use it for this environment's log groups (conditioned on the encryption context), and lets CloudWatch alarms publish to the encrypted topic. The documents bucket keeps its own key from PR #173.
 
+Found while implementing: staging's cluster is encrypted today with the account's AWS-managed `aws/rds` key, not unencrypted; moving to the environment's key still replaces it. The Postgres log group is created here, encrypted with 365-day retention, before the cluster exports to it: RDS would otherwise create it unencrypted and keep it forever. The three query-logging parameters are written out in the parameter group, not in the `locals` map with the rest, because Checkov cannot see inside a dynamic block.
+
 #### 2. What uses it
 
 **File**: `rds.tf`, `secrets.tf`, `ses.tf`, `ecs.tf`, `worker.tf`, `alerting.tf`, `scheduler.tf`, `waf.tf`
 **Changes**:
 
 - The three secrets: `kms_key_id`. The execution role gains `kms:Decrypt` on the key.
-- The four ECS log groups and the regional WAF log group: `kms_key_id`, `retention_in_days = 365`.
+- The four ECS log groups and the Cognito web ACL's log group: `kms_key_id`, `retention_in_days = 365`. The CloudFront web ACL's log group is in `us-east-1` whatever the environment's region, and a log group can use only a key from its own region: it uses `aws_kms_key.data` when the environment is in `us-east-1`, and otherwise is skipped for CKV_AWS_158 with that reason (it holds request metadata, with session headers redacted).
 - `aws_sns_topic.api_alerts`: `kms_master_key_id`.
 - `aws_ssm_parameter.adot_config`: `SecureString` with `key_id`.
 - `aws_scheduler_schedule.job`: `kms_key_arn`; the scheduler role gains `kms:Decrypt`.
@@ -368,7 +376,7 @@ enabled_cloudwatch_logs_exports = ["postgresql"]
 The instance gets `auto_minor_version_upgrade = true`, Performance Insights with the key, and enhanced monitoring at 60 seconds with its role.
 
 **File**: `engineering/infrastructure/iac/components/app/opentofu/main.tf`
-**Changes**: `log_statement = "ddl"`, `log_min_duration_statement = 1000`, and `log_parameter_max_length = 0`, so a logged slow statement never carries bound values, which may be PII.
+**Changes**: `log_statement` leaves the `locals` map; it, `log_min_duration_statement = 1000`, and `log_parameter_max_length = 0` are set in `rds.tf`, so a logged slow statement never carries bound values, which may be PII.
 
 **File**: `variables.tf`, `environments/staging/us-east-1/app.tfvars`, `iac/README.md`
 **Changes**: `backup_retention_period` loses its default and is validated to 7 through 35; staging sets 7. The README table follows, and says prod sets 35.
@@ -376,16 +384,16 @@ The instance gets `auto_minor_version_upgrade = true`, Performance Insights with
 #### 4. Documentation
 
 **File**: `engineering/docs/security/infrastructure.md` (new)
-**Changes**: what the key encrypts, and what `deletion_protection` guards and how an environment that has it on is retired (turn it off in a reviewed PR, apply, then destroy).
+**Changes**: what the key encrypts, what the database logs and keeps, and what `deletion_protection` guards and how an environment that has it on is retired (turn it off in a reviewed PR, apply, then destroy).
 
 ### Success Criteria
 
 #### Automated Verification
 
-- [ ] `cd engineering/infrastructure && just check`
-- [ ] The CI plan succeeds; against a running staging it replaces the cluster and its instance and changes everything else in place
-- [ ] Checkov no longer reports the IDs in the overview
-- [ ] `pre-commit run --files engineering/docs/security/infrastructure.md`
+- [x] `cd engineering/infrastructure && just check`
+- [x] The plan succeeds; against a running staging it replaces the cluster and its instance and changes everything else in place (run locally, 2026-11-12; CI repeats it)
+- [x] Checkov no longer reports the IDs in the overview: 28 OpenTofu findings remain, from 52
+- [x] `pre-commit run --files engineering/docs/security/infrastructure.md`
 
 #### Manual Verification
 
@@ -421,23 +429,27 @@ Access logs, CloudTrail, bucket lifecycles, a narrower task role, and read-only 
 **Changes**: `aws_cloudtrail.account`: multi-region, global service events, log file validation, encrypted with `aws_kms_key.data` (the key policy gains CloudTrail's statement), delivered to the logs bucket and a CloudWatch log group. A data event selector records reads and writes of the documents bucket, so access to uploaded documents is audited outside the application too (Rule 4 §4.5).
 
 **File**: `variables.tf`, `app.tfvars`, `iac/README.md`
-**Changes**: `cloudtrail_management_events` (bool, required). Before this PR, run `aws cloudtrail describe-trails --profile dev-pacompact`: staging sets `false` if a Focus organization trail already records the account's management events, `true` otherwise. The README row says how to decide.
+**Changes**: `cloudtrail_management_events` (bool, required). Checked on 2026-11-12: the staging account has a Focus baseline trail, `focus-baseline-dev-pacompact`, which is not an organization trail. It records management writes only, in `us-east-1` only, to a central Focus bucket. Staging sets `false`, so its own trail adds document reads and writes without paying for a second copy of management events. What the baseline trail leaves out (reads, other regions) is written down in `engineering/docs/security/infrastructure.md` for whoever sets this for `prod`.
 
 #### 3. Least privilege
 
 **File**: `engineering/infrastructure/iac/components/app/opentofu/ecs.tf`
-**Changes**: in `ecs_task_otel`, log writes are scoped to the metrics log group and `cloudwatch:PutMetricData` is conditioned on the ADOT namespace. X-Ray's actions take no resource and keep `*`.
+**Changes**: in `ecs_task_otel`, log writes are scoped to the metrics log group. `cloudwatch:PutMetricData` is removed, not conditioned: the collector writes metrics as embedded-metric-format log events, and nothing calls it. X-Ray's actions take no resource and keep `*`.
 
 **File**: `ecs.tf`, `worker.tf`
-**Changes**: `readonlyRootFilesystem = true` on the API, Worker, jobs, and ADOT containers, with a task-scoped volume mounted at `/tmp` for the API's certificate.
+**Changes**: `readonlyRootFilesystem = true` on the API, Worker, jobs, and ADOT containers, and `TMPDIR=/dev/shm` on ours. There is no volume: a Fargate volume is owned by root, and the containers run as an unprivileged user. `licensing_api/serve.py` moves the certificate to `/dev/shm/licensing-api-tls/` (so the private key never reaches a disk), sends gunicorn's heartbeat files there too, and turns off gunicorn's control socket, which wanted a writable home directory.
+
+Tested on 2026-11-12 with `docker run --read-only`: the API becomes ready and passes its health check, a job runs, the Worker runs, and the ADOT collector starts, none logging an error. Fargate also provides `/dev/shm`; the staging deploy is what confirms it there.
 
 ### Success Criteria
 
 #### Automated Verification
 
-- [ ] `cd engineering/infrastructure && just check`
-- [ ] The CI plan succeeds; against a running staging it adds the bucket, trail, and log group, and replaces nothing
-- [ ] Checkov no longer reports the IDs in the overview
+- [x] `cd engineering/infrastructure && just check`
+- [x] The plan succeeds; against a running staging it adds the bucket, trail, and log group, and replaces nothing beyond what earlier phases replace (run locally, 2026-11-12; CI repeats it)
+- [x] Checkov no longer reports the IDs in the overview: 21 OpenTofu findings remain, all of them Phase 6's
+- [x] `cd engineering/api && just check`: 462 tests at 100%
+- [x] The API, a job, the Worker, and the ADOT collector run under `docker run --read-only`
 
 #### Manual Verification
 
@@ -446,7 +458,7 @@ Access logs, CloudTrail, bucket lifecycles, a narrower task role, and read-only 
 - [ ] Downloading a document produces a `GetObject` data event in the trail
 - [ ] `aws cloudtrail validate-logs` passes for the trail
 
-**Implementation Note**: if the ADOT image cannot run read-only, drop the flag from that one container, skip `CKV_AWS_336` on its task definition with the reason, and add the register row. Pause for confirmation before Phase 6.
+**Implementation Note**: if a container cannot write to `/dev/shm` on Fargate, give that task a volume and say so in the PR. Pause for confirmation before Phase 6.
 
 ---
 
@@ -488,6 +500,9 @@ The remaining findings are fixed or skipped with reasons, Checkov gates pull req
 | CKV_AWS_136 KMS on ECR | repository | The image is built from this public repository and holds no data; AES-256 at rest. |
 | CKV_AWS_145 KMS on S3 | client and logs buckets | The client bucket holds the public site and its origin access identity cannot read SSE-KMS; load balancer logs accept only SSE-S3. |
 | CKV_AWS_18 access logging | logs bucket | It is the log destination. |
+| CKV2_AWS_65 ACLs disabled | logs bucket | CloudFront delivers its access logs by ACL grant; every other bucket has ACLs off. Found in Phase 5. |
+| CKV_AWS_252 SNS topic | trail | It would notify on every log file delivered, and nothing consumes that. Found in Phase 5. |
+| CKV_AWS_259 HSTS preload | response headers policy | The check wants `preload`. It asks browser vendors to hard-code the domain as HTTPS-only, which is slow to undo and is the Commission's call for its production domain; `max-age` and `includeSubDomains` are set. Found in Phase 4. |
 
 Any check that Checkov still reports after these, and that this plan did not foresee, is fixed if it has a fix and otherwise added to this table in the PR.
 
@@ -557,6 +572,36 @@ If Stephen makes these changes in #181 before it merges, drop them here.
 - [ ] securityheaders.com still grades A
 
 ---
+
+## Phase 7: The policy runs in the end-to-end tests
+
+Added on 2026-11-14 from review of Phase 2: the policy was enforced only at CloudFront, so a page that broke it was first seen on a deployed environment. Its PR is stacked on Phase 5's, ahead of Phase 6's.
+
+### Changes Required
+
+#### 1. One list of directives
+
+**File**: `engineering/infrastructure/iac/components/app/opentofu/content-security-policy.json` (new), `headers.tf`
+**Changes**: the sources every environment shares move to the JSON file. `headers.tf` reads it and adds Cognito and the documents bucket to `connect-src` and `form-action`. The header's directives come out in alphabetical order, so the plan shows the policy changed in place; its meaning is the same.
+
+#### 2. The end-to-end tests serve the client under it
+
+**File**: `engineering/e2e/serve-client.mts` (new), `playwright.config.ts`, `tests/fixtures.ts`
+**Changes**: Playwright starts `serve` on the client's static export on port 3200, sending the same directives with `http://localhost:*` added to `connect-src` and `form-action` for the API, the Cognito mock, and RustFS. The `page` fixture fails a test on any `securitypolicyviolation` event, and on a page that arrives with no policy, so the tests cannot pass against `next dev`, which sends none.
+
+**File**: `justfile`, `.github/workflows/e2e.yml`, `engineering/api/.env.example`
+**Changes**: `just e2e` builds the client first; CI builds it and leaves serving to Playwright; `CORS_ORIGINS` adds `http://localhost:3200`.
+
+### Success Criteria
+
+#### Automated Verification
+
+- [x] `cd engineering/infrastructure && just check`
+- [x] `just e2e` passes with `just up` running
+- [x] With `'unsafe-inline'` taken out of `script-src`, the tests fail and name the directive; against a server that sends no policy, they fail and name the page
+- [ ] The `E2E` workflow passes on the PR
+
+What this does not cover: the AWS origins in `connect-src` and `form-action`, which only a deployed environment exercises. Phase 2's check against staging stays.
 
 ## Testing Strategy
 

@@ -20,6 +20,14 @@ describe("SelectField component", () => {
     expect(field).toHaveAttribute("id", "some-id");
   });
 
+  it("describes the select with its hint", () => {
+    renderWithForm(<SelectField id="state" label="State" hint="Choose one" />);
+
+    expect(
+      screen.getByRole("combobox", { name: "State" }),
+    ).toHaveAccessibleDescription("Choose one");
+  });
+
   it("is optional by default with enabled placeholder", () => {
     renderWithForm(<SelectField id="some-id" label="some-name" />);
     expect(

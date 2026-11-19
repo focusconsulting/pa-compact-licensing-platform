@@ -13,9 +13,12 @@ export interface PrivilegeCardProps {
   status: StatusByKind["privilege"];
   /** ISO dates. */
   activeFrom: string;
-  expires: string;
+  /** Absent on public verification unless the privilege is active (FLOW-08); an expired one then says only "Expired". */
+  expires?: string | null;
   /** Staff see the computed status; defaults to the public pill. */
   view?: StatusView;
+  /** Off on public verification, which says no more than "Inactive" about an inactive privilege (FLOW-08). */
+  inactiveQualifier?: boolean;
   discipline?: string;
   detailsHref?: string;
   actions?: ReactNode;
@@ -33,22 +36,24 @@ export default function PrivilegeCard({
   activeFrom,
   expires,
   view,
+  inactiveQualifier = true,
   discipline,
   detailsHref,
   actions,
   headingLevel = "h3",
 }: PrivilegeCardProps) {
   const { t } = useTranslation(["common", "status"]);
-  const qualifier =
-    status === "encumbered" ? null : (
-      <span
-        className={`margin-left-1 ${status === "expired" ? "text-error-dark" : ""}`}
-      >
-        {t(`status:privilegeQualifier.${status}`, {
-          date: formatDate(expires),
-        })}
-      </span>
-    );
+  function privilegeQualifier(): string | null {
+    if (status === "encumbered") return null;
+    if (status === "inactive")
+      return inactiveQualifier ? t("status:privilegeQualifier.inactive") : null;
+    if (expires)
+      return t(`status:privilegeQualifier.${status}`, {
+        date: formatDate(expires),
+      });
+    return status === "expired" ? t("status:privilege.expired") : null;
+  }
+  const qualifier = privilegeQualifier();
   return (
     <RecordCard
       heading={state}
@@ -56,7 +61,13 @@ export default function PrivilegeCard({
       status={
         <>
           <StatusTag kind="privilege" status={status} view={view} />
-          {qualifier}
+          {qualifier && (
+            <span
+              className={`margin-left-1 ${status === "expired" ? "text-error-dark" : ""}`}
+            >
+              {qualifier}
+            </span>
+          )}
         </>
       }
       fields={[

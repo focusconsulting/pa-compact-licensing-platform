@@ -11,6 +11,27 @@ resource "aws_cloudfront_function" "block_403" {
   EOF
 }
 
+# The static export writes /verify as verify.html, and S3 has no key named "verify":
+# without this, every page but / answers 403 when loaded directly or reloaded.
+resource "aws_cloudfront_function" "page_html" {
+  name    = "${var.environment_name}-${local.application_name}-page-html"
+  runtime = "cloudfront-js-2.0"
+  publish = true
+  code    = <<-EOF
+    ${local.site_access_js}
+    function handler(event) {
+      ${local.site_access_page_guard}
+      var request = event.request;
+      var uri = request.uri.replace(/\/+$/, "");
+      // "/" is left to the default root object, and a file keeps its own name.
+      if (uri !== "" && uri.split("/").pop().indexOf(".") === -1) {
+        request.uri = uri + ".html";
+      }
+      return request;
+    }
+  EOF
+}
+
 locals {
   alb_origin_endpoint = {
     http_port              = 80
@@ -80,6 +101,39 @@ resource "aws_s3_bucket_public_access_block" "client_assets" {
   restrict_public_buckets = true
 }
 
+# A deploy replaces every file (`aws s3 sync --delete`); the previous deploy's versions
+# are kept for 30 days, then expire.
+resource "aws_s3_bucket_versioning" "client_assets" {
+  bucket = aws_s3_bucket.client_assets.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "client_assets" {
+  bucket = aws_s3_bucket.client_assets.id
+
+  rule {
+    id     = "expire-previous-deploys"
+    status = "Enabled"
+    filter {}
+
+    noncurrent_version_expiration {
+      noncurrent_days = 30
+    }
+
+    expiration {
+      expired_object_delete_marker = true
+    }
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+
+  depends_on = [aws_s3_bucket_versioning.client_assets]
+}
+
 resource "aws_cloudfront_origin_access_identity" "frontend_oai" {
   comment = "OAI for accessing S3 bucket for client assets"
 }
@@ -107,6 +161,7 @@ resource "aws_s3_bucket_policy" "client_assets_policy" {
 # - Default origin: S3 (Next.js static export)
 # - /api/* origin: internal ALB (Python FastAPI)
 resource "aws_cloudfront_distribution" "frontend_distribution" {
+  #checkov:skip=CKV2_AWS_47:The web ACL has the known-bad-inputs group, which covers Log4j. The check also wants the anonymous IP list, which matches the VPNs and hosted gateways real users arrive through.
   # S3 origin for static frontend assets
   origin {
     domain_name = aws_s3_bucket.client_assets.bucket_regional_domain_name
@@ -133,14 +188,21 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
 
   enabled             = true
   default_root_object = "index.html"
-  aliases             = [var.dns_name]
+  web_acl_id          = aws_wafv2_web_acl.cloudfront.arn
+
+  logging_config {
+    bucket = aws_s3_bucket.logs.bucket_domain_name
+    prefix = "cloudfront/"
+  }
+  aliases = [var.dns_name]
 
   # Default cache behavior — serves the Next.js frontend from S3
   default_cache_behavior {
-    target_origin_id       = "S3-Origin"
-    viewer_protocol_policy = "redirect-to-https"
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
+    target_origin_id           = "S3-Origin"
+    viewer_protocol_policy     = "redirect-to-https"
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security["client"].id
+    allowed_methods            = ["GET", "HEAD"]
+    cached_methods             = ["GET", "HEAD"]
 
     forwarded_values {
       query_string = false
@@ -148,16 +210,30 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
         forward = "none"
       }
     }
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.page_html.arn
+    }
+
+    dynamic "function_association" {
+      for_each = aws_cloudfront_function.site_access_cookie
+      content {
+        event_type   = "viewer-response"
+        function_arn = function_association.value.arn
+      }
+    }
   }
 
   # Block Swagger/OpenAPI docs at the CDN edge — 403 returned before origin is contacted.
   # Matches /api/docs*, /api/redoc*, /api/openapi.json as forwarded by CloudFront.
   ordered_cache_behavior {
-    path_pattern           = "/api/docs*"
-    target_origin_id       = "ALB-Origin"
-    viewer_protocol_policy = "redirect-to-https"
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
+    path_pattern               = "/api/docs*"
+    target_origin_id           = "ALB-Origin"
+    viewer_protocol_policy     = "redirect-to-https"
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security["api"].id
+    allowed_methods            = ["GET", "HEAD"]
+    cached_methods             = ["GET", "HEAD"]
 
     forwarded_values {
       query_string = false
@@ -171,11 +247,12 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
   }
 
   ordered_cache_behavior {
-    path_pattern           = "/api/redoc*"
-    target_origin_id       = "ALB-Origin"
-    viewer_protocol_policy = "redirect-to-https"
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
+    path_pattern               = "/api/redoc*"
+    target_origin_id           = "ALB-Origin"
+    viewer_protocol_policy     = "redirect-to-https"
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security["api"].id
+    allowed_methods            = ["GET", "HEAD"]
+    cached_methods             = ["GET", "HEAD"]
 
     forwarded_values {
       query_string = false
@@ -189,11 +266,12 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
   }
 
   ordered_cache_behavior {
-    path_pattern           = "/api/openapi.json"
-    target_origin_id       = "ALB-Origin"
-    viewer_protocol_policy = "redirect-to-https"
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
+    path_pattern               = "/api/openapi.json"
+    target_origin_id           = "ALB-Origin"
+    viewer_protocol_policy     = "redirect-to-https"
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security["api"].id
+    allowed_methods            = ["GET", "HEAD"]
+    cached_methods             = ["GET", "HEAD"]
 
     forwarded_values {
       query_string = false
@@ -208,17 +286,26 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
 
   # API cache behavior — forwards all requests to the internal ALB uncached
   ordered_cache_behavior {
-    path_pattern           = "/api/*"
-    target_origin_id       = "ALB-Origin"
-    viewer_protocol_policy = "redirect-to-https"
-    allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
-    cached_methods         = ["GET", "HEAD"]
+    path_pattern               = "/api/*"
+    target_origin_id           = "ALB-Origin"
+    viewer_protocol_policy     = "redirect-to-https"
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security["api"].id
+    allowed_methods            = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods             = ["GET", "HEAD"]
 
     cache_policy_id = data.aws_cloudfront_cache_policy.caching_disabled.id
     # Forwards the viewer's Host header, which is what makes the load balancer's
     # certificate (for dns_name) match: CloudFront checks an origin's certificate
     # against the origin domain or the forwarded Host.
     origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer.id
+
+    dynamic "function_association" {
+      for_each = aws_cloudfront_function.site_access_api
+      content {
+        event_type   = "viewer-request"
+        function_arn = function_association.value.arn
+      }
+    }
   }
 
   # Return index.html for 404s so Next.js client-side routing works on direct URL navigation
