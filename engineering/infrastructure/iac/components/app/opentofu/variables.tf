@@ -36,9 +36,13 @@ variable "instance_count" {
 }
 
 variable "backup_retention_period" {
-  description = "RDS backup retention period in days"
+  description = "Days of automated database backups to keep"
   type        = number
-  default     = 30
+
+  validation {
+    condition     = var.backup_retention_period >= 7 && var.backup_retention_period <= 35
+    error_message = "backup_retention_period must be between 7 and 35 days."
+  }
 }
 
 variable "db_username" {
@@ -78,6 +82,16 @@ variable "acm_certificate_arn" {
     condition     = try(split(":", var.acm_certificate_arn)[3], "") == var.aws_region
     error_message = "acm_certificate_arn must be a certificate in aws_region: a load balancer can use only a certificate from its own region."
   }
+}
+
+variable "cloudtrail_management_events" {
+  type        = bool
+  description = "Whether this environment's trail records management events. False where another trail in the account already does: a second copy is charged per event. Reads and writes of uploaded documents are recorded either way."
+}
+
+variable "site_password_protected" {
+  type        = bool
+  description = "Whether CloudFront asks for the site password before it serves a page or passes an API call. On for an environment the public should not reach; the password is in the <environment_name>-site-access secret."
 }
 
 variable "deletion_protection" {

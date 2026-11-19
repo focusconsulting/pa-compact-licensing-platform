@@ -21,8 +21,9 @@ function renderCard(props: Partial<PrivilegeCardProps> = {}) {
         number={BASE.number}
         status={props.status ?? BASE.status}
         activeFrom={BASE.activeFrom}
-        expires={BASE.expires}
+        expires={"expires" in props ? props.expires : BASE.expires}
         view={props.view}
+        inactiveQualifier={props.inactiveQualifier}
         discipline={props.discipline}
         detailsHref={props.detailsHref}
       />
@@ -63,10 +64,30 @@ describe("PrivilegeCard", () => {
     );
   });
 
+  it("says only that a privilege expired when it has no date", () => {
+    renderCard({ status: "expired", expires: null });
+
+    expect(screen.getByText("Inactive")).toBeInTheDocument();
+    expect(screen.getByText("Expired")).toHaveClass("text-error-dark");
+  });
+
+  it("gives an active privilege with no date no qualifier", () => {
+    renderCard({ expires: null });
+
+    expect(screen.queryByText(/Expires/)).toBeNull();
+  });
+
   it("says a deactivated privilege was deactivated", () => {
     renderCard({ status: "inactive", view: "staff" });
 
     expect(screen.getByText("Deactivated")).toBeInTheDocument();
+  });
+
+  it("says only that a privilege is inactive where the reason is not shown", () => {
+    renderCard({ status: "inactive", inactiveQualifier: false });
+
+    expect(screen.getByText("Inactive")).toBeInTheDocument();
+    expect(screen.queryByText("Deactivated")).toBeNull();
   });
 
   it("gives an encumbered privilege no qualifier, and staff its status", () => {

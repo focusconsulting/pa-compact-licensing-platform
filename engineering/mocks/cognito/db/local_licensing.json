@@ -247,6 +247,248 @@
           "Value": "true"
         }
       ]
+    },
+    "dana.draft@demo.example": {
+      "Username": "dana.draft@demo.example",
+      "Password": "Local-Passw0rd!",
+      "UserStatus": "CONFIRMED",
+      "Enabled": true,
+      "UserCreateDate": "2026-01-01T00:00:00.000Z",
+      "UserLastModifiedDate": "2026-01-01T00:00:00.000Z",
+      "Attributes": [
+        {
+          "Name": "sub",
+          "Value": "00000000-0000-4000-8000-000000000012"
+        },
+        {
+          "Name": "email",
+          "Value": "dana.draft@demo.example"
+        },
+        {
+          "Name": "email_verified",
+          "Value": "true"
+        }
+      ]
+    },
+    "sam.submitted@demo.example": {
+      "Username": "sam.submitted@demo.example",
+      "Password": "Local-Passw0rd!",
+      "UserStatus": "CONFIRMED",
+      "Enabled": true,
+      "UserCreateDate": "2026-01-01T00:00:00.000Z",
+      "UserLastModifiedDate": "2026-01-01T00:00:00.000Z",
+      "Attributes": [
+        {
+          "Name": "sub",
+          "Value": "00000000-0000-4000-8000-000000000013"
+        },
+        {
+          "Name": "email",
+          "Value": "sam.submitted@demo.example"
+        },
+        {
+          "Name": "email_verified",
+          "Value": "true"
+        }
+      ]
+    },
+    "ira.info@demo.example": {
+      "Username": "ira.info@demo.example",
+      "Password": "Local-Passw0rd!",
+      "UserStatus": "CONFIRMED",
+      "Enabled": true,
+      "UserCreateDate": "2026-01-01T00:00:00.000Z",
+      "UserLastModifiedDate": "2026-01-01T00:00:00.000Z",
+      "Attributes": [
+        {
+          "Name": "sub",
+          "Value": "00000000-0000-4000-8000-000000000014"
+        },
+        {
+          "Name": "email",
+          "Value": "ira.info@demo.example"
+        },
+        {
+          "Name": "email_verified",
+          "Value": "true"
+        }
+      ]
+    },
+    "dee.denied@demo.example": {
+      "Username": "dee.denied@demo.example",
+      "Password": "Local-Passw0rd!",
+      "UserStatus": "CONFIRMED",
+      "Enabled": true,
+      "UserCreateDate": "2026-01-01T00:00:00.000Z",
+      "UserLastModifiedDate": "2026-01-01T00:00:00.000Z",
+      "Attributes": [
+        {
+          "Name": "sub",
+          "Value": "00000000-0000-4000-8000-000000000015"
+        },
+        {
+          "Name": "email",
+          "Value": "dee.denied@demo.example"
+        },
+        {
+          "Name": "email_verified",
+          "Value": "true"
+        }
+      ]
+    },
+    "wren.withdrawn@demo.example": {
+      "Username": "wren.withdrawn@demo.example",
+      "Password": "Local-Passw0rd!",
+      "UserStatus": "CONFIRMED",
+      "Enabled": true,
+      "UserCreateDate": "2026-01-01T00:00:00.000Z",
+      "UserLastModifiedDate": "2026-01-01T00:00:00.000Z",
+      "Attributes": [
+        {
+          "Name": "sub",
+          "Value": "00000000-0000-4000-8000-000000000016"
+        },
+        {
+          "Name": "email",
+          "Value": "wren.withdrawn@demo.example"
+        },
+        {
+          "Name": "email_verified",
+          "Value": "true"
+        }
+      ]
+    },
+    "sol.superseded@demo.example": {
+      "Username": "sol.superseded@demo.example",
+      "Password": "Local-Passw0rd!",
+      "UserStatus": "CONFIRMED",
+      "Enabled": true,
+      "UserCreateDate": "2026-01-01T00:00:00.000Z",
+      "UserLastModifiedDate": "2026-01-01T00:00:00.000Z",
+      "Attributes": [
+        {
+          "Name": "sub",
+          "Value": "00000000-0000-4000-8000-000000000017"
+        },
+        {
+          "Name": "email",
+          "Value": "sol.superseded@demo.example"
+        },
+        {
+          "Name": "email_verified",
+          "Value": "true"
+        }
+      ]
+    },
+    "pia.expired@demo.example": {
+      "Username": "pia.expired@demo.example",
+      "Password": "Local-Passw0rd!",
+      "UserStatus": "CONFIRMED",
+      "Enabled": true,
+      "UserCreateDate": "2026-01-01T00:00:00.000Z",
+      "UserLastModifiedDate": "2026-01-01T00:00:00.000Z",
+      "Attributes": [
+        {
+          "Name": "sub",
+          "Value": "00000000-0000-4000-8000-000000000018"
+        },
+        {
+          "Name": "email",
+          "Value": "pia.expired@demo.example"
+        },
+        {
+          "Name": "email_verified",
+          "Value": "true"
+        }
+      ]
+    },
+    "enzo.encumbered@demo.example": {
+      "Username": "enzo.encumbered@demo.example",
+      "Password": "Local-Passw0rd!",
+      "UserStatus": "CONFIRMED",
+      "Enabled": true,
+      "UserCreateDate": "2026-01-01T00:00:00.000Z",
+      "UserLastModifiedDate": "2026-01-01T00:00:00.000Z",
+      "Attributes": [
+        {
+          "Name": "sub",
+          "Value": "00000000-0000-4000-8000-000000000019"
+        },
+        {
+          "Name": "email",
+          "Value": "enzo.encumbered@demo.example"
+        },
+        {
+          "Name": "email_verified",
+          "Value": "true"
+        }
+      ]
+    },
+    "eli.withdrawn-eligibility@demo.example": {
+      "Username": "eli.withdrawn-eligibility@demo.example",
+      "Password": "Local-Passw0rd!",
+      "UserStatus": "CONFIRMED",
+      "Enabled": true,
+      "UserCreateDate": "2026-01-01T00:00:00.000Z",
+      "UserLastModifiedDate": "2026-01-01T00:00:00.000Z",
+      "Attributes": [
+        {
+          "Name": "sub",
+          "Value": "00000000-0000-4000-8000-000000000020"
+        },
+        {
+          "Name": "email",
+          "Value": "eli.withdrawn-eligibility@demo.example"
+        },
+        {
+          "Name": "email_verified",
+          "Value": "true"
+        }
+      ]
+    },
+    "bea.barred-until@demo.example": {
+      "Username": "bea.barred-until@demo.example",
+      "Password": "Local-Passw0rd!",
+      "UserStatus": "CONFIRMED",
+      "Enabled": true,
+      "UserCreateDate": "2026-01-01T00:00:00.000Z",
+      "UserLastModifiedDate": "2026-01-01T00:00:00.000Z",
+      "Attributes": [
+        {
+          "Name": "sub",
+          "Value": "00000000-0000-4000-8000-000000000021"
+        },
+        {
+          "Name": "email",
+          "Value": "bea.barred-until@demo.example"
+        },
+        {
+          "Name": "email_verified",
+          "Value": "true"
+        }
+      ]
+    },
+    "ned.bar-ended@demo.example": {
+      "Username": "ned.bar-ended@demo.example",
+      "Password": "Local-Passw0rd!",
+      "UserStatus": "CONFIRMED",
+      "Enabled": true,
+      "UserCreateDate": "2026-01-01T00:00:00.000Z",
+      "UserLastModifiedDate": "2026-01-01T00:00:00.000Z",
+      "Attributes": [
+        {
+          "Name": "sub",
+          "Value": "00000000-0000-4000-8000-000000000022"
+        },
+        {
+          "Name": "email",
+          "Value": "ned.bar-ended@demo.example"
+        },
+        {
+          "Name": "email_verified",
+          "Value": "true"
+        }
+      ]
     }
   }
 }

@@ -11,6 +11,8 @@ export interface TextFieldProps {
   hint?: string;
   type?: "text" | "email" | "number" | "password" | "search" | "tel" | "url";
   optional?: boolean;
+  /** Whether an optional field's label says so; off where the fieldset's legend already does. */
+  showOptional?: boolean;
   disabled?: boolean;
   onBeforeInput?: FormEventHandler;
   pattern?: string;
@@ -33,6 +35,7 @@ export function TextField({
   hint,
   type = "text",
   optional = false,
+  showOptional = true,
   disabled = false,
   onBeforeInput,
   pattern,
@@ -51,7 +54,7 @@ export function TextField({
     <>
       <Label
         htmlFor={id}
-        hint={optional ? t("optionalText") : null}
+        hint={optional && showOptional ? t("optionalText") : null}
         requiredMarker={!optional}
       >
         {label}

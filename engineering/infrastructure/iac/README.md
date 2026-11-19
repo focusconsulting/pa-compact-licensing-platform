@@ -81,7 +81,9 @@ build, so it always shows the task definitions changing.
 
 A deploy is `just deploy <env>`: apply `ecr`, build and push the API image
 tagged with the commit, apply `app` with that tag, build the client from the
-app outputs, sync it to S3, and invalidate CloudFront. Nothing else deploys
+app outputs, sync it to S3, and invalidate CloudFront. The client is a static
+export, one `.html` file per page, so CloudFront rewrites a page's address to
+its file (`page_html` in `cdn.tf`). Nothing else deploys
 anything, and nothing deploys on its own: staging is deployed when someone runs
 the `Deploy` workflow, until the team turns on deploy-on-merge.
 
@@ -148,14 +150,16 @@ may be left out of the tfvars file when the default is right.
 | `db_username` | The application's database user | `licensing` | required |
 | `db_instance_class` | Aurora instance class | `db.t4g.medium` | `db.t4g.medium` |
 | `instance_count` | Aurora instances | default | `1` |
-| `backup_retention_period` | Days of automated database backups | `1` | `30` |
+| `backup_retention_period` | Days of automated database backups, 7 to 35; `prod` sets 35 | `7` | required |
 | `repo_name` | The `ecr` component's `repository_url` for the API image | the staging repository | required |
 | `image_tag` | The commit SHA whose image runs; `just deploy` passes it, tfvars never set it | per deploy | required |
 | `ecs_max_capacity` | Most API tasks the autoscaler may run | default | `2` |
 | `commission_ops_email` | The Commission's operational mailbox; empty sends nothing | default | empty |
 | `cognito_callback_url`, `cognito_logout_url` | Cognito redirect URLs | default | `https://<dns_name>` |
 | `acm_certificate_arn` | The certificate the load balancer's HTTPS listener presents: it covers `dns_name` and is issued in `aws_region` | the zone's wildcard certificate in `us-east-1` | required |
-| `deletion_protection` | Guards what would block a teardown or lose data in one (the load balancer's deletion protection). `prod` leaves it on | `false`: staging is spun up and torn down | `true` |
+| `site_password_protected` | Whether CloudFront asks for a password before it serves a page or passes an API call ([how it works](../../docs/security/infrastructure.md#the-site-password)). `prod` turns it off when the site opens to the public | `true`: staging is not for the public | required |
+| `cloudtrail_management_events` | Whether the environment's trail records management events; off where another trail in the account already does, since a second copy is charged per event ([what to check](../../docs/security/infrastructure.md#logs-and-the-audit-trail)) | `false`: Focus's baseline trail records them | required |
+| `deletion_protection` | Guards what would block a teardown or lose data in one: the database's and the load balancer's deletion protection, the database's final snapshot, and the logs bucket's contents ([what it does](../../docs/security/infrastructure.md#deletion_protection)). `prod` leaves it on | `false`: staging is spun up and torn down | `true` |
 
 ## Adding an environment
 

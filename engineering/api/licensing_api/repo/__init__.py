@@ -1,6 +1,7 @@
 """Table models. Importing them all here keeps SQLAlchemy's metadata complete, so foreign keys between tables resolve whichever model is used first."""
 
 from licensing_api.repo.adverse_action import AdverseAction, AdverseActionNpdbCategory
+from licensing_api.repo.attestation import Attestation, ParticipationApplicationAttestation
 from licensing_api.repo.audit_log import AuditLogEntry
 from licensing_api.repo.compact_settings import CompactSettings
 from licensing_api.repo.document import Document
@@ -12,6 +13,7 @@ from licensing_api.repo.history import (
     FeeHistory,
     ParticipationApplicationHistory,
     PractitionerHistory,
+    PractitionerOtherNameHistory,
     PrivilegeHistory,
     PrivilegeRequestHistory,
     QualifyingLicenseHistory,
@@ -22,7 +24,7 @@ from licensing_api.repo.history import (
 from licensing_api.repo.job_run import JobRun
 from licensing_api.repo.notification import Notification
 from licensing_api.repo.participation_application import ParticipationApplication
-from licensing_api.repo.practitioner import Practitioner, PractitionerSsn
+from licensing_api.repo.practitioner import Practitioner, PractitionerOtherName, PractitionerSsn
 from licensing_api.repo.privilege import Privilege, PrivilegeNumberSequence
 from licensing_api.repo.privilege_request import PrivilegeRequest
 from licensing_api.repo.qualifying_license import QualifyingLicense
@@ -42,6 +44,7 @@ __all__ = [
     'AdverseAction',
     'AdverseActionHistory',
     'AdverseActionNpdbCategory',
+    'Attestation',
     'AuditLogEntry',
     'CompactEligibility',
     'CompactSettings',
@@ -54,9 +57,12 @@ __all__ = [
     'JobRun',
     'Notification',
     'ParticipationApplication',
+    'ParticipationApplicationAttestation',
     'ParticipationApplicationHistory',
     'Practitioner',
     'PractitionerHistory',
+    'PractitionerOtherName',
+    'PractitionerOtherNameHistory',
     'PractitionerSsn',
     'Privilege',
     'PrivilegeHistory',

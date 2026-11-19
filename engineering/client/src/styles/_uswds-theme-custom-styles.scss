@@ -13,3 +13,123 @@ i.e.
 */
 
 @use "uswds-core" as *;
+
+// PA Compact dark navy header band so the light-blue logo has crisp contrast,
+// with a white desktop nav bar below it.
+.usa-header--extended {
+  background-color: color("primary-darker");
+  border-top: units("05") solid color("accent-cool");
+
+  .usa-navbar {
+    border-bottom: 0;
+    padding-top: units(1);
+    padding-bottom: units(1);
+  }
+
+  .usa-logo a {
+    color: color("white");
+  }
+
+  @include at-media("desktop") {
+    .usa-nav {
+      background-color: color("white");
+      border-bottom: 1px solid color("base-lighter");
+    }
+
+    .usa-nav__secondary,
+    .usa-nav__secondary-item,
+    .usa-nav__secondary-item a,
+    .usa-nav__secondary-item button {
+      color: color("white");
+    }
+
+    .usa-nav__secondary-item a:hover,
+    .usa-nav__secondary-item button:hover {
+      color: color("accent-cool-light");
+    }
+  }
+}
+
+main h1,
+main h2 {
+  color: color("primary-dark");
+}
+
+.usa-identifier {
+  background-color: color("primary-darker");
+}
+
+.usa-footer__secondary-section {
+  background-color: color("primary-darker");
+  border-top: units("05") solid color("accent-cool");
+  border-bottom: 1px solid color("primary-dark");
+  color: color("white");
+
+  a.usa-link {
+    color: color("accent-cool-light");
+
+    &:hover,
+    &:active {
+      color: color("white");
+    }
+  }
+}
+
+.portal-cards .usa-card__container {
+  border-top: units("05") solid color("accent-cool");
+}
+
+// Blend USWDS radio items into framed light-gray form panels.
+.bg-base-lightest .usa-radio {
+  background-color: transparent;
+}
+
+// USWDS's hint gray falls short of 4.5:1 on the panel's light gray.
+.bg-base-lightest .usa-hint {
+  color: color("base-dark");
+}
+
+// Restore USWDS active page fill overridden by react-uswds's bg-transparent
+// utility when $utilities-use-important is enabled.
+.usa-pagination .usa-pagination__button.usa-current {
+  background-color: color("ink") !important;
+  color: color("white") !important;
+
+  &:hover,
+  &:focus,
+  &:active {
+    background-color: color("ink") !important;
+    color: color("white") !important;
+  }
+}
+
+// Prevent narrow 4-column wrapping on short identifier link lists.
+.usa-identifier__required-links-list {
+  @include at-media("tablet") {
+    column-count: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: units(1.5) units(4);
+  }
+}
+
+.usa-identifier__required-links-item {
+  @include at-media("desktop") {
+    margin-bottom: 0;
+  }
+}
+
+.usa-table-container--scrollable {
+  margin-top: 0;
+}
+
+// Use tighter vertical rhythm for application page containers below the header
+// than USWDS's default 4rem marketing section padding.
+.usa-section {
+  @include u-padding-y(3);
+
+  @include at-media("tablet") {
+    @include u-padding-top(4);
+    @include u-padding-bottom(6);
+  }
+}

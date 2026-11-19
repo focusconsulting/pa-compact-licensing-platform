@@ -17,3 +17,9 @@ matching [`engineering/api/seed/users.sql`](../../api/seed/users.sql).
 Everyone signs in with `Local-Passw0rd!`, except `backfill@example.com`, which
 starts in `FORCE_CHANGE_PASSWORD` with `Temp-Passw0rd!` to exercise the first
 sign-in. Changes such as a new password last until the container is recreated.
+
+With `NEXT_PUBLIC_DEV_SIGN_IN_PASSWORD` set, as
+[`engineering/client/.env.example`](../../client/.env.example) sets it, the
+sign-in page lists these users and signs in as the one you choose
+([ADR-0020](../../adrs/0020-development-only-sign-in-list.md)). The list is
+read from this mock, so a user added here appears in it.

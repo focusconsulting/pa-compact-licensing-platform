@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+  "/api/admin/status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get The System Status
+     * @description The deployed version, environment, when this task started and how long it has run, and the database's response time and newest migration. Needs `system_admin`.
+     */
+    get: operations["Get_the_system_status_api_admin_status_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/commission/audit": {
     parameters: {
       query?: never;
@@ -124,6 +144,134 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/me/applications": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List My Applications
+     * @description Your participation applications, newest first.
+     */
+    get: operations["List_my_applications_api_me_applications_get"];
+    put?: never;
+    /**
+     * Start My Application
+     * @description Starts a draft with the state of qualifying license, which must be live. A PA has one open application at a time: `409 APPLICATION_OPEN` while another is a draft, submitted, or waiting on information. An eligible PA gets `409 ALREADY_ELIGIBLE`: changing the state of qualifying license is not in v1 (Rule 3 §3.6).
+     */
+    post: operations["Start_my_application_api_me_applications_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/me/applications/{application_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get My Application
+     * @description One of your applications.
+     */
+    get: operations["Get_my_application_api_me_applications__application_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Save My Application
+     * @description Saves a wizard step's answers while the application is a draft or waiting on information. `409 INVALID_TRANSITION` otherwise, or when changing the state after submitting.
+     */
+    patch: operations["Save_my_application_api_me_applications__application_id__patch"];
+    trace?: never;
+  };
+  "/api/me/applications/{application_id}/attestations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Accept An Attestation
+     * @description Records that you accepted this version of an attestation. `409 ATTESTATIONS_OUT_OF_DATE` when a newer version exists: read it and accept that one.
+     */
+    post: operations["Accept_an_attestation_api_me_applications__application_id__attestations_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/me/applications/{application_id}/submit": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Submit My Application
+     * @description Sends a draft to the state of qualifying license, or resubmits one waiting on information, in one transaction. Refused with `409 INVALID_TRANSITION`, `409 STATE_NOT_LIVE`, or `409 ATTESTATIONS_OUT_OF_DATE` (the codes to accept are in `details`), `404` for a document that is not your unattached upload, and `409 DOCUMENT_NOT_CLEAN` for one whose malware scan is not finished or not clean (the file names are in `details`).
+     */
+    post: operations["Submit_my_application_api_me_applications__application_id__submit_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/me/applications/{application_id}/withdraw": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Withdraw My Application
+     * @description Withdraws an application the SQL has received and not decided (Rule 3 §3.7). A draft is never withdrawn: `409 INVALID_TRANSITION`.
+     */
+    post: operations["Withdraw_my_application_api_me_applications__application_id__withdraw_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/me/dashboard": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get My Dashboard
+     * @description Your license, applications, privileges, and what you can do next.
+     */
+    get: operations["Get_my_dashboard_api_me_dashboard_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/me/documents": {
     parameters: {
       query?: never;
@@ -138,6 +286,26 @@ export interface paths {
      * @description Creates a `pending` document and returns a form, valid for five minutes, that uploads exactly `size_bytes` of `content_type` straight to storage. The file is scanned for malware before anyone can download it.
      */
     post: operations["Upload_my_document_api_me_documents_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/me/documents/unattached": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List My Unattached Documents
+     * @description Documents you uploaded that no application or request holds yet, newest first.
+     */
+    get: operations["List_my_unattached_documents_api_me_documents_unattached_get"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -176,6 +344,110 @@ export interface paths {
      * @description A link, valid for one minute, that downloads the document as a file. Only a document whose malware scan found it clean can be downloaded; `409 DOCUMENT_NOT_CLEAN` otherwise.
      */
     get: operations["Download_my_document_api_me_documents__document_id__download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/me/profile": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get My Profile
+     * @description Your profile, as the application shows it.
+     */
+    get: operations["Get_my_profile_api_me_profile_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Save My Profile
+     * @description Changes your date of birth, residence address, NCCPA certification number, or other names. Once your state has verified a field it is listed in `verified_fields`, and only the state changes it: `409 VERIFIED_BY_STATE`. A verified date of birth or NCCPA number that is still empty can be filled in. Your address stays yours to change, in the US only.
+     */
+    patch: operations["Save_my_profile_api_me_profile_patch"];
+    trace?: never;
+  };
+  "/api/public/attestations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Current Attestations
+     * @description The current version of each attestation that applies in every state, in the order to show them.
+     */
+    get: operations["List_current_attestations_api_public_attestations_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/public/privilege-holders": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Search Privilege Holders
+     * @description PAs who hold a compact privilege, active or not. Search by `first_name` and `last_name` together, or by `privilege_number` alone. Names must match in full, ignoring case. No match is an empty list.
+     */
+    get: operations["Search_privilege_holders_api_public_privilege_holders_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/public/privilege-holders/{holder_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get A Privilege Holder
+     * @description A PA's compact privileges: the state, number, status, and issue date of each. A privilege that is not active shows as `expired` or `inactive`, with no reason and no `expires_on`.
+     */
+    get: operations["Get_a_privilege_holder_api_public_privilege_holders__holder_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/public/states": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List States
+     * @description Every US jurisdiction, by name, with its membership and whether it is live.
+     */
+    get: operations["List_states_api_public_states_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -249,6 +521,122 @@ export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
     /**
+     * AcceptedAttestation
+     * @description The version of an attestation the PA last accepted on this application.
+     * @example {
+     *       "accepted_at": "2026-11-12T15:04:05Z",
+     *       "code": "truthfulness",
+     *       "version": 1
+     *     }
+     */
+    AcceptedAttestation: {
+      /**
+       * Accepted At
+       * Format: date-time
+       */
+      accepted_at: string;
+      /** Code */
+      code: string;
+      /** Version */
+      version: number;
+    };
+    /**
+     * Action
+     * @description The primary action, and when it is unavailable, every reason why.
+     */
+    Action: {
+      /** Available */
+      available: boolean;
+      kind: components["schemas"]["ActionKind"];
+      /** Reasons */
+      reasons: components["schemas"]["UnavailableReason"][];
+    };
+    /**
+     * ActionKind
+     * @description The one thing the dashboard offers next.
+     * @enum {string}
+     */
+    ActionKind: "apply_for_participation" | "apply_for_privileges";
+    /**
+     * ApplicationCreate
+     * @description The state the PA designates as their state of qualifying license (Rule 3 §3.4(a)(2)).
+     * @example {
+     *       "sql_state_code": "KS"
+     *     }
+     */
+    ApplicationCreate: {
+      /**
+       * Sql State Code
+       * @description Two-letter state code
+       */
+      sql_state_code: string;
+    };
+    /**
+     * ApplicationEvent
+     * @description One step in an application's history. ``note`` is the state's request when it asked for information.
+     */
+    ApplicationEvent: {
+      /**
+       * At
+       * Format: date-time
+       */
+      at: string;
+      /** Note */
+      note?: string | null;
+      status: components["schemas"]["ApplicationStatus"];
+    };
+    /**
+     * ApplicationKind
+     * @description Why a participation application was made: a first application, or a change of state of qualifying license.
+     * @enum {string}
+     */
+    ApplicationKind: "initial" | "change_sql";
+    /**
+     * ApplicationOut
+     * @description A participation application as its PA sees it. ``request_note`` is the SQL's latest request for information.
+     * @example {
+     *       "attestations": [],
+     *       "claimed_license_expires_on": "2027-12-31",
+     *       "claimed_license_number": "PA-12345",
+     *       "documents": [],
+     *       "id": "3d7e2a91-6b0c-4f58-a2e4-9c1b8f0d5e36",
+     *       "kind": "initial",
+     *       "opened_at": null,
+     *       "request_note": null,
+     *       "sql_state_code": "KS",
+     *       "status": "draft",
+     *       "sworn_at": null,
+     *       "withdrawn_at": null
+     *     }
+     */
+    ApplicationOut: {
+      /** Attestations */
+      attestations: components["schemas"]["AcceptedAttestation"][];
+      /** Claimed License Expires On */
+      claimed_license_expires_on: string | null;
+      /** Claimed License Number */
+      claimed_license_number: string | null;
+      /** Documents */
+      documents: components["schemas"]["DocumentOut"][];
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      kind: components["schemas"]["ApplicationKind"];
+      /** Opened At */
+      opened_at: string | null;
+      /** Request Note */
+      request_note: string | null;
+      /** Sql State Code */
+      sql_state_code: string;
+      status: components["schemas"]["ApplicationStatus"];
+      /** Sworn At */
+      sworn_at: string | null;
+      /** Withdrawn At */
+      withdrawn_at: string | null;
+    };
+    /**
      * ApplicationStatus
      * @description The participation application's states (FLOW-06).
      * @enum {string}
@@ -262,6 +650,110 @@ export interface components {
       | "withdrawn"
       | "eligibility_withdrawn"
       | "superseded";
+    /**
+     * ApplicationSubmit
+     * @description The sworn statement (Q-06), and the PA's unattached uploads to send with the application.
+     * @example {
+     *       "document_ids": [],
+     *       "sworn": true,
+     *       "sworn_name": "Pat Morgan"
+     *     }
+     */
+    ApplicationSubmit: {
+      /** Document Ids */
+      document_ids?: string[];
+      /**
+       * Sworn
+       * @constant
+       */
+      sworn: true;
+      /** Sworn Name */
+      sworn_name: string;
+    };
+    /**
+     * ApplicationSummary
+     * @description An application, its decision, and its timeline, oldest first.
+     */
+    ApplicationSummary: {
+      /** Claimed License Number */
+      claimed_license_number: string | null;
+      /** Decided At */
+      decided_at: string | null;
+      /** Denial Reason */
+      denial_reason: string | null;
+      /** Denial Reason Detail */
+      denial_reason_detail: string | null;
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      kind: components["schemas"]["ApplicationKind"];
+      /** Opened At */
+      opened_at: string | null;
+      /** Sql State Code */
+      sql_state_code: string;
+      status: components["schemas"]["ApplicationStatus"];
+      /** Timeline */
+      timeline: components["schemas"]["ApplicationEvent"][];
+      /** Withdrawn At */
+      withdrawn_at: string | null;
+    };
+    /**
+     * ApplicationUpdate
+     * @description The fields a wizard step saves. Omitted fields keep their value; ``sql_state_code`` changes only in a draft.
+     * @example {
+     *       "claimed_license_expires_on": "2027-12-31",
+     *       "claimed_license_number": "PA-12345"
+     *     }
+     */
+    ApplicationUpdate: {
+      /** Claimed License Expires On */
+      claimed_license_expires_on?: string | null;
+      /** Claimed License Number */
+      claimed_license_number?: string | null;
+      /** Sql State Code */
+      sql_state_code?: string | null;
+    };
+    /**
+     * AttestationAccept
+     * @description The attestation, and the version of its text, the PA accepted.
+     * @example {
+     *       "code": "truthfulness",
+     *       "version": 1
+     *     }
+     */
+    AttestationAccept: {
+      /** Code */
+      code: string;
+      /** Version */
+      version: number;
+    };
+    /**
+     * AttestationAppliesTo
+     * @description What an attestation is for: the PA's participation application or a privilege request.
+     * @enum {string}
+     */
+    AttestationAppliesTo: "participation" | "privilege";
+    /**
+     * AttestationOut
+     * @description The current version of an attestation. Accept it by ``code`` and ``version``.
+     * @example {
+     *       "applies_to": "participation",
+     *       "code": "truthfulness",
+     *       "text": "I swear that the information in this application is true and accurate.",
+     *       "version": 1
+     *     }
+     */
+    AttestationOut: {
+      applies_to: components["schemas"]["AttestationAppliesTo"];
+      /** Code */
+      code: string;
+      /** Text */
+      text: string;
+      /** Version */
+      version: number;
+    };
     /**
      * AuditEntryOut
      * @description One staff read of private data or security event. ``before`` and ``after`` never hold an SSN.
@@ -345,9 +837,60 @@ export interface components {
        */
       user_id: string;
     };
+    /**
+     * Dashboard
+     * @description Everything the PA's dashboard shows, read from the database on each request.
+     * @example {
+     *       "applications": [
+     *         {
+     *           "claimed_license_number": "PA-000123",
+     *           "id": "3d7e2a91-6b0c-4f58-a2e4-9c1b8f0d5e36",
+     *           "kind": "initial",
+     *           "opened_at": "2026-10-14T15:00:00Z",
+     *           "sql_state_code": "KS",
+     *           "status": "submitted",
+     *           "timeline": [
+     *             {
+     *               "at": "2026-10-14T15:00:00Z",
+     *               "status": "submitted"
+     *             }
+     *           ]
+     *         }
+     *       ],
+     *       "primary_action": {
+     *         "available": false,
+     *         "kind": "apply_for_privileges",
+     *         "reasons": [
+     *           "application_in_review"
+     *         ]
+     *       },
+     *       "privileges": [],
+     *       "qualifying_license": null
+     *     }
+     */
+    Dashboard: {
+      /**
+       * Applications
+       * @description Newest first
+       */
+      applications: components["schemas"]["ApplicationSummary"][];
+      primary_action: components["schemas"]["Action"];
+      /** Privileges */
+      privileges: components["schemas"]["PrivilegeSummary"][];
+      qualifying_license:
+        components["schemas"]["QualifyingLicenseSummary"] | null;
+    };
+    /** Data[ApplicationOut] */
+    Data_ApplicationOut_: {
+      data: components["schemas"]["ApplicationOut"];
+    };
     /** Data[CurrentUser] */
     Data_CurrentUser_: {
       data: components["schemas"]["CurrentUser"];
+    };
+    /** Data[Dashboard] */
+    Data_Dashboard_: {
+      data: components["schemas"]["Dashboard"];
     };
     /** Data[DocumentDownload] */
     Data_DocumentDownload_: {
@@ -360,6 +903,50 @@ export interface components {
     /** Data[DocumentUpload] */
     Data_DocumentUpload_: {
       data: components["schemas"]["DocumentUpload"];
+    };
+    /** Data[PrivilegeHolder] */
+    Data_PrivilegeHolder_: {
+      data: components["schemas"]["PrivilegeHolder"];
+    };
+    /** Data[ProfileOut] */
+    Data_ProfileOut_: {
+      data: components["schemas"]["ProfileOut"];
+    };
+    /** Data[StatusOut] */
+    Data_StatusOut_: {
+      data: components["schemas"]["StatusOut"];
+    };
+    /** Data[list[ApplicationOut]] */
+    Data_list_ApplicationOut__: {
+      /** Data */
+      data: components["schemas"]["ApplicationOut"][];
+    };
+    /** Data[list[AttestationOut]] */
+    Data_list_AttestationOut__: {
+      /** Data */
+      data: components["schemas"]["AttestationOut"][];
+    };
+    /** Data[list[DocumentOut]] */
+    Data_list_DocumentOut__: {
+      /** Data */
+      data: components["schemas"]["DocumentOut"][];
+    };
+    /** Data[list[StateOut]] */
+    Data_list_StateOut__: {
+      /** Data */
+      data: components["schemas"]["StateOut"][];
+    };
+    /**
+     * DatabaseStatus
+     * @description Whether the database answered, how fast, and the newest migration applied to it.
+     */
+    DatabaseStatus: {
+      /** Latency Ms */
+      latency_ms: number | null;
+      /** Latest Migration */
+      latest_migration: string | null;
+      /** Reachable */
+      reachable: boolean;
     };
     /**
      * DocumentDownload
@@ -481,7 +1068,14 @@ export interface components {
       | "FORBIDDEN"
       | "NOT_FOUND"
       | "DOCUMENT_NOT_CLEAN"
+      | "APPLICATION_OPEN"
+      | "ALREADY_ELIGIBLE"
+      | "VERIFIED_BY_STATE"
+      | "INVALID_TRANSITION"
+      | "STATE_NOT_LIVE"
+      | "ATTESTATIONS_OUT_OF_DATE"
       | "VALIDATION_ERROR"
+      | "RATE_LIMITED"
       | "HTTP_ERROR"
       | "INTERNAL_ERROR";
     /**
@@ -517,6 +1111,20 @@ export interface components {
       status: string;
     };
     /**
+     * OtherName
+     * @description A name the PA uses or has used. ``last_name`` is required.
+     */
+    OtherName: {
+      /** First Name */
+      first_name?: string | null;
+      /** Last Name */
+      last_name: string;
+      /** Middle Name */
+      middle_name?: string | null;
+      /** Name Suffix */
+      name_suffix?: string | null;
+    };
+    /**
      * Page
      * @description Where a page sits in a list: its 1-based ``number``, its ``size``, and the ``total`` count across all pages.
      * @example {
@@ -537,6 +1145,12 @@ export interface components {
     Paged_AuditEntryOut_: {
       /** Data */
       data: components["schemas"]["AuditEntryOut"][];
+      page: components["schemas"]["Page"];
+    };
+    /** Paged[PrivilegeHolderSummary] */
+    Paged_PrivilegeHolderSummary_: {
+      /** Data */
+      data: components["schemas"]["PrivilegeHolderSummary"][];
       page: components["schemas"]["Page"];
     };
     /**
@@ -560,6 +1174,98 @@ export interface components {
      */
     PrivilegeComputedStatus: "inactive" | "expired" | "encumbered" | "active";
     /**
+     * PrivilegeEvent
+     * @description The day a privilege's status changed, and to what. ``reason`` is the deactivation reason when ``inactive``.
+     */
+    PrivilegeEvent: {
+      /**
+       * On
+       * Format: date
+       */
+      on: string;
+      /** Reason */
+      reason?: string | null;
+      status: components["schemas"]["PrivilegeComputedStatus"];
+    };
+    /**
+     * PrivilegeHolder
+     * @description A PA who holds a privilege, and each privilege with its status and dates.
+     * @example {
+     *       "first_name": "Pat",
+     *       "id": "5f0c2d6e-8a41-4b7c-9d13-6e2f4a8b1c90",
+     *       "last_name": "Morgan",
+     *       "name_suffix": null,
+     *       "privileges": [
+     *         {
+     *           "expires_on": "2027-12-31",
+     *           "issued_on": "2026-11-02",
+     *           "number": "PA-OK-000123",
+     *           "state": {
+     *             "code": "OK",
+     *             "name": "Oklahoma"
+     *           },
+     *           "status": "active"
+     *         }
+     *       ],
+     *       "state_of_qualifying_license": {
+     *         "code": "KS",
+     *         "name": "Kansas"
+     *       }
+     *     }
+     */
+    PrivilegeHolder: {
+      /** First Name */
+      first_name: string;
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Last Name */
+      last_name: string;
+      /** Name Suffix */
+      name_suffix: string | null;
+      /** Privileges */
+      privileges: components["schemas"]["PublicPrivilege"][];
+      state_of_qualifying_license: components["schemas"]["StateRef"];
+    };
+    /**
+     * PrivilegeHolderSummary
+     * @description A PA who holds a privilege, and the states they hold one in.
+     * @example {
+     *       "first_name": "Pat",
+     *       "id": "5f0c2d6e-8a41-4b7c-9d13-6e2f4a8b1c90",
+     *       "last_name": "Morgan",
+     *       "name_suffix": null,
+     *       "privilege_states": [
+     *         {
+     *           "code": "OK",
+     *           "name": "Oklahoma"
+     *         }
+     *       ],
+     *       "state_of_qualifying_license": {
+     *         "code": "KS",
+     *         "name": "Kansas"
+     *       }
+     *     }
+     */
+    PrivilegeHolderSummary: {
+      /** First Name */
+      first_name: string;
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Last Name */
+      last_name: string;
+      /** Name Suffix */
+      name_suffix: string | null;
+      /** Privilege States */
+      privilege_states: components["schemas"]["StateRef"][];
+      state_of_qualifying_license: components["schemas"]["StateRef"];
+    };
+    /**
      * PrivilegeRequestStatus
      * @description A privilege request's states (FLOW-06).
      *
@@ -569,6 +1275,161 @@ export interface components {
      */
     PrivilegeRequestStatus:
       "pending_payment" | "submitted" | "issued" | "denied" | "withdrawn";
+    /**
+     * PrivilegeSummary
+     * @description A privilege as its holder sees it. ``history`` is oldest first.
+     */
+    PrivilegeSummary: {
+      /**
+       * Expires In Days
+       * @description Days from today in the compact's time zone; null once it is inactive or expired
+       */
+      expires_in_days: number | null;
+      /**
+       * Expires On
+       * Format: date
+       */
+      expires_on: string;
+      /** History */
+      history: components["schemas"]["PrivilegeEvent"][];
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /**
+       * Issued At
+       * Format: date-time
+       */
+      issued_at: string;
+      /** Privilege Number */
+      privilege_number: string;
+      /** Remote State Code */
+      remote_state_code: string;
+      status: components["schemas"]["PrivilegeComputedStatus"];
+    };
+    /**
+     * ProfileOut
+     * @description The profile fields the application's first step shows. ``residence`` is null until the PA enters one.
+     * @example {
+     *       "date_of_birth": "1988-03-14",
+     *       "legal_first_name": "Jordan",
+     *       "legal_last_name": "Sample",
+     *       "nccpa_certification_number": "1234567",
+     *       "other_names": [],
+     *       "residence": {
+     *         "city": "Sample City",
+     *         "country_code": "US",
+     *         "line1": "100 Sample Street",
+     *         "postal_code": "66601",
+     *         "region": "KS"
+     *       },
+     *       "verified_fields": [
+     *         "date_of_birth",
+     *         "other_names",
+     *         "nccpa_certification_number"
+     *       ]
+     *     }
+     */
+    ProfileOut: {
+      /** Date Of Birth */
+      date_of_birth: string | null;
+      /** Legal First Name */
+      legal_first_name: string | null;
+      /** Legal Last Name */
+      legal_last_name: string | null;
+      /** Nccpa Certification Number */
+      nccpa_certification_number: string | null;
+      /** Other Names */
+      other_names: components["schemas"]["OtherName"][];
+      residence: components["schemas"]["Residence"] | null;
+      /** Verified Fields */
+      verified_fields: string[];
+    };
+    /**
+     * ProfileUpdate
+     * @description Fields to change. Omitted fields keep their value; ``other_names`` replaces the whole list.
+     * @example {
+     *       "date_of_birth": "1988-03-14",
+     *       "nccpa_certification_number": "1234567",
+     *       "other_names": [
+     *         {
+     *           "last_name": "Smith"
+     *         }
+     *       ],
+     *       "residence": {
+     *         "city": "Sample City",
+     *         "country_code": "US",
+     *         "line1": "100 Sample Street",
+     *         "postal_code": "66601",
+     *         "region": "KS"
+     *       }
+     *     }
+     */
+    ProfileUpdate: {
+      /** Date Of Birth */
+      date_of_birth?: string | null;
+      /** Nccpa Certification Number */
+      nccpa_certification_number?: string | null;
+      /** Other Names */
+      other_names?: components["schemas"]["OtherName"][] | null;
+      residence?: components["schemas"]["Residence"] | null;
+    };
+    /**
+     * PublicPrivilege
+     * @description A privilege as the public sees it: no reason for its status, and nothing about discipline.
+     *
+     *     ``expires_on`` is None unless the privilege is active: a date still ahead beside
+     *     ``inactive`` would show the privilege was ended early.
+     * @example {
+     *       "expires_on": "2027-12-31",
+     *       "issued_on": "2026-11-02",
+     *       "number": "PA-OK-000123",
+     *       "state": {
+     *         "code": "OK",
+     *         "name": "Oklahoma"
+     *       },
+     *       "status": "active"
+     *     }
+     */
+    PublicPrivilege: {
+      /** Expires On */
+      expires_on: string | null;
+      /**
+       * Issued On
+       * Format: date
+       */
+      issued_on: string;
+      /** Number */
+      number: string;
+      state: components["schemas"]["StateRef"];
+      status: components["schemas"]["PublicPrivilegeStatus"];
+    };
+    /**
+     * PublicPrivilegeStatus
+     * @description What public verification shows (FLOW-06).
+     *
+     *     An encumbered privilege is ``inactive``: the public never learns that an adverse
+     *     action exists, public or not (Rule 4 §4.5(c)).
+     * @enum {string}
+     */
+    PublicPrivilegeStatus: "active" | "expired" | "inactive";
+    /**
+     * QualifyingLicenseSummary
+     * @description The license the PA's eligibility rests on, and when its state, ``state_code``, verified it.
+     */
+    QualifyingLicenseSummary: {
+      /** Expires On */
+      expires_on: string | null;
+      /** License Number */
+      license_number: string;
+      /** State Code */
+      state_code: string;
+      /** Status */
+      status: string;
+      /** Verified At */
+      verified_at: string | null;
+    };
     /**
      * ReadyResp
      * @description The readiness response: whether the database answered.
@@ -581,11 +1442,105 @@ export interface components {
       db: boolean;
     };
     /**
+     * Residence
+     * @description The PA's primary residence, where legal papers can be served by mail (Rule 3 §3.4(a)(3)).
+     */
+    Residence: {
+      /** City */
+      city: string;
+      /** Country Code */
+      country_code: string;
+      /** Line1 */
+      line1: string;
+      /** Line2 */
+      line2?: string | null;
+      /** Postal Code */
+      postal_code?: string | null;
+      /** Region */
+      region?: string | null;
+    };
+    /**
      * ScanStatus
      * @description A document's malware-scan result (``scan_status``); an upload starts ``pending``.
      * @enum {string}
      */
     ScanStatus: "pending" | "clean" | "infected" | "error";
+    /**
+     * StateOut
+     * @description A state, and whether it takes applications: only a live member does.
+     * @example {
+     *       "code": "KS",
+     *       "is_live": true,
+     *       "is_member": true,
+     *       "name": "Kansas"
+     *     }
+     */
+    StateOut: {
+      /** Code */
+      code: string;
+      /** Is Live */
+      is_live: boolean;
+      /** Is Member */
+      is_member: boolean;
+      /** Name */
+      name: string;
+    };
+    /**
+     * StateRef
+     * @description A state by code and name, for a response that names a state without describing it.
+     * @example {
+     *       "code": "OK",
+     *       "name": "Oklahoma"
+     *     }
+     */
+    StateRef: {
+      /** Code */
+      code: string;
+      /** Name */
+      name: string;
+    };
+    /**
+     * StatusOut
+     * @description The task answering this request; another task behind the load balancer may differ.
+     * @example {
+     *       "database": {
+     *         "latency_ms": 1.8,
+     *         "latest_migration": "20261112_110000_practitioner_other_names",
+     *         "reachable": true
+     *       },
+     *       "environment": "STAGING",
+     *       "started_at": "2026-11-16T21:46:19Z",
+     *       "uptime_seconds": 3600,
+     *       "version": "3f2a9c1d8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a39"
+     *     }
+     */
+    StatusOut: {
+      database: components["schemas"]["DatabaseStatus"];
+      /**
+       * Environment
+       * @enum {string}
+       */
+      environment: "LOCAL_DEV" | "STAGING" | "PROD";
+      /**
+       * Started At
+       * Format: date-time
+       */
+      started_at: string;
+      /** Uptime Seconds */
+      uptime_seconds: number;
+      /** Version */
+      version: string;
+    };
+    /**
+     * UnavailableReason
+     * @description Why the PA cannot apply for privileges yet.
+     * @enum {string}
+     */
+    UnavailableReason:
+      | "application_in_review"
+      | "information_requested"
+      | "not_yet_eligible"
+      | "two_year_bar";
     /**
      * UploadForm
      * @description POST the ``fields`` and then the file, as ``multipart/form-data`` field ``file``, to ``url``.
@@ -620,6 +1575,35 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+  Get_the_system_status_api_admin_status_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_StatusOut_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
   List_audit_log_entries_api_commission_audit_get: {
     parameters: {
       query?: {
@@ -813,6 +1797,269 @@ export interface operations {
       };
     };
   };
+  List_my_applications_api_me_applications_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_list_ApplicationOut__"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Start_my_application_api_me_applications_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ApplicationCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_ApplicationOut_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Get_my_application_api_me_applications__application_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The application's ID */
+        application_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_ApplicationOut_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Save_my_application_api_me_applications__application_id__patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The application's ID */
+        application_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ApplicationUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_ApplicationOut_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Accept_an_attestation_api_me_applications__application_id__attestations_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The application's ID */
+        application_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AttestationAccept"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_ApplicationOut_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Submit_my_application_api_me_applications__application_id__submit_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The application's ID */
+        application_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ApplicationSubmit"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_ApplicationOut_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Withdraw_my_application_api_me_applications__application_id__withdraw_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The application's ID */
+        application_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_ApplicationOut_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Get_my_dashboard_api_me_dashboard_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_Dashboard_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
   Upload_my_document_api_me_documents_post: {
     parameters: {
       query?: never;
@@ -833,6 +2080,35 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["Data_DocumentUpload_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  List_my_unattached_documents_api_me_documents_unattached_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_list_DocumentOut__"];
         };
       };
       /** @description Unprocessable Content */
@@ -897,6 +2173,217 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["Data_DocumentDownload_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Get_my_profile_api_me_profile_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_ProfileOut_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Save_my_profile_api_me_profile_patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ProfileUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_ProfileOut_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  List_current_attestations_api_public_attestations_get: {
+    parameters: {
+      query: {
+        applies_to: components["schemas"]["AttestationAppliesTo"];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_list_AttestationOut__"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Search_privilege_holders_api_public_privilege_holders_get: {
+    parameters: {
+      query?: {
+        /** @description Required with `last_name`, unless searching by `privilege_number` */
+        first_name?: string | null;
+        /** @description Required with `first_name`, unless searching by `privilege_number` */
+        last_name?: string | null;
+        /** @description For example `PA-OK-000123`. Not with a name */
+        privilege_number?: string | null;
+        page?: number;
+        page_size?: number;
+        sort?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Paged_PrivilegeHolderSummary_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Too many requests from one address. The web firewall sends this, not the API. */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Get_a_privilege_holder_api_public_privilege_holders__holder_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The `id` from a search result */
+        holder_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_PrivilegeHolder_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Too many requests from one address. The web firewall sends this, not the API. */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  List_states_api_public_states_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_list_StateOut__"];
         };
       };
       /** @description Unprocessable Content */

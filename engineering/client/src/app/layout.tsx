@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     default: "PA Compact Data System",
     template: "%s | PA Compact Data System",
   },
-  icons: [`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/img/logo.svg`],
+  icons: [`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/img/favicon.png`],
 };
 
 interface LayoutProps {
