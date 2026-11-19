@@ -2,6 +2,8 @@
 
 The functions every feature calls to record a change and declare a route, and the signatures the epic 2 tracks implement. Decided in [ADR-0009](../adrs/0009-route-authorization-and-change-context.md); planned in the [contract step plan](../thoughts/shared/plans/api/2026-10-14-SCRUM-77-platform-contract.md). Changing a signature here is a platform change: it needs the tech lead's review.
 
+This page is not for business logic. How an application, privilege request, or privilege moves, and who may move it, lives in the [flows](../../product/context/flows/), which are the source of truth; code links to them rather than restating them here.
+
 ## Recording a change
 
 A write validates, then changes its rows, writes a history row and an event, and commits once (constitution Principle VI). Nothing sends email or cascades inside the request: handlers do that later.
@@ -119,7 +121,22 @@ async def list_applications(
 | `Permission` | What a route asks for. `manage_own_record`, `read_general`, `compact_admin`, `system_admin` come from a role; `read_private`, `read_ssn`, `write`, `admin` are granted per state in `users.permissions` (the Commission roles also hold `read_private` everywhere) |
 | `ROLE_PERMISSIONS` | Each role's permissions. A role is never checked directly: change what a role may do here, not in routes |
 
-`require` decides who may call a route, not which rows they see: a record outside the caller's scope is filtered by the route's query and returns `404` (constitution Principle II).
+`require` decides who may call a route, not which rows they see: a record outside the caller's scope is filtered by the route's query and returns `404` (constitution Principle II). Which role reaches which route family is the [permission matrix](roles-and-permissions.md#permission-matrix).
+
+A route that needs two permissions, such as the Commission SSN reveal, declares the namespace's permission on its router and the second on the route. A route that returns private fields only to some callers decides it with `held_permissions(caller, st)`, not with a second route.
+
+### Relationships
+
+`licensing_api/repo/scope.py` (SCRUM-104). Each predicate is a `ColumnElement[bool]` correlated on `practitioners.id`, for use as `select(Practitioner).where(related_to(st))` or inside an `EXISTS`. A relationship, once formed, persists: denials, withdrawals, and expiry do not end it ([ADR-0020](../adrs/0020-state-standing-and-relationship-scoping.md)).
+
+| Predicate | True when |
+|---|---|
+| `is_sql_for(state_code)` | A participation application names the state as `sql_state_code` and has left `draft` |
+| `is_remote_for(state_code)` | A privilege request names the state as `remote_state_code` and has left `pending_payment` |
+| `holds_license_in(state_code)` | A qualifying license in the state is linked to the practitioner |
+| `related_to(state_code)` | Any of the three: the PAs whose uniform data set the state may see (Rule 4 §4.6(a)) |
+
+An action on one record checks that record's state column, not `related_to`. A Kansas user can read a PA whose SQL is Kansas and who holds a privilege in Missouri, but can decide only the application whose `sql_state_code` is `KS`.
 
 ## Response shapes
 

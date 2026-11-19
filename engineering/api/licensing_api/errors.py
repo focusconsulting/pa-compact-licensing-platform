@@ -15,7 +15,15 @@ class ErrorCode(StrEnum):
     Forbidden = 'FORBIDDEN'
     NotFound = 'NOT_FOUND'
     DocumentNotClean = 'DOCUMENT_NOT_CLEAN'
+    ApplicationOpen = 'APPLICATION_OPEN'
+    AlreadyEligible = 'ALREADY_ELIGIBLE'
+    VerifiedByState = 'VERIFIED_BY_STATE'
+    InvalidTransition = 'INVALID_TRANSITION'
+    StateNotLive = 'STATE_NOT_LIVE'
+    AttestationsOutOfDate = 'ATTESTATIONS_OUT_OF_DATE'
     ValidationError = 'VALIDATION_ERROR'
+    # Sent by the web firewall past its rate limit (waf.tf); the API never raises it.
+    RateLimited = 'RATE_LIMITED'
     HttpError = 'HTTP_ERROR'
     InternalError = 'INTERNAL_ERROR'
 

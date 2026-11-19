@@ -2,7 +2,7 @@
 artifact: flow-index
 status: draft
 authored-by: CTO (Kalish)
-last-revised: 2026-10-05
+last-revised: 2026-11-16
 ---
 
 # Flows — PA Compact Data System
@@ -20,6 +20,7 @@ The journey these flows serve, with the assumptions and open questions for the C
 | FLOW-05 | [05-adverse-action-cascade.md](05-adverse-action-cascade.md) | QL adverse action → all privileges deactivated; lift; 2-year bar; eligibility withdrawal; the CompactConnect dialogs we reuse | A-01, A-02, L-06 |
 | FLOW-06 | [06-state-machines.md](06-state-machines.md) | Participation application, privilege request, privilege status | F-02, L-05, P-03 |
 | FLOW-07 | [07-domain-event-catalogue.md](07-domain-event-catalogue.md) | Every domain event, its producer and consumers (the F-05 contract); deferred events reserved by name | F-05, F-11, F-13 |
+| FLOW-08 | [08-public-verification.md](08-public-verification.md) | Anyone, with no account, looks up a PA's privileges: the two searches, the closed list of what is shown, the three public statuses, the screens | V-01 |
 
 ## SOW alignment (redline response v2, 2026-10-05)
 
@@ -48,7 +49,7 @@ The deferred list in `product/backlog/mvp-ticket-breakdown.md` §5.1, and its "D
 | State: notify member states of license status changes, including adverse action and significant investigatory information | new | FLOW-05, FLOW-07 | Covered |
 | Commission: integrate with national credentialing organizations | moved in from "Out of Scope" | FLOW-01, FLOW-02 | Not drawn; NCCPA certification is PA-entered and SQL-verified today |
 | Commission: payment reconciliation and financial reporting to member state administrators | moved in from "Out of Scope" | FLOW-03 | Not drawn. §7.4 still says Focus "will not be responsible for financial reconciliation or settlement" |
-| Public verification of active and inactive privileges | "and inactive" added | FLOW-05, FLOW-06 | Covered by the status vocabulary; FLOW-05 adds the confidentiality invariant |
+| Public verification of active and inactive privileges | "and inactive" added | FLOW-08, FLOW-05, FLOW-06 | Drawn in FLOW-08; FLOW-06 holds the status vocabulary and FLOW-05 the confidentiality invariant |
 
 ## Actors used in every diagram
 

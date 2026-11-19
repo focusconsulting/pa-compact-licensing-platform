@@ -18,6 +18,10 @@ export interface HistoryTimelineProps {
   caption?: string;
 }
 
+const dateCell = (event: HistoryEvent) => (
+  <span className="text-no-wrap">{formatDate(event.on)}</span>
+);
+
 /**
  * What happened to a record, newest first, as C6b draws it. The one history for
  * applications, privileges, and the staff record.
@@ -39,7 +43,7 @@ export default function HistoryTimeline({
         {
           key: "on",
           header: t("history.date"),
-          cell: (event) => formatDate(event.on),
+          cell: dateCell,
         },
         { key: "what", header: t("history.what"), cell: (event) => event.what },
         { key: "by", header: t("history.by"), cell: (event) => event.by },

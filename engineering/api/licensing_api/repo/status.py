@@ -13,7 +13,7 @@ End dates are inclusive.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
@@ -65,6 +65,26 @@ class PrivilegeComputedStatus(StrEnum):
     EXPIRED = 'expired'
     ENCUMBERED = 'encumbered'
     ACTIVE = 'active'
+
+
+class PublicPrivilegeStatus(StrEnum):
+    """What public verification shows (FLOW-06).
+
+    An encumbered privilege is ``inactive``: the public never learns that an adverse
+    action exists, public or not (Rule 4 §4.5(c)).
+    """
+
+    ACTIVE = 'active'
+    EXPIRED = 'expired'
+    INACTIVE = 'inactive'
+
+
+PUBLIC_STATUS: Mapping[PrivilegeComputedStatus, PublicPrivilegeStatus] = {
+    PrivilegeComputedStatus.ACTIVE: PublicPrivilegeStatus.ACTIVE,
+    PrivilegeComputedStatus.EXPIRED: PublicPrivilegeStatus.EXPIRED,
+    PrivilegeComputedStatus.ENCUMBERED: PublicPrivilegeStatus.INACTIVE,
+    PrivilegeComputedStatus.INACTIVE: PublicPrivilegeStatus.INACTIVE,
+}
 
 
 class QualifyingLicenseStatus(SQLModel, table=True):

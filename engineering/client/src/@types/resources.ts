@@ -6,6 +6,9 @@ import country from "../i18n/en/country.json";
 import date from "../i18n/en/date.json";
 import status from "../i18n/en/status.json";
 import shell from "../i18n/en/shell.json";
+import application from "../i18n/en/application.json";
+import verify from "../i18n/en/verify.json";
+import home from "../i18n/en/home.json";
 
 const resources = {
   common,
@@ -16,6 +19,9 @@ const resources = {
   date,
   status,
   shell,
+  application,
+  verify,
+  home,
 } as const;
 
 export default resources;

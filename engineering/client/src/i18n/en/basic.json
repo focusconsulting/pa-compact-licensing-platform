@@ -6,7 +6,8 @@
     "name": {
       "firstNameTitle": "First name",
       "middleNameTitle": "Middle name",
-      "lastNameTitle": "Last name"
+      "lastNameTitle": "Last name",
+      "suffixTitle": "Suffix"
     },
     "hasBirthNameTitle": "Do you have a different name at birth?"
   }

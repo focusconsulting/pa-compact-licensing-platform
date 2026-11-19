@@ -49,7 +49,9 @@ async def main() -> None:
     loop = asyncio.get_running_loop()
     for stop_signal in _STOP_SIGNALS:
         loop.add_signal_handler(stop_signal, stop.set)
-    engine = create_async_engine(settings.db_url, pool_pre_ping=True)
+    engine = create_async_engine(
+        settings.db_url, pool_pre_ping=True, connect_args=settings.db_connect_args
+    )
     try:
         await run_worker(
             async_sessionmaker(engine, expire_on_commit=False),
