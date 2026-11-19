@@ -239,16 +239,20 @@ describe("the application's first step", () => {
     ]);
   });
 
-  it("shows the state's request and leaves its state as it is", async () => {
+  it("shows the state's request, takes a reply, and leaves its state as it is", async () => {
     const spy = answers({
       "GET /api/me/applications": ok([
         application({
           status: "info_requested",
+          opened_at: "2026-10-14T15:00:00Z",
           request_note: "Upload your NCCPA certificate.",
+          requested_at: "2026-10-19T15:00:00Z",
+          resubmit_by: "2026-12-13",
           claimed_license_number: "PA-9",
           claimed_license_expires_on: "2027-01-31",
         }),
       ]),
+      "GET /api/me/documents/unattached": ok([]),
       "GET /api/me/profile": ok(
         profile({
           date_of_birth: "1988-03-14",
@@ -264,14 +268,42 @@ describe("the application's first step", () => {
         }),
       ),
     });
-    render(<Page />);
+    const { container } = render(<Page />);
 
     expect(
-      await screen.findByText("Upload your NCCPA certificate."),
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Update your application",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Kansas needs more information" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Upload your NCCPA certificate."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Asked on Oct 19, 2026. Resubmit by Dec 13, 2026."),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("combobox", { name: "State *" }),
     ).not.toBeInTheDocument();
+    expect(screen.getByText("Kansas", { selector: "p" })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "To apply through another state, withdraw this application and apply again.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Only if Kansas' note asks for one. One file: PDF, Word, PNG or JPEG.",
+      ),
+    ).toBeInTheDocument();
+    await expectNoAxeViolations(container);
+    await userEvent.type(
+      screen.getByRole("textbox", { name: /^Your reply to Kansas/ }),
+      "Attached my certificate.",
+    );
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
 
     await waitFor(() => expect(push).toHaveBeenCalled());
@@ -279,8 +311,44 @@ describe("the application's first step", () => {
       {
         claimed_license_number: "PA-9",
         claimed_license_expires_on: "2027-01-31",
+        response_note: "Attached my certificate.",
       },
     ]);
+  });
+
+  it("shows the upload the PA already chose for the state", async () => {
+    answers({
+      "GET /api/me/applications": ok([
+        application({
+          status: "info_requested",
+          request_note: "Upload your NCCPA certificate.",
+          requested_at: "2026-10-19T15:00:00Z",
+          resubmit_by: "2026-12-13",
+          sql_state_code: "OK",
+          response_note: "Here it is.",
+        }),
+      ]),
+      "GET /api/me/documents/unattached": ok([
+        {
+          id: "d1",
+          kind: "information_response",
+          file_name: "nccpa.pdf",
+          content_type: "application/pdf",
+          size_bytes: 10,
+          scan_status: "clean",
+          created_at: "2026-10-20T15:00:00Z",
+        },
+      ]),
+    });
+    render(<Page />);
+
+    expect((await screen.findAllByText(/nccpa\.pdf/)).length).toBeGreaterThan(
+      0,
+    );
+    expect(screen.getByText("Oklahoma", { selector: "p" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: /^Your reply to Oklahoma/ }),
+    ).toHaveValue("Here it is.");
   });
 
   it("sends a PA whose application is with the state to its receipt", async () => {
@@ -488,6 +556,19 @@ describe("the application's first step", () => {
 
     expect(
       await screen.findByText("We couldn't save your answers. Try again."),
+    ).toBeInTheDocument();
+  });
+
+  it("says the application cannot be loaded when its state is not listed", async () => {
+    answers({
+      "GET /api/me/applications": ok([application({ sql_state_code: "ZZ" })]),
+    });
+    render(<Page />);
+
+    expect(
+      await screen.findByText(
+        "We couldn't load your application. Try again later.",
+      ),
     ).toBeInTheDocument();
   });
 

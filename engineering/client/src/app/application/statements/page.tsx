@@ -21,6 +21,7 @@ import {
   loadApplications,
   loadAttestations,
   loadStates,
+  loadUnattached,
   openApplication,
   nameOfState,
   submitApplication,
@@ -30,7 +31,8 @@ const BACKGROUND_CHECK = "background_check";
 const SWORN = "truthfulness";
 
 type Values = Record<string, boolean | string>;
-type ErrorKey = "save" | "stateNotLive" | "statementsChanged";
+type ErrorKey =
+  "save" | "stateNotLive" | "statementsChanged" | "documentNotClean";
 
 interface StatementProps {
   attestation: Attestation;
@@ -62,7 +64,7 @@ interface StatementsFormProps {
   onChanged: () => void;
 }
 
-/** Step 2 of the application (B6): each statement, the background check, and the sworn statement. */
+/** Step 2 of the application (B6, or B6r to resubmit): each statement, the background check, and the sworn statement. */
 function StatementsForm({
   application,
   attestations,
@@ -82,6 +84,7 @@ function StatementsForm({
   );
   const backgroundCheck = attestations.find((a) => a.code === BACKGROUND_CHECK);
   const sworn = attestations.find((a) => a.code === SWORN);
+  const resubmitting = application.status === "info_requested";
 
   async function submit(values: Values) {
     setError(null);
@@ -97,7 +100,12 @@ function StatementsForm({
             ),
           ),
       );
-      await submitApplication(application.id, String(values.swornName));
+      const uploads = resubmitting ? await loadUnattached() : [];
+      await submitApplication(
+        application.id,
+        String(values.swornName),
+        uploads.map((d) => d.id),
+      );
       router.push("/application/received");
     } catch (e) {
       const code = e instanceof ApplicationError ? e.code : null;
@@ -105,7 +113,11 @@ function StatementsForm({
         setError("statementsChanged");
         onChanged();
       } else {
-        setError(code === "STATE_NOT_LIVE" ? "stateNotLive" : "save");
+        const keys: Record<string, ErrorKey> = {
+          STATE_NOT_LIVE: "stateNotLive",
+          DOCUMENT_NOT_CLEAN: "documentNotClean",
+        };
+        setError(keys[String(code)] ?? "save");
       }
     }
   }
@@ -114,6 +126,7 @@ function StatementsForm({
     <FormProvider {...form}>
       <Form onSubmit={form.handleSubmit(submit)} large>
         <PageHeading title={t("statements.title")} />
+        {resubmitting && <p>{t("statements.resubmitIntro")}</p>}
         {error && (
           <AlertBanner type="error" heading={t("errors.heading")}>
             {t(`errors.${error}`)}
@@ -148,7 +161,7 @@ function StatementsForm({
         <TextField id="swornName" label={t("statements.swornName")} />
         <div className="margin-top-4 display-flex flex-align-center">
           <Button type="submit" className="margin-top-0">
-            {t("statements.submit")}
+            {t(resubmitting ? "statements.resubmit" : "statements.submit")}
           </Button>
           <Link href="/application" className="usa-link margin-left-3">
             {t("statements.back")}
