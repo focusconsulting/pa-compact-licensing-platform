@@ -13,12 +13,16 @@ vi.mock("src/contexts/AuthContext");
 
 const mockSignIn = vi.fn();
 const mockCompleteNewPassword = vi.fn();
+const mockVerifyTotpSetup = vi.fn();
+const mockAnswerTotp = vi.fn();
 
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(useAuth).mockReturnValue({
     signIn: mockSignIn,
     completeNewPassword: mockCompleteNewPassword,
+    verifyTotpSetup: mockVerifyTotpSetup,
+    answerTotp: mockAnswerTotp,
     signOut: vi.fn(),
     isLoading: false,
     idToken: null,
@@ -128,7 +132,7 @@ describe("LoginPage", () => {
       user: {},
       userAttributes: {},
     });
-    mockCompleteNewPassword.mockResolvedValue(undefined);
+    mockCompleteNewPassword.mockResolvedValue({ type: "success", session: {} });
 
     render(<LoginPage />);
     await user.type(
@@ -251,6 +255,145 @@ describe("LoginPage", () => {
 
     await expectNoAxeViolations(container);
   });
+  describe("TOTP", () => {
+    const SECRET = "JBSWY3DPEHPK3PXP";
+
+    async function signInTo(result: object) {
+      const user = userEvent.setup();
+      mockSignIn.mockResolvedValue(result);
+      const view = render(<LoginPage />);
+      await user.type(
+        screen.getByRole("textbox", { name: /Email address/i }),
+        "kim@example.com",
+      );
+      await user.type(document.getElementById("password")!, "password");
+      await user.click(screen.getByRole("button", { name: /Sign in/i }));
+      return { user, ...view };
+    }
+
+    async function enterCode(user: ReturnType<typeof userEvent.setup>) {
+      await user.type(
+        await screen.findByRole("textbox", { name: /Authentication code/i }),
+        "123456",
+      );
+      await user.click(screen.getByRole("button", { name: /Continue/i }));
+    }
+
+    it("answers a TOTP challenge and goes to the dashboard", async () => {
+      const cognitoUser = {};
+      const { user } = await signInTo({
+        type: "totpRequired",
+        user: cognitoUser,
+      });
+      mockAnswerTotp.mockResolvedValue(undefined);
+
+      await screen.findByRole("heading", {
+        name: /Enter your authentication code/i,
+      });
+      await enterCode(user);
+
+      await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/dashboard"));
+      expect(mockAnswerTotp).toHaveBeenCalledWith(cognitoUser, "123456");
+    });
+
+    it("shows the setup key and enrols with the first code", async () => {
+      const cognitoUser = {};
+      const { user } = await signInTo({
+        type: "totpSetupRequired",
+        user: cognitoUser,
+        secret: SECRET,
+      });
+      mockVerifyTotpSetup.mockResolvedValue(undefined);
+
+      await screen.findByRole("heading", {
+        name: /Set up your authenticator app/i,
+      });
+      expect(
+        screen.getByRole("img", {
+          name: /QR code for your authenticator app/i,
+        }),
+      ).toBeInTheDocument();
+      expect(screen.getByTestId("totp-secret")).toHaveTextContent(
+        "JBSW Y3DP EHPK 3PXP",
+      );
+      expect(
+        screen.getByRole("link", { name: /open it in your authenticator/i }),
+      ).toHaveAttribute(
+        "href",
+        expect.stringMatching(
+          /^otpauth:\/\/totp\/.*kim%40example\.com\?secret=JBSWY3DPEHPK3PXP/,
+        ),
+      );
+      await enterCode(user);
+
+      await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/dashboard"));
+      expect(mockVerifyTotpSetup).toHaveBeenCalledWith(cognitoUser, "123456");
+    });
+
+    it("asks a new user to enrol after setting a password", async () => {
+      const { user } = await signInTo({
+        type: "newPasswordRequired",
+        user: {},
+        userAttributes: {},
+      });
+      mockCompleteNewPassword.mockResolvedValue({
+        type: "totpSetupRequired",
+        user: {},
+        secret: SECRET,
+      });
+
+      await user.type(
+        await screen.findByLabelText(/New password/),
+        "NewPass123!",
+      );
+      await user.type(
+        screen.getByLabelText(/Confirm new password/),
+        "NewPass123!",
+      );
+      await user.click(screen.getByRole("button", { name: /Set password/i }));
+
+      expect(
+        await screen.findByRole("heading", {
+          name: /Set up your authenticator app/i,
+        }),
+      ).toBeInTheDocument();
+      expect(mockPush).not.toHaveBeenCalled();
+    });
+
+    it("shows the error when a code is rejected", async () => {
+      const { user } = await signInTo({ type: "totpRequired", user: {} });
+      mockAnswerTotp.mockRejectedValue(new Error("Invalid code received"));
+
+      await enterCode(user);
+
+      expect(
+        await screen.findByText(/Invalid code received/i),
+      ).toBeInTheDocument();
+      expect(mockPush).not.toHaveBeenCalled();
+    });
+
+    it("shows a generic error when a code fails with a non-Error value", async () => {
+      const { user } = await signInTo({ type: "totpRequired", user: {} });
+      mockAnswerTotp.mockRejectedValue("network down");
+
+      await enterCode(user);
+
+      expect(await screen.findByText("Code not accepted")).toBeInTheDocument();
+    });
+
+    it("has no axe violations on the setup step", async () => {
+      const { container } = await signInTo({
+        type: "totpSetupRequired",
+        user: {},
+        secret: SECRET,
+      });
+      await screen.findByRole("heading", {
+        name: /Set up your authenticator app/i,
+      });
+
+      await expectNoAxeViolations(container);
+    });
+  });
 });
 
 describe("LoginPage, in a build that sets the local password", () => {
@@ -265,6 +408,8 @@ describe("LoginPage, in a build that sets the local password", () => {
     vi.mocked(auth.useAuth).mockReturnValue({
       signIn: mockSignIn,
       completeNewPassword: mockCompleteNewPassword,
+      verifyTotpSetup: mockVerifyTotpSetup,
+      answerTotp: mockAnswerTotp,
       signOut: vi.fn(),
       isLoading: false,
       idToken: null,

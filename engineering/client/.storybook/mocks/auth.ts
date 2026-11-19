@@ -21,6 +21,15 @@ export const signIn: typeof auth.signIn = () =>
   Promise.resolve({ type: "success", session } as const);
 
 export const completeNewPassword: typeof auth.completeNewPassword = () =>
+  Promise.resolve({ type: "success", session } as const);
+
+export const verifyTotpSetup: typeof auth.verifyTotpSetup = () =>
   Promise.resolve(session);
+
+export const answerTotp: typeof auth.answerTotp = () =>
+  Promise.resolve(session);
+
+export const totpUri: typeof auth.totpUri = (email, secret) =>
+  `otpauth://totp/${email}?secret=${secret}`;
 
 export const signOut: typeof auth.signOut = () => {};

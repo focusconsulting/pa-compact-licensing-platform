@@ -100,9 +100,10 @@ describe("AuthProvider", () => {
 
   it("updates state after completeNewPassword", async () => {
     vi.mocked(authLib.getCurrentSession).mockResolvedValue(null);
-    vi.mocked(authLib.completeNewPassword).mockResolvedValue(
-      makeSession("final-token", "user@example.com"),
-    );
+    vi.mocked(authLib.completeNewPassword).mockResolvedValue({
+      type: "success",
+      session: makeSession("final-token", "user@example.com"),
+    });
 
     const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -112,6 +113,56 @@ describe("AuthProvider", () => {
     });
 
     expect(result.current.idToken).toBe("final-token");
+  });
+
+  it("does not update state when a TOTP challenge follows the new password", async () => {
+    vi.mocked(authLib.getCurrentSession).mockResolvedValue(null);
+    vi.mocked(authLib.completeNewPassword).mockResolvedValue({
+      type: "totpSetupRequired",
+      user: {} as never,
+      secret: "JBSWY3DPEHPK3PXP",
+    });
+
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.completeNewPassword({} as never, "NewPass123!", {});
+    });
+
+    expect(result.current.idToken).toBeNull();
+  });
+
+  it("updates state after verifyTotpSetup", async () => {
+    vi.mocked(authLib.getCurrentSession).mockResolvedValue(null);
+    vi.mocked(authLib.verifyTotpSetup).mockResolvedValue(
+      makeSession("enrolled-token", "user@example.com"),
+    );
+
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.verifyTotpSetup({} as never, "123456");
+    });
+
+    expect(result.current.idToken).toBe("enrolled-token");
+  });
+
+  it("updates state after answerTotp", async () => {
+    vi.mocked(authLib.getCurrentSession).mockResolvedValue(null);
+    vi.mocked(authLib.answerTotp).mockResolvedValue(
+      makeSession("mfa-token", "user@example.com"),
+    );
+
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.answerTotp({} as never, "123456");
+    });
+
+    expect(result.current.idToken).toBe("mfa-token");
   });
 
   it("clears state on signOut", async () => {

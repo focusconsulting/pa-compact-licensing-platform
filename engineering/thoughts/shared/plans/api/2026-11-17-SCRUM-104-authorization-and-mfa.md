@@ -36,7 +36,19 @@ SCRUM-104 makes the API enforce the permission matrix SCRUM-103 agreed, and requ
 
 ## PR 2: the client answers TOTP challenges
 
-`client/src/lib/auth.ts` handles `mfaSetup` (associate a software token, show the secret as a QR code, verify the first code) and `totpRequired`. The login page gains the two steps. These are inert while the pool has MFA off.
+Branch `feature/SCRUM-104-totp-client`, stacked on PR 1.
+
+- `client/src/lib/auth.ts`: one set of challenge callbacks serves `signIn` and `completeNewPassword`, so a new user goes from setting a password straight to enrolment. `mfaSetup` associates a software token and resolves with its secret; `verifyTotpSetup` confirms the first code; `answerTotp` answers `totpRequired`; `totpUri` builds the `otpauth://` link.
+- `AuthContext`: `completeNewPassword` returns the next step; `verifyTotpSetup` and `answerTotp` sign the user in.
+- Login page: an enrolment step (a QR code of the `otpauth://` URI, the link itself, and the setup key grouped in fours) and a code step.
+
+These steps stay inert while the pool has MFA off.
+
+The QR code uses `qrcode.react` ([ADR-0021](../../../../adrs/0021-qrcode-react-for-totp-enrolment.md)); the PR names it for the Commission's consent (SOW §7.5).
+
+### Success criteria
+
+- [x] `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm test:coverage` at 100%
 
 ## PR 3: a local Cognito that does TOTP and issues `amr`
 
