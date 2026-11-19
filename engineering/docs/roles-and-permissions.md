@@ -11,7 +11,9 @@ held in state S = the permissions their role holds everywhere
                 + the permissions granted to them in S
 ```
 
-S is the state in the route's path, such as `KS` in `/states/KS/applications`, or the user's own `state_code` when the path names none.
+S is the state in the route's path, such as `KS` in `/states/KS/applications`, or the user's own `state_code` when the path names none. A user with no `state_code` (the Commission roles) holds their `*` grants there.
+
+In a `/states/{state_code}` path the user must first have **standing** in S: S is their `state_code`, or they hold a grant there. Without it they are refused whatever their role holds, so a Kansas user cannot use Missouri's routes, and Commission users read states only through `/commission` ([ADR-0020](../adrs/0020-state-standing-and-relationship-scoping.md)).
 
 Routes never check a role. To change what a role may do, change `ROLE_PERMISSIONS`, not the routes.
 
@@ -50,7 +52,9 @@ The [confidentiality tiers](data-model.md#confidentiality-tiers) map onto these:
 {"KS": ["write", "read_private"], "MO": ["read_private"]}
 ```
 
-A value that names no permission matches nothing, so a typo denies rather than allows. Grants are read on every request, so a change takes effect on the user's next request. The F-04 staff CLI will create staff and change their grants, writing each change to `audit_log` as a security event.
+A `compact_admin` user who may reveal SSNs holds `{"*": ["read_ssn"]}`. `*` is the only key a Commission user holds, `read_ssn` is the only permission granted under it, and it gives no standing in any state. Only a `compact_admin` may hold it.
+
+A value that names no permission matches nothing, so a typo denies rather than allows. Grants are read on every request, so a change takes effect on the user's next request. The F-04 staff CLI (SCRUM-105) will create staff and change their grants, writing each change to `audit_log` as a security event; no route does. `admin` and `compact_admin` may use it in any state, and a holder of the `admin` grant in a state may use it in that state.
 
 ## What the client sees
 
@@ -58,7 +62,7 @@ A value that names no permission matches nothing, so a typo denies rather than a
 
 ## What a permission does not decide
 
-A permission decides whether a user may call a route, not which rows they see. [Documents](documents.md#who-may-see-a-document) lists the scope for each kind of document. A `state_staff` user with `read_private` in Kansas sees only the PAs connected to Kansas (Rule 5 §5.6(a)), and a licensee sees only their own record. The route's query applies that scope, and a record outside it returns `404` (constitution Principle II).
+A permission decides whether a user may call a route, not which rows they see. [Documents](documents.md#who-may-see-a-document) lists the scope for each kind of document. A `state_staff` user with `read_private` in Kansas sees only the PAs related to Kansas (Rule 5 §5.6(a)), and a licensee sees only their own record. The route's query applies that scope with the [relationship predicates](platform-contract.md#relationships), and a record outside it returns `404` (constitution Principle II). Which role reaches which route family is the [permission matrix](#permission-matrix).
 
 ## Namespaces
 
@@ -75,6 +79,32 @@ Every `/api` route outside `/api/health` sits under the namespace of the people 
 The health checks under `/api/health` are public for the load balancer, so they say only whether the API and database answer. `GET /api/admin/status` gives the system operator the deployed version, environment, uptime, database latency, and newest migration.
 
 `/commission` routes need `compact_admin`, not `read_private`: with no state in the path, `read_private` is checked in the caller's own state, so a state staff member's grant would pass.
+
+## Permission matrix
+
+What each role reaches, by route family, decided in [ADR-0020](../adrs/0020-state-standing-and-relationship-scoping.md). A `/states/{st}` row applies only to a caller with **standing** in `st`: `st` is their `state_code`, or they hold a grant there. Without standing the route returns `403 FORBIDDEN`, whatever the role. **✓** means the role alone passes; **grant** means the user also needs that permission granted in the state (in `*` for a Commission user); **own** means only their own record. SCRUM-104's role × endpoint test is driven from this table.
+
+| Route family | Declares | Rows the query returns | `licensee` | `state_staff` | `state_admin` | `compact_admin` | `admin` |
+|---|---|---|---|---|---|---|---|
+| `/me`: the caller's account | `require()` | The caller | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `/me/...`: profile, applications, privilege requests, payments | `manage_own_record` | The caller's practitioner | own | — | — | — | — |
+| `/public/...`: verification, live states, fees | `public()` | Public tier only | Anyone, signed in or not | | | | |
+| `/states/{st}/practitioners/...`: search, profile, history, documents | `read_general` | [`related_to(st)`](platform-contract.md#relationships) | — | ✓ | ✓ | — | — |
+| The private fields in those responses | `read_private` in `st` | Same | — | grant | grant | — | — |
+| `/states/{st}/practitioners/{id}/ssn`: reveal, audited | `read_ssn` | `related_to(st)` | — | grant | grant | — | — |
+| `/states/{st}/applications`: SQL queue and case view | `read_general` | `sql_state_code = st`, once the state has received it ([FLOW-06](../../product/context/flows/06-state-machines.md)) | — | ✓ | ✓ | — | — |
+| `/states/{st}/applications/{id}/...`: verify, request information, decide, withdraw eligibility | `write` | Same | — | grant | grant | — | — |
+| `/states/{st}/qualifying-licenses`, `/license-ingestions`: enter, update, upload | `write` | `state_code = st` | — | grant | grant | — | — |
+| `/states/{st}/privilege-requests`: remote-state queue and case view | `read_general` | `remote_state_code = st`, once the state has received it ([FLOW-06](../../product/context/flows/06-state-machines.md)) | — | ✓ | ✓ | — | — |
+| `/states/{st}/privilege-requests/{id}/...`, `/privileges/{id}/...`: issue, deny, change status | `write` | `remote_state_code = st` | — | grant | grant | — | — |
+| `/states/{st}/adverse-actions`, `/sii-reports`: read | `read_general` | The practitioner is `related_to(st)` | — | ✓ | ✓ | — | — |
+| The same: report, update, lift, close | `write` | Reported by `st` | — | grant | grant | — | — |
+| `/states/{st}/settings`: fees, proofs, contacts, practice requirements | `admin` | The state itself | — | grant | grant | — | — |
+| `/states/{st}/member-contacts`, `/reports`, `/dashboard` | `read_general` | The state's own figures; every member state's contacts | — | ✓ | ✓ | — | — |
+| `/commission/...`: every state's records, reports, member contacts, audit log | `compact_admin` | Every state | — | — | — | ✓ | ✓ |
+| `/commission/practitioners/{id}/ssn`: reveal, audited | `compact_admin`, then `read_ssn` | Every state | — | — | — | grant | — |
+| `/commission/settings`, `/commission/states/{st}`, `/commission/privileges/{id}/deactivate` | `compact_admin` | Every state | — | — | — | ✓ | ✓ |
+| `/admin/...` | `system_admin` | | — | — | — | — | ✓ |
 
 ## Declaring a route
 
