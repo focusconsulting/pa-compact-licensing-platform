@@ -70,7 +70,8 @@ security: audit-api audit-client scan-image scan-secrets
 # Known vulnerabilities in the API's locked dependencies, dev tools included
 audit-api:
     cd engineering/api && uv export --frozen --all-groups --no-hashes --no-emit-project --quiet \
-        | {{ pip_audit }} --requirement /dev/stdin --disable-pip --no-deps --progress-spinner off
+        | {{ pip_audit }} --requirement /dev/stdin --disable-pip --no-deps --progress-spinner off \
+            $(awk '{ sub(/#.*/, "") } NF { printf "--ignore-vuln %s ", $1 }' .pip-audit-ignore)
 
 # Known vulnerabilities in the client's and the end-to-end specs' locked dependencies, dev tools included
 audit-client:
@@ -80,7 +81,7 @@ audit-client:
 # Build the API's production image and scan its OS and Python packages
 scan-image:
     docker build --quiet --target app -t licensing-api:security engineering/api
-    {{ trivy }} image --quiet --severity MEDIUM,HIGH,CRITICAL --exit-code 1 licensing-api:security
+    {{ trivy }} image --quiet --severity MEDIUM,HIGH,CRITICAL --ignorefile .trivyignore.yaml --exit-code 1 licensing-api:security
 
 # Secrets anywhere in the git history
 scan-secrets:

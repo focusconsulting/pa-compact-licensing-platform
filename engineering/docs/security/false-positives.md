@@ -5,6 +5,18 @@ with why and until when. A scanner's own ignore file holds the ID; this
 register holds the reason. Remove an entry, and its ignore, when its
 condition clears or it expires; an expired entry is a defect.
 
+Accept a finding only when it doesn't apply to us, or when its fix isn't
+released or is younger than the 14-day release age; otherwise fix it. Each
+scan's ignore file:
+
+| Scan | Ignore file | Holds |
+|---|---|---|
+| CodeQL | `.github/codeql/ignore.tsv` | Rule ID and file, tab-separated |
+| pip-audit | `engineering/api/.pip-audit-ignore` | Vulnerability ID |
+| pnpm audit | `pnpm.auditConfig.ignoreGhsas` in `engineering/client/package.json` and `engineering/e2e/package.json` | GHSA ID |
+| Trivy | `.trivyignore.yaml` | CVE or GHSA ID, with an `expired_at` date after which it fails again |
+| ZAP | `.zap/rules.tsv` | Plugin ID, marked `IGNORE` |
+
 Checkov is report-only until
 [SCRUM-84](https://focusdigital.atlassian.net/browse/SCRUM-84) hardens the
 infrastructure, so its findings are recorded in bulk below rather than

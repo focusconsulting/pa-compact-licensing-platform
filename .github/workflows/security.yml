@@ -45,7 +45,7 @@ jobs:
 
       # Code scanning's own check fails only on high and above by default.
       - name: Fail on medium or worse
-        run: python3 scripts/security/findings-gate.py sarif sarif-results/*.sarif
+        run: python3 scripts/security/findings-gate.py sarif .github/codeql/ignore.tsv sarif-results/*.sarif
 
   dependencies:
     name: Dependency audit
