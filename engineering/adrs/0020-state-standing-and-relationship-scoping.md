@@ -28,7 +28,7 @@ Epic 5's contract step (SCRUM-103) fixes the permission matrix every later route
 2. **Commission grants use the key `*`.** `users.permissions` may hold `{"*": ["read_ssn"]}` for a `compact_admin` user. When the caller has no `state_code` and the route names no state, `require` reads the `*` grants. The key gives no standing in any `/states/{state_code}` path, and `read_ssn` is the only permission granted under it. No role holds `read_ssn`: each Commission user who may reveal an SSN is granted it individually, and every reveal is audited ([ADR-0007](0007-ssn-storage.md)). The system operator (`admin`) is not given it (backlog §2.4).
 3. **Relationships are SQL predicates in one module.** `licensing_api/repo/scope.py` defines, over `practitioners.id`:
    - `is_sql_for(state_code)`: a participation application names the state as `sql_state_code` and has left `draft`.
-   - `is_remote_for(state_code)`: a privilege request names the state as `remote_state_code` and has left `pending_payment`. Every privilege comes from such a request, so this covers privileges too.
+   - `is_remote_for(state_code)`: a privilege request names the state as `remote_state_code` and has been paid for (`submitted_at` is set). An unpaid request withdrawn after 60 days never reached the state (FLOW-06). Every privilege comes from such a request, so this covers privileges too.
    - `holds_license_in(state_code)`: a qualifying license in the state is linked to the practitioner.
    - `related_to(state_code)`: any of the three.
 
