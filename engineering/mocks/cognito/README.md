@@ -10,6 +10,11 @@ cognito-local has no SRP, so locally the client signs in with
 only flow the deployed app client allows
 ([ADR-0010](../../adrs/0010-local-sign-in-uses-password-auth.md)).
 
+The local pool requires no TOTP, because cognito-local cannot enrol an
+authenticator app at sign-in. To try SRP and TOTP, run `just up dev`
+from the repository root, which signs in with DEV's pool instead
+([ADR-0022](../../adrs/0022-local-totp-against-the-dev-pool.md)).
+
 ## Users
 
 [`db/local_licensing.json`](db/local_licensing.json) holds the local users,

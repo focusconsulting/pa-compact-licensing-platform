@@ -50,9 +50,21 @@ The QR code uses `qrcode.react` ([ADR-0021](../../../../adrs/0021-qrcode-react-f
 
 - [x] `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm test:coverage` at 100%
 
-## PR 3: a local Cognito that does TOTP and issues `amr`
+## PR 3: try TOTP locally against the DEV pool
 
-cognito-local supports TOTP only partly and never issues `amr`. Constitution Principle IV rules out a local bypass, so the local stack needs a stand-in that does. The candidates are a newer cognito-local, Magnito, moto, or a small mock of our own. That choice needs an ADR that supersedes part of ADR-0010. Seeded users get TOTP secrets, so `just up` and Playwright can sign in.
+Branch `feature/SCRUM-104-local-totp`, stacked on PR 2.
+
+No emulator both enrols an authenticator app at sign-in and issues `amr` (cognito-local refuses `AssociateSoftwareToken` with a session; see ADR-0022). Decision (2026-11-17): local sign-in stays on cognito-local with password auth and no TOTP, and `just up dev` points the local API, Worker, and client at DEV's real pool.
+
+- `engineering/infrastructure/justfile`: `cognito-env <env>` prints the Cognito settings from the app component's outputs.
+- Root `justfile`: `up` takes an optional environment and exports those settings before starting the apps.
+- ADR-0022, which amends ADR-0010; the README and the mock's README.
+
+### Success criteria
+
+- [x] A failed `cognito-env` stops `just up dev` before anything starts
+- [x] Exported settings override the `.env` files for `uv run`, uvicorn, and Next.js
+- [ ] `just up dev` signs in against DEV (needs DEV credentials)
 
 ## PR 4: require TOTP
 
@@ -60,6 +72,8 @@ cognito-local supports TOTP only partly and never issues `amr`. Constitution Pri
 - `licensing_api/auth.py`: refuse a token whose `amr` lacks `mfa` with `401 MFA_REQUIRED`, and check `iss`.
 - An ADR for authentication: TOTP everywhere, asserted from `amr`.
 - AC: a token without the MFA claim gets 401.
+- First, with `just up dev` and a DEV user enrolled in TOTP, check that DEV's ID token carries `amr` (decision, 2026-11-17). If it doesn't, the check falls back to the pool's MFA setting.
+- Tokens from cognito-local carry no `amr`, so local sign-in against the mock needs its own answer when the API requires it (ADR-0022, Consequences).
 
 ## What We're NOT Doing
 
