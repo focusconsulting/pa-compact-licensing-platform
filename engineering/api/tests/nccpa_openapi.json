@@ -1,0 +1,1014 @@
+{
+  "components": {
+    "schemas": {
+      "ActivityResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "activityId": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ApprovedActivity": {
+        "additionalProperties": false,
+        "properties": {
+          "approvedActivityId": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "cmeTypeId": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "deletedOn": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "endsOn": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "hasSpecialtiesApplied": {
+            "type": "boolean"
+          },
+          "maxCredits": {
+            "format": "double",
+            "type": "number"
+          },
+          "providerId": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "providerName": {
+            "nullable": true,
+            "type": "string"
+          },
+          "sponsorId": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "sponsorName": {
+            "nullable": true,
+            "type": "string"
+          },
+          "startsOn": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "title": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "CatOneCmeModel": {
+        "additionalProperties": false,
+        "properties": {
+          "activityEndsOn": {
+            "description": "End date of the CME Activity that will be logged.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "activityStartsOn": {
+            "description": "Start date of the CME Activity that will be logged.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "approvedActivityId": {
+            "description": "Optional approvedActivityId (from /Cme/SearchApprovedActivities or /Cme/ApprovedActivitiesForLogging). If a param value is present here, the CME type will be SA or PI depending on the approved activity.",
+            "format": "int32",
+            "nullable": true,
+            "type": "integer"
+          },
+          "creditsEarned": {
+            "description": "Credits earned for the CME Activity that will be logged.",
+            "format": "double",
+            "type": "number"
+          },
+          "providerId": {
+            "description": "Optional providerId (from /Cme/Providers). Required if approvedActivityId is not supplied.",
+            "format": "int32",
+            "nullable": true,
+            "type": "integer"
+          },
+          "sponsorId": {
+            "description": "Optional sponsorId (from /Cme/Sponsors). Required if approvedActivityId is not supplied.",
+            "format": "int32",
+            "nullable": true,
+            "type": "integer"
+          },
+          "title": {
+            "description": "The title of the CME Activity that will be logged.",
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "activityStartsOn",
+          "creditsEarned",
+          "title"
+        ],
+        "type": "object"
+      },
+      "CertProgramCmeModel": {
+        "additionalProperties": false,
+        "properties": {
+          "activityEndsOn": {
+            "description": "End date of the CME Activity that will be logged.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "activityStartsOn": {
+            "description": "Start date of the CME Activity that will be logged.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "certificateProgramId": {
+            "description": "Certification Program IDs can be obtained from /Cme/CertificatePrograms.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "creditsEarned": {
+            "description": "Credits earned for the CME Activity that will be logged.",
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "required": [
+          "activityStartsOn",
+          "certificateProgramId",
+          "creditsEarned"
+        ],
+        "type": "object"
+      },
+      "CertificateProgram": {
+        "additionalProperties": false,
+        "properties": {
+          "certificateProgramId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "maxCredits": {
+            "format": "double",
+            "type": "number"
+          },
+          "name": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "CertificationStatusResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "certificationDate": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "certificationStatus": {
+            "nullable": true,
+            "type": "string"
+          },
+          "expirationDate": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "firstName": {
+            "nullable": true,
+            "type": "string"
+          },
+          "lastName": {
+            "nullable": true,
+            "type": "string"
+          },
+          "paId": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "CmeCreditsModel": {
+        "additionalProperties": false,
+        "properties": {
+          "creditsEarned": {
+            "description": "Credits earned for the CME Activity.",
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "required": [
+          "creditsEarned"
+        ],
+        "type": "object"
+      },
+      "EarningWindow": {
+        "additionalProperties": false,
+        "properties": {
+          "cycleYear": {
+            "format": "int32",
+            "nullable": true,
+            "type": "integer"
+          },
+          "earningEndsOn": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "earningStartsOn": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "paId": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "PaSearchModel": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "NCCPA PaId or SSN",
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "Provider": {
+        "additionalProperties": false,
+        "properties": {
+          "acronym": {
+            "nullable": true,
+            "type": "string"
+          },
+          "name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "providerId": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "sponsorId": {
+            "format": "int32",
+            "nullable": true,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Sponsor": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "nullable": true,
+            "type": "string"
+          },
+          "name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "sponsorId": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "WebServices Public Api",
+    "version": "v1"
+  },
+  "openapi": "3.0.4",
+  "paths": {
+    "/CertificationStatus": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaSearchModel"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaSearchModel"
+              }
+            },
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaSearchModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaSearchModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificationStatusResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificationStatusResponse"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificationStatusResponse"
+                }
+              }
+            },
+            "description": "If a PA is found, a data structure is returned with information about that PA. CertificationStatus will be \"Certified\", \"Not Certified\", \"Not Certified - Revoked\". ExpirationDate and CertificationDate will not be provided for certain PAs."
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "description": "System Under Maintenance."
+          }
+        },
+        "summary": "Searches for a single PA by either NCCPA PaId or SSN and, if found, returns a data structure representing the PA's current board certification info.",
+        "tags": [
+          "CertificationStatus"
+        ]
+      }
+    },
+    "/CertificationStatus/Report": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaSearchModel"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaSearchModel"
+              }
+            },
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaSearchModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaSearchModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "If PA represented by {id} is found. A PDF is returned containing board certification status information."
+          },
+          "400": {
+            "description": "If PA represented by {id} is not found."
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "description": "System Under Maintenance."
+          }
+        },
+        "summary": "Generates a board certification status report (PDF) for a PA.",
+        "tags": [
+          "CertificationStatus"
+        ]
+      }
+    },
+    "/CertificationStatus/Search": {
+      "get": {
+        "parameters": [
+          {
+            "description": "3 character string (like 'USA'). Required.",
+            "in": "query",
+            "name": "countryCode",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "2 character string (like 'GA'). Required.",
+            "in": "query",
+            "name": "stateCode",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "At least the first 2 characters of the first name. Required.",
+            "in": "query",
+            "name": "firstName",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "At least the first 2 characters of the last name. Required.",
+            "in": "query",
+            "name": "lastName",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CertificationStatusResponse"
+                  },
+                  "type": "array"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CertificationStatusResponse"
+                  },
+                  "type": "array"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CertificationStatusResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "CertificationStatus will be \"Certified\", \"Not Certified\", \"Not Certified - Revoked\". ExpirationDate and CertificationDate will not be provided for certain PAs."
+          },
+          "400": {
+            "description": "Invalid search criteria received."
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "description": "System Under Maintenance."
+          }
+        },
+        "summary": "Searches for PAs by country, state, first, and last name. Returns data structures for each PA found representing the PA's current board certification info.",
+        "tags": [
+          "CertificationStatus"
+        ]
+      }
+    },
+    "/Cme/Activities/{activityId}": {
+      "put": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "activityId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CmeCreditsModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The CME Activity is updated successfully."
+          },
+          "400": {
+            "description": "The CME Activity cannot be updated. In many cases, the body of the error response will be a JSON object that contains a \"Message\" property which will be useful in diagnosing CME logging issues."
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "description": "System Under Maintenance."
+          }
+        },
+        "summary": "Updates an existing CME Activity.",
+        "tags": [
+          "Cme"
+        ]
+      }
+    },
+    "/Cme/Activities/{activityId}/AddFiles": {
+      "post": {
+        "parameters": [
+          {
+            "description": "Required ID of the CME Activity to update. The CME Activity must be associated with the current PA.",
+            "in": "path",
+            "name": "activityId",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The file is uploaded and attached successfully."
+          },
+          "404": {
+            "description": "The CME Activity represented by {activityId} could not found."
+          },
+          "415": {
+            "description": "The file is in an unsupported media type or the request was not multipart/form-data."
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "description": "System Under Maintenance."
+          }
+        },
+        "summary": "Attach files to an existing CME activity. Supports PDF, JPG, GIF, PNG, BMP, TIFF. Files are categorized as CME Certificates. Expects a multipart/form-data\r\nrequest. Each file part of the request must contain its own Content-Type header. Total request size not to exceed 2MB.",
+        "tags": [
+          "Cme"
+        ]
+      }
+    },
+    "/Cme/ApprovedActivitiesForLogging": {
+      "get": {
+        "parameters": [
+          {
+            "description": "The start date of the CME Activity that will be logged.",
+            "in": "query",
+            "name": "startingOn",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Required parameter to filter for activities to be used for logging with a specific CME type. Values supported are 2 (SA or Self Assessment) and 3 (PI or Performance Improvement).",
+            "in": "query",
+            "name": "cmeType",
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Optional end date of the CME Activity that will be logged.",
+            "in": "query",
+            "name": "endingOn",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ApprovedActivity"
+                  },
+                  "type": "array"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ApprovedActivity"
+                  },
+                  "type": "array"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ApprovedActivity"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Returns a list of SA/PI approved activities."
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "description": "System Under Maintenance."
+          }
+        },
+        "summary": "Get a list of SA/PI approved activities given an activity start/end date and CME type (SA or PI). Returns only approved activities that are valid given a potential CME activity's attributes.",
+        "tags": [
+          "Cme"
+        ]
+      }
+    },
+    "/Cme/CertificatePrograms": {
+      "get": {
+        "parameters": [
+          {
+            "description": "Optional parameter to filter Certification Programs by cycle year. If present, Certification Program MaxCredits will be specific to the cycle year.",
+            "in": "query",
+            "name": "cycleYear",
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CertificateProgram"
+                  },
+                  "type": "array"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CertificateProgram"
+                  },
+                  "type": "array"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CertificateProgram"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Returns a list of certification programs."
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "description": "System Under Maintenance."
+          }
+        },
+        "summary": "Returns a list of certification programs.",
+        "tags": [
+          "Cme"
+        ]
+      }
+    },
+    "/Cme/EarningWindow": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EarningWindow"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EarningWindow"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/EarningWindow"
+                }
+              }
+            },
+            "description": "Returns a PA's current CME cycle earning window."
+          },
+          "404": {
+            "description": "The PAs current CME cycle earning window could not be found."
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "description": "System Under Maintenance."
+          }
+        },
+        "summary": "Gets a PA's current CME cycle earning window.",
+        "tags": [
+          "Cme"
+        ]
+      }
+    },
+    "/Cme/LogCategoryOne": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatOneCmeModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityResponse"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityResponse"
+                }
+              }
+            },
+            "description": "Returns a JSON object with the ActivityId of the newly created CME Activity. The ActivityId returned here should be recorded by the caller if subsequent credits are to be added to the same activity at a later time (through /Cme/UpdateActivity)."
+          },
+          "400": {
+            "description": "The CME activity cannot be created. In many cases, the body of the error response will be a JSON object that contains a \"Message\" property which will be useful in diagnosing CME logging issues.  The most common error messages are listed below:<br/>            <br/>            SponsorId is required.<br/>            ProviderId is required.<br/>            Title is required.<br/>            CreditsEarned is required.<br/>            ActivityStartsOn is required.<br/>            Cannot log more credits than those available on the approved activity.<br/>            Activity is outside the approved activity start and end date.<br/>            Credits being logged must be greater than 0.<br/>            Cannot log more than 200 credits for a single category one activity.<br/>            Cannot log: Provider and Sponsor mismatch.<br/>            You cannot log the same SA or PI approved activity for the same day.<br/>            The SA or PI approved activity you are logging to is not active.<br/>            Credits logged must be less than or equal to the maximum credits that may be earned for this SA/PI activity which is X.<br/>            You cannot log the same activity on the same day.<br/>            Cannot log outside of open earning windows.<br/>            Cannot create category one CME with no sponsor. Sponsor with id {0} does not exist.<br/>            Cannot create category one CME with no provider. Provider with id {0} does not exist."
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "description": "System Under Maintenance."
+          }
+        },
+        "summary": "Creates a new category one CME Activity for a PA.",
+        "tags": [
+          "Cme"
+        ]
+      }
+    },
+    "/Cme/LogCertificateProgram": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertProgramCmeModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityResponse"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityResponse"
+                }
+              }
+            },
+            "description": "Returns a JSON object with the ActivityId of the newly created CME Activity. The ActivityId returned here should be recorded by the caller if subsequent credits are to be added to the same activity at a later time (through /Cme/UpdateActivity)."
+          },
+          "400": {
+            "description": "The CME activity cannot be created. In many cases, the body of the error response will be a JSON object that contains a \"Message\" property which will be useful in diagnosing CME logging issues.  The most common error messages are listed below:<br/>            <br/>            You may only log the same Certification Program once per calendar year.<br/>            You cannot log the same Certification Program more than twice in the same cycle.<br/>            Maximum credits that may be earned for this activity is X."
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "description": "System Under Maintenance."
+          }
+        },
+        "summary": "Creates a new certification program CME Activity for a PA.",
+        "tags": [
+          "Cme"
+        ]
+      }
+    },
+    "/Cme/Providers": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Provider"
+                  },
+                  "type": "array"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Provider"
+                  },
+                  "type": "array"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Provider"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Returns a list of providers."
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "description": "System Under Maintenance."
+          }
+        },
+        "summary": "Returns a list of providers.",
+        "tags": [
+          "Cme"
+        ]
+      }
+    },
+    "/Cme/SearchApprovedActivities": {
+      "get": {
+        "parameters": [
+          {
+            "description": "Optional parameter to filter for activities that start on or after param value.",
+            "in": "query",
+            "name": "startsOnOrAfter",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional parameter to filter for activities that end on or before param value.",
+            "in": "query",
+            "name": "endsOnOrBefore",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional parameter to filter for activities to be used for specific CME types. Values supported are 2 (SA or Self Assessment) and 3 (PI or Performance Improvement).",
+            "in": "query",
+            "name": "cmeType",
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Optional parameter to filter for activities where the title contains param value.",
+            "in": "query",
+            "name": "title",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ApprovedActivity"
+                  },
+                  "type": "array"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ApprovedActivity"
+                  },
+                  "type": "array"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ApprovedActivity"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Returns a list of approved activities."
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "description": "System Under Maintenance."
+          }
+        },
+        "summary": "Search for SA/PI approved activities.",
+        "tags": [
+          "Cme"
+        ]
+      }
+    },
+    "/Cme/Sponsors": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Sponsor"
+                  },
+                  "type": "array"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Sponsor"
+                  },
+                  "type": "array"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Sponsor"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Returns a list of sponsors."
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "description": "System Under Maintenance."
+          }
+        },
+        "summary": "Returns a list of sponsors.",
+        "tags": [
+          "Cme"
+        ]
+      }
+    }
+  },
+  "tags": [
+    {
+      "description": "Provides endpoints for retrieving certification information about PAs. Requires \"client_credentials\" grant type.",
+      "name": "CertificationStatus"
+    },
+    {
+      "description": "Provides endpoints for logging CME activities on behalf of a PA.  Requires \"authorization_code\" grant type.",
+      "name": "Cme"
+    }
+  ]
+}

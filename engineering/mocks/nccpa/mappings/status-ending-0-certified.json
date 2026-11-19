@@ -1,0 +1,33 @@
+{
+  "priority": 5,
+  "request": {
+    "method": "POST",
+    "urlPath": "/CertificationStatus",
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer local-nccpa-token"
+      },
+      "Content-Type": {
+        "contains": "application/json"
+      }
+    },
+    "bodyPatterns": [
+      {
+        "matchesJsonPath": {
+          "expression": "$.id",
+          "matches": "^[1-9][0-9]*0$"
+        }
+      }
+    ]
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "body": "{\"paId\": {{jsonPath request.body '$.id'}}, \"firstName\": \"Casey\", \"lastName\": \"Certified\", \"certificationStatus\": \"Certified\", \"expirationDate\": \"2028-12-31T00:00:00\", \"certificationDate\": \"2010-06-01T00:00:00\"}",
+    "transformers": [
+      "response-template"
+    ]
+  }
+}

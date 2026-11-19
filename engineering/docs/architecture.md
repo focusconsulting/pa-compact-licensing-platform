@@ -92,12 +92,12 @@ flowchart LR
   worker -- "<b>Reads and writes</b><br/><i>[SQL / TLS]</i>" --> db
   worker -- "<b>Sends email</b><br/><i>[SMTP / STARTTLS]</i>" --> ses
   worker -- "<b>Reads physician reports</b><br/><i>[OAuth2 / HTTPS]</i>" --> fsmb
+  worker -- "<b>Reads PA certification</b><br/><i>[OAuth2 / HTTPS]</i>" --> nccpa
   worker -- "<b>Logs</b><br/><i>[awslogs]</i>" --> observability
   scheduler -- "<b>Runs</b><br/><i>[ECS RunTask]</i>" --> jobs
   jobs -- "<b>Reads and writes</b><br/><i>[SQL / TLS]</i>" --> db
   jobs -- "<b>Logs</b><br/><i>[awslogs]</i>" --> observability
   api -- "<b>Charges fees</b><br/><i>[HTTPS]</i>" --> payments
-  api -- "<b>Queries certification</b><br/><i>[HTTPS]</i>" --> nccpa
   api -- "<b>Logs</b><br/><i>[OTLP / AWS Distro for OpenTelemetry]</i>" --> observability
 
   classDef person fill:#08427b,stroke:#073b6f,color:#fff
@@ -124,4 +124,5 @@ and [`engineering/api/.env.example`](../api/.env.example).
 | S3 | RustFS |
 | GuardDuty Malware Protection | A tagger that writes the same tag, `THREATS_FOUND` for the EICAR test file ([`engineering/mocks/malware-scanner`](../mocks/malware-scanner/README.md)); not started in CI |
 | FSMB Physician Data Center | WireMock with fixed reports ([`engineering/mocks/fsmb`](../mocks/fsmb/README.md)); FSMB's demo server in staging ([`fsmb.md`](fsmb.md)) |
-| Payment Provider, NCCPA | Mock servers, built with the tickets that write their clients |
+| NCCPA Board Certification Status | WireMock with fixed PAs ([`engineering/mocks/nccpa`](../mocks/nccpa/README.md)); no AWS environment reaches NCCPA yet ([`nccpa.md`](nccpa.md)) |
+| Payment Provider | A mock server, built with the ticket that writes its client |

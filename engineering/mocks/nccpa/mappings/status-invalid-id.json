@@ -1,0 +1,26 @@
+{
+  "priority": 7,
+  "request": {
+    "method": "POST",
+    "urlPath": "/CertificationStatus",
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer local-nccpa-token"
+      },
+      "Content-Type": {
+        "contains": "application/json"
+      }
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "Content-Type": "application/problem+json; charset=utf-8"
+    },
+    "jsonBody": {
+      "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+      "title": "One or more validation errors occurred.",
+      "status": 400
+    }
+  }
+}
