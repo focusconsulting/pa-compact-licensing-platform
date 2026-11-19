@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from enum import StrEnum
-from typing import Annotated, Any
+from typing import Annotated
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -43,7 +43,7 @@ from licensing_api.repo.status import (
     PrivilegeStatus,
     QualifyingLicenseStatus,
 )
-from licensing_api.repo.user import User
+from licensing_api.repo.user import SYSTEM_USER_EMAIL, User
 from licensing_api.responses import Data, example
 
 me = APIRouter(prefix='/dashboard')
@@ -74,9 +74,31 @@ class Action(BaseModel):
     reasons: list[UnavailableReason]
 
 
+# Rule 3 §3.7(a)(1): the state must have what it asked for within 60 days of the application.
+_RESUBMIT_WITHIN_DAYS = 60
+
+
+class EventKind(StrEnum):
+    """What a step was, for the PA to read: worked out from history, never stored."""
+
+    APPLIED = 'applied'
+    # The first submit of an application after an earlier one was submitted.
+    APPLIED_AGAIN = 'applied_again'
+    RESUBMITTED = 'resubmitted'
+    INFO_REQUESTED = 'info_requested'
+    WITHDRAWN_BY_PA = 'withdrawn_by_pa'
+    # Withdrawn by the system user: the 60 days ran out (Rule 3 §3.7(a)(1)).
+    WITHDRAWN_BY_DEADLINE = 'withdrawn_by_deadline'
+    ELIGIBLE = 'eligible'
+    DENIED = 'denied'
+    ELIGIBILITY_WITHDRAWN = 'eligibility_withdrawn'
+    SUPERSEDED = 'superseded'
+
+
 class ApplicationEvent(BaseModel):
     """One step in an application's history. ``note`` is the state's request when it asked for information."""
 
+    kind: EventKind
     status: ApplicationStatus
     at: datetime
     note: str | None = None
@@ -95,6 +117,9 @@ class ApplicationSummary(BaseModel):
     withdrawn_at: datetime | None
     denial_reason: str | None
     denial_reason_detail: str | None
+    resubmit_by: date | None = Field(
+        description='While information is requested, the last day the state must have it'
+    )
     timeline: list[ApplicationEvent]
 
 
@@ -143,7 +168,8 @@ _EXAMPLE_APPLICATION = ApplicationSummary(
     withdrawn_at=None,
     denial_reason=None,
     denial_reason_detail=None,
-    timeline=[ApplicationEvent(status=ApplicationStatus.SUBMITTED, at=_AT)],
+    resubmit_by=None,
+    timeline=[ApplicationEvent(kind=EventKind.APPLIED, status=ApplicationStatus.SUBMITTED, at=_AT)],
 )
 _EXAMPLE_ACTION = Action(
     kind=ActionKind.APPLY_FOR_PRIVILEGES,
@@ -194,10 +220,23 @@ async def get_my_dashboard(
         ).all()
     )
     barred = await session.get(CompactEligibility, practitioner_id)
+    system_user = (
+        await session.scalars(select(col(User.id)).where(col(User.email) == SYSTEM_USER_EMAIL))
+    ).one()
+    time_zone = await reference_time_zone(session)
     return Data(
         data=Dashboard(
             qualifying_license=await _license(session, applications),
-            applications=[await _application(session, a) for a in applications],
+            applications=[
+                await _application(
+                    session,
+                    a,
+                    applied_before=any(older.opened_at for older in applications[i + 1 :]),
+                    system_user=system_user,
+                    time_zone=time_zone,
+                )
+                for i, a in enumerate(applications)
+            ],
             privileges=await _privileges(session, practitioner_id),
             primary_action=_primary_action(applications, barred is not None and barred.is_barred),
         )
@@ -264,7 +303,12 @@ async def _license(
 
 
 async def _application(
-    session: AsyncSession, application: ParticipationApplication
+    session: AsyncSession,
+    application: ParticipationApplication,
+    *,
+    applied_before: bool,
+    system_user: int,
+    time_zone: ZoneInfo,
 ) -> ApplicationSummary:
     rows = (
         await session.scalars(
@@ -277,9 +321,22 @@ async def _application(
         )
     ).all()
     # A step dated apart from when it was recorded, such as the day the state reviewed it, shows on that day.
-    timeline = [
-        _application_event(row.effective_at or row.changed_at, row.updated or {}) for row in rows
-    ]
+    timeline: list[ApplicationEvent] = []
+    for row in rows:
+        updated = row.updated or {}
+        if 'status' not in updated:
+            continue
+        status = ApplicationStatus(updated['status'])
+        timeline.append(
+            ApplicationEvent(
+                kind=_kind(status, timeline, applied_before, row.changed_by == system_user),
+                status=status,
+                at=row.effective_at or row.changed_at,
+                note=updated.get('request_note')
+                if status == ApplicationStatus.INFO_REQUESTED
+                else None,
+            )
+        )
     denial = (
         await session.get(RefDenialReason, application.denial_reason_code)
         if application.denial_reason_code
@@ -296,17 +353,29 @@ async def _application(
         withdrawn_at=application.withdrawn_at,
         denial_reason=denial.label if denial else None,
         denial_reason_detail=application.denial_reason_detail,
-        timeline=[event for event in timeline if event is not None],
+        resubmit_by=add_days(
+            compact_date_at(application.opened_at, time_zone), _RESUBMIT_WITHIN_DAYS
+        )
+        if application.status == ApplicationStatus.INFO_REQUESTED and application.opened_at
+        else None,
+        timeline=timeline,
     )
 
 
-def _application_event(at: datetime, updated: dict[str, Any]) -> ApplicationEvent | None:
-    """A history row that changed the status is a step; one that changed only other fields is not."""
-    if 'status' not in updated:
-        return None
-    status = ApplicationStatus(updated['status'])
-    note = updated.get('request_note') if status == ApplicationStatus.INFO_REQUESTED else None
-    return ApplicationEvent(status=status, at=at, note=note)
+def _kind(
+    status: ApplicationStatus,
+    earlier: list[ApplicationEvent],
+    applied_before: bool,
+    by_system: bool,
+) -> EventKind:
+    """A submit is the first, a repeat, or a resubmit; a withdrawal is the PA's or the deadline's."""
+    if status == ApplicationStatus.SUBMITTED:
+        if earlier:
+            return EventKind.RESUBMITTED
+        return EventKind.APPLIED_AGAIN if applied_before else EventKind.APPLIED
+    if status == ApplicationStatus.WITHDRAWN:
+        return EventKind.WITHDRAWN_BY_DEADLINE if by_system else EventKind.WITHDRAWN_BY_PA
+    return EventKind(status.value)
 
 
 async def _privileges(session: AsyncSession, practitioner_id: int) -> list[PrivilegeSummary]:

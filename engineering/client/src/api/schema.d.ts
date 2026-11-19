@@ -581,6 +581,7 @@ export interface components {
        * Format: date-time
        */
       at: string;
+      kind: components["schemas"]["EventKind"];
       /** Note */
       note?: string | null;
       status: components["schemas"]["ApplicationStatus"];
@@ -691,6 +692,11 @@ export interface components {
       kind: components["schemas"]["ApplicationKind"];
       /** Opened At */
       opened_at: string | null;
+      /**
+       * Resubmit By
+       * @description While information is requested, the last day the state must have it
+       */
+      resubmit_by: string | null;
       /** Sql State Code */
       sql_state_code: string;
       status: components["schemas"]["ApplicationStatus"];
@@ -852,6 +858,7 @@ export interface components {
      *           "timeline": [
      *             {
      *               "at": "2026-10-14T15:00:00Z",
+     *               "kind": "applied",
      *               "status": "submitted"
      *             }
      *           ]
@@ -1087,6 +1094,22 @@ export interface components {
       /** Details */
       details: string[];
     };
+    /**
+     * EventKind
+     * @description What a step was, for the PA to read: worked out from history, never stored.
+     * @enum {string}
+     */
+    EventKind:
+      | "applied"
+      | "applied_again"
+      | "resubmitted"
+      | "info_requested"
+      | "withdrawn_by_pa"
+      | "withdrawn_by_deadline"
+      | "eligible"
+      | "denied"
+      | "eligibility_withdrawn"
+      | "superseded";
     /**
      * LicenseComputedStatus
      * @description The statuses ``QualifyingLicenseStatus`` reports: the state's reported statuses, plus ``encumbered``.
