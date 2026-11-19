@@ -1,0 +1,2648 @@
+{
+  "components": {
+    "schemas": {
+      "AddMemberRequest": {
+        "properties": {
+          "fid": {
+            "$ref": "#/components/schemas/Fid"
+          },
+          "ignoreExisting": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "BoardActionStatus": {
+        "enum": [
+          "Unknown",
+          "Cleared",
+          "Alerted"
+        ]
+      },
+      "Date": {
+        "format": "date",
+        "type": "string"
+      },
+      "Fid": {
+        "format": "FID",
+        "pattern": "\\d{9}",
+        "type": "string"
+      },
+      "Member": {
+        "properties": {
+          "birthDate": {
+            "$ref": "#/components/schemas/Date"
+          },
+          "boardActionStatus": {
+            "$ref": "#/components/schemas/BoardActionStatus"
+          },
+          "currentReport": {
+            "$ref": "#/components/schemas/MemberReportSummary"
+          },
+          "fid": {
+            "$ref": "#/components/schemas/Fid"
+          },
+          "fullName": {
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "fullName"
+        ],
+        "type": "object"
+      },
+      "MemberReportSummary": {
+        "properties": {
+          "boardActionStatus": {
+            "$ref": "#/components/schemas/BoardActionStatus"
+          },
+          "isComplete": {
+            "type": "boolean"
+          },
+          "reportDateUtc": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "reportGeneratedBy": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reportId": {
+            "format": "int64",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ]
+          },
+          "reportStatus": {
+            "$ref": "#/components/schemas/ReportStatus"
+          }
+        },
+        "type": "object"
+      },
+      "PartialDate": {
+        "properties": {
+          "date": {
+            "description": "Full date, if available",
+            "format": "date-time",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "day": {
+            "description": "Day, if any, in two digit format",
+            "pattern": "\\d{2}",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "month": {
+            "description": "Month, if any, in two digit format",
+            "pattern": "\\d{2}",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "year": {
+            "description": "Year, if any, in four digit format",
+            "pattern": "\\d{4}",
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "PaymentStatus": {
+        "description": "PDC report payment status",
+        "properties": {
+          "isPaid": {
+            "description": "Determines if the report is paid",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "ProblemDetails": {
+        "properties": {
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "format": "int32",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "Report": {
+        "description": "PDC report",
+        "properties": {
+          "abms": {
+            "$ref": "#/components/schemas/ReportAbms",
+            "description": "ABMS information"
+          },
+          "aoa": {
+            "$ref": "#/components/schemas/ReportAoa",
+            "description": "AOA information"
+          },
+          "asOfDateTimeUtc": {
+            "description": "Date and time the report was generated (in UTC)",
+            "format": "date-time",
+            "type": "string"
+          },
+          "birthDate": {
+            "$ref": "#/components/schemas/ReportBirthDate",
+            "description": "Birth date"
+          },
+          "boardActionStatus": {
+            "$ref": "#/components/schemas/BoardActionStatus",
+            "description": "Board action status"
+          },
+          "boardOrders": {
+            "description": "Board orders",
+            "items": {
+              "$ref": "#/components/schemas/ReportBoardOrder"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "dea": {
+            "$ref": "#/components/schemas/ReportDea",
+            "description": "DEA information"
+          },
+          "fid": {
+            "description": "FID of the physician",
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "generatedByUser": {
+            "description": "Report generated by user",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "licenses": {
+            "description": "License information",
+            "items": {
+              "$ref": "#/components/schemas/ReportLicense"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "medicalEducation": {
+            "$ref": "#/components/schemas/ReportMedicalEducation",
+            "description": "Medical education"
+          },
+          "names": {
+            "$ref": "#/components/schemas/ReportNames",
+            "description": "Names"
+          },
+          "npi": {
+            "description": "NPI information",
+            "items": {
+              "$ref": "#/components/schemas/ReportNpi"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "reportId": {
+            "description": "ID of the report",
+            "format": "int64",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "fid",
+          "names"
+        ],
+        "type": "object"
+      },
+      "ReportAbms": {
+        "description": "PDC ABMS information",
+        "properties": {
+          "certifications": {
+            "description": "ABMS certifications",
+            "items": {
+              "$ref": "#/components/schemas/ReportAbmsCertification"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "ReportAbmsCertification": {
+        "description": "PDC ABMS certification",
+        "properties": {
+          "boardName": {
+            "description": "Certifying board",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "certificateDuration": {
+            "description": "Duration of the certificate (e.g. Lifetime, MOC, Time Limited)",
+            "maxLength": 20,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "certificateName": {
+            "description": "Certificate name",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "certificateStatus": {
+            "description": "Status of certificate (e.g. Active, Inactive, Expired)",
+            "maxLength": 100,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "certificateType": {
+            "description": "Type of certificate (e.g. General, Subspecialty)",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "effectiveDate": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PartialDate",
+                "description": "Effective date"
+              }
+            ]
+          },
+          "expirationDate": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PartialDate",
+                "description": "Expiration date"
+              }
+            ]
+          },
+          "isCertified": {
+            "description": "Is certified?",
+            "type": "boolean"
+          },
+          "meetsMocRequirements": {
+            "description": "Meets MOC requirements (e.g. Yes, No, Not Required)",
+            "maxLength": 20,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "mocPathwayId": {
+            "description": "MOC pathway Id",
+            "maxLength": 2,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "mocPathwayName": {
+            "description": "MOC pathway name",
+            "maxLength": 100,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "occupationStatus": {
+            "description": "Occupation status (e.g. R)",
+            "maxLength": 2,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "occupationStatusNotifyYear": {
+            "description": "Occupation status notification year",
+            "pattern": "\\d{4}",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "occurrenceType": {
+            "description": "Type of occurrence (e.g. Initial, Recertification, Designation)",
+            "maxLength": 20,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reportDate": {
+            "description": "Report date",
+            "format": "date-time",
+            "type": "string"
+          },
+          "reverificationDate": {
+            "description": "Reverification date",
+            "format": "date-time",
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "boardName",
+          "certificateName",
+          "meetsMocRequirements",
+          "certificateType",
+          "certificateDuration",
+          "occurrenceType"
+        ],
+        "type": "object"
+      },
+      "ReportAoa": {
+        "description": "PDC AOA information",
+        "properties": {
+          "certifications": {
+            "description": "AOA certifications",
+            "items": {
+              "$ref": "#/components/schemas/ReportAoaCertification"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "ReportAoaCertification": {
+        "properties": {
+          "aoaId": {
+            "description": "AOA ID",
+            "maxLength": 6,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "boardName": {
+            "description": "Board name",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "certificationEndDate": {
+            "description": "Certification end date",
+            "format": "date-time",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "certificationIssueDate": {
+            "description": "Certification issue date",
+            "format": "date-time",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "certificationName": {
+            "description": "Certification name",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "certificationStatus": {
+            "description": "Certification status (e.g. Active, Inactive, Retired, Deceased)",
+            "maxLength": 20,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "certificationType": {
+            "description": "Certification type (e.g. Primary, Subspecialty)",
+            "maxLength": 50,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isOccParticipating": {
+            "description": "Is OCC participating",
+            "type": "boolean"
+          },
+          "isOccRequired": {
+            "description": "Is OCC required",
+            "type": "boolean"
+          },
+          "recertificationExpireDate": {
+            "description": "Recertification expire date",
+            "format": "date-time",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "recertificationIssueDate": {
+            "description": "Recertification issue date",
+            "format": "date-time",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reportDate": {
+            "description": "Report date",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "aoaId",
+          "boardName",
+          "certificationName",
+          "certificationType"
+        ],
+        "type": "object"
+      },
+      "ReportBirthDate": {
+        "description": "Birth date",
+        "properties": {
+          "date": {
+            "description": "Full date, if available",
+            "format": "date-time",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "day": {
+            "description": "Day, if any, in two digit format",
+            "pattern": "\\d{2}",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "month": {
+            "description": "Month, if any, in two digit format",
+            "pattern": "\\d{2}",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reportDate": {
+            "description": "Report date",
+            "format": "date-time",
+            "type": "string"
+          },
+          "year": {
+            "description": "Year, if any, in four digit format",
+            "pattern": "\\d{4}",
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "ReportBoardOrder": {
+        "description": "Board order",
+        "properties": {
+          "actionForm": {
+            "$ref": "#/components/schemas/ReportBoardOrderActionForm",
+            "description": "Action form"
+          },
+          "actions": {
+            "description": "Actions",
+            "items": {
+              "$ref": "#/components/schemas/ReportBoardOrderAction"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "appealDate": {
+            "description": "Appeal date",
+            "format": "date-time",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "bases": {
+            "description": "Bases",
+            "items": {
+              "$ref": "#/components/schemas/ReportBoardOrderBasis"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "disciplinaryEntity": {
+            "$ref": "#/components/schemas/ReportBoardOrderEntity",
+            "description": "Disciplinary entity"
+          },
+          "effectiveDate": {
+            "description": "Effective date",
+            "format": "date-time",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "issueDate": {
+            "description": "Issue date",
+            "format": "date-time",
+            "type": "string"
+          },
+          "orderId": {
+            "description": "Order ID",
+            "format": "int64",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ]
+          },
+          "usmleId": {
+            "description": "USMLE ID",
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "disciplinaryEntity",
+          "actions"
+        ],
+        "type": "object"
+      },
+      "ReportBoardOrderAction": {
+        "description": "Board order action",
+        "properties": {
+          "actionCode": {
+            "description": "Action code",
+            "maxLength": 5,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "actionDescription": {
+            "description": "Action description",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "actionStayed": {
+            "$ref": "#/components/schemas/ReportBoardOrderActionStayed",
+            "description": "Action stayed"
+          },
+          "comments": {
+            "description": "Comments",
+            "maxLength": 1000,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "effectiveDate": {
+            "description": "Action effective date",
+            "format": "date-time",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "expirationDate": {
+            "description": "Action expiration date",
+            "format": "date-time",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isIndefinite": {
+            "description": "Is action indefinite?",
+            "type": "boolean"
+          },
+          "isPrejudicial": {
+            "description": "Is action prejudicial?",
+            "type": "boolean"
+          },
+          "termDays": {
+            "description": "Term days",
+            "format": "int32",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ]
+          },
+          "termMonths": {
+            "description": "Term months",
+            "format": "int32",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ]
+          },
+          "termYears": {
+            "description": "Term years",
+            "format": "int32",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "actionCode",
+          "actionDescription"
+        ],
+        "type": "object"
+      },
+      "ReportBoardOrderActionForm": {
+        "description": "Board order action form",
+        "properties": {
+          "code": {
+            "description": "Code",
+            "maxLength": 5,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "description": "Description",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "description"
+        ],
+        "type": "object"
+      },
+      "ReportBoardOrderActionStayed": {
+        "description": "Board order action stayed",
+        "properties": {
+          "code": {
+            "description": "Code",
+            "maxLength": 5,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "description": "Description",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "description"
+        ],
+        "type": "object"
+      },
+      "ReportBoardOrderBasis": {
+        "description": "Board order basis",
+        "properties": {
+          "categoryCode": {
+            "description": "Basis category code",
+            "maxLength": 5,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "code": {
+            "description": "Basis code",
+            "maxLength": 5,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "description": "Basis description",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "description"
+        ],
+        "type": "object"
+      },
+      "ReportBoardOrderEntity": {
+        "properties": {
+          "code": {
+            "description": "Entity code",
+            "maxLength": 3,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "description": "Entity description",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "description": "Entity name",
+            "maxLength": 25,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "description"
+        ],
+        "type": "object"
+      },
+      "ReportDea": {
+        "description": "PDC DEA information",
+        "properties": {
+          "certifications": {
+            "description": "DEA certifications",
+            "items": {
+              "$ref": "#/components/schemas/ReportDeaCertification"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "ReportDeaCertification": {
+        "description": "PDC DEA certificate",
+        "properties": {
+          "city": {
+            "description": "City",
+            "maxLength": 50,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "deaNumber": {
+            "description": "DEA number",
+            "maxLength": 9,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "drugSchedules": {
+            "description": "Drug schedules (space separated)",
+            "maxLength": 20,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "expirationDate": {
+            "description": "Expiration date",
+            "format": "date-time",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reportDate": {
+            "description": "Report date",
+            "format": "date-time",
+            "type": "string"
+          },
+          "state": {
+            "description": "State",
+            "maxLength": 2,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "zipCode": {
+            "description": "Zip code",
+            "maxLength": 9,
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "deaNumber"
+        ],
+        "type": "object"
+      },
+      "ReportGraduationDate": {
+        "description": "PDC graduation date",
+        "properties": {
+          "isVerified": {
+            "description": "Is the graduation date verified?",
+            "type": "boolean"
+          },
+          "reportDate": {
+            "description": "Report date",
+            "format": "date-time",
+            "type": "string"
+          },
+          "year": {
+            "description": "Graduation year",
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "year"
+        ],
+        "type": "object"
+      },
+      "ReportLicense": {
+        "description": "PDC license",
+        "properties": {
+          "expirationDate": {
+            "description": "Expiration date",
+            "format": "date-time",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "issueDate": {
+            "description": "Issue date",
+            "format": "date-time",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "issuerDescription": {
+            "description": "Description of license issuer",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "issuerName": {
+            "description": "Name of license issuer",
+            "maxLength": 5,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "licenseNumber": {
+            "description": "License number",
+            "maxLength": 20,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "licenseType": {
+            "description": "Type of license",
+            "maxLength": 100,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reportDate": {
+            "description": "Report date",
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "description": "License status",
+            "maxLength": 100,
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "issuerName",
+          "issuerDescription"
+        ],
+        "type": "object"
+      },
+      "ReportMedicalDegree": {
+        "description": "PDC medical degree",
+        "properties": {
+          "code": {
+            "description": "Code",
+            "maxLength": 5,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "description": "Description",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isVerified": {
+            "description": "Is the degree verified?",
+            "type": "boolean"
+          },
+          "reportDate": {
+            "description": "Report date",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "description"
+        ],
+        "type": "object"
+      },
+      "ReportMedicalEducation": {
+        "description": "PDC medical education",
+        "properties": {
+          "degree": {
+            "$ref": "#/components/schemas/ReportMedicalDegree",
+            "description": "Medical degree"
+          },
+          "graduationDate": {
+            "$ref": "#/components/schemas/ReportGraduationDate",
+            "description": "Graduation date"
+          },
+          "school": {
+            "$ref": "#/components/schemas/ReportMedicalSchool",
+            "description": "Medical school"
+          }
+        },
+        "type": "object"
+      },
+      "ReportMedicalSchool": {
+        "description": "PDC medical school",
+        "properties": {
+          "alternateNames": {
+            "description": "Alternate school names",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100,
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "cibisCode": {
+            "description": "CIBIS code",
+            "maxLength": 6,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "city": {
+            "description": "City",
+            "maxLength": 50,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "countryCode": {
+            "description": "ISO Country code",
+            "maxLength": 2,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "countryDescription": {
+            "description": "Country description",
+            "maxLength": 100,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isVerified": {
+            "description": "Is the school verified?",
+            "type": "boolean"
+          },
+          "name": {
+            "description": "School name",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reportDate": {
+            "description": "Report date",
+            "format": "date-time",
+            "type": "string"
+          },
+          "schoolTypeCode": {
+            "description": "Type of school (e.g. MD, DO)",
+            "maxLength": 5,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "schoolTypeDescription": {
+            "description": "Description of the school type",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "stateCode": {
+            "description": "State or province code",
+            "maxLength": 3,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "stateDescription": {
+            "description": "State or province description",
+            "maxLength": 100,
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "cibisCode",
+          "schoolTypeCode",
+          "schoolTypeDescription"
+        ],
+        "type": "object"
+      },
+      "ReportName": {
+        "description": "PDC Name",
+        "properties": {
+          "firstName": {
+            "description": "First name",
+            "maxLength": 50,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lastName": {
+            "description": "Last name",
+            "maxLength": 50,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "middleName": {
+            "description": "Middle name",
+            "maxLength": 50,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reportDate": {
+            "description": "Report date",
+            "format": "date-time",
+            "type": "string"
+          },
+          "suffix": {
+            "description": "Suffix",
+            "maxLength": 4,
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "lastName"
+        ],
+        "type": "object"
+      },
+      "ReportNames": {
+        "description": "PDC names",
+        "properties": {
+          "legal": {
+            "$ref": "#/components/schemas/ReportName",
+            "description": "Legal name"
+          },
+          "other": {
+            "description": "Other names",
+            "items": {
+              "$ref": "#/components/schemas/ReportName"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          }
+        },
+        "required": [
+          "legal"
+        ],
+        "type": "object"
+      },
+      "ReportNpi": {
+        "description": "PDC NPI",
+        "properties": {
+          "entityType": {
+            "description": "Entity type (e.g. Individual, Group)",
+            "maxLength": 20,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "npiNumber": {
+            "description": "NPI number",
+            "maxLength": 10,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reportDate": {
+            "description": "Report date",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "npiNumber",
+          "entityType"
+        ],
+        "type": "object"
+      },
+      "ReportStatus": {
+        "enum": [
+          "Pending",
+          "Succeeded",
+          "Failed"
+        ]
+      },
+      "SearchRequest": {
+        "properties": {
+          "birthDate": {
+            "$ref": "#/components/schemas/Date"
+          },
+          "degree": {
+            "maxLength": 5,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "graduationYear": {
+            "maximum": 2100,
+            "minimum": 1900,
+            "pattern": "\\d{4}",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "licenseNumber": {
+            "maxLength": 16,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "medicalSchool": {
+            "maxLength": 100,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "maxLength": 160,
+            "minLength": 1,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "npi": {
+            "maxLength": 10,
+            "pattern": "\\d{10}",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reuseSearchId": {
+            "type": "boolean"
+          },
+          "ssnLastFour": {
+            "pattern": "\\d{4}",
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "SearchResult": {
+        "properties": {
+          "fid": {
+            "$ref": "#/components/schemas/Fid"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "oauth2": {
+        "flows": {
+          "clientCredentials": {
+            "authorizationUrl": "https://services-pdc-demo.fsmb.org/connect/token",
+            "scopes": {
+              "pdc.member_read": "Read member information including reports.",
+              "pdc.member_write": "Update member information including generating reports.",
+              "pdc.search": "Search for physicians."
+            },
+            "tokenUrl": "https://services-pdc-demo.fsmb.org/connect/token"
+          }
+        },
+        "type": "oauth2"
+      }
+    }
+  },
+  "info": {
+    "contact": {
+      "email": "pdc@fsmb.org",
+      "name": "Federation of State Medical Boards",
+      "url": "https://pdc.fsmb.org"
+    },
+    "description": "Provides access to PDC data.",
+    "summary": "Provides access to PDC resources including rosters and members",
+    "termsOfService": "https://github.com/fsmb/pdc-api",
+    "title": "PDC API",
+    "version": "v1"
+  },
+  "openapi": "3.1.1",
+  "paths": {
+    "/v1/rosters/{customerKey}/members": {
+      "post": {
+        "description": "Add a member to the roster.",
+        "parameters": [
+          {
+            "description": "Customer key",
+            "in": "path",
+            "name": "customerKey",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddMemberRequest"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddMemberRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddMemberRequest"
+              }
+            }
+          },
+          "description": "Cancellation token",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Member"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Member"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "FID is invalid."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Member already exists and ignoreExisting is not set."
+          }
+        },
+        "summary": "Add Member",
+        "tags": [
+          "Member"
+        ]
+      }
+    },
+    "/v1/rosters/{customerKey}/members/{fid}": {
+      "get": {
+        "description": "Get a member by FID.",
+        "parameters": [
+          {
+            "description": "Customer key",
+            "in": "path",
+            "name": "customerKey",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "FID",
+            "in": "path",
+            "name": "fid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Member"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Member"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "FID is invalid."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Member not found."
+          }
+        },
+        "summary": "Get Member",
+        "tags": [
+          "Member"
+        ]
+      }
+    },
+    "/v1/rosters/{customerKey}/members/{fid}/reports": {
+      "post": {
+        "description": "Generate a new report for a member.",
+        "parameters": [
+          {
+            "description": "Customer key",
+            "in": "path",
+            "name": "customerKey",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "FID",
+            "in": "path",
+            "name": "fid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Member"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Member"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "202": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Request already pending."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "FID is invalid"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          }
+        },
+        "summary": "Generate Report",
+        "tags": [
+          "Member"
+        ]
+      }
+    },
+    "/v1/rosters/{customerKey}/members/{fid}/reports/current": {
+      "get": {
+        "description": "Gets the current report summary for a member, if any.",
+        "parameters": [
+          {
+            "description": "Customer key",
+            "in": "path",
+            "name": "customerKey",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "FID",
+            "in": "path",
+            "name": "fid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberReportSummary"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberReportSummary"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "204": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Report not available."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "FID is invalid."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Report not found."
+          }
+        },
+        "summary": "Get Current Report Summary",
+        "tags": [
+          "Member"
+        ]
+      }
+    },
+    "/v1/rosters/{customerKey}/members/{fid}/reports/current/data": {
+      "get": {
+        "description": "Get the current report as data for a member, if any.",
+        "parameters": [
+          {
+            "description": "Customer key",
+            "in": "path",
+            "name": "customerKey",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "FID",
+            "in": "path",
+            "name": "fid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Report"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Report"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "204": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Report not available."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "FID is invalid."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Member or report not found."
+          }
+        },
+        "summary": "Get Current Report Data",
+        "tags": [
+          "Member"
+        ]
+      }
+    },
+    "/v1/rosters/{customerKey}/members/{fid}/reports/current/pdf": {
+      "get": {
+        "description": "Get the current report as a PDF for a member, if any.",
+        "parameters": [
+          {
+            "description": "Customer key",
+            "in": "path",
+            "name": "customerKey",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "FID",
+            "in": "path",
+            "name": "fid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "For internal use only",
+            "in": "query",
+            "name": "audit",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "format": "byte",
+                  "type": "string"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "format": "byte",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "204": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Report not available."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "FID is invalid."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Member or report not found."
+          }
+        },
+        "summary": "Get Current Report PDF",
+        "tags": [
+          "Member"
+        ]
+      }
+    },
+    "/v1/rosters/{customerKey}/members/{fid}/reports/{reportId}": {
+      "get": {
+        "description": "Gets a report summary, by ID.",
+        "parameters": [
+          {
+            "description": "Customer key",
+            "in": "path",
+            "name": "customerKey",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "FID",
+            "in": "path",
+            "name": "fid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Report ID",
+            "in": "path",
+            "name": "reportId",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberReportSummary"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberReportSummary"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "204": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Report not available."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "FID is invalid."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Report not found."
+          }
+        },
+        "summary": "Get Report Summary by ID",
+        "tags": [
+          "Member"
+        ]
+      }
+    },
+    "/v1/rosters/{customerKey}/members/{fid}/reports/{reportId}/data": {
+      "get": {
+        "description": "Get a report by its ID as data.",
+        "parameters": [
+          {
+            "description": "Customer key",
+            "in": "path",
+            "name": "customerKey",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "FID",
+            "in": "path",
+            "name": "fid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The report ID.",
+            "in": "path",
+            "name": "reportId",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Report"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Report"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "204": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Report not available."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "FID is invalid."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Report not found."
+          }
+        },
+        "summary": "Get Report Data by ID",
+        "tags": [
+          "Member"
+        ]
+      }
+    },
+    "/v1/rosters/{customerKey}/members/{fid}/reports/{reportId}/pdf": {
+      "get": {
+        "description": "Get a report by its ID as a PDF.",
+        "parameters": [
+          {
+            "description": "Customer key",
+            "in": "path",
+            "name": "customerKey",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "FID",
+            "in": "path",
+            "name": "fid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The report ID.",
+            "in": "path",
+            "name": "reportId",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ]
+            }
+          },
+          {
+            "description": "For internal use only",
+            "in": "query",
+            "name": "audit",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "format": "byte",
+                  "type": "string"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "format": "byte",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "204": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Report not available."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "FID is invalid."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Report not found."
+          }
+        },
+        "summary": "Get Report PDF by ID",
+        "tags": [
+          "Member"
+        ]
+      }
+    },
+    "/v1/rosters/{customerKey}/reports/{fid}/invoice": {
+      "get": {
+        "description": "Gets the invoice status for the current report, if any.",
+        "parameters": [
+          {
+            "description": "Customer key",
+            "in": "path",
+            "name": "customerKey",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "FID",
+            "in": "path",
+            "name": "fid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentStatus"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "204": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Report not available."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "FID is invalid."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Report not found."
+          }
+        },
+        "summary": "Get Current Report Invoice",
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/v1/rosters/{customerKey}/reports/{fid}/{reportId}/invoice": {
+      "get": {
+        "description": "Gets the invoice status for a report.",
+        "parameters": [
+          {
+            "description": "Customer key",
+            "in": "path",
+            "name": "customerKey",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "FID",
+            "in": "path",
+            "name": "fid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Report ID",
+            "in": "path",
+            "name": "reportId",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentStatus"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "204": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Report not found."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "FID or report ID is invalid."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          }
+        },
+        "summary": "Get Report Invoice Status by ID",
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/v1/rosters/{customerKey}/search": {
+      "post": {
+        "deprecated": true,
+        "description": "Search for a physician.",
+        "parameters": [
+          {
+            "description": "Customer key",
+            "in": "path",
+            "name": "customerKey",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchRequest"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchRequest"
+              }
+            }
+          },
+          "description": "Cancellation token",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "204": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "No match was found."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Bad request. Ensure that all search data is provided."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          }
+        },
+        "summary": "Physician Search",
+        "tags": [
+          "LegacySearch"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://services-pdc-demo.fsmb.org/"
+    }
+  ],
+  "tags": [
+    {
+      "name": "LegacySearch"
+    },
+    {
+      "name": "Member"
+    },
+    {
+      "name": "Reports"
+    }
+  ]
+}
