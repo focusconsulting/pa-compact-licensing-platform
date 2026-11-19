@@ -35,13 +35,15 @@ deploy env:
     just apply app {{ env }} -auto-approve -var image_tag="$sha" -var repo_name="$repo"
     out() { (cd {{ iac }}/components/app/opentofu && tofu output -raw "$1"); }
     # Every NEXT_PUBLIC_* value is set explicitly so a laptop's .env cannot leak into the build:
-    # the API is same-origin behind CloudFront, and Cognito is the real service (no endpoint, SRP).
+    # the API is same-origin behind CloudFront, Cognito is the real service (no endpoint, SRP), and
+    # the sign-in page has no list of seeded users (ADR-0020).
     (cd {{ justfile_directory() }}/../client \
         && pnpm install --frozen-lockfile \
         && NEXT_PUBLIC_BASE_PATH="" \
            NEXT_PUBLIC_API_BASE_URL="" \
            NEXT_PUBLIC_COGNITO_ENDPOINT_URL="" \
            NEXT_PUBLIC_COGNITO_AUTH_FLOW="" \
+           NEXT_PUBLIC_DEV_SIGN_IN_PASSWORD="" \
            NEXT_PUBLIC_COGNITO_REGION={{ region }} \
            NEXT_PUBLIC_COGNITO_USER_POOL_ID="$(out cognito_user_pool_id)" \
            NEXT_PUBLIC_COGNITO_CLIENT_ID="$(out cognito_client_id)" \

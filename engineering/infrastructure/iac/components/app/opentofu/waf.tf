@@ -8,8 +8,9 @@
 locals {
   waf_name = "${var.environment_name}-${local.application_name}"
 
-  # Requests per five minutes from one IP address. SCRUM-139 tunes the public limit
-  # against the verification page, the first route under /api/public/.
+  # Requests per five minutes from one IP address. A public lookup is two requests, a
+  # search and the PA it opens, so 300 is 150 lookups: far more than a person makes,
+  # and what paces someone walking privilege numbers in order.
   waf_cloudfront_rate_rules = {
     public = { priority = 0, path = "/api/public/", limit = 300 }
     api    = { priority = 1, path = "/api/", limit = 2000 }
@@ -44,6 +45,17 @@ resource "aws_wafv2_web_acl" "cloudfront" {
     allow {}
   }
 
+  # The API's ErrorResponse (errors.py), which the client reads on every other error;
+  # the API documents this answer and never sends it.
+  custom_response_body {
+    key          = "rate-limited"
+    content_type = "APPLICATION_JSON"
+    content = jsonencode({
+      code    = "RATE_LIMITED"
+      details = ["Too many requests. Try again in a few minutes."]
+    })
+  }
+
   dynamic "rule" {
     for_each = local.waf_cloudfront_rate_rules
     content {
@@ -51,7 +63,18 @@ resource "aws_wafv2_web_acl" "cloudfront" {
       priority = rule.value.priority
 
       action {
-        block {}
+        block {
+          custom_response {
+            response_code            = 429
+            custom_response_body_key = "rate-limited"
+
+            # The length of the window the limit is counted over.
+            response_header {
+              name  = "Retry-After"
+              value = "300"
+            }
+          }
+        }
       }
 
       statement {

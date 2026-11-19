@@ -13,7 +13,11 @@ import AppShell from "./AppShell";
 vi.mock("src/contexts/AuthContext");
 vi.mock("src/contexts/CurrentUserContext");
 let pathname = "/";
-vi.mock("next/navigation", () => ({ usePathname: () => pathname }));
+const push = vi.fn();
+vi.mock("next/navigation", () => ({
+  usePathname: () => pathname,
+  useRouter: () => ({ push }),
+}));
 
 const signOut = vi.fn();
 
@@ -148,11 +152,32 @@ describe("AppShell", () => {
     );
   });
 
-  it("signs out", async () => {
+  it("signs out at the front door", async () => {
     as({});
 
     renderShell();
     await userEvent.click(screen.getByRole("button", { name: "Sign out" }));
+
+    expect(signOut).toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("goes to the front door from another page, and signs out there", async () => {
+    pathname = "/dashboard";
+    as({});
+
+    const { rerender } = renderShell();
+    await userEvent.click(screen.getByRole("button", { name: "Sign out" }));
+
+    expect(push).toHaveBeenCalledWith("/");
+    expect(signOut).not.toHaveBeenCalled();
+
+    pathname = "/";
+    rerender(
+      <AppShell>
+        <h1>Page</h1>
+      </AppShell>,
+    );
 
     expect(signOut).toHaveBeenCalled();
   });

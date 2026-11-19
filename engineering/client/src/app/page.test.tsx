@@ -1,141 +1,82 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 
-import type { CognitoUserSession } from "amazon-cognito-identity-js";
-
-import { useAuth } from "src/contexts/AuthContext";
-import { CurrentUserProvider } from "src/contexts/CurrentUserContext";
-import { getCurrentSession } from "src/lib/auth";
+import {
+  CurrentUserContext,
+  type CurrentUser,
+} from "src/contexts/CurrentUserContext";
+import type { Permission } from "src/lib/navigation";
 import { expectNoAxeViolations } from "src/tests/axe";
-import { answerFetch } from "src/tests/fetch";
-import HomePage from "./page";
+import Home from "./page";
 
-vi.mock("src/lib/auth");
-vi.mock("src/contexts/AuthContext");
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
-
-const mockSignOut = vi.fn();
-
-beforeEach(() => {
-  vi.clearAllMocks();
-  vi.mocked(useAuth).mockReturnValue({
-    isLoading: false,
-    idToken: "valid-token",
-    email: "user@example.com",
-    signOut: mockSignOut,
-    signIn: vi.fn(),
-    completeNewPassword: vi.fn(),
-    verifyTotpSetup: vi.fn(),
-    answerTotp: vi.fn(),
-  });
-  vi.mocked(getCurrentSession).mockResolvedValue({
-    getIdToken: () => ({ getJwtToken: () => "valid-token" }),
-  } as CognitoUserSession);
-});
-
-const mockUser = {
-  user_id: "8f14e45f-ceea-467f-a0e6-2b5c3d1a9e2b",
-  email: "user@example.com",
-  given_name: "Jane",
-  family_name: "Doe",
-  role: "admin",
-  state_code: "CA",
-  is_active: true,
-  permissions: ["read_general"],
-};
-
-function Home() {
-  return (
-    <CurrentUserProvider>
-      <HomePage />
-    </CurrentUserProvider>
+function renderHome(permissions?: Permission[]) {
+  const user = permissions
+    ? ({ given_name: "Jordan", permissions } as CurrentUser)
+    : null;
+  return render(
+    <CurrentUserContext.Provider value={{ user, error: null }}>
+      <Home />
+    </CurrentUserContext.Provider>,
   );
 }
 
-function answerMe(overrides: Record<string, unknown>) {
-  answerFetch({ data: { ...mockUser, ...overrides } });
-}
-
-function failMe(status: number) {
-  answerFetch({ code: "FORBIDDEN", details: [] }, status);
-}
-
-describe("Home (Dashboard) page", () => {
-  it("displays user data after successful fetch", async () => {
-    answerMe({});
-
-    render(<Home />);
-
-    await waitFor(() =>
-      expect(screen.getByText("user@example.com")).toBeInTheDocument(),
-    );
-    expect(screen.getByText("Jane Doe")).toBeInTheDocument();
-    expect(screen.getByText("admin")).toBeInTheDocument();
-    expect(screen.getByText("CA")).toBeInTheDocument();
-    expect(screen.getByText("Active")).toBeInTheDocument();
+/** Each card's heading and where its button leads, in order. */
+const doors = () =>
+  screen.getAllByRole("listitem").map((card) => {
+    const link = within(card).getByRole("link");
+    return [
+      within(card).getByRole("heading", { level: 2 }).textContent,
+      link.textContent,
+      link.getAttribute("href"),
+    ];
   });
 
-  it("displays error message when fetch returns non-ok response", async () => {
-    failMe(403);
+describe("the front door", () => {
+  it("offers a signed-out visitor both sign-ins and the lookup", async () => {
+    const { container } = renderHome();
 
-    render(<Home />);
-
-    await waitFor(() => expect(screen.getByText("403")).toBeInTheDocument());
-  });
-
-  it("displays error message when the session has expired", async () => {
-    vi.mocked(getCurrentSession).mockResolvedValue(null);
-
-    render(<Home />);
-
-    await waitFor(() =>
-      expect(screen.getByText("Not authenticated")).toBeInTheDocument(),
-    );
-  });
-
-  it("shows dash for name when given_name and family_name are null", async () => {
-    answerMe({ given_name: null, family_name: null, state_code: null });
-
-    render(<Home />);
-
-    await waitFor(() => expect(screen.getByText("—")).toBeInTheDocument());
-  });
-
-  it("shows a generic error when the request fails with a non-Error value", async () => {
-    vi.mocked(getCurrentSession).mockRejectedValue("offline");
-
-    render(<Home />);
-
-    await waitFor(() =>
-      expect(screen.getByText("Failed to load user")).toBeInTheDocument(),
-    );
-  });
-
-  it("shows an inactive user's status", async () => {
-    answerMe({ is_active: false });
-
-    render(<Home />);
-
-    await waitFor(() =>
-      expect(screen.getByText("Inactive")).toBeInTheDocument(),
-    );
-  });
-
-  it("has no axe violations once the user loads", async () => {
-    answerMe({});
-
-    const { container } = render(<Home />);
-    await screen.findByText("user@example.com");
-
+    expect(
+      screen.getByRole("heading", { level: 1, name: "PA Compact" }),
+    ).toBeInTheDocument();
+    expect(doors()).toEqual([
+      ["PAs", "Sign in as a PA", "/login"],
+      ["State and Commission staff", "Sign in as staff", "/login"],
+      ["Look up a Compact Privilege", "Look up a PA", "/verify"],
+    ]);
     await expectNoAxeViolations(container);
   });
 
-  it("has no axe violations when the user fails to load", async () => {
-    failMe(403);
+  it("leads a signed-in PA to their dashboard from their own card", async () => {
+    const { container } = renderHome(["manage_own_record"]);
 
-    const { container } = render(<Home />);
-    await screen.findByText("403");
-
+    expect(doors()).toEqual([
+      ["PAs", "Go to your dashboard", "/dashboard"],
+      ["State and Commission staff", "Sign in as staff", "/login"],
+      ["Look up a Compact Privilege", "Look up a PA", "/verify"],
+    ]);
     await expectNoAxeViolations(container);
+  });
+
+  it.each<[string, Permission[]]>([
+    ["state staff", ["read_general", "write"]],
+    ["Commission staff", ["read_general", "compact_admin"]],
+  ])("leads signed-in %s to theirs from the staff card", (_, permissions) => {
+    renderHome(permissions);
+
+    expect(doors().map(([, , href]) => href)).toEqual([
+      "/login",
+      "/dashboard",
+      "/verify",
+    ]);
+  });
+
+  it("offers a signed-in user with no portal the same as a visitor", () => {
+    renderHome([]);
+
+    expect(doors().map(([, action]) => action)).toEqual([
+      "Sign in as a PA",
+      "Sign in as staff",
+      "Look up a PA",
+    ]);
   });
 });

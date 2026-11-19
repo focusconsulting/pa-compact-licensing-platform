@@ -11,6 +11,27 @@ resource "aws_cloudfront_function" "block_403" {
   EOF
 }
 
+# The static export writes /verify as verify.html, and S3 has no key named "verify":
+# without this, every page but / answers 403 when loaded directly or reloaded.
+resource "aws_cloudfront_function" "page_html" {
+  name    = "${var.environment_name}-${local.application_name}-page-html"
+  runtime = "cloudfront-js-2.0"
+  publish = true
+  code    = <<-EOF
+    ${local.site_access_js}
+    function handler(event) {
+      ${local.site_access_page_guard}
+      var request = event.request;
+      var uri = request.uri.replace(/\/+$/, "");
+      // "/" is left to the default root object, and a file keeps its own name.
+      if (uri !== "" && uri.split("/").pop().indexOf(".") === -1) {
+        request.uri = uri + ".html";
+      }
+      return request;
+    }
+  EOF
+}
+
 locals {
   alb_origin_endpoint = {
     http_port              = 80
@@ -189,6 +210,19 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
         forward = "none"
       }
     }
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.page_html.arn
+    }
+
+    dynamic "function_association" {
+      for_each = aws_cloudfront_function.site_access_cookie
+      content {
+        event_type   = "viewer-response"
+        function_arn = function_association.value.arn
+      }
+    }
   }
 
   # Block Swagger/OpenAPI docs at the CDN edge — 403 returned before origin is contacted.
@@ -264,6 +298,14 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
     # certificate (for dns_name) match: CloudFront checks an origin's certificate
     # against the origin domain or the forwarded Host.
     origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer.id
+
+    dynamic "function_association" {
+      for_each = aws_cloudfront_function.site_access_api
+      content {
+        event_type   = "viewer-request"
+        function_arn = function_association.value.arn
+      }
+    }
   }
 
   # Return index.html for 404s so Next.js client-side routing works on direct URL navigation

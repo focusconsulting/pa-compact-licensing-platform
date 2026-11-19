@@ -23,18 +23,18 @@ export interface NavItem {
 /** Each portal's nav, in the order the Figma headers draw it. The Commission's isn't drawn yet. */
 export const NAV: Record<Portal, NavItem[]> = {
   pa: [
-    { key: "dashboard", href: "/" },
+    { key: "dashboard", href: "/dashboard" },
     { key: "application", href: "/application" },
   ],
   state: [
-    { key: "home", href: "/" },
+    { key: "home", href: "/dashboard" },
     { key: "applications", href: "/applications", permission: "write" },
     { key: "upload", href: "/uploads/new", permission: "write" },
     { key: "uploads", href: "/uploads", permission: "write" },
     { key: "practitioners", href: "/practitioners" },
   ],
   commission: [
-    { key: "home", href: "/" },
+    { key: "home", href: "/dashboard" },
     { key: "practitioners", href: "/practitioners" },
     { key: "settings", href: "/settings", permission: "compact_admin" },
   ],

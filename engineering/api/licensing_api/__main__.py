@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -18,6 +19,7 @@ from licensing_api.errors import (
 )
 from licensing_api.logging_config import LOG_CONFIG, configure_logging
 from licensing_api.migrations import run_migrations
+from licensing_api.repo.base import utc_now
 from licensing_api.request_logger import (
     RequestIdMiddleware,
     RequestLoggingMiddleware,
@@ -92,6 +94,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     app.state.session_factory = async_sessionmaker(engine, expire_on_commit=False)
     app.state.db_engine = engine
     app.state.storage = create_storage(settings)
+    app.state.started_at = utc_now()
+    # Uptime counts on the monotonic clock, which a wall-clock adjustment cannot move.
+    app.state.started_monotonic = time.monotonic()
 
     yield
     await engine.dispose()
