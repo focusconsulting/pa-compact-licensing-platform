@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+  "/api/admin/status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get The System Status
+     * @description The deployed version, environment, when this task started and how long it has run, and the database's response time and newest migration. Needs `system_admin`.
+     */
+    get: operations["Get_the_system_status_api_admin_status_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/commission/audit": {
     parameters: {
       query?: never;
@@ -351,7 +371,7 @@ export interface paths {
     head?: never;
     /**
      * Save My Profile
-     * @description Changes your date of birth, residence address, NCCPA certification number, or other names. Once your state has verified a field it is listed in `verified_fields`, and only the state changes it: `409 VERIFIED_BY_STATE`. Your address stays yours to change.
+     * @description Changes your date of birth, residence address, NCCPA certification number, or other names. Once your state has verified a field it is listed in `verified_fields`, and only the state changes it: `409 VERIFIED_BY_STATE`. A verified date of birth or NCCPA number that is still empty can be filled in. Your address stays yours to change, in the US only.
      */
     patch: operations["Save_my_profile_api_me_profile_patch"];
     trace?: never;
@@ -368,6 +388,46 @@ export interface paths {
      * @description The current version of each attestation that applies in every state, in the order to show them.
      */
     get: operations["List_current_attestations_api_public_attestations_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/public/privilege-holders": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Search Privilege Holders
+     * @description PAs who hold a compact privilege, active or not. Search by `first_name` and `last_name` together, or by `privilege_number` alone. Names must match in full, ignoring case. No match is an empty list.
+     */
+    get: operations["Search_privilege_holders_api_public_privilege_holders_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/public/privilege-holders/{holder_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get A Privilege Holder
+     * @description A PA's compact privileges: the state, number, status, and issue date of each. A privilege that is not active shows as `expired` or `inactive`, with no reason and no `expires_on`.
+     */
+    get: operations["Get_a_privilege_holder_api_public_privilege_holders__holder_id__get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -851,9 +911,17 @@ export interface components {
     Data_DocumentUpload_: {
       data: components["schemas"]["DocumentUpload"];
     };
+    /** Data[PrivilegeHolder] */
+    Data_PrivilegeHolder_: {
+      data: components["schemas"]["PrivilegeHolder"];
+    };
     /** Data[ProfileOut] */
     Data_ProfileOut_: {
       data: components["schemas"]["ProfileOut"];
+    };
+    /** Data[StatusOut] */
+    Data_StatusOut_: {
+      data: components["schemas"]["StatusOut"];
     };
     /** Data[list[ApplicationOut]] */
     Data_list_ApplicationOut__: {
@@ -874,6 +942,18 @@ export interface components {
     Data_list_StateOut__: {
       /** Data */
       data: components["schemas"]["StateOut"][];
+    };
+    /**
+     * DatabaseStatus
+     * @description Whether the database answered, how fast, and the newest migration applied to it.
+     */
+    DatabaseStatus: {
+      /** Latency Ms */
+      latency_ms: number | null;
+      /** Latest Migration */
+      latest_migration: string | null;
+      /** Reachable */
+      reachable: boolean;
     };
     /**
      * DocumentDownload
@@ -1002,6 +1082,7 @@ export interface components {
       | "STATE_NOT_LIVE"
       | "ATTESTATIONS_OUT_OF_DATE"
       | "VALIDATION_ERROR"
+      | "RATE_LIMITED"
       | "HTTP_ERROR"
       | "INTERNAL_ERROR";
     /**
@@ -1089,6 +1170,12 @@ export interface components {
       data: components["schemas"]["AuditEntryOut"][];
       page: components["schemas"]["Page"];
     };
+    /** Paged[PrivilegeHolderSummary] */
+    Paged_PrivilegeHolderSummary_: {
+      /** Data */
+      data: components["schemas"]["PrivilegeHolderSummary"][];
+      page: components["schemas"]["Page"];
+    };
     /**
      * Permission
      * @description What a caller may do: granted by role in every state (``ROLE_PERMISSIONS``), or per state in ``users.permissions``.
@@ -1122,6 +1209,84 @@ export interface components {
       /** Reason */
       reason?: string | null;
       status: components["schemas"]["PrivilegeComputedStatus"];
+    };
+    /**
+     * PrivilegeHolder
+     * @description A PA who holds a privilege, and each privilege with its status and dates.
+     * @example {
+     *       "first_name": "Pat",
+     *       "id": "5f0c2d6e-8a41-4b7c-9d13-6e2f4a8b1c90",
+     *       "last_name": "Morgan",
+     *       "name_suffix": null,
+     *       "privileges": [
+     *         {
+     *           "expires_on": "2027-12-31",
+     *           "issued_on": "2026-11-02",
+     *           "number": "PA-OK-000123",
+     *           "state": {
+     *             "code": "OK",
+     *             "name": "Oklahoma"
+     *           },
+     *           "status": "active"
+     *         }
+     *       ],
+     *       "state_of_qualifying_license": {
+     *         "code": "KS",
+     *         "name": "Kansas"
+     *       }
+     *     }
+     */
+    PrivilegeHolder: {
+      /** First Name */
+      first_name: string;
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Last Name */
+      last_name: string;
+      /** Name Suffix */
+      name_suffix: string | null;
+      /** Privileges */
+      privileges: components["schemas"]["PublicPrivilege"][];
+      state_of_qualifying_license: components["schemas"]["StateRef"];
+    };
+    /**
+     * PrivilegeHolderSummary
+     * @description A PA who holds a privilege, and the states they hold one in.
+     * @example {
+     *       "first_name": "Pat",
+     *       "id": "5f0c2d6e-8a41-4b7c-9d13-6e2f4a8b1c90",
+     *       "last_name": "Morgan",
+     *       "name_suffix": null,
+     *       "privilege_states": [
+     *         {
+     *           "code": "OK",
+     *           "name": "Oklahoma"
+     *         }
+     *       ],
+     *       "state_of_qualifying_license": {
+     *         "code": "KS",
+     *         "name": "Kansas"
+     *       }
+     *     }
+     */
+    PrivilegeHolderSummary: {
+      /** First Name */
+      first_name: string;
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Last Name */
+      last_name: string;
+      /** Name Suffix */
+      name_suffix: string | null;
+      /** Privilege States */
+      privilege_states: components["schemas"]["StateRef"][];
+      state_of_qualifying_license: components["schemas"]["StateRef"];
     };
     /**
      * PrivilegeRequestStatus
@@ -1234,6 +1399,45 @@ export interface components {
       residence?: components["schemas"]["Residence"] | null;
     };
     /**
+     * PublicPrivilege
+     * @description A privilege as the public sees it: no reason for its status, and nothing about discipline.
+     *
+     *     ``expires_on`` is None unless the privilege is active: a date still ahead beside
+     *     ``inactive`` would show the privilege was ended early.
+     * @example {
+     *       "expires_on": "2027-12-31",
+     *       "issued_on": "2026-11-02",
+     *       "number": "PA-OK-000123",
+     *       "state": {
+     *         "code": "OK",
+     *         "name": "Oklahoma"
+     *       },
+     *       "status": "active"
+     *     }
+     */
+    PublicPrivilege: {
+      /** Expires On */
+      expires_on: string | null;
+      /**
+       * Issued On
+       * Format: date
+       */
+      issued_on: string;
+      /** Number */
+      number: string;
+      state: components["schemas"]["StateRef"];
+      status: components["schemas"]["PublicPrivilegeStatus"];
+    };
+    /**
+     * PublicPrivilegeStatus
+     * @description What public verification shows (FLOW-06).
+     *
+     *     An encumbered privilege is ``inactive``: the public never learns that an adverse
+     *     action exists, public or not (Rule 4 §4.5(c)).
+     * @enum {string}
+     */
+    PublicPrivilegeStatus: "active" | "expired" | "inactive";
+    /**
      * QualifyingLicenseSummary
      * @description The license the PA's eligibility rests on, and when its state, ``state_code``, verified it.
      */
@@ -1305,6 +1509,52 @@ export interface components {
       name: string;
     };
     /**
+     * StateRef
+     * @description A state by code and name, for a response that names a state without describing it.
+     * @example {
+     *       "code": "OK",
+     *       "name": "Oklahoma"
+     *     }
+     */
+    StateRef: {
+      /** Code */
+      code: string;
+      /** Name */
+      name: string;
+    };
+    /**
+     * StatusOut
+     * @description The task answering this request; another task behind the load balancer may differ.
+     * @example {
+     *       "database": {
+     *         "latency_ms": 1.8,
+     *         "latest_migration": "20261112_110000_practitioner_other_names",
+     *         "reachable": true
+     *       },
+     *       "environment": "STAGING",
+     *       "started_at": "2026-11-16T21:46:19Z",
+     *       "uptime_seconds": 3600,
+     *       "version": "3f2a9c1d8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a39"
+     *     }
+     */
+    StatusOut: {
+      database: components["schemas"]["DatabaseStatus"];
+      /**
+       * Environment
+       * @enum {string}
+       */
+      environment: "LOCAL_DEV" | "STAGING" | "PROD";
+      /**
+       * Started At
+       * Format: date-time
+       */
+      started_at: string;
+      /** Uptime Seconds */
+      uptime_seconds: number;
+      /** Version */
+      version: string;
+    };
+    /**
      * UnavailableReason
      * @description Why the PA cannot apply for privileges yet.
      * @enum {string}
@@ -1313,8 +1563,7 @@ export interface components {
       | "application_in_review"
       | "information_requested"
       | "not_yet_eligible"
-      | "two_year_bar"
-      | "eligibility_withdrawn";
+      | "two_year_bar";
     /**
      * UploadForm
      * @description POST the ``fields`` and then the file, as ``multipart/form-data`` field ``file``, to ``url``.
@@ -1349,6 +1598,35 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+  Get_the_system_status_api_admin_status_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_StatusOut_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
   List_audit_log_entries_api_commission_audit_get: {
     parameters: {
       query?: {
@@ -2015,6 +2293,95 @@ export interface operations {
       };
       /** @description Unprocessable Content */
       422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Search_privilege_holders_api_public_privilege_holders_get: {
+    parameters: {
+      query?: {
+        /** @description Required with `last_name`, unless searching by `privilege_number` */
+        first_name?: string | null;
+        /** @description Required with `first_name`, unless searching by `privilege_number` */
+        last_name?: string | null;
+        /** @description For example `PA-OK-000123`. Not with a name */
+        privilege_number?: string | null;
+        page?: number;
+        page_size?: number;
+        sort?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Paged_PrivilegeHolderSummary_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Too many requests from one address. The web firewall sends this, not the API. */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  Get_a_privilege_holder_api_public_privilege_holders__holder_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The `id` from a search result */
+        holder_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Data_PrivilegeHolder_"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description Too many requests from one address. The web firewall sends this, not the API. */
+      429: {
         headers: {
           [name: string]: unknown;
         };

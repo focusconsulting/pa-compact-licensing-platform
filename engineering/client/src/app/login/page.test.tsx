@@ -49,7 +49,7 @@ describe("LoginPage", () => {
     await user.type(document.getElementById("password")!, "password123");
     await user.click(screen.getByRole("button", { name: /Sign in/i }));
 
-    await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/"));
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/dashboard"));
   });
 
   it("shows set-password form when newPasswordRequired", async () => {
@@ -146,7 +146,7 @@ describe("LoginPage", () => {
     );
     await user.click(screen.getByRole("button", { name: /Set password/i }));
 
-    await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/"));
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/dashboard"));
   });
 
   it("shows error when password change fails", async () => {
@@ -250,5 +250,56 @@ describe("LoginPage", () => {
     await screen.findByRole("heading", { name: /Set a new password/i });
 
     await expectNoAxeViolations(container);
+  });
+});
+
+describe("LoginPage, in a build that sets the local password", () => {
+  /** The page as that build compiles it: the list is decided when the module loads. */
+  async function renderDevPage() {
+    vi.stubEnv("NEXT_PUBLIC_DEV_SIGN_IN_PASSWORD", "Local-Passw0rd!");
+    vi.resetModules();
+    vi.doMock("src/lib/devSignIns", () => ({
+      listMockUsers: () => Promise.resolve(["avery.active@demo.example"]),
+    }));
+    const auth = await import("src/contexts/AuthContext");
+    vi.mocked(auth.useAuth).mockReturnValue({
+      signIn: mockSignIn,
+      completeNewPassword: mockCompleteNewPassword,
+      signOut: vi.fn(),
+      isLoading: false,
+      idToken: null,
+      email: null,
+    } as ReturnType<typeof useAuth>);
+    const { default: DevLoginPage } = await import("./page");
+    const view = render(<DevLoginPage />);
+    vi.unstubAllEnvs();
+    return view;
+  }
+
+  it("signs in as a seeded user in one click, showing what it tried", async () => {
+    mockSignIn.mockResolvedValue({ type: "success", session: {} });
+    await renderDevPage();
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: "avery.active@demo.example" }),
+    );
+
+    expect(mockSignIn).toHaveBeenCalledWith(
+      "avery.active@demo.example",
+      "Local-Passw0rd!",
+    );
+    expect(screen.getByRole("textbox", { name: /Email address/i })).toHaveValue(
+      "avery.active@demo.example",
+    );
+    expect(document.getElementById("password")).toHaveValue("Local-Passw0rd!");
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/dashboard"));
+  });
+});
+
+describe("LoginPage, in a build for a deployed environment", () => {
+  it("has no list of seeded users", () => {
+    render(<LoginPage />);
+
+    expect(screen.queryByText("Seeded users")).toBeNull();
   });
 });

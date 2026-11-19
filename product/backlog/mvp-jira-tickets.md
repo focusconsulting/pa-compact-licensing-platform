@@ -337,15 +337,15 @@ Everything that changes a license or privilege after issuance (FLOW-04, FLOW-05)
 ### Product ticket
 
 **Clarify:** which fields the public sees beyond the rule minimum of name plus states (default adds privilege number, status, and dates; no adverse-action data; no NPI search); SOW v2 has the public verify "active and inactive" privileges — confirm an inactive privilege shows its status and dates and never the reason.
-**Wireframes:** search, results, detail.
+**Wireframes:** search, results, detail. Drawn 2026-11-16 as block V on the [board](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=5121-15647); [FLOW-08](../context/flows/08-public-verification.md) lists each frame. The entry is the third card of the public landing (epics 4 and 5).
 
 ### Engineering ticket
 
-**Sprint:** 6 · **Blocked by:** Backend platform (seed); Design system and app shell; real data arrives with Privilege, payment, and issuance · **Provides:** `/verify` and `/api/v1/public/*` with the allow-list schema · **Consumes:** `privileges` and the status views; the WAF rate limit from epic 3
+**Sprint:** 6 · **Blocked by:** Backend platform (seed); Design system and app shell; real data arrives with Privilege, payment, and issuance · **Provides:** `/verify` and `/api/public/*` with the allow-list schema · **Consumes:** `privileges` and the status views; the WAF rate limit from epic 3
 
 **Scope**
 
-- `/verify`: search by last and first name together, or by exact privilege number; results; detail showing the agreed fields and nothing else. Inactive privileges (expired, deactivated, encumbered) are returned with their status and dates, never the deactivation reason or the action behind it (SOW v2; FLOW-05). Unauthenticated `/api/v1/public/*` with strict response schemas; WAF rate limit returning 429; no enumeration.
+- `/verify`: search by last and first name together, or by exact privilege number; results; detail showing the agreed fields and nothing else. Inactive privileges (expired, deactivated, encumbered) are returned with their status and dates, never the deactivation reason or the action behind it (SOW v2; FLOW-05). Unauthenticated `/api/public/*` with strict response schemas; WAF rate limit returning 429; no enumeration.
 
 **Done when**
 
