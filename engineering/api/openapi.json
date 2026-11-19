@@ -982,6 +982,18 @@
         "title": "Data[DocumentUpload]",
         "type": "object"
       },
+      "Data_PrivilegeHolder_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PrivilegeHolder"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Data[PrivilegeHolder]",
+        "type": "object"
+      },
       "Data_ProfileOut_": {
         "properties": {
           "data": {
@@ -992,6 +1004,18 @@
           "data"
         ],
         "title": "Data[ProfileOut]",
+        "type": "object"
+      },
+      "Data_StatusOut_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/StatusOut"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "Data[StatusOut]",
         "type": "object"
       },
       "Data_list_ApplicationOut__": {
@@ -1056,6 +1080,44 @@
           "data"
         ],
         "title": "Data[list[StateOut]]",
+        "type": "object"
+      },
+      "DatabaseStatus": {
+        "description": "Whether the database answered, how fast, and the newest migration applied to it.",
+        "properties": {
+          "latency_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms"
+          },
+          "latest_migration": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Migration"
+          },
+          "reachable": {
+            "title": "Reachable",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "reachable",
+          "latency_ms",
+          "latest_migration"
+        ],
+        "title": "DatabaseStatus",
         "type": "object"
       },
       "DocumentDownload": {
@@ -1249,6 +1311,7 @@
           "STATE_NOT_LIVE",
           "ATTESTATIONS_OUT_OF_DATE",
           "VALIDATION_ERROR",
+          "RATE_LIMITED",
           "HTTP_ERROR",
           "INTERNAL_ERROR"
         ],
@@ -1432,6 +1495,26 @@
         "title": "Paged[AuditEntryOut]",
         "type": "object"
       },
+      "Paged_PrivilegeHolderSummary_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/PrivilegeHolderSummary"
+            },
+            "title": "Data",
+            "type": "array"
+          },
+          "page": {
+            "$ref": "#/components/schemas/Page"
+          }
+        },
+        "required": [
+          "data",
+          "page"
+        ],
+        "title": "Paged[PrivilegeHolderSummary]",
+        "type": "object"
+      },
       "Permission": {
         "description": "What a caller may do: granted by role in every state (``ROLE_PERMISSIONS``), or per state in ``users.permissions``.",
         "enum": [
@@ -1486,6 +1569,148 @@
           "on"
         ],
         "title": "PrivilegeEvent",
+        "type": "object"
+      },
+      "PrivilegeHolder": {
+        "additionalProperties": false,
+        "description": "A PA who holds a privilege, and each privilege with its status and dates.",
+        "examples": [
+          {
+            "first_name": "Pat",
+            "id": "5f0c2d6e-8a41-4b7c-9d13-6e2f4a8b1c90",
+            "last_name": "Morgan",
+            "name_suffix": null,
+            "privileges": [
+              {
+                "expires_on": "2027-12-31",
+                "issued_on": "2026-11-02",
+                "number": "PA-OK-000123",
+                "state": {
+                  "code": "OK",
+                  "name": "Oklahoma"
+                },
+                "status": "active"
+              }
+            ],
+            "state_of_qualifying_license": {
+              "code": "KS",
+              "name": "Kansas"
+            }
+          }
+        ],
+        "properties": {
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          },
+          "name_suffix": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name Suffix"
+          },
+          "privileges": {
+            "items": {
+              "$ref": "#/components/schemas/PublicPrivilege"
+            },
+            "title": "Privileges",
+            "type": "array"
+          },
+          "state_of_qualifying_license": {
+            "$ref": "#/components/schemas/StateRef"
+          }
+        },
+        "required": [
+          "id",
+          "first_name",
+          "last_name",
+          "name_suffix",
+          "state_of_qualifying_license",
+          "privileges"
+        ],
+        "title": "PrivilegeHolder",
+        "type": "object"
+      },
+      "PrivilegeHolderSummary": {
+        "additionalProperties": false,
+        "description": "A PA who holds a privilege, and the states they hold one in.",
+        "examples": [
+          {
+            "first_name": "Pat",
+            "id": "5f0c2d6e-8a41-4b7c-9d13-6e2f4a8b1c90",
+            "last_name": "Morgan",
+            "name_suffix": null,
+            "privilege_states": [
+              {
+                "code": "OK",
+                "name": "Oklahoma"
+              }
+            ],
+            "state_of_qualifying_license": {
+              "code": "KS",
+              "name": "Kansas"
+            }
+          }
+        ],
+        "properties": {
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          },
+          "name_suffix": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name Suffix"
+          },
+          "privilege_states": {
+            "items": {
+              "$ref": "#/components/schemas/StateRef"
+            },
+            "title": "Privilege States",
+            "type": "array"
+          },
+          "state_of_qualifying_license": {
+            "$ref": "#/components/schemas/StateRef"
+          }
+        },
+        "required": [
+          "id",
+          "first_name",
+          "last_name",
+          "name_suffix",
+          "state_of_qualifying_license",
+          "privilege_states"
+        ],
+        "title": "PrivilegeHolderSummary",
         "type": "object"
       },
       "PrivilegeRequestStatus": {
@@ -1743,6 +1968,70 @@
         "title": "ProfileUpdate",
         "type": "object"
       },
+      "PublicPrivilege": {
+        "additionalProperties": false,
+        "description": "A privilege as the public sees it: no reason for its status, and nothing about discipline.\n\n``expires_on`` is None unless the privilege is active: a date still ahead beside\n``inactive`` would show the privilege was ended early.",
+        "examples": [
+          {
+            "expires_on": "2027-12-31",
+            "issued_on": "2026-11-02",
+            "number": "PA-OK-000123",
+            "state": {
+              "code": "OK",
+              "name": "Oklahoma"
+            },
+            "status": "active"
+          }
+        ],
+        "properties": {
+          "expires_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires On"
+          },
+          "issued_on": {
+            "format": "date",
+            "title": "Issued On",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/StateRef"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PublicPrivilegeStatus"
+          }
+        },
+        "required": [
+          "state",
+          "number",
+          "status",
+          "issued_on",
+          "expires_on"
+        ],
+        "title": "PublicPrivilege",
+        "type": "object"
+      },
+      "PublicPrivilegeStatus": {
+        "description": "What public verification shows (FLOW-06).\n\nAn encumbered privilege is ``inactive``: the public never learns that an adverse\naction exists, public or not (Rule 4 \u00a74.5(c)).",
+        "enum": [
+          "active",
+          "expired",
+          "inactive"
+        ],
+        "title": "PublicPrivilegeStatus",
+        "type": "string"
+      },
       "QualifyingLicenseSummary": {
         "description": "The license the PA's eligibility rests on, and when its state, ``state_code``, verified it.",
         "properties": {
@@ -1823,7 +2112,7 @@
             "type": "string"
           },
           "country_code": {
-            "pattern": "^[A-Z]{2}$",
+            "pattern": "^US$",
             "title": "Country Code",
             "type": "string"
           },
@@ -1929,14 +2218,91 @@
         "title": "StateOut",
         "type": "object"
       },
+      "StateRef": {
+        "additionalProperties": false,
+        "description": "A state by code and name, for a response that names a state without describing it.",
+        "examples": [
+          {
+            "code": "OK",
+            "name": "Oklahoma"
+          }
+        ],
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ],
+        "title": "StateRef",
+        "type": "object"
+      },
+      "StatusOut": {
+        "description": "The task answering this request; another task behind the load balancer may differ.",
+        "examples": [
+          {
+            "database": {
+              "latency_ms": 1.8,
+              "latest_migration": "20261112_110000_practitioner_other_names",
+              "reachable": true
+            },
+            "environment": "STAGING",
+            "started_at": "2026-11-16T21:46:19Z",
+            "uptime_seconds": 3600,
+            "version": "3f2a9c1d8e7b6a5f4e3d2c1b0a9f8e7d6c5b4a39"
+          }
+        ],
+        "properties": {
+          "database": {
+            "$ref": "#/components/schemas/DatabaseStatus"
+          },
+          "environment": {
+            "enum": [
+              "LOCAL_DEV",
+              "STAGING",
+              "PROD"
+            ],
+            "title": "Environment",
+            "type": "string"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
+          "uptime_seconds": {
+            "title": "Uptime Seconds",
+            "type": "integer"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "environment",
+          "started_at",
+          "uptime_seconds",
+          "database"
+        ],
+        "title": "StatusOut",
+        "type": "object"
+      },
       "UnavailableReason": {
         "description": "Why the PA cannot apply for privileges yet.",
         "enum": [
           "application_in_review",
           "information_requested",
           "not_yet_eligible",
-          "two_year_bar",
-          "eligibility_withdrawn"
+          "two_year_bar"
         ],
         "title": "UnavailableReason",
         "type": "string"
@@ -1994,6 +2360,43 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/admin/status": {
+      "get": {
+        "description": "The deployed version, environment, when this task started and how long it has run, and the database's response time and newest migration. Needs `system_admin`.",
+        "operationId": "Get_the_system_status_api_admin_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_StatusOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get The System Status",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/commission/audit": {
       "get": {
         "description": "Staff reads of private data and security events, newest first. Filters combine; `occurred_to` is exclusive. Changes to records are in their history, not here.",
@@ -3018,7 +3421,7 @@
         ]
       },
       "patch": {
-        "description": "Changes your date of birth, residence address, NCCPA certification number, or other names. Once your state has verified a field it is listed in `verified_fields`, and only the state changes it: `409 VERIFIED_BY_STATE`. Your address stays yours to change.",
+        "description": "Changes your date of birth, residence address, NCCPA certification number, or other names. Once your state has verified a field it is listed in `verified_fields`, and only the state changes it: `409 VERIFIED_BY_STATE`. A verified date of birth or NCCPA number that is still empty can be filled in. Your address stays yours to change, in the US only.",
         "operationId": "Save_my_profile_api_me_profile_patch",
         "requestBody": {
           "content": {
@@ -3100,6 +3503,204 @@
           }
         },
         "summary": "List Current Attestations",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/public/privilege-holders": {
+      "get": {
+        "description": "PAs who hold a compact privilege, active or not. Search by `first_name` and `last_name` together, or by `privilege_number` alone. Names must match in full, ignoring case. No match is an empty list.",
+        "operationId": "Search_privilege_holders_api_public_privilege_holders_get",
+        "parameters": [
+          {
+            "description": "Required with `last_name`, unless searching by `privilege_number`",
+            "in": "query",
+            "name": "first_name",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Required with `last_name`, unless searching by `privilege_number`",
+              "title": "First Name"
+            }
+          },
+          {
+            "description": "Required with `first_name`, unless searching by `privilege_number`",
+            "in": "query",
+            "name": "last_name",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Required with `first_name`, unless searching by `privilege_number`",
+              "title": "Last Name"
+            }
+          },
+          {
+            "description": "For example `PA-OK-000123`. Not with a name",
+            "in": "query",
+            "name": "privilege_number",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^[Pp][Aa]-[A-Za-z]{2}-\\d{6,}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "For example `PA-OK-000123`. Not with a name",
+              "title": "Privilege Number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sort"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paged_PrivilegeHolderSummary_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many requests from one address. The web firewall sends this, not the API."
+          }
+        },
+        "summary": "Search Privilege Holders",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/public/privilege-holders/{holder_id}": {
+      "get": {
+        "description": "A PA's compact privileges: the state, number, status, and issue date of each. A privilege that is not active shows as `expired` or `inactive`, with no reason and no `expires_on`.",
+        "operationId": "Get_a_privilege_holder_api_public_privilege_holders__holder_id__get",
+        "parameters": [
+          {
+            "description": "The `id` from a search result",
+            "in": "path",
+            "name": "holder_id",
+            "required": true,
+            "schema": {
+              "description": "The `id` from a search result",
+              "format": "uuid",
+              "title": "Holder Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data_PrivilegeHolder_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many requests from one address. The web firewall sends this, not the API."
+          }
+        },
+        "summary": "Get A Privilege Holder",
         "tags": [
           "public"
         ]

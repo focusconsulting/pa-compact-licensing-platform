@@ -1,0 +1,2 @@
+# CodeQL results findings-gate.py accepts: rule ID, file, then the reason, tab-separated.
+# Each row has an entry in engineering/docs/security/false-positives.md.

@@ -31,6 +31,7 @@ export default function DataTable<T>({
     <Table
       bordered
       fullWidth
+      scrollable
       caption={<span className="usa-sr-only">{caption}</span>}
     >
       <thead>

@@ -65,7 +65,6 @@ class UnavailableReason(StrEnum):
     NOT_YET_ELIGIBLE = 'not_yet_eligible'
     # Within two years of a restriction ending (ML §4.A(8)).
     TWO_YEAR_BAR = 'two_year_bar'
-    ELIGIBILITY_WITHDRAWN = 'eligibility_withdrawn'
 
 
 class Action(BaseModel):
@@ -256,9 +255,9 @@ def _primary_action(applications: list[ParticipationApplication], barred: bool) 
             pending = UnavailableReason.APPLICATION_IN_REVIEW
         elif ApplicationStatus.INFO_REQUESTED in statuses:
             pending = UnavailableReason.INFORMATION_REQUESTED
-        elif statuses[:1] == [ApplicationStatus.ELIGIBILITY_WITHDRAWN]:
-            pending = UnavailableReason.ELIGIBILITY_WITHDRAWN
         else:
+            # Includes a PA whose eligibility a state withdrew: they may apply again straight away
+            # (FLOW-01, "What the PA's dashboard offers next").
             reasons = [UnavailableReason.TWO_YEAR_BAR] if barred else []
             return Action(
                 kind=ActionKind.APPLY_FOR_PARTICIPATION, available=not reasons, reasons=reasons

@@ -10,7 +10,7 @@ export interface PageHeadingProps {
 export default function PageHeading({ title, intro }: PageHeadingProps) {
   return (
     <>
-      <h1 className="margin-bottom-2">{title}</h1>
+      <h1 className="margin-top-0 margin-bottom-2">{title}</h1>
       {intro && <p className="usa-intro margin-top-0">{intro}</p>}
     </>
   );

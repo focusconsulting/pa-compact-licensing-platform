@@ -1,6 +1,7 @@
 # SNS topic that aggregates all API operational alerts
 resource "aws_sns_topic" "api_alerts" {
-  name = "${var.environment_name}-${local.application_name}-api-alerts"
+  name              = "${var.environment_name}-${local.application_name}-api-alerts"
+  kms_master_key_id = aws_kms_key.data.arn
 }
 
 # CloudWatch Metric Math alarm: (target 4xx + target 5xx + elb 5xx) / total requests > 1%
@@ -182,8 +183,10 @@ resource "aws_cloudwatch_metric_alarm" "worker_not_running" {
   threshold           = 1
   # Container Insights reports nothing for a service with no tasks.
   treat_missing_data = "breaching"
-  alarm_actions      = [aws_sns_topic.api_alerts.arn]
-  ok_actions         = [aws_sns_topic.api_alerts.arn]
+  # A paused environment reports nothing, which this alarm treats as breaching.
+  actions_enabled = !local.paused
+  alarm_actions   = [aws_sns_topic.api_alerts.arn]
+  ok_actions      = [aws_sns_topic.api_alerts.arn]
 }
 
 resource "aws_cloudwatch_log_metric_filter" "heartbeat" {
@@ -209,6 +212,8 @@ resource "aws_cloudwatch_metric_alarm" "jobs_not_running" {
   comparison_operator = "LessThanThreshold"
   threshold           = 1
   treat_missing_data  = "breaching"
-  alarm_actions       = [aws_sns_topic.api_alerts.arn]
-  ok_actions          = [aws_sns_topic.api_alerts.arn]
+  # A paused environment reports nothing, which this alarm treats as breaching.
+  actions_enabled = !local.paused
+  alarm_actions   = [aws_sns_topic.api_alerts.arn]
+  ok_actions      = [aws_sns_topic.api_alerts.arn]
 }
