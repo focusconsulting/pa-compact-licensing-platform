@@ -25,6 +25,7 @@ from licensing_api.days import (
     reference_time_zone,
 )
 from licensing_api.dependencies import get_db_session
+from licensing_api.information_request import resubmit_by
 from licensing_api.permissions import Permission, require
 from licensing_api.practitioners import own_practitioner_id
 from licensing_api.repo.adverse_action import AdverseAction
@@ -72,10 +73,6 @@ class Action(BaseModel):
     kind: ActionKind
     available: bool
     reasons: list[UnavailableReason]
-
-
-# Rule 3 §3.7(a)(1): the state must have what it asked for within 60 days of the application.
-_RESUBMIT_WITHIN_DAYS = 60
 
 
 class EventKind(StrEnum):
@@ -353,9 +350,7 @@ async def _application(
         withdrawn_at=application.withdrawn_at,
         denial_reason=denial.label if denial else None,
         denial_reason_detail=application.denial_reason_detail,
-        resubmit_by=add_days(
-            compact_date_at(application.opened_at, time_zone), _RESUBMIT_WITHIN_DAYS
-        )
+        resubmit_by=resubmit_by(application.opened_at, time_zone)
         if application.status == ApplicationStatus.INFO_REQUESTED and application.opened_at
         else None,
         timeline=timeline,
