@@ -16,6 +16,10 @@
     "settings": "Settings"
   },
   "returnToTop": "Return to top",
+  "footer": {
+    "contactPrompt": "Questions? Email ",
+    "contactEmail": "pacompact@csg.org"
+  },
   "identifier": {
     "domain": "pacompact.org",
     "label": "Agency identifier",

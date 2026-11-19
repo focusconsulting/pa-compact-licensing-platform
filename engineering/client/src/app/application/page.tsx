@@ -1,6 +1,13 @@
 "use client";
 
-import { Button, Fieldset, Form } from "@trussworks/react-uswds";
+import {
+  Button,
+  Fieldset,
+  Form,
+  ProcessList,
+  ProcessListHeading,
+  ProcessListItem,
+} from "@trussworks/react-uswds";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
@@ -176,7 +183,10 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
           </AlertBanner>
         )}
         <p className="text-base">{t("required")}</p>
-        <Fieldset legend={t("start.residence")} className="legend-lg">
+        <Fieldset
+          legend={t("start.residence")}
+          className="legend-lg margin-top-3"
+        >
           <span className="usa-hint">{t("start.residenceHint")}</span>
           <TextField
             id="residenceLine1"
@@ -216,7 +226,7 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
         )}
         <h2>{t("start.licenseHeading")}</h2>
         <TextField id="licenseNumber" label={t("start.licenseNumber")} />
-        <Fieldset legend={t("start.licenseExpires")}>
+        <Fieldset legend={t("start.licenseExpires")} className="margin-top-3">
           <DateFields id="licenseExpires" name="" />
         </Fieldset>
         {fixedDateOfBirth ? (
@@ -225,7 +235,7 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
             value={formatDate(String(profile.date_of_birth))}
           />
         ) : (
-          <Fieldset legend={t("start.dateOfBirth")}>
+          <Fieldset legend={t("start.dateOfBirth")} className="margin-top-3">
             <DateFields id="dateOfBirth" name="" />
           </Fieldset>
         )}
@@ -259,6 +269,7 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
               id="otherLastName"
               label={t("basic:fields.name.lastNameTitle")}
               optional
+              showOptional={false}
             />
             <TextField
               id="otherSuffix"
@@ -283,18 +294,55 @@ function LicenseAndDetails({ loaded }: { loaded: Loaded }) {
   );
 }
 
+/** Before step 1 (B1j): how joining works, and what to have ready. */
+function Intro({ onStart }: { onStart: () => void }) {
+  const { t } = useTranslation("application");
+  const steps = ["step1", "step2", "step3", "step4"] as const;
+  const ready = [
+    "readyResidence",
+    "readyLicense",
+    "readyBirth",
+    "readyNccpa",
+  ] as const;
+  return (
+    <>
+      <PageHeading title={t("intro.title")} />
+      <h2>{t("intro.howHeading")}</h2>
+      <ProcessList>
+        {steps.map((step) => (
+          <ProcessListItem key={step}>
+            <ProcessListHeading type="p" className="font-sans-md text-normal">
+              {t(`intro.${step}`)}
+            </ProcessListHeading>
+          </ProcessListItem>
+        ))}
+      </ProcessList>
+      <p className="text-bold">{t("intro.haveReady")}</p>
+      <ul className="usa-list">
+        {ready.map((item) => (
+          <li key={item}>{t(`intro.${item}`)}</li>
+        ))}
+      </ul>
+      <Button type="button" onClick={onStart}>
+        {t("intro.start")}
+      </Button>
+    </>
+  );
+}
+
 function StartPage() {
   const { t } = useTranslation("application");
   const router = useRouter();
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [failed, setFailed] = useState(false);
+  const [started, setStarted] = useState(false);
 
   useEffect(() => {
     let current = true;
     Promise.all([loadApplications(), loadProfile(), loadStates()])
       .then(([applications, profile, states]) => {
         if (applications.some((a) => a.status === "eligible")) {
-          router.replace("/");
+          router.replace("/dashboard");
           return;
         }
         const application = openApplication(applications);
@@ -320,16 +368,23 @@ function StartPage() {
       <div className="grid-container">
         <div className="grid-row">
           <div className="grid-col-12 desktop:grid-col-8">
-            <StepIndicator
-              steps={[t("steps.license"), t("steps.statements")]}
-              current={0}
-            />
             {failed && (
               <AlertBanner type="error" heading={t("errors.heading")}>
                 {t("errors.load")}
               </AlertBanner>
             )}
-            {loaded && <LicenseAndDetails loaded={loaded} />}
+            {loaded && !loaded.application && !started && (
+              <Intro onStart={() => setStarted(true)} />
+            )}
+            {loaded && (loaded.application || started) && (
+              <>
+                <StepIndicator
+                  steps={[t("steps.license"), t("steps.statements")]}
+                  current={0}
+                />
+                <LicenseAndDetails loaded={loaded} />
+              </>
+            )}
           </div>
         </div>
       </div>

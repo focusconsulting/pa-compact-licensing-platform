@@ -71,10 +71,12 @@ Every `/api` route outside `/api/health` sits under the namespace of the people 
 | Namespace | Who calls it | Rule |
 |---|---|---|
 | `/me` | A PA, for their own record; any user, for their own account | Signed in |
-| `/public` | Anyone: verification and published configuration | `public()` |
+| `/public` | Anyone: [verification](../../product/context/flows/08-public-verification.md) and published configuration | `public()` |
 | `/states/{state_code}` | One state's staff, in the state the path names | `state_param='state_code'` |
 | `/commission` | Commission staff, across every state | `compact_admin` |
 | `/admin` | The system operator | `system_admin` |
+
+The health checks under `/api/health` are public for the load balancer, so they say only whether the API and database answer. `GET /api/admin/status` gives the system operator the deployed version, environment, uptime, database latency, and newest migration.
 
 `/commission` routes need `compact_admin`, not `read_private`: with no state in the path, `read_private` is checked in the caller's own state, so a state staff member's grant would pass.
 
