@@ -1,4 +1,9 @@
-import { DateInput, DateInputGroup, FormGroup } from "@trussworks/react-uswds";
+import {
+  DateInputGroup,
+  FormGroup,
+  Label,
+  TextInput,
+} from "@trussworks/react-uswds";
 import { useTranslation } from "react-i18next";
 import { useFormContext } from "react-hook-form";
 import { useCallback, useEffect, useState, ChangeEvent } from "react";
@@ -12,6 +17,48 @@ export interface DateFieldsProps {
   optionalDay?: boolean;
   optionalMonth?: boolean;
   optionalYear?: boolean;
+}
+
+interface DatePartProps {
+  id: string;
+  label: string;
+  unit: "day" | "year";
+  length: number;
+  required: boolean;
+  defaultValue: string;
+  onChange: (value: string) => void;
+}
+
+/** A day or year input. USWDS's DateInput can't mark its label required, so this builds the same markup with a Label that can. */
+function DatePart({
+  id,
+  label,
+  unit,
+  length,
+  required,
+  defaultValue,
+  onChange,
+}: DatePartProps) {
+  return (
+    <FormGroup className={`usa-form-group--${unit}`}>
+      <Label htmlFor={id} requiredMarker={required}>
+        {label}
+      </Label>
+      <TextInput
+        id={id}
+        name={id}
+        type="text"
+        inputMode="numeric"
+        maxLength={length}
+        minLength={unit === "day" ? 1 : length}
+        required={required}
+        defaultValue={defaultValue}
+        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+          onChange(e.target.value)
+        }
+      />
+    </FormGroup>
+  );
 }
 
 /** Month, day, and year inputs, stored in the form as one YYYY-MM-DD value. */
@@ -95,33 +142,23 @@ export function DateFields({
           defaultValue={monthState}
         />
       </FormGroup>
-      <DateInput
+      <DatePart
         id={`${id}Day`}
         label={[name, t("day")].join(" ")}
         unit="day"
-        maxLength={2}
-        minLength={1}
-        // @ts-expect-error requiredMarker is not in the type definition but is used by USWDS DateInput
-        requiredMarker={!optionalDay}
+        length={2}
         required={!optionalDay}
-        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-          updateValue({ day: e.target.value })
-        }
         defaultValue={dayState}
+        onChange={(day) => updateValue({ day })}
       />
-      <DateInput
+      <DatePart
         id={`${id}Year`}
         label={[name, t("year")].join(" ")}
         unit="year"
-        maxLength={4}
-        minLength={4}
-        // @ts-expect-error requiredMarker is not in the type definition but is used by USWDS DateInput
-        requiredMarker={!optionalYear}
+        length={4}
         required={!optionalYear}
-        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-          updateValue({ year: e.target.value })
-        }
         defaultValue={yearState}
+        onChange={(year) => updateValue({ year })}
       />
     </DateInputGroup>
   );

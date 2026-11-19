@@ -33,6 +33,15 @@ export const api = createClient<paths>({
 });
 api.use(authorize);
 
+/**
+ * The same client with no session, for the routes under `/api/public/` that a
+ * signed-out visitor calls. `api` would refuse them before sending.
+ */
+export const publicApi = createClient<paths>({
+  baseUrl: BASE_URL,
+  fetch: (request) => globalThis.fetch(request),
+});
+
 /** Authenticated `fetch` for calls the typed client cannot make, such as non-JSON bodies. */
 export async function authFetch(
   path: string,

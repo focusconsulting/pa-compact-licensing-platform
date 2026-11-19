@@ -88,8 +88,8 @@ That installs dependencies, creates `engineering/api/.env` and
 `engineering/client/.env` from their examples if missing, starts the
 local services, applies migrations, loads the local users, and runs the API,
 the Worker, and the client. Ctrl-C stops them; `just down` stops the services.
-With the system running, `just e2e` runs the Playwright tests
-([`engineering/e2e/`](engineering/e2e/README.md)).
+With the system running, `just e2e` builds the client and runs the Playwright
+tests against it ([`engineering/e2e/`](engineering/e2e/README.md)).
 No AWS account or credentials are needed.
 
 | What | Where |

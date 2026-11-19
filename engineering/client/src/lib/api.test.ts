@@ -3,7 +3,7 @@ import type { CognitoUserSession } from "amazon-cognito-identity-js";
 
 import * as authLib from "src/lib/auth";
 import { answerFetch } from "src/tests/fetch";
-import { api, authFetch } from "./api";
+import { api, authFetch, publicApi } from "./api";
 
 vi.mock("src/lib/auth");
 
@@ -42,6 +42,19 @@ describe("api", () => {
     vi.mocked(authLib.getCurrentSession).mockResolvedValue(null);
 
     await expect(api.GET("/api/me")).rejects.toThrow("Not authenticated");
+  });
+});
+
+describe("publicApi", () => {
+  it("calls the API with no session and no token", async () => {
+    vi.mocked(authLib.getCurrentSession).mockResolvedValue(null);
+    const fetchSpy = answerFetch({ data: [] });
+
+    await publicApi.GET("/api/public/states");
+
+    const [request] = fetchSpy.mock.calls[0] as [Request];
+    expect(request.url).toBe("http://api.test/api/public/states");
+    expect(request.headers.has("Authorization")).toBe(false);
   });
 });
 

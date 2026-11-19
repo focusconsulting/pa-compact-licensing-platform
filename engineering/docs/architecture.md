@@ -12,7 +12,7 @@ Who uses the PA Compact Data System, and which outside systems it depends on.
 title: "PA Compact Data System: system context"
 ---
 flowchart TD
-  pa@{shape: person, label: "Physician Assistant"}
+  pa@{shape: person, label: "PA"}
   state@{shape: person, label: "State<br/>staff"}
   commission@{shape: person, label: "Commission staff"}
   public@{shape: person, label: "Public and employers"}

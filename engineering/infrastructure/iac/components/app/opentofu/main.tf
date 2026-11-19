@@ -64,6 +64,9 @@ locals {
   db_name            = "licensing"
   db_master_username = "postgres"
   db_port            = 5432
+  # AWS's RDS certificate bundle, shipped in the image (engineering/api/certs/); the API,
+  # the Worker, and the jobs verify Postgres's certificate against it.
+  db_ca_file         = "/app/certs/rds-global-bundle.pem"
   application_name   = "licensing"
   cluster_identifier = "${var.environment_name}-${local.application_name}-rds"
   aurora_engine      = "aurora-postgresql"
@@ -79,7 +82,6 @@ locals {
     log_disconnections          = { value = 1 }
     log_lock_waits              = { value = 1 }
     log_temp_files              = { value = 0 }
-    log_statement               = { value = "none" }
     log_error_verbosity         = { value = "terse" }
     log_min_error_statement     = { value = "log" }
     log_rotation_age            = { value = 1440 }

@@ -12,6 +12,9 @@ locals {
     { name = "DB_NAME", value = local.db_name },
     { name = "ENVIRONMENT", value = upper(var.environment_name) },
     { name = "LOG_LEVEL", value = var.log_level },
+    { name = "DB_CA_FILE", value = local.db_ca_file },
+    # The root filesystem is read-only; anything temporary goes to memory.
+    { name = "TMPDIR", value = "/dev/shm" },
     { name = "SMTP_HOST", value = "email-smtp.${var.aws_region}.amazonaws.com" },
     { name = "SMTP_PORT", value = "587" },
     { name = "SMTP_STARTTLS", value = "true" },
@@ -35,12 +38,14 @@ locals {
 
 resource "aws_cloudwatch_log_group" "worker_logs" {
   name              = "/ecs/${local.application_name}/${var.environment_name}/worker"
-  retention_in_days = 30
+  retention_in_days = 365
+  kms_key_id        = aws_kms_key.data.arn
 }
 
 resource "aws_cloudwatch_log_group" "jobs_logs" {
   name              = "/ecs/${local.application_name}/${var.environment_name}/jobs"
-  retention_in_days = 30
+  retention_in_days = 365
+  kms_key_id        = aws_kms_key.data.arn
 }
 
 resource "aws_ecs_task_definition" "worker_task" {
@@ -54,12 +59,13 @@ resource "aws_ecs_task_definition" "worker_task" {
 
   container_definitions = jsonencode([
     {
-      name        = local.worker_container_name
-      image       = "${var.repo_name}:${var.image_tag}"
-      essential   = true
-      command     = ["python", "-m", "licensing_api.worker"]
-      environment = local.worker_environment
-      secrets     = local.worker_secrets
+      name                   = local.worker_container_name
+      image                  = "${var.repo_name}:${var.image_tag}"
+      essential              = true
+      command                = ["python", "-m", "licensing_api.worker"]
+      readonlyRootFilesystem = true
+      environment            = local.worker_environment
+      secrets                = local.worker_secrets
       # ECS sends SIGTERM, then SIGKILL after this; the Worker finishes the delivery in hand first.
       stopTimeout = 60
       logConfiguration = {
@@ -85,9 +91,10 @@ resource "aws_ecs_task_definition" "jobs_task" {
 
   container_definitions = jsonencode([
     {
-      name      = local.jobs_container_name
-      image     = "${var.repo_name}:${var.image_tag}"
-      essential = true
+      name                   = local.jobs_container_name
+      image                  = "${var.repo_name}:${var.image_tag}"
+      essential              = true
+      readonlyRootFilesystem = true
       # Each schedule overrides the command with `run <job>`; on its own this lists the jobs.
       command     = ["python", "-m", "licensing_api.jobs", "--help"]
       environment = local.worker_environment
@@ -110,11 +117,14 @@ resource "aws_ecs_service" "worker_service" {
   task_definition = aws_ecs_task_definition.worker_task.arn
   launch_type     = "FARGATE"
   # Two Workers are safe (SKIP LOCKED); one carries the pilot's volume with room to spare.
-  desired_count = 1
+  desired_count = local.paused ? 0 : 1
 
   network_configuration {
     subnets          = data.terraform_remote_state.network.outputs.private_subnet_ids
     security_groups  = [aws_security_group.ecs_sg.id]
     assign_public_ip = false
   }
+
+  # Starts after the database instance on resume, and stops before it on pause.
+  depends_on = [aws_rds_cluster_instance.cluster_instances]
 }

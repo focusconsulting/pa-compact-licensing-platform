@@ -49,6 +49,23 @@ Where each user starts.
 
 An action that can't be undone opens a Modal over the page it came from (C5 · Confirm decision, [`3539:37050`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3539-37050)). The page after it starts with a success Alert, then either what happens next as a Process list (B9 · Application received, [`3504:34259`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3504-34259)) or the list the user returns to (C6 · Decision recorded, [`3539:37448`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=3539-37448)).
 
+### Front door
+
+The page at the site's address, for anyone. V0 · Front door ([`5126:16369`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=5126-16369)), and V0s ([`5126:16573`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=5126-16573)) for a visitor who is signed in.
+
+1. `h1` and the intro line
+2. A Card group, one Card per way in: its `h2`, one line saying who it is for, and a Button. The cards stack below desktop width.
+3. Signed in, the visitor's own Card leads to their dashboard
+
+### Lookup
+
+A search anyone can use, its results, and one record. Block V on the board:
+V1 · Look up a Compact Privilege ([`5121:15650`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=5121-15650)), V2 · Results ([`5122:15865`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=5122-15865)), and V3 · Jordan Sample ([`5122:16336`](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library?node-id=5122-16336)).
+
+1. Search: `h1` and intro, required fields note, a Radio pair that picks the search, its fields, and the Button
+2. Results, under the same search: an `h2` with the count, then a Table whose first column links to the record. No match is a line saying what the search needs.
+3. Record: a link back to the results, `h1` (the person's name), then `h2` sections; a Card per item where the record has several
+
 ### Settings form
 
 Not drawn yet; this is a placeholder until the Commission's settings screens are.

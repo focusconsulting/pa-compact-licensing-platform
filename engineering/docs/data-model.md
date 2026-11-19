@@ -15,7 +15,7 @@ Rule citations are to the adopted Rules 3 and 4 in `product/context/research-cor
 
 | Tier | Who may see it |
 |---|---|
-| Public | Anyone, through public verification (Rule 4 §4.5(b)) |
+| Public | Anyone, through [public verification](../../product/context/flows/08-public-verification.md) (Rule 4 §4.5(b)) |
 | Private | The PA themselves, and state and Commission users with a relationship to the PA (`read_private`) |
 | States and Commission | State and Commission users only; never the PA or the public (ML §8.C) |
 | Restricted | The full SSN: `read_ssn`, every read audited (ADR-0007) |
@@ -153,9 +153,35 @@ A PA's uniform data set (Rule 4 §4.3(c)), held by the Commission and written by
 | `pa_program_name`, `pa_program_graduation_year` | TEXT, SMALLINT | §4.3(c)(9) |
 | `nccpa_certification_number`, `_status`, `_expires_on` | TEXT, TEXT, DATE | §4.3(c)(10) |
 | `npi` | TEXT, NULL | Not in the adopted uniform data set; optional, never verified |
-| `<group>_entered_by`, `<group>_verified_by_state`, `<group>_verified_at` | FK `users`, FK `states`, TIMESTAMPTZ | Provenance for each group: `identity`, `residence`, `contact`, `education`, `certification`. A state and a time are set together or not at all |
+| `<group>_entered_by`, `<group>_verified_by_state`, `<group>_verified_at` | FK `users`, FK `states`, TIMESTAMPTZ | Provenance for each group: `identity`, `residence`, `contact`, `education`, `certification`. A state and a time are set together or not at all. [Field groups](#field-groups) lists each group's fields |
 
-Other names (§4.3(c)(2)) and the address and email change log (§4.3(e)(1)–(2)) are reserved for epic 5.
+The address and email change logs (§4.3(e)(1)–(2)) are read from `practitioners_history`.
+
+#### Field groups
+
+The uniform data set the PA enters (Rule 4 §4.3(c)(1)–(10)) is stamped in five groups. `<group>_entered_by` is the last user who wrote the group: the PA, or staff entering on their behalf. When and by whom a group is verified is in [FLOW-02](../../product/context/flows/02-sql-eligibility-verification.md#uniform-data-set-what-the-sql-owns-after-verification).
+
+| Group | Fields | Rule 4 §4.3(c) |
+|---|---|---|
+| `identity` | `legal_first_name`, `legal_middle_name`, `legal_last_name`, `name_suffix`, `practitioner_other_names` rows, `sex_code`, `date_of_birth`, `practitioner_ssn` | (1)–(5) |
+| `residence` | `residence_line1`, `residence_line2`, `residence_city`, `residence_region`, `residence_postal_code`, `residence_country_code` | (6) |
+| `contact` | `phone`, `correspondence_email` | (7)–(8) |
+| `education` | `pa_program_name`, `pa_program_graduation_year` | (9) |
+| `certification` | `nccpa_certification_number`, `nccpa_certification_status`, `nccpa_certification_expires_on` | (10) |
+
+`users.email` is the sign-in, not part of the data set. `correspondence_email` is, and email goes to it when it is set ([notifications](notifications.md)).
+
+### `practitioner_other_names`
+
+Other names a PA has used, previously or currently (Rule 4 §4.3(c)(2)), covered by the `identity` group. Tier: private. Owner: epic 5.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `practitioner_id` | FK | |
+| `first_name`, `middle_name`, `last_name`, `name_suffix` | TEXT | `last_name` is required |
+| `removed_at` | TIMESTAMPTZ, NULL | The PA stopped listing it. Rows are never deleted, so their history keeps pointing at them |
+
+Changes are kept in `practitioner_other_names_history`. `PATCH /me/profile` replaces the list: a name no longer listed is removed, a new one added, and one listed again left alone.
 
 ### `practitioner_ssn`
 
@@ -227,7 +253,41 @@ A PA's application to participate in the compact, decided by their state of qual
 | `eligibility_withdrawn_at`, `eligibility_withdrawal_reason` | | Required for `eligibility_withdrawn` (Rule 3 §3.9(b)) |
 | `superseded_at` | TIMESTAMPTZ | Required for `superseded`: a later `change_sql` application became eligible (Rule 3 §3.6) |
 
+The sworn statement (Q-06), set by submit and again by each resubmission. The submit route requires it; there is no CHECK, because rows made before it have none:
+
+| Column | Type | Meaning |
+|---|---|---|
+| `sworn_name` | TEXT | The name the PA typed |
+| `sworn_at` | TIMESTAMPTZ | When the server received it |
+
 The database enforces: `eligible` needs a linked license, `license_verified_at`, and `cbc_completed_on` (FLOW-02); one open application (`draft`, `submitted`, `info_requested`) per practitioner; one `eligible` application per practitioner, so a `change_sql` application that becomes eligible supersedes the old one in the same transaction, and the issuance check "participation still eligible" can only find the current one. The queue index is `(sql_state_code, status)`.
+
+### `attestations`
+
+The statements a PA accepts to apply: for participation from Rule 3 §3.4(a), for a privilege from Rule 3 §3.3(a)(11)–(12). Seeded with drafted texts that Commission legal signs off (Q-06); a state's jurisprudence attestation is added when the state configures one. Tier: public. Owner: epic 6.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `code`, `version` | TEXT, INTEGER | Primary key. A wording change is a new version, so an acceptance always names the text the PA read |
+| `applies_to` | TEXT CHECK | `participation` or `privilege` |
+| `state_code` | FK `states`, NULL | One remote state's own attestation, for a requirement it configures as `attestation`, such as jurisprudence; NULL applies to every state |
+| `sort_order` | SMALLINT | Display order within `applies_to` |
+| `text` | TEXT | What the PA reads |
+| `retired_at` | TIMESTAMPTZ, NULL | No longer asked for |
+
+Only `retired_at` may change; a trigger refuses any other update. Only a `privilege` attestation may name a state. The current version of a code is its highest unretired one (`current_attestations` in `repo/attestation.py`).
+
+### `participation_application_attestations`
+
+What a PA accepted on an application, written with `accept_participation` and checked with `out_of_date_codes` (`repo/attestation.py`). Epic 8 adds `privilege_request_attestations` with the same shape. Tier: private. Owner: epic 6.
+
+| Column | Type | Meaning |
+|---|---|---|
+| `participation_application_id` | FK | |
+| `attestation_code`, `attestation_version` | FK `attestations` | |
+| `accepted_at` | TIMESTAMPTZ | |
+
+The primary key is `(participation_application_id, attestation_code, attestation_version)`. A trigger refuses any update or delete outside an expungement (ADR-0008): accepting a newer version adds a row, and the latest per code counts. That keeps the submitted record (Rule 5 §5.3) without a history table.
 
 ### `fees`
 
@@ -262,7 +322,7 @@ One open request (`pending_payment`, `submitted`) per practitioner and remote st
 
 ### `privileges`
 
-A compact privilege issued by a remote state (Rule 4 §4.3(d)). Tier: the state, number, status, and dates are public (Rule 4 §4.5(b), Q-12); the deactivation reason and note are states and Commission. Owner: epic 8.
+A compact privilege issued by a remote state (Rule 4 §4.3(d)). Tier: the state, number, status, and issue date are public, and the expiry date while the privilege is active (Rule 4 §4.5(b), Q-12); the deactivation reason and note are states and Commission. Owner: epic 8.
 
 | Column | Type | Meaning |
 |---|---|---|
