@@ -1,5 +1,5 @@
 # Build stage — install dependencies using uv
-FROM ghcr.io/astral-sh/uv:0.13.8-python3.13-alpine@sha256:f2d6278d0821c35881b010ddbf75825049661a98dbfdf61bbd1407e8dd544d00 AS build
+FROM ghcr.io/astral-sh/uv:0.13.9-python3.13-alpine@sha256:f3f098c0532abb45dd01362a6ea3585b8b4cd53f0589be79efb8e529816637ce AS build
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -14,7 +14,7 @@ RUN uv sync --frozen --no-dev
 
 
 # Dev
-FROM ghcr.io/astral-sh/uv:0.13.8-python3.13-alpine@sha256:f2d6278d0821c35881b010ddbf75825049661a98dbfdf61bbd1407e8dd544d00 AS dev
+FROM ghcr.io/astral-sh/uv:0.13.9-python3.13-alpine@sha256:f3f098c0532abb45dd01362a6ea3585b8b4cd53f0589be79efb8e529816637ce AS dev
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
