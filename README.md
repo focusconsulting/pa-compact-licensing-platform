@@ -10,7 +10,7 @@
 engineering/api/                  Python API (FastAPI, Python 3.13)
 engineering/client/               Next.js frontend (React, TypeScript, USWDS)
 engineering/infrastructure/iac/   Infrastructure as Code (OpenTofu)
-product/                          Product context: flows, evidence, research corpus
+product/context/flows/            The flows the system implements
 ```
 
 ## Prerequisites
@@ -102,7 +102,7 @@ No AWS account or credentials are needed.
 
 Sign in as any user in
 [`engineering/mocks/cognito/db/local_licensing.json`](engineering/mocks/cognito/db/local_licensing.json)
-with `Local-Passw0rd!`, for example `gustavo.torrico@focusconsulting.io`.
+with `Local-Passw0rd!`.
 `backfill@example.com` (`Temp-Passw0rd!`) is asked to choose a new password
 on first sign-in.
 

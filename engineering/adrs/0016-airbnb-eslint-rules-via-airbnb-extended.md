@@ -16,7 +16,7 @@ Proposed
 
 ## Context
 
-The client's lint rules are the Airbnb JavaScript style guide, which the GSA 18F Front-End Guide names and the SOW requires us to lint against with zero errors and warnings ([SOW §5.2](../../product/context/PA%20Compact%20Data%20System%20SOW%20-%20Focus%20Consulting.md), "Properly Styled Code"). Until now they came from `eslint-config-airbnb` 19 and `eslint-config-airbnb-typescript` 18 through `.eslintrc.cjs`.
+The client's lint rules are the Airbnb JavaScript style guide, which the GSA 18F Front-End Guide names and the SOW requires us to lint against with zero errors and warnings ([SOW §5.2](https://github.com/focusconsulting/pa-compact-licensing-platform/blob/main/product/context/PA%20Compact%20Data%20System%20SOW%20-%20Focus%20Consulting.md), "Properly Styled Code"). Until now they came from `eslint-config-airbnb` 19 and `eslint-config-airbnb-typescript` 18 through `.eslintrc.cjs`.
 
 Both packages have stopped. `eslint-config-airbnb` 19.0.4 (2021) is its last release and supports ESLint 8 and `eslint-plugin-react-hooks` 4. `eslint-config-airbnb-typescript` 18.0.0 (March 2024) is its last release, supports typescript-eslint 7, and configures two rules that typescript-eslint 8 deleted, so it cannot load on 8 at all. ESLint 10 removed the eslintrc format they are written in, and `eslint-config-next` 16 is flat-config only. Five open Dependabot pull requests (eslint 10, eslint-config-next 16, typescript-eslint 8, react-hooks 7) fail on one or both of them.
 
@@ -59,5 +59,5 @@ Against the current configuration, Airbnb accounts for 155 of the 275 active rul
 ## Related
 
 - Constitution Principle I (new dependencies need an ADR).
-- [SOW §5.2](../../product/context/PA%20Compact%20Data%20System%20SOW%20-%20Focus%20Consulting.md), "Properly Styled Code".
+- [SOW §5.2](https://github.com/focusconsulting/pa-compact-licensing-platform/blob/main/product/context/PA%20Compact%20Data%20System%20SOW%20-%20Focus%20Consulting.md), "Properly Styled Code".
 - [eslint-config-airbnb-extended](https://github.com/eslint-config/airbnb-extended), legacy config.

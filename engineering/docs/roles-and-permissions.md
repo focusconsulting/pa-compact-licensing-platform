@@ -1,6 +1,6 @@
 # Roles and Permissions
 
-Who can do what in the PA Compact Data System, and how the API checks it. The capabilities each role needs come from the backlog ([`mvp-ticket-breakdown.md`](../../product/backlog/mvp-ticket-breakdown.md) §2.4, decision D5); the design is [ADR-0009](../adrs/0009-route-authorization-and-change-context.md); the code is `engineering/api/licensing_api/permissions.py`.
+Who can do what in the PA Compact Data System, and how the API checks it. The capabilities each role needs come from the backlog ([`mvp-ticket-breakdown.md`](https://github.com/focusconsulting/pa-compact-licensing-platform/blob/main/product/backlog/mvp-ticket-breakdown.md) §2.4, decision D5); the design is [ADR-0009](../adrs/0009-route-authorization-and-change-context.md); the code is `engineering/api/licensing_api/permissions.py`.
 
 ## How a check works
 
