@@ -2,7 +2,7 @@
 // in AWS, so a page that breaks the policy fails here and not on a deployed environment.
 // Usage: node serve-client.mts <port>, after `pnpm build` in ../client.
 import { spawn } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -33,7 +33,8 @@ const policy = Object.entries(shared)
   .map(([directive, sources]) => [directive, ...sources, ...(LOCAL_ORIGINS[directive] ?? [])].join(" "))
   .join("; ");
 
-const config = path.join(tmpdir(), `licensing-client-serve-${port}.json`);
+// A directory only this user can read, under a name nobody else can predict.
+const config = path.join(mkdtempSync(path.join(tmpdir(), "licensing-client-serve-")), "serve.json");
 writeFileSync(
   config,
   JSON.stringify({
