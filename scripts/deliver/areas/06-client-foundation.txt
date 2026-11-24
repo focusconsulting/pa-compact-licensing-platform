@@ -19,6 +19,7 @@ engineering/client/public
 engineering/client/scripts
 engineering/client/src/@types
 engineering/client/src/api
+engineering/client/src/assets
 engineering/client/src/components
 engineering/client/src/contexts
 engineering/client/src/i18n
