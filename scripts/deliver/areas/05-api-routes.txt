@@ -1,0 +1,22 @@
+# API routes, the app, and the OpenAPI document
+engineering/api/licensing_api/__main__.py
+engineering/api/licensing_api/routes
+engineering/api/openapi.json
+engineering/api/tests/test_application_routes.py
+engineering/api/tests/test_audit_route.py
+engineering/api/tests/test_catalogue_routes.py
+engineering/api/tests/test_context.py
+engineering/api/tests/test_dashboard_routes.py
+engineering/api/tests/test_documents_download.py
+engineering/api/tests/test_documents_upload.py
+engineering/api/tests/test_errors.py
+engineering/api/tests/test_health.py
+engineering/api/tests/test_migrations.py
+engineering/api/tests/test_openapi.py
+engineering/api/tests/test_profile_routes.py
+engineering/api/tests/test_public_verification.py
+engineering/api/tests/test_responses.py
+engineering/api/tests/test_route_access.py
+engineering/api/tests/test_status_definitions.py
+engineering/api/tests/test_status_route.py
+engineering/api/tests/test_user.py

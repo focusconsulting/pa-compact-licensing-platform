@@ -1,0 +1,3 @@
+# Client pages: front door, sign-in, dashboard, participation application, public verification
+engineering/client/src/app
+engineering/client/src/stories/pages
