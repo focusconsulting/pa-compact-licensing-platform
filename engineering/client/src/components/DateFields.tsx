@@ -17,6 +17,8 @@ export interface DateFieldsProps {
   optionalDay?: boolean;
   optionalMonth?: boolean;
   optionalYear?: boolean;
+  /** Marks each part in error; the fieldset around it shows the message. */
+  error?: boolean;
 }
 
 interface DatePartProps {
@@ -25,6 +27,7 @@ interface DatePartProps {
   unit: "day" | "year";
   length: number;
   required: boolean;
+  error?: boolean;
   defaultValue: string;
   onChange: (value: string) => void;
 }
@@ -36,6 +39,7 @@ function DatePart({
   unit,
   length,
   required,
+  error,
   defaultValue,
   onChange,
 }: DatePartProps) {
@@ -52,6 +56,7 @@ function DatePart({
         maxLength={length}
         minLength={unit === "day" ? 1 : length}
         required={required}
+        validationStatus={error ? "error" : undefined}
         defaultValue={defaultValue}
         onChange={(e: ChangeEvent<HTMLInputElement>) =>
           onChange(e.target.value)
@@ -68,6 +73,7 @@ export function DateFields({
   optionalDay = false,
   optionalMonth = false,
   optionalYear = false,
+  error = false,
 }: DateFieldsProps) {
   const { t } = useTranslation("date");
   const options = t("options", { returnObjects: true });
@@ -136,6 +142,7 @@ export function DateFields({
           options={options}
           required={!optionalMonth}
           showValuesInLabels
+          error={error ? "" : undefined}
           onChange={(e: ChangeEvent<HTMLInputElement>) =>
             updateValue({ month: e.target.value })
           }
@@ -147,6 +154,7 @@ export function DateFields({
         label={[name, t("day")].join(" ")}
         unit="day"
         length={2}
+        error={error}
         required={!optionalDay}
         defaultValue={dayState}
         onChange={(day) => updateValue({ day })}
@@ -156,6 +164,7 @@ export function DateFields({
         label={[name, t("year")].join(" ")}
         unit="year"
         length={4}
+        error={error}
         required={!optionalYear}
         defaultValue={yearState}
         onChange={(year) => updateValue({ year })}
