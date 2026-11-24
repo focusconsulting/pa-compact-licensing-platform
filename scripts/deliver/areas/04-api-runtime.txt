@@ -1,0 +1,23 @@
+# API runtime: events, the Worker, scheduled jobs, notifications, document scans, and the local mocks they run against
+engineering/api/licensing_api/events.py
+engineering/api/licensing_api/handlers.py
+engineering/api/licensing_api/jobs.py
+engineering/api/licensing_api/scans.py
+engineering/api/licensing_api/worker.py
+engineering/api/licensing_api/notifications
+engineering/api/tests/email_templates
+engineering/api/tests/snapshots
+engineering/mocks
+engineering/api/tests/notification_helpers.py
+engineering/api/tests/test_application_notifications.py
+engineering/api/tests/test_discipline_notifications.py
+engineering/api/tests/test_dispatch_events.py
+engineering/api/tests/test_document_scans.py
+engineering/api/tests/test_email_preview.py
+engineering/api/tests/test_email_render.py
+engineering/api/tests/test_event_catalogue.py
+engineering/api/tests/test_events.py
+engineering/api/tests/test_jobs.py
+engineering/api/tests/test_privilege_notifications.py
+engineering/api/tests/test_send_pending.py
+engineering/api/tests/test_worker.py

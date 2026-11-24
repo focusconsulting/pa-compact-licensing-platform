@@ -1,0 +1,7 @@
+# End-to-end tests, CI workflows, and scanner configuration
+engineering/e2e
+.github
+scripts
+.trivyignore.yaml
+.zap
+codecov.yml
