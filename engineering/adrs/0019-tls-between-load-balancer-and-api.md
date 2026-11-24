@@ -20,7 +20,6 @@ The constitution requires TLS on every hop, including the load balancer
 to the API ([Principle VII](../engineering-constitution.md#vii-zero-trust)),
 and SCRUM-84's acceptance criteria say no connection between components
 uses plain HTTP. The API container served plain HTTP on port 8000.
-Plan: [Harden the infrastructure](../thoughts/shared/plans/iac/2026-11-12-SCRUM-84-harden-infrastructure.md).
 
 An Application Load Balancer encrypts its connection to an HTTPS target
 but does not validate the target's certificate: a self-signed or expired

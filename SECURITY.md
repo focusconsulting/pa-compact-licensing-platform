@@ -3,7 +3,7 @@
 ## Reporting a vulnerability
 
 Report a vulnerability privately through GitHub's
-[private vulnerability reporting](https://github.com/focusconsulting/pa-compact-licensing-platform/security/advisories/new),
+private vulnerability reporting (this repository's Security tab, "Report a vulnerability"),
 not in a public issue. The data system holds practitioners' personal
 information, so please don't test against a deployed environment.
 

@@ -7,7 +7,6 @@ The PA Compact Data System's relational data model: every table, what each colum
 - SSN storage: [ADR-0007](../adrs/0007-ssn-storage.md)
 - Expungement and append-only history: [ADR-0008](../adrs/0008-expungement-and-append-only-history.md)
 - Who may see and change what: [Roles and Permissions](roles-and-permissions.md)
-- Plan: [F-02 base data model](../thoughts/shared/plans/api/2026-10-07-F-02-canonical-data-model.md)
 
 Rule citations are to the adopted Rules 3 and 4 in `product/context/research-corpus/sources/` and to the model legislation (ML).
 

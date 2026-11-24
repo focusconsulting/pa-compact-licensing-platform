@@ -2,7 +2,7 @@
 
 The system prompt for turning a wireframe into a screen. Paste everything under "Prompt" into Claude Design, then give it one wireframe: a Figma frame from the [PA Compact Parts Library](https://www.figma.com/design/k1W9PxXhtQ3fopcKUePpH9/PA-Compact-Parts-Library) or a template in [`wireframe-kit.md`](wireframe-kit.md), plus the story's spec.
 
-Brand values are placeholders until the Commission answers Q-09; the prompt names tokens, not values, so it doesn't change when they arrive. The terms table is Q-19's default, the rule terms, until the Commission signs them off ([`mvp-ticket-breakdown.md`](../../../product/backlog/mvp-ticket-breakdown.md)). "Compact privilege" is from the [glossary](../../../product/context/reference/glossary.md).
+Brand values are placeholders until the Commission answers Q-09; the prompt names tokens, not values, so it doesn't change when they arrive. The terms table is Q-19's default, the rule terms, until the Commission signs them off ([`mvp-ticket-breakdown.md`](https://github.com/focusconsulting/pa-compact-licensing-platform/blob/main/product/backlog/mvp-ticket-breakdown.md)). "Compact privilege" is from the [glossary](../../../product/context/reference/glossary.md).
 
 ## Prompt
 

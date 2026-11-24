@@ -2,7 +2,7 @@
 
 The names screens may use for colour, type, spacing, and radius. A token is a USWDS theme token, written as USWDS writes it: `"primary-dark"`, spacing `2`, type `"lg"`, radius `"md"`. It is set through its `$theme-*` setting in [`_uswds-theme.scss`](../../client/src/styles/_uswds-theme.scss) and read through USWDS functions and mixins (`color()`, `units()`, `u-*`, `typeset()`, `radius()`). Project SCSS holds no hex, `px`, or font-weight literal. The only names the project adds are the five status-tag tones.
 
-Values are USWDS defaults, as placeholders, until the Commission's brand assets arrive (Q-09 in [`mvp-ticket-breakdown.md`](../../../product/backlog/mvp-ticket-breakdown.md#6-sprint-1--questions-for-the-client)). A new value changes a setting, not a name. Storybook's Design/Theme stories render every token with its current value.
+Values are USWDS defaults, as placeholders, until the Commission's brand assets arrive (Q-09 in [`mvp-ticket-breakdown.md`](https://github.com/focusconsulting/pa-compact-licensing-platform/blob/main/product/backlog/mvp-ticket-breakdown.md#6-sprint-1--questions-for-the-client)). A new value changes a setting, not a name. Storybook's Design/Theme stories render every token with its current value.
 
 The Figma Parts Library is the USWDS Figma kit, which names a family's base grade `medium`: Figma's `theme/color/primary/medium` is `primary` here.
 

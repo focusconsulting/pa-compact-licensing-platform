@@ -1,6 +1,6 @@
 # Platform Contract
 
-The functions every feature calls to record a change and declare a route, and the signatures the epic 2 tracks implement. Decided in [ADR-0009](../adrs/0009-route-authorization-and-change-context.md); planned in the [contract step plan](../thoughts/shared/plans/api/2026-10-14-SCRUM-77-platform-contract.md). Changing a signature here is a platform change: it needs the tech lead's review.
+The functions every feature calls to record a change and declare a route, and the signatures the epic 2 tracks implement. Decided in [ADR-0009](../adrs/0009-route-authorization-and-change-context.md). Changing a signature here is a platform change: it needs the tech lead's review.
 
 This page is not for business logic. How an application, privilege request, or privilege moves, and who may move it, lives in the [flows](../../product/context/flows/), which are the source of truth; code links to them rather than restating them here.
 

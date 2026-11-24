@@ -96,7 +96,7 @@ user, keep their `401`/`403` codes.
 `coverage run --branch` and `vitest --coverage` in CI
 ([`api.yml`](../.github/workflows/api.yml),
 [`client.yml`](../.github/workflows/client.yml)). The
-[RFP](../product/context/research-corpus/sources/pa-compact-commission-data-system-rfp.md)'s QASP floor of 90% is the
+[RFP](https://github.com/focusconsulting/pa-compact-licensing-platform/blob/main/product/context/research-corpus/sources/pa-compact-commission-data-system-rfp.md)'s QASP floor of 90% is the
 contractual minimum, not the target.
 
 API tests run against real Postgres (Docker Compose locally
@@ -160,7 +160,7 @@ Exempt: Storybook.
 ### VI. The record is the audit trail
 
 The compact rules make the data system the system of record
-([Rule 4 §4.3(e)](../product/context/research-corpus/sources/rule-4-compact-data-system--confidentiality-information-sharing.md)): every change is retained. The architecture follows from that.
+([Rule 4 §4.3(e)](https://github.com/focusconsulting/pa-compact-licensing-platform/blob/main/product/context/research-corpus/sources/rule-4-compact-data-system--confidentiality-information-sharing.md)): every change is retained. The architecture follows from that.
 
 - **One transaction per write.** A write validates, then writes the
   rows, a history row, and a `domain_events` row in one transaction,
@@ -233,7 +233,7 @@ are emitted as metrics, not reconstructed from logs.
 ### IX. Plans link to specs, code links to rules
 
 Every technical plan in
-[`engineering/thoughts/shared/plans/`](thoughts/shared/plans/) links to
+`engineering/thoughts/shared/plans/` links to
 the story or spec in [`product/`](../product/) it implements and to the
 flows in [`product/context/flows/`](../product/context/flows/) it touches. ADRs generated from a plan carry
 the same link forward.
@@ -241,7 +241,7 @@ the same link forward.
 Behavior a compact rule forces cites the rule once, at the point it is
 encoded, using the keys in
 [`product/context/reference/glossary.md`](../product/context/reference/glossary.md#rule-citation-keys-used-in-the-backlog)
-(e.g. [`ML §4.B`](../product/context/research-corpus/sources/pa-compact-model-legislation.md), [`Rule 3 §3.4(d)`](../product/context/research-corpus/sources/rule-3-compact-privilege.md)). Adopted rule text governs over
+(e.g. [`ML §4.B`](https://github.com/focusconsulting/pa-compact-licensing-platform/blob/main/product/context/research-corpus/sources/pa-compact-model-legislation.md), [`Rule 3 §3.4(d)`](https://github.com/focusconsulting/pa-compact-licensing-platform/blob/main/product/context/research-corpus/sources/rule-3-compact-privilege.md)). Adopted rule text governs over
 draft text.
 
 This traceability lets validation skills walk from any AI-generated
@@ -273,7 +273,7 @@ cited once, at the point where their value or rule is transcribed —
 not re-cited per line.
 
 The contract sets a documentation floor
-([SOW §5.2](../product/context/PA%20Compact%20Data%20System%20SOW%20-%20Focus%20Consulting.md#52-quality-standards),
+([SOW §5.2](https://github.com/focusconsulting/pa-compact-licensing-platform/blob/main/product/context/PA%20Compact%20Data%20System%20SOW%20-%20Focus%20Consulting.md#52-quality-standards),
 "complete and current at each sprint"). The rule above governs what
 that documentation says, not whether it exists:
 
@@ -291,7 +291,7 @@ that documentation says, not whether it exists:
   license in an inventory generated from the lockfiles. Third-party
   materials, open source included, need the Commission's written
   consent before they are delivered
-  ([SOW §7.5](../product/context/PA%20Compact%20Data%20System%20SOW%20-%20Focus%20Consulting.md#75-intellectual-property-and-open-source)),
+  ([SOW §7.5](https://github.com/focusconsulting/pa-compact-licensing-platform/blob/main/product/context/PA%20Compact%20Data%20System%20SOW%20-%20Focus%20Consulting.md#75-intellectual-property-and-open-source)),
   so a PR that adds one names it for that consent.
 
 Exceptions require justification in the PR description.
@@ -318,7 +318,7 @@ following the root [`README.md`](../README.md), with nothing learned by word of 
   adds a tool, a service, or a setting updates the README, the example
   file, and Docker Compose in the same PR.
 - **Every documented command works.** Commands in `README.md` files and
-  [`CLAUDE.md`](../CLAUDE.md) are run as part of reviewing a change that touches them.
+  `AGENTS.md` are run as part of reviewing a change that touches them.
 
 ### XIII. Dates and deadlines follow one calendar
 
@@ -513,12 +513,12 @@ The data system holds PII and disciplinary information for a
 multi-state government commission. Security is a release blocker, not
 an afterthought. Agents and engineers treat PII and confidential
 disciplinary data as the highest-priority concern when designing or
-modifying any feature. The QASP ([RFP](../product/context/research-corpus/sources/pa-compact-commission-data-system-rfp.md), [SOW](../product/context/PA%20Compact%20Data%20System%20SOW%20-%20Focus%20Consulting.md))
+modifying any feature. The QASP ([RFP](https://github.com/focusconsulting/pa-compact-licensing-platform/blob/main/product/context/research-corpus/sources/pa-compact-commission-data-system-rfp.md), [SOW](https://github.com/focusconsulting/pa-compact-licensing-platform/blob/main/product/context/PA%20Compact%20Data%20System%20SOW%20-%20Focus%20Consulting.md))
 requires OWASP ASVS conformance.
 
 **Data residency.** All software, data, and backups reside on servers
 in the United States and are never replicated, mirrored, or transited
-outside it ([SOW §2](../product/context/PA%20Compact%20Data%20System%20SOW%20-%20Focus%20Consulting.md#2-scope-of-work)).
+outside it ([SOW §2](https://github.com/focusconsulting/pa-compact-licensing-platform/blob/main/product/context/PA%20Compact%20Data%20System%20SOW%20-%20Focus%20Consulting.md#2-scope-of-work)).
 
 **PII scope.** Practitioner identity in the uniform data set — names,
 SSN, date of birth, sex, NPI, addresses, phone, email, education,
