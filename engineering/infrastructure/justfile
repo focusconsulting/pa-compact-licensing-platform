@@ -51,6 +51,18 @@ deploy env:
     aws s3 sync {{ justfile_directory() }}/../client/out/ "s3://$(out client_assets_bucket)/" --delete
     aws cloudfront create-invalidation --distribution-id "$(out cloudfront_distribution_id)" --paths "/*" >/dev/null
 
+# Print the exports that point a local API, Worker, and client at an environment's Cognito pool (`just up <env>`)
+cognito-env env:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    just init app {{ env }} >&2
+    out() { (cd {{ iac }}/components/app/opentofu && tofu output -raw "$1"); }
+    pool=$(out cognito_user_pool_id)
+    client=$(out cognito_client_id)
+    # An empty endpoint and auth flow mean the real service, with SRP, as `deploy` builds the client.
+    echo "export COGNITO_ENDPOINT_URL='' COGNITO_REGION='{{ region }}' COGNITO_USER_POOL_ID='$pool' COGNITO_CLIENT_ID='$client'"
+    echo "export NEXT_PUBLIC_COGNITO_ENDPOINT_URL='' NEXT_PUBLIC_COGNITO_AUTH_FLOW='' NEXT_PUBLIC_COGNITO_REGION='{{ region }}' NEXT_PUBLIC_COGNITO_USER_POOL_ID='$pool' NEXT_PUBLIC_COGNITO_CLIENT_ID='$client'"
+
 # Pause an environment: keep its data and address, and run no database instance, tasks, or jobs (`resume` undoes it)
 pause env: (set-paused env "true")
 

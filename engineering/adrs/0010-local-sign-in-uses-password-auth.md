@@ -8,7 +8,7 @@ date: 2026-10-21
 
 ## Status
 
-Accepted
+Accepted. Amended by [ADR-0022](0022-local-totp-against-the-dev-pool.md): `just up dev` signs in with SRP against DEV's pool.
 
 ## Date
 
