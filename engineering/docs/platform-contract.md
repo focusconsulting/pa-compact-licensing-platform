@@ -127,7 +127,7 @@ A route that needs two permissions, such as the Commission SSN reveal, declares 
 
 ### Relationships
 
-`licensing_api/repo/scope.py` (SCRUM-104). Each predicate is a `ColumnElement[bool]` correlated on `practitioners.id`, for use as `select(Practitioner).where(related_to(st))` or inside an `EXISTS`. A relationship, once formed, persists: denials, withdrawals, and expiry do not end it ([ADR-0020](../adrs/0020-state-standing-and-relationship-scoping.md)).
+`licensing_api/repo/scope.py` (SCRUM-104). Each predicate is a `ColumnElement[bool]` correlated on `practitioners.id`, for use as `select(Practitioner).where(related_to(st))` or inside an `EXISTS`. A relationship, once formed, persists: denials, withdrawals, and expiry do not end it ([ADR-0021](../adrs/0021-state-standing-and-relationship-scoping.md)).
 
 | Predicate | True when |
 |---|---|
