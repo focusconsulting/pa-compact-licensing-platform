@@ -52,7 +52,10 @@ new=$(export_tree "$commit" "$area")
 while read -r p; do git -C "$dst" rm -rq --ignore-unmatch -- "$p"; rm -rf "${dst:?}/$p"; done < <(list "$here/areas/$area.txt")
 cp -a "$new/." "$dst/"
 rm -rf "$new"
-git -C "$dst" add -A
+# Forced, since this repo tracks files its own .gitignore names, such as .env.example.
+while read -r p; do
+    if [ -e "$dst/$p" ]; then git -C "$dst" add -f -- "$p"; fi
+done < <(list "$here/areas/$area.txt")
 
 git -C "$dst" commit -q -m "$title" -m "Source-Commit: $commit
 Delivered-Area: $area"
