@@ -189,3 +189,17 @@ Code style follows the GSA 18F front-end guide (SOW §5.2): ESLint with the
 Airbnb style guide, Stylelint's standard SCSS rules with BEM class names, and
 Prettier. The deliberate deviations are explained in
 [`eslint.config.mjs`](engineering/client/eslint.config.mjs).
+
+## License
+
+Copyright (c) 2026 PA Compact Commission
+
+This program is free software: you can redistribute it and/or modify it
+under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or (at your
+option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE. See the
+[GNU Affero General Public License](LICENSE) for more details.
