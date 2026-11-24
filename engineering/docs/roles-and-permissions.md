@@ -13,7 +13,7 @@ held in state S = the permissions their role holds everywhere
 
 S is the state in the route's path, such as `KS` in `/states/KS/applications`, or the user's own `state_code` when the path names none. A user with no `state_code` (the Commission roles) holds their `*` grants there.
 
-In a `/states/{state_code}` path the user must first have **standing** in S: S is their `state_code`, or they hold a grant there. Without it they are refused whatever their role holds, so a Kansas user cannot use Missouri's routes, and Commission users read states only through `/commission` ([ADR-0020](../adrs/0020-state-standing-and-relationship-scoping.md)).
+In a `/states/{state_code}` path the user must first have **standing** in S: S is their `state_code`, or they hold a grant there. Without it they are refused whatever their role holds, so a Kansas user cannot use Missouri's routes, and Commission users read states only through `/commission` ([ADR-0021](../adrs/0021-state-standing-and-relationship-scoping.md)).
 
 Routes never check a role. To change what a role may do, change `ROLE_PERMISSIONS`, not the routes.
 
@@ -82,7 +82,7 @@ The health checks under `/api/health` are public for the load balancer, so they 
 
 ## Permission matrix
 
-What each role reaches, by route family, decided in [ADR-0020](../adrs/0020-state-standing-and-relationship-scoping.md). A `/states/{st}` row applies only to a caller with **standing** in `st`: `st` is their `state_code`, or they hold a grant there. Without standing the route returns `403 FORBIDDEN`, whatever the role. **✓** means the role alone passes; **grant** means the user also needs that permission granted in the state (in `*` for a Commission user); **own** means only their own record. SCRUM-104's role × endpoint test is driven from this table.
+What each role reaches, by route family, decided in [ADR-0021](../adrs/0021-state-standing-and-relationship-scoping.md). A `/states/{st}` row applies only to a caller with **standing** in `st`: `st` is their `state_code`, or they hold a grant there. Without standing the route returns `403 FORBIDDEN`, whatever the role. **✓** means the role alone passes; **grant** means the user also needs that permission granted in the state (in `*` for a Commission user); **own** means only their own record. SCRUM-104's role × endpoint test is driven from this table.
 
 | Route family | Declares | Rows the query returns | `licensee` | `state_staff` | `state_admin` | `compact_admin` | `admin` |
 |---|---|---|---|---|---|---|---|
