@@ -1,6 +1,7 @@
 # Repo tooling, the engineering constitution, ADRs, docs, and the product flows
 README.md
 SECURITY.md
+LICENSE
 justfile
 .gitignore
 .tool-versions
