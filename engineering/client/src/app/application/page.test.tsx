@@ -34,6 +34,8 @@ beforeEach(() => {
     signOut: vi.fn(),
     signIn: vi.fn(),
     completeNewPassword: vi.fn(),
+    verifyTotpSetup: vi.fn(),
+    answerTotp: vi.fn(),
   });
   vi.mocked(getCurrentSession).mockResolvedValue({
     getIdToken: () => ({ getJwtToken: () => "valid-token" }),
