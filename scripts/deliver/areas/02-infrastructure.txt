@@ -1,2 +1,0 @@
-# The AWS infrastructure, as OpenTofu code
-engineering/infrastructure
