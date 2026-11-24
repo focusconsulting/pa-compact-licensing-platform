@@ -1,0 +1,9 @@
+# Stays behind even inside a delivered path. A bare name matches at any depth.
+engineering/thoughts
+engineering/infrastructure/iac/environments
+.github/CODEOWNERS
+.github/dependabot.yml
+CLAUDE.md
+AGENTS.md
+.claude
+scripts/deliver
