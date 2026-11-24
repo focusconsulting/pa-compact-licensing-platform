@@ -26,11 +26,11 @@ Epic 5's contract step (SCRUM-103) fixes the permission matrix every later route
 
 1. **A state path needs standing.** Under `/states/{state_code}`, a caller passes `require` only when they belong to that state: their `state_code` is that state, or they hold at least one grant there. Without standing, the caller gets `403 FORBIDDEN` whatever permissions their role holds. Commission users read state data through `/commission` routes, never through `/states/{state_code}`. With standing, role permissions and that state's grants combine as ADR-0009 describes.
 2. **Commission grants use the key `*`.** `users.permissions` may hold `{"*": ["read_ssn"]}` for a `compact_admin` user. When the caller has no `state_code` and the route names no state, `require` reads the `*` grants. The key gives no standing in any `/states/{state_code}` path, and `read_ssn` is the only permission granted under it. No role holds `read_ssn`: each Commission user who may reveal an SSN is granted it individually, and every reveal is audited ([ADR-0007](0007-ssn-storage.md)). The system operator (`admin`) is not given it (backlog §2.4).
-3. **Relationships are SQL predicates in one module.** `licensing_api/repo/scope.py` defines, over `practitioners.id`:
-   - `is_sql_for(state_code)`: a participation application names the state as `sql_state_code` and has left `draft`.
-   - `is_remote_for(state_code)`: a privilege request names the state as `remote_state_code` and has left `pending_payment`. Every privilege comes from such a request, so this covers privileges too.
-   - `holds_license_in(state_code)`: a qualifying license in the state is linked to the practitioner.
-   - `related_to(state_code)`: any of the three.
+3. **Relationships are SQL predicates in one module.** `licensing_api/repo/scope.py` defines, each correlated on a `practitioner_id` column the caller passes from its own query:
+   - `is_sql_for(state_code, practitioner_id)`: a participation application names the state as `sql_state_code` and has left `draft`.
+   - `is_remote_for(state_code, practitioner_id)`: a privilege request names the state as `remote_state_code` and has been paid for (`submitted_at` is set). An unpaid request withdrawn after 60 days never reached the state (FLOW-06). Every privilege comes from such a request, so this covers privileges too.
+   - `holds_license_in(state_code, practitioner_id)`: a qualifying license in the state is linked to the practitioner.
+   - `related_to(state_code, practitioner_id)`: any of the three.
 
    Routes compose these into their queries, and a record outside them returns `404`. An action on one record checks that record's own state column (`participation_applications.sql_state_code` for an eligibility decision, `privilege_requests.remote_state_code` for issuance), not the union.
 4. **A relationship, once formed, persists.** A denied, withdrawn, or superseded application, and a denied or withdrawn request or an expired privilege, keep the state related to the PA. That state was a party to the record and needs it for appeals (Rule 3 §3.9(a)) and discipline. Drafts and unpaid requests never form a relationship, because no state has received them.

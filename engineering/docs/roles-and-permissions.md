@@ -54,7 +54,7 @@ The [confidentiality tiers](data-model.md#confidentiality-tiers) map onto these:
 
 A `compact_admin` user who may reveal SSNs holds `{"*": ["read_ssn"]}`. `*` is the only key a Commission user holds, `read_ssn` is the only permission granted under it, and it gives no standing in any state. Only a `compact_admin` may hold it.
 
-A value that names no permission matches nothing, so a typo denies rather than allows. Grants are read on every request, so a change takes effect on the user's next request. The F-04 staff CLI (SCRUM-105) will create staff and change their grants, writing each change to `audit_log` as a security event; no route does. `admin` and `compact_admin` may use it in any state, and a holder of the `admin` grant in a state may use it in that state.
+A value that names no permission matches nothing, so a typo denies rather than allows. So does a permission the role may not be granted (`GRANTABLE`): staff are granted only `read_private`, `read_ssn`, `write`, and `admin` under state codes, and a `compact_admin` only `read_ssn` under `*`. A role's own permissions, such as `compact_admin`, are never granted. Grants are read on every request, so a change takes effect on the user's next request. The F-04 staff CLI (SCRUM-105) will create staff and change their grants, writing each change to `audit_log` as a security event; no route does. `admin` and `compact_admin` may use it in any state, and a holder of the `admin` grant in a state may use it in that state.
 
 ## What the client sees
 
@@ -117,7 +117,7 @@ caller: Annotated[User, require(Permission.WRITE, state_param='state_code')]
 ## Changing roles and permissions
 
 - **What a role may do:** edit `ROLE_PERMISSIONS` and the Roles table above.
-- **A new permission:** add it to `Permission`, describe it in the Permissions table above, and grant it through a role or a per-state grant.
-- **A new role:** a migration extending the `chk_users_role` constraint, a `Role` member, and an entry in `ROLE_PERMISSIONS`.
+- **A new permission:** add it to `Permission`, describe it in the Permissions table above, and give it to a role in `ROLE_PERMISSIONS` or make it grantable in `GRANTABLE`.
+- **A new role:** a migration extending the `chk_users_role` constraint, a `Role` member, and entries in `ROLE_PERMISSIONS` and `GRANTABLE`.
 
 `tests/test_permissions.py` fails when these tables and the code disagree. A change to a role or permission is a platform change and needs the tech lead's review.

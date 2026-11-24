@@ -116,7 +116,7 @@ async def list_applications(
 
 | Name | Contract |
 |---|---|
-| `require(permission=None, *, state_param=None)` | Yields the caller's `User` (from `current_user`). The caller passes when they hold `permission` through their role or as a grant in the route's state: the `state_param` path state, or their own. With no `permission`, any active user passes. Unknown user `403 USER_NOT_FOUND`, inactive `403 USER_INACTIVE`, missing permission `403 FORBIDDEN` |
+| `require(permission=None, *, state_param=None)` | Yields the caller's `User` (from `current_user`). The caller passes when they hold `permission` through their role or as a grant in the route's state: the `state_param` path state, or their own. A `state_param` state also needs standing: it is the caller's `state_code`, or they hold a grant there. With no `permission`, any active user with standing passes. Unknown user `403 USER_NOT_FOUND`, inactive `403 USER_INACTIVE`, no standing or missing permission `403 FORBIDDEN` |
 | `public()` | For a route anyone may call, signed in or not; use in `dependencies=[...]` |
 | `Permission` | What a route asks for. `manage_own_record`, `read_general`, `compact_admin`, `system_admin` come from a role; `read_private`, `read_ssn`, `write`, `admin` are granted per state in `users.permissions` (the Commission roles also hold `read_private` everywhere) |
 | `ROLE_PERMISSIONS` | Each role's permissions. A role is never checked directly: change what a role may do here, not in routes |
@@ -127,14 +127,14 @@ A route that needs two permissions, such as the Commission SSN reveal, declares 
 
 ### Relationships
 
-`licensing_api/repo/scope.py` (SCRUM-104). Each predicate is a `ColumnElement[bool]` correlated on `practitioners.id`, for use as `select(Practitioner).where(related_to(st))` or inside an `EXISTS`. A relationship, once formed, persists: denials, withdrawals, and expiry do not end it ([ADR-0020](../adrs/0020-state-standing-and-relationship-scoping.md)).
+`licensing_api/repo/scope.py` (SCRUM-104). Each predicate is a `ColumnElement[bool]` correlated on the `practitioner_id` column it is given, which must belong to a table in the query's `FROM`: `select(Practitioner).where(related_to(st, Practitioner.id))`, or `select(PrivilegeRequest).where(related_to(st, PrivilegeRequest.practitioner_id))`. Given a column from any other table, SQLAlchemy adds that table to the subquery, and every row matches. A relationship, once formed, persists: denials, withdrawals, and expiry do not end it ([ADR-0020](../adrs/0020-state-standing-and-relationship-scoping.md)).
 
 | Predicate | True when |
 |---|---|
-| `is_sql_for(state_code)` | A participation application names the state as `sql_state_code` and has left `draft` |
-| `is_remote_for(state_code)` | A privilege request names the state as `remote_state_code` and has left `pending_payment` |
-| `holds_license_in(state_code)` | A qualifying license in the state is linked to the practitioner |
-| `related_to(state_code)` | Any of the three: the PAs whose uniform data set the state may see (Rule 4 §4.6(a)) |
+| `is_sql_for(state_code, practitioner_id)` | A participation application names the state as `sql_state_code` and has left `draft` |
+| `is_remote_for(state_code, practitioner_id)` | A privilege request names the state as `remote_state_code` and has been paid for (`submitted_at` is set): an unpaid request withdrawn after 60 days never reached the state |
+| `holds_license_in(state_code, practitioner_id)` | A qualifying license in the state is linked to the practitioner |
+| `related_to(state_code, practitioner_id)` | Any of the three: the PAs whose uniform data set the state may see (Rule 4 §4.6(a)) |
 
 An action on one record checks that record's state column, not `related_to`. A Kansas user can read a PA whose SQL is Kansas and who holds a privilege in Missouri, but can decide only the application whose `sql_state_code` is `KS`.
 
