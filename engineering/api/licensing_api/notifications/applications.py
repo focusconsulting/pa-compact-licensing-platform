@@ -6,11 +6,16 @@ and carry no notes: an information request says only that one is waiting.
 
 from __future__ import annotations
 
+from datetime import datetime
+from typing import cast
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col, or_, select
 
 from licensing_api.context import ChangeContext
+from licensing_api.days import reference_time_zone
 from licensing_api.events import handler
+from licensing_api.information_request import resubmit_by
 from licensing_api.notifications.recipients import (
     commission_ops,
     practitioner,
@@ -59,12 +64,15 @@ async def send_application_submitted(
 async def send_application_info_requested(
     session: AsyncSession, ctx: ChangeContext, event: DomainEvent
 ) -> None:
-    """Tell the PA the state needs more from them. A link only, never the note (FLOW-07, D15)."""
+    """Tell the PA the state needs more from them, and by when. A link only, never the note (FLOW-07, D15)."""
     application = await _application(session, event)
     pa = await practitioner(session, application.practitioner_id)
+    # The state asks only about an application it received, so opened_at is set (FLOW-06).
+    opened_at = cast(datetime, application.opened_at)
     context = {
         'first_name': pa.first_name,
         'state_name': await state_name(session, application.sql_state_code),
+        'resubmit_by': resubmit_by(opened_at, await reference_time_zone(session)).isoformat(),
     }
     await queue(session, ctx, event, 'application_info_requested', [pa.recipient], context)
 

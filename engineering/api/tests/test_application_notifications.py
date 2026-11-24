@@ -38,6 +38,8 @@ async def contacts(db_session):
 
 
 _AT = datetime(2026, 7, 1, tzinfo=timezone.utc)
+# Midnight UTC on Jul 1 is Jun 30 in the compact's time zone; 60 days on (Rule 3 §3.7(a)(1)).
+_RESUBMIT_BY = '2026-08-29'
 
 
 async def _application(session: AsyncSession, **overrides: object) -> ParticipationApplication:
@@ -104,7 +106,9 @@ async def test_a_submitted_application_emails_the_pa_and_the_qualifying_states_c
     ]
 
 
-async def test_an_information_request_sends_a_link_and_never_the_note(db_session, contacts):
+async def test_an_information_request_sends_a_link_and_the_deadline_never_the_note(
+    db_session, contacts
+):
     application = await _application(
         db_session,
         status=ApplicationStatus.INFO_REQUESTED,
@@ -122,7 +126,7 @@ async def test_an_information_request_sends_a_link_and_never_the_note(db_session
         (
             'application_info_requested',
             'pat@demo.example',
-            {'first_name': 'Pat', 'state_name': 'Kansas'},
+            {'first_name': 'Pat', 'state_name': 'Kansas', 'resubmit_by': _RESUBMIT_BY},
         )
     ]
 
