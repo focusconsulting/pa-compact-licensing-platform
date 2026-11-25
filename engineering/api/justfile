@@ -10,7 +10,7 @@ open_cmd := if os() == "macos" { "open" } else { "xdg-open" }
 install:
     uv sync
 
-# Start the local services (Postgres, maildev, RustFS, the malware scanner, Cognito mock), resetting their data
+# Start the local services (Postgres, maildev, RustFS, the malware scanner, Cognito mock, FSMB mock), resetting their data
 infra: infra-down
     docker compose -p pa-compact --profile scanner up -d --wait --build
     docker compose -p pa-compact run --rm rustfs-init >/dev/null
@@ -50,6 +50,16 @@ job name env-file=".env":
 # Send every email template, or those named, with sample data to maildev (`just email-preview welcome --to me@example.com`)
 email-preview *args:
     uv run --env-file .env python -m licensing_api.notifications.preview {{ args }}
+
+# Refresh FSMB's OpenAPI document that tests/test_fsmb_openapi.py holds the FSMB models to (docs/fsmb.md)
+fsmb-openapi:
+    curl -fsS https://services-pdc-demo.fsmb.org/swagger/v1/swagger.json \
+        | python3 -c 'import json, sys; print(json.dumps(json.load(sys.stdin), indent=2, sort_keys=True))' \
+        > tests/fsmb_openapi.json
+
+# Fetch one FSMB report and say whether it fits the models, showing no report data (`just fsmb-check 999999915`)
+fsmb-check fid env-file=".env":
+    uv run --env-file {{ env-file }} python -m scripts.fsmb_check {{ fid }}
 
 # Run tests (pass additional args with: just test -k test_name)
 test env-file=".env" *args:

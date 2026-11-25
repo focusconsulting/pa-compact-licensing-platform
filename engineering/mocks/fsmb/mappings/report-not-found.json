@@ -1,0 +1,28 @@
+{
+  "priority": 5,
+  "request": {
+    "method": "GET",
+    "urlPathTemplate": "/v1/rosters/{customerKey}/members/{fid}/reports/current/data",
+    "pathParameters": {
+      "fid": {
+        "matches": "^[0-9]{9}$"
+      }
+    },
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer local-fsmb-token"
+      }
+    }
+  },
+  "response": {
+    "status": 404,
+    "headers": {
+      "Content-Type": "application/problem+json"
+    },
+    "jsonBody": {
+      "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5",
+      "title": "Not Found",
+      "status": 404
+    }
+  }
+}

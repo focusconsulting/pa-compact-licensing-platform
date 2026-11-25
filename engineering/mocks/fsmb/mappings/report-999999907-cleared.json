@@ -1,0 +1,120 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "GET",
+    "urlPathTemplate": "/v1/rosters/{customerKey}/members/{fid}/reports/current/data",
+    "pathParameters": {
+      "fid": {
+        "equalTo": "999999907"
+      }
+    },
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer local-fsmb-token"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "fid": "999999907",
+      "reportId": 2447718,
+      "asOfDateTimeUtc": "2023-01-18T19:23:07Z",
+      "generatedByUser": "apiuser",
+      "boardActionStatus": "Cleared",
+      "boardOrders": [],
+      "names": {
+        "legal": {
+          "firstName": "Alexa",
+          "middleName": "Wood",
+          "lastName": "Checkey",
+          "suffix": "",
+          "reportDate": "2020-05-04T00:00:00"
+        },
+        "other": []
+      },
+      "birthDate": {
+        "month": "09",
+        "day": "02",
+        "year": "1988",
+        "date": "1988-09-02T00:00:00",
+        "reportDate": "2020-05-04T00:00:00"
+      },
+      "medicalEducation": {
+        "school": {
+          "name": "Ohio University Heritage College of Osteopathic Medicine",
+          "alternateNames": [
+            "Ohio University College of Osteopathic Medicine"
+          ],
+          "cibisCode": "039120",
+          "schoolTypeCode": "DO",
+          "schoolTypeDescription": "Doctor of Osteopathy",
+          "city": "Athens",
+          "stateCode": "OH",
+          "stateDescription": "Ohio",
+          "countryCode": "US",
+          "countryDescription": "UNITED STATES",
+          "isVerified": true,
+          "reportDate": "2020-05-04T00:00:00"
+        },
+        "graduationDate": {
+          "year": "2014",
+          "isVerified": true,
+          "reportDate": "2020-05-04T00:00:00"
+        },
+        "degree": {
+          "code": "DO",
+          "description": "Doctor of Osteopathy",
+          "isVerified": true,
+          "reportDate": "2020-05-04T00:00:00"
+        }
+      },
+      "licenses": [
+        {
+          "reportDate": "2020-05-04T00:00:00",
+          "licenseType": "Full",
+          "issuerName": "OH",
+          "issuerDescription": "State Medical Board of Ohio",
+          "status": "Active",
+          "licenseNumber": "TEST4444",
+          "issueDate": "2017-07-01T00:00:00",
+          "expirationDate": "2027-01-31T00:00:00"
+        }
+      ],
+      "npi": [
+        {
+          "npiNumber": "1588667638",
+          "entityType": "Individual",
+          "reportDate": "2020-05-04T00:00:00"
+        }
+      ],
+      "abms": {
+        "certifications": []
+      },
+      "aoa": {
+        "certifications": [
+          {
+            "aoaId": "123456",
+            "reportDate": "2022-02-28T00:00:00",
+            "boardName": "American Osteopathic Board of Family Physicians",
+            "certificationName": "Family Medicine/OMT",
+            "certificationStatus": "Active",
+            "certificationType": "Primary",
+            "isOccParticipating": true,
+            "isOccRequired": true,
+            "certificationIssueDate": "2018-01-01T00:00:00",
+            "certificationEndDate": null,
+            "recertificationIssueDate": null,
+            "recertificationExpireDate": "2026-12-31T00:00:00"
+          }
+        ]
+      },
+      "dea": {
+        "certifications": []
+      }
+    }
+  }
+}

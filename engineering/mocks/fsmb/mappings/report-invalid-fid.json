@@ -1,0 +1,23 @@
+{
+  "priority": 6,
+  "request": {
+    "method": "GET",
+    "urlPathTemplate": "/v1/rosters/{customerKey}/members/{fid}/reports/current/data",
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer local-fsmb-token"
+      }
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "Content-Type": "application/problem+json"
+    },
+    "jsonBody": {
+      "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+      "title": "FID is invalid.",
+      "status": 400
+    }
+  }
+}

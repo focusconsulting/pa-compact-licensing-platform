@@ -91,3 +91,9 @@ services:
     build: ../mocks/cognito
     ports:
       - "${COGNITO_PORT:-9229}:9229"
+
+  # FSMB's Physician Data Center: WireMock with the members in engineering/mocks/fsmb
+  fsmb-mock:
+    build: ../mocks/fsmb
+    ports:
+      - "${FSMB_PORT:-8083}:8080"
