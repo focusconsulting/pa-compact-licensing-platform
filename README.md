@@ -15,40 +15,27 @@ product/context/flows/            The flows the system implements
 
 ## Prerequisites
 
-- Install the following using [asdf](https://asdf-vm.com/guide/getting-started.html):
+Install these at the versions in [`.tool-versions`](.tool-versions):
 
-   ```bash
-     asdf plugin add python
-     asdf install python 3.13.12
-     asdf set python 3.13.12
+| Tool | Version | Install |
+|---|---|---|
+| Python | 3.13.12 | <https://www.python.org/downloads/> |
+| Node.js | 25.8.2 | <https://nodejs.org/en/download> |
+| [uv](https://docs.astral.sh/uv/) (Python package manager) | 0.11.2 | <https://docs.astral.sh/uv/getting-started/installation/> |
+| [just](https://github.com/casey/just) (task runner) | 1.48.1 | <https://github.com/casey/just#installation> |
+| [OpenTofu](https://opentofu.org/) (only to plan or apply the infrastructure, see [`engineering/infrastructure/iac/README.md`](engineering/infrastructure/iac/README.md)) | 1.11.6 | <https://opentofu.org/docs/intro/install/> |
 
-     asdf plugin add nodejs
-     asdf install nodejs 25.8.2
-     asdf set nodejs 25.8.2
+Or, our preference, install them with [asdf](https://asdf-vm.com/guide/getting-started.html),
+which reads the versions from `.tool-versions`:
 
-     asdf plugin add uv
-     asdf install uv 0.11.2
-     asdf set uv 0.11.2
+```bash
+for tool in python nodejs uv just opentofu; do asdf plugin add "$tool"; done
+asdf install
+```
 
-     asdf plugin add just
-     asdf install just 1.48.1
-     asdf set just 1.48.1
+Then, however you installed them:
 
-     asdf plugin add opentofu
-     asdf install opentofu 1.11.6
-     asdf set opentofu 1.11.6
-
-     asdf reshim
-     npm install -g pnpm@latest-10
-   ```
-
-  - Python 3.13+
-  - Node.js 24+
-  - [uv](https://docs.astral.sh/uv/) (Python package manager)
-  - [pnpm](https://pnpm.io/) 10+
-  - [just](https://github.com/casey/just) (task runner)
-  - [OpenTofu](https://opentofu.org/) (infrastructure; needed only to plan or apply it, see
-    [`engineering/infrastructure/iac/README.md`](engineering/infrastructure/iac/README.md))
+- [pnpm](https://pnpm.io/installation) 10: `npm install -g pnpm@latest-10`
 - Docker, running (local Postgres for the API, and image builds)
 - [pre-commit](https://pre-commit.com/) (`pipx install pre-commit` or `brew install pre-commit`)
 
@@ -189,17 +176,3 @@ Code style follows the GSA 18F front-end guide (SOW §5.2): ESLint with the
 Airbnb style guide, Stylelint's standard SCSS rules with BEM class names, and
 Prettier. The deliberate deviations are explained in
 [`eslint.config.mjs`](engineering/client/eslint.config.mjs).
-
-## License
-
-Copyright (c) 2026 PA Compact Commission
-
-This program is free software: you can redistribute it and/or modify it
-under the terms of the GNU Affero General Public License as published by
-the Free Software Foundation, either version 3 of the License, or (at your
-option) any later version.
-
-This program is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-or FITNESS FOR A PARTICULAR PURPOSE. See the
-[GNU Affero General Public License](LICENSE) for more details.
